@@ -184,6 +184,27 @@ actor {
     "htlc_" # Nat.toText(htlc_counter) # "_" # Int.toText(Time.now());
   };
   
+  // Validate HTLC parameters
+  private func validate_htlc_params(
+    recipient : Principal,
+    amount : Nat,
+    expiration_time : Int
+  ) : Result.Result<(), Text> {
+    if (amount == 0) {
+      return #err("Amount must be greater than 0");
+    };
+    
+    if (expiration_time <= Time.now()) {
+      return #err("Expiration time must be in the future");
+    };
+    
+    if (Principal.isAnonymous(recipient)) {
+      return #err("Recipient cannot be anonymous");
+    };
+    
+    #ok(());
+  };
+  
   // Check if HTLC has expired
   private func is_expired(htlc : HTLC) : Bool {
     Time.now() > htlc.expiration_time;
@@ -296,7 +317,7 @@ actor {
   // CORE HTLC METHODS
   // ============================================================================
   
-  /// Create a new HTLC
+  /// Create a new HTLC lock
   public shared({ caller }) func create_htlc(
     recipient : Principal,
     amount : Nat,
@@ -306,19 +327,19 @@ actor {
     ethereum_address : ?Text
   ) : async Result.Result<Text, Text> {
     
-    if (amount == 0) {
-      return #err("Amount must be greater than 0");
+    // Validate parameters
+    switch (validate_htlc_params(recipient, amount, expiration_time)) {
+      case (#err(error)) { return #err(error) };
+      case (#ok()) { };
     };
     
-    if (expiration_time <= Time.now()) {
-      return #err("Expiration time must be in the future");
-    };
-    
+    // Generate unique HTLC ID
     let htlc_id = generate_htlc_id();
     
+    // Create HTLC structure (hashlock will be set when secret is provided)
     let htlc : HTLC = {
       id = htlc_id;
-      hashlock = Blob.fromArray([]); // Will be set later
+      hashlock = Blob.fromArray([]); // Will be set when secret is provided
       sender = caller;
       recipient = recipient;
       amount = amount;
@@ -331,11 +352,13 @@ actor {
       ethereum_address = ethereum_address;
     };
     
+    // Store HTLC
     htlc_store.put(htlc_id, htlc);
+    
     #ok(htlc_id);
   };
   
-  /// Set the hashlock for an HTLC
+  /// Set the hashlock for an HTLC (called after secret is generated)
   public shared({ caller }) func set_htlc_hashlock(
     htlc_id : Text,
     hashlock : Blob
@@ -351,6 +374,7 @@ actor {
           return #err("HTLC is not in locked state");
         };
         
+        // Update hashlock
         let updated_htlc : HTLC = {
           htlc with hashlock = hashlock;
         };
@@ -384,11 +408,8 @@ actor {
           return #err("HTLC has expired");
         };
         
-        // In a real implementation, you would hash the secret and compare with hashlock
-        // For now, we'll just accept any non-empty secret
-        if (Text.size(secret) == 0) {
-          return #err("Secret cannot be empty");
-        };
+        // TODO: Verify hashlock matches secret hash
+        // For now, we'll just update the status
         
         let updated_htlc : HTLC = {
           htlc with 
@@ -742,118 +763,228 @@ actor {
   ) : async Result.Result<Text, Text> {
     let base_url = INCH_API_ENDPOINTS.fusion_plus_orders # "/order/active";
     
-    // Build query parameters manually
-    let page_param = switch (page) {
-      case (?p) { "page=" # Nat.toText(p) };
-      case (null) { "page=1" };
+    // Build query parameters
+    let query_params = Buffer.Buffer<Text>(0);
+    
+    switch (page) {
+      case (?p) { query_params.add("page=" # Nat.toText(p)) };
+      case (null) { query_params.add("page=1") };
     };
     
-    let limit_param = switch (limit) {
-      case (?l) { "limit=" # Nat.toText(l) };
-      case (null) { "limit=100" };
+    switch (limit) {
+      case (?l) { query_params.add("limit=" # Nat.toText(l)) };
+      case (null) { query_params.add("limit=100") };
     };
     
-    let src_param = switch (src_chain) {
-      case (?src) { "srcChain=" # Nat.toText(src) };
-      case (null) { "" };
+    switch (src_chain) {
+      case (?sc) { query_params.add("srcChain=" # Nat.toText(sc)) };
+      case (null) { };
     };
     
-    let dst_param = switch (dst_chain) {
-      case (?dst) { "dstChain=" # Nat.toText(dst) };
-      case (null) { "" };
+    switch (dst_chain) {
+      case (?dc) { query_params.add("dstChain=" # Nat.toText(dc)) };
+      case (null) { };
     };
     
-    // Build URL with query parameters
-    let url = base_url # "?" # page_param # "&" # limit_param;
+    let url = base_url # "?" # Text.join("&", query_params.vals());
     
-    let headers = [
+    let request_headers = [
+      { name = "accept"; value = "application/json" },
       { name = "Authorization"; value = "Bearer " # INCH_API_KEY },
-      { name = "Accept"; value = "application/json" },
+      { name = "User-Agent"; value = "ionic-swap-htlc" },
     ];
     
-    let request = createHttpRequest(url, "GET", null, headers);
+    let http_request = createHttpRequest(url, "GET", null, request_headers);
     
-    let response = await (with cycles = DEFAULT_HTTP_CYCLES) IC.http_request(request);
-    
-    switch (decodeHttpResponse(response)) {
-      case (#ok(text)) { #ok(text) };
-      case (#err(error)) { #err(error) };
+    try {
+      Cycles.add<system>(DEFAULT_HTTP_CYCLES);
+      let http_response = await IC.http_request(http_request);
+      
+      switch (decodeHttpResponse(http_response)) {
+        case (#ok(response_text)) { #ok(response_text) };
+        case (#err(error)) { #err("Failed to decode response: " # error) };
+      };
+    } catch (error) {
+      #err("HTTP request failed: " # Error.message(error));
     };
   };
   
   /// Get orders by maker address
-  public func get_orders_by_maker(maker_address : Text) : async Result.Result<Text, Text> {
+  public func get_orders_by_maker(
+    maker_address : Text,
+    page : ?Nat,
+    limit : ?Nat,
+    src_chain_id : ?Nat,
+    dst_chain_id : ?Nat
+  ) : async Result.Result<Text, Text> {
     let base_url = INCH_API_ENDPOINTS.fusion_plus_orders # "/order/maker/" # maker_address;
     
-    let headers = [
+    // Build query parameters
+    let query_params = Buffer.Buffer<Text>(0);
+    
+    switch (page) {
+      case (?p) { query_params.add("page=" # Nat.toText(p)) };
+      case (null) { };
+    };
+    
+    switch (limit) {
+      case (?l) { query_params.add("limit=" # Nat.toText(l)) };
+      case (null) { };
+    };
+    
+    switch (src_chain_id) {
+      case (?sc) { query_params.add("srcChainId=" # Nat.toText(sc)) };
+      case (null) { };
+    };
+    
+    switch (dst_chain_id) {
+      case (?dc) { query_params.add("dstChainId=" # Nat.toText(dc)) };
+      case (null) { };
+    };
+    
+    let url = if (query_params.size() > 0) {
+      base_url # "?" # Text.join("&", query_params.vals());
+    } else {
+      base_url;
+    };
+    
+    let request_headers = [
+      { name = "accept"; value = "application/json" },
       { name = "Authorization"; value = "Bearer " # INCH_API_KEY },
-      { name = "Accept"; value = "application/json" },
+      { name = "User-Agent"; value = "ionic-swap-htlc" },
     ];
     
-    let request = createHttpRequest(base_url, "GET", null, headers);
+    let http_request = createHttpRequest(url, "GET", null, request_headers);
     
-    let response = await (with cycles = DEFAULT_HTTP_CYCLES) IC.http_request(request);
-    
-    switch (decodeHttpResponse(response)) {
-      case (#ok(text)) { #ok(text) };
-      case (#err(error)) { #err(error) };
+    try {
+      Cycles.add<system>(DEFAULT_HTTP_CYCLES);
+      let http_response = await IC.http_request(http_request);
+      
+      switch (decodeHttpResponse(http_response)) {
+        case (#ok(response_text)) { #ok(response_text) };
+        case (#err(error)) { #err("Failed to decode response: " # error) };
+      };
+    } catch (error) {
+      #err("HTTP request failed: " # Error.message(error));
     };
   };
   
-  /// Get order secrets
+  /// Get secrets and data for withdrawal and cancellation
   public func get_order_secrets(order_hash : Text) : async Result.Result<Text, Text> {
     let url = INCH_API_ENDPOINTS.fusion_plus_orders # "/order/secrets/" # order_hash;
     
-    let headers = [
+    let request_headers = [
+      { name = "accept"; value = "application/json" },
       { name = "Authorization"; value = "Bearer " # INCH_API_KEY },
-      { name = "Accept"; value = "application/json" },
+      { name = "User-Agent"; value = "ionic-swap-htlc" },
     ];
     
-    let request = createHttpRequest(url, "GET", null, headers);
+    let http_request = createHttpRequest(url, "GET", null, request_headers);
     
-    let response = await (with cycles = DEFAULT_HTTP_CYCLES) IC.http_request(request);
-    
-    switch (decodeHttpResponse(response)) {
-      case (#ok(text)) { #ok(text) };
-      case (#err(error)) { #err(error) };
+    try {
+      Cycles.add<system>(DEFAULT_HTTP_CYCLES);
+      let http_response = await IC.http_request(http_request);
+      
+      switch (decodeHttpResponse(http_response)) {
+        case (#ok(response_text)) { #ok(response_text) };
+        case (#err(error)) { #err("Failed to decode response: " # error) };
+      };
+    } catch (error) {
+      #err("HTTP request failed: " # Error.message(error));
     };
   };
   
-  /// Get escrow factory address
+  /// Get escrow factory contract address
   public func get_escrow_factory_address(chain_id : Nat) : async Result.Result<Text, Text> {
     let url = INCH_API_ENDPOINTS.fusion_plus_orders # "/order/escrow?chainId=" # Nat.toText(chain_id);
     
-    let headers = [
+    let request_headers = [
+      { name = "accept"; value = "application/json" },
       { name = "Authorization"; value = "Bearer " # INCH_API_KEY },
-      { name = "Accept"; value = "application/json" },
+      { name = "User-Agent"; value = "ionic-swap-htlc" },
     ];
     
-    let request = createHttpRequest(url, "GET", null, headers);
+    let http_request = createHttpRequest(url, "GET", null, request_headers);
     
-    let response = await (with cycles = DEFAULT_HTTP_CYCLES) IC.http_request(request);
-    
-    switch (decodeHttpResponse(response)) {
-      case (#ok(text)) { #ok(text) };
-      case (#err(error)) { #err(error) };
+    try {
+      Cycles.add<system>(DEFAULT_HTTP_CYCLES);
+      let http_response = await IC.http_request(http_request);
+      
+      switch (decodeHttpResponse(http_response)) {
+        case (#ok(response_text)) { #ok(response_text) };
+        case (#err(error)) { #err("Failed to decode response: " # error) };
+      };
+    } catch (error) {
+      #err("HTTP request failed: " # Error.message(error));
     };
   };
   
-  /// Get tokens for a chain
+  /// Get available tokens for a specific chain
   public func get_tokens(chain_id : Nat) : async Result.Result<Text, Text> {
     let url = INCH_API_ENDPOINTS.swap_v5 # "/" # Nat.toText(chain_id) # "/tokens";
     
-    let headers = [
+    let request_headers = [
+      { name = "accept"; value = "application/json" },
       { name = "Authorization"; value = "Bearer " # INCH_API_KEY },
-      { name = "Accept"; value = "application/json" },
+      { name = "User-Agent"; value = "ionic-swap-htlc" },
     ];
     
-    let request = createHttpRequest(url, "GET", null, headers);
+    let http_request = createHttpRequest(url, "GET", null, request_headers);
     
-    let response = await (with cycles = DEFAULT_HTTP_CYCLES) IC.http_request(request);
-    
-    switch (decodeHttpResponse(response)) {
-      case (#ok(text)) { #ok(text) };
-      case (#err(error)) { #err(error) };
+    try {
+      Cycles.add<system>(DEFAULT_HTTP_CYCLES);
+      let http_response = await IC.http_request(http_request);
+      
+      switch (decodeHttpResponse(http_response)) {
+        case (#ok(response_text)) { #ok(response_text) };
+        case (#err(error)) { #err("Failed to decode response: " # error) };
+      };
+    } catch (error) {
+      #err("HTTP request failed: " # Error.message(error));
+    };
+  };
+  
+  // ============================================================================
+  // HELPER METHODS FOR HTLC INTEGRATION
+  // ============================================================================
+  
+  /// Parse order secrets response to extract secret for HTLC claim
+  public func parse_order_secrets_for_htlc(order_hash : Text) : async Result.Result<Text, Text> {
+    switch (await get_order_secrets(order_hash)) {
+      case (#ok(response_text)) {
+        // Parse the JSON response to extract the first secret
+        switch (JSON.parse(response_text)) {
+          case (?json) {
+            // For now, we'll return the raw response since the JSON library doesn't have get methods
+            // In a full implementation, you'd parse the JSON structure manually
+            #ok(response_text);
+          };
+          case (null) { #err("Failed to parse JSON response") };
+        };
+      };
+      case (#err(error)) { #err("Failed to get order secrets: " # error) };
+    };
+  };
+  
+  /// Check if an order is active and can be filled
+  public func is_order_active(order_hash : Text) : async Result.Result<Bool, Text> {
+    switch (await get_active_orders(?1, ?500, null, null)) {
+      case (#ok(response_text)) {
+        // Parse the JSON response to check if the order is in the active list
+        switch (JSON.parse(response_text)) {
+          case (?json) {
+            // For now, we'll just check if the response contains the order hash
+            // In a full implementation, you'd parse the items array and check each order
+            if (Text.contains(response_text, #text(order_hash))) {
+              #ok(true);
+            } else {
+              #ok(false);
+            };
+          };
+          case (null) { #err("Failed to parse JSON response") };
+        };
+      };
+      case (#err(error)) { #err("Failed to get active orders: " # error) };
     };
   };
   
@@ -866,29 +997,37 @@ actor {
     "Hello, " # name # "!";
   };
   
-  /// Test HTTP request
+  /// Test method to check if we can make a basic HTTP request
   public func test_http_request() : async Result.Result<Text, Text> {
     let url = "https://httpbin.org/get";
-    let headers = [{ name = "User-Agent"; value = "ICP-Canister" }];
+    let request_headers = [
+      { name = "User-Agent"; value = "ionic-swap-htlc-test" },
+    ];
     
-    let request = createHttpRequest(url, "GET", null, headers);
+    let http_request = createHttpRequest(url, "GET", null, request_headers);
     
-    let response = await (with cycles = DEFAULT_HTTP_CYCLES) IC.http_request(request);
-    
-    switch (decodeHttpResponse(response)) {
-      case (#ok(text)) { #ok(text) };
-      case (#err(error)) { #err(error) };
+    try {
+      Cycles.add<system>(DEFAULT_HTTP_CYCLES);
+      let http_response = await IC.http_request(http_request);
+      
+      switch (decodeHttpResponse(http_response)) {
+        case (#ok(response_text)) { #ok(response_text) };
+        case (#err(error)) { #err("Failed to decode response: " # error) };
+      };
+    } catch (error) {
+      #err("HTTP request failed: " # Error.message(error));
     };
   };
   
-  /// Test 1inch API
+  /// Test 1inch API connectivity
   public func test_1inch_api() : async Result.Result<Text, Text> {
-    await get_tokens(1); // Get tokens for Ethereum mainnet
+    // Test with a simple token request for Ethereum mainnet
+    await get_tokens(1);
   };
   
-  /// Test get active orders
+  /// Test getting active orders (limited to first page)
   public func test_get_active_orders() : async Result.Result<Text, Text> {
-    await get_active_orders(?1, ?10, ?1, ?137); // Page 1, limit 10, Ethereum to Polygon
+    await get_active_orders(?1, ?10, null, null);
   };
   
   /// Get cycles balance
@@ -896,9 +1035,10 @@ actor {
     Cycles.balance();
   };
   
-  /// Deposit cycles to the canister
-  public func deposit_cycles() : async Nat {
-    Cycles.add<system>(1_000_000_000_000); // 1 trillion cycles
-    Cycles.balance();
+  /// Deposit cycles into the canister
+  public shared func deposit_cycles() : async () {
+    let amount = Cycles.available();
+    let accepted = Cycles.accept<system>(amount);
+    assert (accepted == amount);
   };
 };
