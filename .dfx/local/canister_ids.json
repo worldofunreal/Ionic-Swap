@@ -2,10 +2,16 @@
   "__Candid_UI": {
     "local": "uzt4z-lp777-77774-qaabq-cai"
   },
+  "evm_rpc": {
+    "local": "umunu-kh777-77774-qaaca-cai"
+  },
   "frontend": {
     "local": "uxrrr-q7777-77774-qaaaq-cai"
   },
   "fusion_htlc_canister": {
     "local": "u6s2n-gx777-77774-qaaba-cai"
+  },
+  "token": {
+    "local": "ulvla-h7777-77774-qaacq-cai"
   }
 }
