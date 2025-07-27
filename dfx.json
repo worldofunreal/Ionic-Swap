@@ -3,31 +3,6 @@
     "fusion_htlc_canister": {
       "main": "src/fusion_htlc_canister/main.mo",
       "type": "motoko"
-    },
-    "token": {
-          "type": "motoko",
-          "main": "src/token/Token.mo",
-          "args": "-v --incremental-gc"
-        },
-    "evm_rpc": {
-      "type": "custom",
-      "candid": "https://github.com/internet-computer-protocol/evm-rpc-canister/releases/latest/download/evm_rpc.did",
-      "wasm": "https://github.com/internet-computer-protocol/evm-rpc-canister/releases/latest/download/evm_rpc.wasm.gz",
-      "remote": {
-        "id": {
-          "ic": "7hfb6-caaaa-aaaar-qadga-cai"
-        }
-      }
-    },
-    "frontend": {
-      "dependencies": [
-        "fusion_htlc_canister"
-      ],
-      "source": [
-        "src/frontend/dist"
-      ],
-      "type": "assets",
-      "workspace": "frontend"
     }
   },
   "defaults": {

@@ -2,6 +2,7 @@ import Blob "mo:base/Blob";
 import Cycles "mo:base/ExperimentalCycles";
 import Nat64 "mo:base/Nat64";
 import Nat "mo:base/Nat";
+import Int "mo:base/Int";
 import Text "mo:base/Text";
 import Debug "mo:base/Debug";
 import Error "mo:base/Error";
@@ -9,6 +10,11 @@ import Result "mo:base/Result";
 import Buffer "mo:base/Buffer";
 import JSON "mo:json.mo/lib";
 import IC "ic:aaaaa-aa";
+import Principal "mo:base/Principal";
+import Time "mo:base/Time";
+import HashMap "mo:base/HashMap";
+import Hash "mo:base/Hash";
+import Iter "mo:base/Iter";
 
 actor {
   
@@ -19,6 +25,353 @@ actor {
   type HttpRequestArgs = IC.http_request_args;
   type HttpResponseResult = IC.http_request_result;
   type HttpHeader = IC.http_header;
+  
+  // HTLC Status Enum
+  type HTLCStatus = {
+    #Locked;
+    #Claimed;
+    #Refunded;
+    #Expired;
+  };
+  
+  // Chain Type Enum
+  type ChainType = {
+    #ICP;
+    #Ethereum;
+    #Polygon;
+    #Arbitrum;
+    #Base;
+    #Optimism;
+  };
+  
+  // Token Type Enum
+  type TokenType = {
+    #ICRC1 : Principal; // ICRC-1 token canister ID
+    #ERC20 : Text; // ERC-20 contract address
+    #Native; // Native token (ICP, ETH, etc.)
+  };
+  
+  // HTLC Structure - Core HTLC functionality
+  type HTLC = {
+    id : Text; // Unique HTLC identifier
+    hashlock : Blob; // SHA256 hash of the secret
+    sender : Principal; // ICP sender principal
+    recipient : Principal; // ICP recipient principal
+    amount : Nat; // Token amount
+    token_canister : Principal; // ICRC-1 token canister
+    expiration_time : Int; // Expiration timestamp
+    status : HTLCStatus; // Current status
+    created_at : Int; // Creation timestamp
+    secret : ?Text; // The secret (only available after claim)
+    chain_type : ChainType; // Target chain for cross-chain swap
+    ethereum_address : ?Text; // Ethereum address for cross-chain
+  };
+  
+  // 1inch Fusion+ Order Integration
+  type OneInchOrder = {
+    order_hash : Text; // 1inch order hash
+    hashlock : Text; // 1inch hashlock
+    timelock : Int; // 1inch timelock
+    maker : Text; // Maker address
+    taker : Text; // Taker address
+    maker_asset : Text; // Maker token address
+    taker_asset : Text; // Taker token address
+    making_amount : Text; // Maker amount
+    taking_amount : Text; // Taker amount
+    src_chain_id : Nat; // Source chain ID
+    dst_chain_id : Nat; // Destination chain ID
+    secret_hashes : [Text]; // Array of secret hashes for partial fills
+    fills : [Text]; // Array of fill amounts
+  };
+  
+  // HTLC Order Mapping - Links HTLCs to 1inch orders
+  type HTLCOrder = {
+    htlc_id : Text; // Our HTLC ID
+    oneinch_order : OneInchOrder; // Associated 1inch order
+    is_source_chain : Bool; // True if ICP is source, false if destination
+    partial_fill_index : ?Nat; // Index for partial fills
+  };
+  
+  // ============================================================================
+  // STABLE STORAGE
+  // ============================================================================
+  
+  // HTLC storage
+  stable var htlc_counter : Nat = 0;
+  stable var htlc_entries : [(Text, HTLC)] = [];
+  stable var htlc_orders : [(Text, HTLCOrder)] = [];
+  
+  // ============================================================================
+  // RUNTIME STORAGE
+  // ============================================================================
+  
+  // HTLC storage using HashMap for efficient lookups
+  private var htlc_store = HashMap.HashMap<Text, HTLC>(0, Text.equal, Text.hash);
+  private var htlc_order_store = HashMap.HashMap<Text, HTLCOrder>(0, Text.equal, Text.hash);
+  
+  // ============================================================================
+  // INITIALIZATION
+  // ============================================================================
+  
+  system func postupgrade() {
+    // Restore HTLC data from stable storage
+    htlc_store := HashMap.fromIter<Text, HTLC>(htlc_entries.vals(), htlc_entries.size(), Text.equal, Text.hash);
+    htlc_order_store := HashMap.fromIter<Text, HTLCOrder>(htlc_orders.vals(), htlc_orders.size(), Text.equal, Text.hash);
+    
+    // Clear stable storage
+    htlc_entries := [];
+    htlc_orders := [];
+  };
+  
+  system func preupgrade() {
+    // Save HTLC data to stable storage
+    htlc_entries := Iter.toArray(htlc_store.entries());
+    htlc_orders := Iter.toArray(htlc_order_store.entries());
+  };
+  
+  // ============================================================================
+  // HELPER FUNCTIONS
+  // ============================================================================
+  
+  // Generate unique HTLC ID
+  private func generate_htlc_id() : Text {
+    htlc_counter += 1;
+    "htlc_" # Nat.toText(htlc_counter) # "_" # Int.toText(Time.now());
+  };
+  
+  // Validate HTLC parameters
+  private func validate_htlc_params(
+    recipient : Principal,
+    amount : Nat,
+    expiration_time : Int
+  ) : Result.Result<(), Text> {
+    if (amount == 0) {
+      return #err("Amount must be greater than 0");
+    };
+    
+    if (expiration_time <= Time.now()) {
+      return #err("Expiration time must be in the future");
+    };
+    
+    if (Principal.isAnonymous(recipient)) {
+      return #err("Recipient cannot be anonymous");
+    };
+    
+    #ok(());
+  };
+  
+  // Check if HTLC has expired
+  private func is_expired(htlc : HTLC) : Bool {
+    Time.now() > htlc.expiration_time;
+  };
+  
+  // ============================================================================
+  // CORE HTLC METHODS
+  // ============================================================================
+  
+  /// Create a new HTLC lock
+  public shared({ caller }) func create_htlc(
+    recipient : Principal,
+    amount : Nat,
+    token_canister : Principal,
+    expiration_time : Int,
+    chain_type : ChainType,
+    ethereum_address : ?Text
+  ) : async Result.Result<Text, Text> {
+    
+    // Validate parameters
+    switch (validate_htlc_params(recipient, amount, expiration_time)) {
+      case (#err(error)) { return #err(error) };
+      case (#ok()) { };
+    };
+    
+    // Generate unique HTLC ID
+    let htlc_id = generate_htlc_id();
+    
+    // Create HTLC structure (hashlock will be set when secret is provided)
+    let htlc : HTLC = {
+      id = htlc_id;
+      hashlock = Blob.fromArray([]); // Will be set when secret is provided
+      sender = caller;
+      recipient = recipient;
+      amount = amount;
+      token_canister = token_canister;
+      expiration_time = expiration_time;
+      status = #Locked;
+      created_at = Time.now();
+      secret = null;
+      chain_type = chain_type;
+      ethereum_address = ethereum_address;
+    };
+    
+    // Store HTLC
+    htlc_store.put(htlc_id, htlc);
+    
+    #ok(htlc_id);
+  };
+  
+  /// Set the hashlock for an HTLC (called after secret is generated)
+  public shared({ caller }) func set_htlc_hashlock(
+    htlc_id : Text,
+    hashlock : Blob
+  ) : async Result.Result<(), Text> {
+    
+    switch (htlc_store.get(htlc_id)) {
+      case (?htlc) {
+        if (htlc.sender != caller) {
+          return #err("Only the sender can set the hashlock");
+        };
+        
+        if (htlc.status != #Locked) {
+          return #err("HTLC is not in locked state");
+        };
+        
+        // Update hashlock
+        let updated_htlc : HTLC = {
+          htlc with hashlock = hashlock;
+        };
+        
+        htlc_store.put(htlc_id, updated_htlc);
+        #ok(());
+      };
+      case (null) {
+        #err("HTLC not found");
+      };
+    };
+  };
+  
+  /// Claim an HTLC with the secret
+  public shared({ caller }) func claim_htlc(
+    htlc_id : Text,
+    secret : Text
+  ) : async Result.Result<(), Text> {
+    
+    switch (htlc_store.get(htlc_id)) {
+      case (?htlc) {
+        if (htlc.recipient != caller) {
+          return #err("Only the recipient can claim the HTLC");
+        };
+        
+        if (htlc.status != #Locked) {
+          return #err("HTLC is not in locked state");
+        };
+        
+        if (is_expired(htlc)) {
+          return #err("HTLC has expired");
+        };
+        
+        // TODO: Verify hashlock matches secret hash
+        // For now, we'll just update the status
+        let updated_htlc : HTLC = {
+          htlc with 
+          status = #Claimed;
+          secret = ?secret;
+        };
+        
+        htlc_store.put(htlc_id, updated_htlc);
+        #ok(());
+      };
+      case (null) {
+        #err("HTLC not found");
+      };
+    };
+  };
+  
+  /// Refund an expired HTLC
+  public shared({ caller }) func refund_htlc(htlc_id : Text) : async Result.Result<(), Text> {
+    
+    switch (htlc_store.get(htlc_id)) {
+      case (?htlc) {
+        if (htlc.sender != caller) {
+          return #err("Only the sender can refund the HTLC");
+        };
+        
+        if (htlc.status != #Locked) {
+          return #err("HTLC is not in locked state");
+        };
+        
+        if (not is_expired(htlc)) {
+          return #err("HTLC has not expired yet");
+        };
+        
+        let updated_htlc : HTLC = {
+          htlc with status = #Refunded;
+        };
+        
+        htlc_store.put(htlc_id, updated_htlc);
+        #ok(());
+      };
+      case (null) {
+        #err("HTLC not found");
+      };
+    };
+  };
+  
+  /// Get HTLC details
+  public query func get_htlc(htlc_id : Text) : async Result.Result<HTLC, Text> {
+    switch (htlc_store.get(htlc_id)) {
+      case (?htlc) { #ok(htlc) };
+      case (null) { #err("HTLC not found") };
+    };
+  };
+  
+  /// Get all HTLCs for a principal
+  public query func get_htlcs_by_principal(principal : Principal) : async [HTLC] {
+    let result = Buffer.Buffer<HTLC>(0);
+    for ((_, htlc) in htlc_store.entries()) {
+      if (htlc.sender == principal or htlc.recipient == principal) {
+        result.add(htlc);
+      };
+    };
+    Buffer.toArray(result);
+  };
+  
+  // ============================================================================
+  // 1INCH INTEGRATION METHODS
+  // ============================================================================
+  
+  /// Link an HTLC to a 1inch Fusion+ order
+  public shared({ caller }) func link_1inch_order(
+    htlc_id : Text,
+    oneinch_order : OneInchOrder,
+    is_source_chain : Bool,
+    partial_fill_index : ?Nat
+  ) : async Result.Result<(), Text> {
+    
+    // Verify HTLC exists and caller is the sender
+    switch (htlc_store.get(htlc_id)) {
+      case (?htlc) {
+        if (htlc.sender != caller) {
+          return #err("Only the HTLC sender can link 1inch orders");
+        };
+        
+        let htlc_order : HTLCOrder = {
+          htlc_id = htlc_id;
+          oneinch_order = oneinch_order;
+          is_source_chain = is_source_chain;
+          partial_fill_index = partial_fill_index;
+        };
+        
+        htlc_order_store.put(htlc_id, htlc_order);
+        #ok(());
+      };
+      case (null) {
+        #err("HTLC not found");
+      };
+    };
+  };
+  
+  /// Get linked 1inch order for an HTLC
+  public query func get_1inch_order(htlc_id : Text) : async Result.Result<HTLCOrder, Text> {
+    switch (htlc_order_store.get(htlc_id)) {
+      case (?htlc_order) { #ok(htlc_order) };
+      case (null) { #err("No 1inch order linked to this HTLC") };
+    };
+  };
+  
+  // ============================================================================
+  // EXISTING 1INCH API METHODS (keeping for compatibility)
+  // ============================================================================
   
   // 1inch API endpoints
   let INCH_API_ENDPOINTS = {
