@@ -1,0 +1,26 @@
+{
+  "canisters": {
+    "fusion_htlc_canister": {
+      "main": "src/fusion_htlc_canister/main.mo",
+      "type": "motoko"
+    },
+    "frontend": {
+      "dependencies": [
+        "fusion_htlc_canister"
+      ],
+      "source": [
+        "src/frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "frontend"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
