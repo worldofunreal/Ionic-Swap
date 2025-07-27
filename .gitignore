@@ -131,6 +131,5 @@ dist
 
 
 # dfx
-.dfx
-.dfx/local/
-.mops
+.dfx/
+.mops/

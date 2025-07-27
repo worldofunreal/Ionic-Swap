@@ -8,7 +8,7 @@
           "type": "motoko",
           "main": "src/token/Token.mo",
           "args": "-v --incremental-gc"
-    },
+        },
     "evm_rpc": {
       "type": "custom",
       "candid": "https://github.com/internet-computer-protocol/evm-rpc-canister/releases/latest/download/evm_rpc.did",
@@ -33,6 +33,9 @@
   "defaults": {
     "build": {
       "args": "",
+        "replica": {
+          "subnet_type": "system"
+      },
       "packtool": "mops sources"
     }
   },

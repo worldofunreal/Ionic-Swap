@@ -198,7 +198,7 @@ shared ({ caller = _owner }) actor class Token  (args: ?{
           name = "ICRC-10";
           url = "https://github.com/dfinity/ICRC/ICRCs/icrc-10/"
         });
-        ignore icrc1().register_supported_standards({
+        ignore initclass.register_supported_standards({
           name = "ICRC-106";
           url = "https://github.com/dfinity/ICRC/blob/main/ICRCs/ICRC-106"
         });
