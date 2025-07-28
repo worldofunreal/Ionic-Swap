@@ -133,3 +133,4 @@ dist
 # dfx
 .dfx/
 .mops/
+artifacts/
