@@ -3,10 +3,37 @@ type http_header =
    name: text;
    value: text;
  };
+type RpcServices = 
+ variant {
+   ArbitrumOne: opt vec L2MainnetService;
+   BaseMainnet: opt vec L2MainnetService;
+   Custom: record {
+             chainId: nat64;
+             services: vec RpcApi;
+           };
+   EthMainnet: opt vec EthMainnetService;
+   EthSepolia: opt vec EthSepoliaService;
+   OptimismMainnet: opt vec L2MainnetService;
+ };
+type RpcApi = 
+ record {
+   headers: opt vec HttpHeader;
+   url: text;
+ };
+type Result_9 = 
+ variant {
+   err: text;
+   ok: EvmChainConfig;
+ };
+type Result_8 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
 type Result_7 = 
  variant {
    err: text;
-   ok: HTLCOrder;
+   ok: EvmHtlcInteraction;
  };
 type Result_6 = 
  variant {
@@ -32,6 +59,11 @@ type Result_2 =
  variant {
    err: text;
    ok: bool;
+ };
+type Result_10 = 
+ variant {
+   err: text;
+   ok: HTLCOrder;
  };
 type Result_1 = 
  variant {
@@ -82,11 +114,24 @@ type OneInchOrder =
    taking_amount: text;
    timelock: int;
  };
+type L2MainnetService = 
+ variant {
+   Alchemy;
+   Ankr;
+   BlockPi;
+   Llama;
+   PublicNode;
+ };
 type HttpResponseResult = 
  record {
    body: blob;
    headers: vec http_header;
    status: nat;
+ };
+type HttpHeader = 
+ record {
+   name: text;
+   value: text;
  };
 type HTLCStatus = 
  variant {
@@ -121,6 +166,48 @@ type HTLC =
    status: HTLCStatus;
    token_canister: principal;
  };
+type EvmHtlcInteraction = 
+ record {
+   action: variant {
+             Claim;
+             Create;
+             Refund;
+           };
+   evm_htlc_address: text;
+   htlc_id: text;
+   secret: opt text;
+   status: variant {
+             Confirmed;
+             Failed;
+             Pending;
+           };
+   transaction_hash: opt text;
+ };
+type EvmChainConfig = 
+ record {
+   chain_id: nat;
+   gas_limit: nat;
+   gas_price: nat;
+   htlc_contract_address: opt text;
+   rpc_services: RpcServices;
+ };
+type EthSepoliaService = 
+ variant {
+   Alchemy;
+   Ankr;
+   BlockPi;
+   PublicNode;
+   Sepolia;
+ };
+type EthMainnetService = 
+ variant {
+   Alchemy;
+   Ankr;
+   BlockPi;
+   Cloudflare;
+   Llama;
+   PublicNode;
+ };
 type ChainType = 
  variant {
    Arbitrum;
@@ -131,10 +218,16 @@ type ChainType =
    Polygon;
  };
 service : {
+  /// Claim HTLC on EVM chain
+  claim_evm_htlc: (chain_id: nat, evm_htlc_address: text, secret: text) ->
+   (Result_1);
   /// Claim an HTLC with the secret
   claim_htlc: (htlc_id: text, secret: text) -> (Result);
   /// Complete a partial fill
   complete_partial_fill: (fill_id: text, secret: text) -> (Result);
+  /// Create HTLC on EVM chain
+  create_evm_htlc: (chain_id: nat, evm_htlc_address: text, hashlock: 
+   text, recipient: text, amount: nat, expiration: int) -> (Result_1);
   /// Create a new HTLC lock
   create_htlc: (recipient: principal, amount: nat, token_canister: principal,
    expiration_time: int, chain_type: ChainType, ethereum_address:
@@ -145,16 +238,29 @@ service : {
   /// Deposit cycles into the canister
   deposit_cycles: () -> ();
   /// Get linked 1inch order for an HTLC
-  get_1inch_order: (htlc_id: text) -> (Result_7) query;
+  get_1inch_order: (htlc_id: text) -> (Result_10) query;
   /// Get active cross-chain swap orders
   get_active_orders: (page: opt nat, limit: opt nat, src_chain: opt nat,
    dst_chain: opt nat) -> (Result_1);
   /// Get all active resolvers
   get_active_resolvers: () -> (vec Resolver) query;
+  /// Get chain configuration
+  get_chain_config: (chain_id: nat) -> (Result_9) query;
   /// Get cycles balance
   get_cycles_balance: () -> (nat) query;
   /// Get escrow factory contract address
   get_escrow_factory_address: (chain_id: nat) -> (Result_1);
+  /// Get balance of an address on EVM chain
+  get_evm_balance: (chain_id: nat, address: text) -> (Result_1);
+  /// Get latest block number from EVM chain
+  get_evm_block_number: (chain_id: nat) -> (Result_8);
+  /// Get EVM interaction details
+  get_evm_interaction: (interaction_id: text) -> (Result_7) query;
+  /// Get all EVM interactions for an HTLC
+  get_evm_interactions_by_htlc: (htlc_id: text) ->
+   (vec EvmHtlcInteraction) query;
+  /// Get transaction receipt from EVM chain
+  get_evm_transaction_receipt: (chain_id: nat, tx_hash: text) -> (Result_1);
   /// Get HTLC details
   get_htlc: (htlc_id: text) -> (Result_6) query;
   /// Get all partial fills for an HTLC
@@ -183,6 +289,8 @@ service : {
    is_source_chain: bool, partial_fill_index: opt nat) -> (Result);
   /// Parse order secrets response to extract secret for HTLC claim
   parse_order_secrets_for_htlc: (order_hash: text) -> (Result_1);
+  /// Refund HTLC on EVM chain
+  refund_evm_htlc: (chain_id: nat, evm_htlc_address: text) -> (Result_1);
   /// Refund an expired HTLC
   refund_htlc: (htlc_id: text) -> (Result);
   /// Register a new resolver
@@ -192,6 +300,8 @@ service : {
   set_htlc_hashlock: (htlc_id: text, hashlock: blob) -> (Result);
   /// Test 1inch API connectivity
   test_1inch_api: () -> (Result_1);
+  /// Test EVM RPC connectivity
+  test_evm_rpc: (chain_id: nat) -> (Result_1);
   /// Test getting active orders (limited to first page)
   test_get_active_orders: () -> (Result_1);
   /// Test method to check if we can make a basic HTTP request
@@ -200,6 +310,8 @@ service : {
                 context: blob;
                 response: HttpResponseResult;
               }) -> (HttpResponseResult) query;
+  /// Update chain configuration
+  update_chain_config: (chain_id: nat, config: EvmChainConfig) -> (Result);
   /// Update resolver status
   update_resolver_status: (address: text, is_active: bool) -> (Result);
 }
