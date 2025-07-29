@@ -3,6 +3,19 @@
     "fusion_htlc_canister": {
       "main": "src/fusion_htlc_canister/main.mo",
       "type": "motoko"
+    },
+    "frontend": {
+      "dependencies": [
+        "fusion_htlc_canister"
+      ],
+      "frontend": {
+        "entrypoint": "src/frontend/index.html"
+      },
+      "source": [
+        "src/frontend/assets",
+        "dist/frontend/"
+      ],
+      "type": "assets"
     }
   },
   "defaults": {

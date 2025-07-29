@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "setup": "npm i && dfx canister create fusion_htlc_canister && dfx generate fusion_htlc_canister && dfx deploy",
+    "dev": "vite --port 3000",
     "start": "vite --port 3000",
     "prebuild": "dfx generate",
     "build": "tsc && vite build",
