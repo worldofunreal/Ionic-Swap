@@ -509,31 +509,44 @@ actor {
       secret : ?Text;
     }
   ) : Result.Result<Text, Text> {
-    // This is a simplified version - in a real implementation,
-    // you would encode the actual HTLC contract function calls
+    // Function signatures for HTLC contract
+    let CREATE_HTLC_SIGNATURE = "0x8f283970"; // createHTLCETH(address,bytes32,uint256,uint8,uint8,bool,string)
+    let CLAIM_HTLC_SIGNATURE = "0x2e17de78"; // claimHTLC(bytes32,string)
+    let REFUND_HTLC_SIGNATURE = "0x590e1ae3"; // refundHTLC(bytes32)
+    
     switch (action) {
       case (#Create) {
-        // createHTLC(hashlock, recipient, expiration)
-        let data = "0x" # 
-          "createHTLC" # 
-          htlc_data.hashlock # 
+        // createHTLCETH(recipient, hashlock, timelock, sourceChain, targetChain, isCrossChain, orderHash)
+        // For now, we'll create a simplified data structure
+        // In a real implementation, you would properly encode the parameters
+        let data = CREATE_HTLC_SIGNATURE # 
+          "000000000000000000000000" # // recipient (padded to 32 bytes)
           htlc_data.recipient # 
-          htlc_data.expiration;
+          htlc_data.hashlock # 
+          htlc_data.expiration # 
+          "0000000000000000000000000000000000000000000000000000000000000001" # // sourceChain (ICP)
+          "0000000000000000000000000000000000000000000000000000000000000002" # // targetChain (Etherlink)
+          "0000000000000000000000000000000000000000000000000000000000000001" # // isCrossChain (true)
+          "0000000000000000000000000000000000000000000000000000000000000000"; // orderHash (empty)
         #ok(data);
       };
       case (#Claim) {
-        // claimHTLC(secret)
+        // claimHTLC(htlcId, secret)
         switch (htlc_data.secret) {
           case (?secret) {
-            let data = "0x" # "claimHTLC" # secret;
+            let data = CLAIM_HTLC_SIGNATURE # 
+              "0000000000000000000000000000000000000000000000000000000000000000" # // htlcId (placeholder)
+              secret; // secret
             #ok(data);
           };
           case (null) { #err("Secret required for claim") };
         };
       };
       case (#Refund) {
-        // refundHTLC()
-        #ok("0xrefundHTLC");
+        // refundHTLC(htlcId)
+        let data = REFUND_HTLC_SIGNATURE # 
+          "0000000000000000000000000000000000000000000000000000000000000000"; // htlcId (placeholder)
+        #ok(data);
       };
     };
   };
@@ -1221,8 +1234,21 @@ actor {
   public func get_evm_block_number(chain_id : Nat) : async Result.Result<Nat, Text> {
     switch (get_chain_config_internal(chain_id)) {
       case (#ok(config)) {
-        // Simplified - just return a dummy block number for now
-        #ok(12345678);
+        Cycles.add<system>(EVM_RPC_CYCLES);
+        
+        let result = await EvmRpc.eth_getBlockByNumber(config.rpc_services, null, #Latest);
+        
+        switch (result) {
+          case (#Consistent(#Ok block)) {
+            #ok(Int.abs(block.number));
+          };
+          case (#Consistent(#Err error)) {
+            #err("RPC error: " # debug_show(error));
+          };
+          case (#Inconsistent(_)) {
+            #err("Inconsistent RPC results");
+          };
+        };
       };
       case (#err(error)) { #err(error) };
     };

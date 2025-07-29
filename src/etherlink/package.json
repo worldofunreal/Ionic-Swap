@@ -1,0 +1,51 @@
+{
+  "name": "ionic-swap-etherlink",
+  "version": "1.0.0",
+  "description": "Etherlink integration for Ionic-Swap cross-chain HTLC system",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:coverage": "hardhat coverage",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "deploy:bsc": "hardhat run scripts/deploy.js --network bsc",
+    "deploy:etherlink": "hardhat run scripts/deploy.js --network etherlink",
+    "verify:sepolia": "hardhat verify --network sepolia",
+    "verify:bsc": "hardhat verify --network bsc",
+    "verify:etherlink": "hardhat verify --network etherlink",
+    "node": "hardhat node",
+    "clean": "hardhat clean",
+    "integration-test": "hardhat run scripts/integration-test.js",
+    "test-integration": "hardhat run scripts/test-integration.js",
+    "test-simple": "hardhat run scripts/simple-integration-test.js",
+    "test-communication": "hardhat run scripts/evm-icp-communication-test.js",
+    "test-icp": "node scripts/icp-client.js"
+  },
+  "keywords": [
+    "etherlink",
+    "htlc",
+    "cross-chain",
+    "1inch",
+    "fusion+",
+    "solidity"
+  ],
+  "author": "Ionic-Swap Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomiclabs/hardhat-etherscan": "^3.1.7",
+    "@openzeppelin/test-helpers": "^0.5.16",
+    "chai": "^4.3.10",
+    "chai-as-promised": "^8.0.1",
+    "dotenv": "^16.3.1",
+    "ethers": "^5.7.2",
+    "hardhat": "^2.19.0",
+    "hardhat-gas-reporter": "^1.0.9",
+    "solidity-coverage": "^0.8.5"
+  },
+  "dependencies": {
+    "@dfinity/agent": "^0.15.0",
+    "@dfinity/candid": "^0.15.0",
+    "@openzeppelin/contracts": "^4.9.3"
+  }
+}
