@@ -1,6 +1,7 @@
 import Blob "mo:base/Blob";
 import Cycles "mo:base/ExperimentalCycles";
 import Nat64 "mo:base/Nat64";
+import Nat8 "mo:base/Nat8";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import Text "mo:base/Text";
@@ -16,6 +17,7 @@ import HashMap "mo:base/HashMap";
 import Hash "mo:base/Hash";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
+import BaseX "mo:base-x-encoder";
 
 // EVM RPC Integration
 import EvmRpc "canister:evm_rpc";
@@ -197,6 +199,14 @@ actor {
     gas_price = 100_000_000; // 0.1 gwei
     htlc_contract_address = null;
   };
+
+  let SEPOLIA_TESTNET : EvmChainConfig = {
+    chain_id = 11155111; // Sepolia chain ID
+    rpc_services = #EthSepolia(null); // Use Sepolia RPC
+    gas_limit = 300_000;
+    gas_price = 1_500_000_000; // 1.5 gwei (typical for Sepolia)
+    htlc_contract_address = null;
+  };
   
   // EVM RPC cycles for different operations
   let EVM_RPC_CYCLES : Nat = 2_000_000_000; // 2B cycles for RPC calls
@@ -255,6 +265,7 @@ actor {
     // Initialize default chain configs if empty
     if (evm_chain_config_store.size() == 0) {
       evm_chain_config_store.put(1, ETHEREUM_MAINNET);
+      evm_chain_config_store.put(11155111, SEPOLIA_TESTNET);
       evm_chain_config_store.put(137, POLYGON_MAINNET);
       evm_chain_config_store.put(42161, ARBITRUM_ONE);
     };
@@ -468,9 +479,21 @@ actor {
       return #err("Invalid hex format");
     };
     
-    // For now, use a simple approach - just return 0
-    // In a full implementation, you would parse the hex string properly
-    #ok(0);
+    // Use BaseX library to decode hex
+    let format = { prefix = #single("0x") };
+    switch (BaseX.fromHex(hex, format)) {
+      case (#ok(bytes)) {
+        // Convert bytes to Nat (big-endian)
+        var result : Nat = 0;
+        for (byte in bytes.vals()) {
+          result := result * 256 + Nat8.toNat(byte);
+        };
+        #ok(result);
+      };
+      case (#err(error)) {
+        #err("Failed to decode hex: " # error);
+      };
+    };
   };
   
   // Get chain configuration for a specific chain ID
@@ -1221,8 +1244,21 @@ actor {
   public func get_evm_block_number(chain_id : Nat) : async Result.Result<Nat, Text> {
     switch (get_chain_config_internal(chain_id)) {
       case (#ok(config)) {
-        // Simplified - just return a dummy block number for now
-        #ok(12345678);
+        Cycles.add<system>(EVM_RPC_CYCLES);
+        
+        let result = await EvmRpc.eth_getBlockByNumber(config.rpc_services, null, #Latest);
+        
+        switch (result) {
+          case (#Consistent(#Ok block)) {
+            #ok(block.number);
+          };
+          case (#Consistent(#Err error)) {
+            #err("RPC error: " # debug_show(error));
+          };
+          case (#Inconsistent(_)) {
+            #err("Inconsistent RPC results");
+          };
+        };
       };
       case (#err(error)) { #err(error) };
     };
