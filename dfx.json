@@ -4,10 +4,19 @@
       "main": "src/fusion_htlc_canister/main.mo",
       "type": "motoko"
     },
+    "cross_chain_orderbook": {
+      "main": "src/cross_chain_orderbook/main.mo",
+      "type": "motoko"
+    },
     "evm_rpc": {
       "type": "pull",
       "id": "7hfb6-caaaa-aaaar-qadga-cai"
-    }
+    },
+    "token": {
+          "type": "motoko",
+          "main": "src/token/Token.mo",
+          "args": "-v --incremental-gc"  
+     }
   },
   "defaults": {
     "build": {
