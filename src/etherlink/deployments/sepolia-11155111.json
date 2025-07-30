@@ -1,0 +1,21 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "contractAddress": "0x28c91484b55b6991d8f5e4fe2ff313024532537e",
+  "deployer": "0xf0d056015Bdd86C0EFD07000F75Ea10873A1d0A7",
+  "icpNetworkSigner": "0x6a3Ff928a09D21D82B27e9B002BBAea7fc123A00",
+  "rescueDelaySrc": "86400",
+  "rescueDelayDst": "86400",
+  "deploymentTime": "2025-07-30T21:24:30.125Z",
+  "transactionHash": "0x7b4752abc5cb9421d6c0f991d81f4c9d7af84f49c0fb9a3b07a8a0940131ef17",
+  "blockNumber": null,
+  "gasUsed": "2640283",
+  "initialState": {
+    "icpNetworkSigner": "0x6a3Ff928a09D21D82B27e9B002BBAea7fc123A00",
+    "escrowSrcImplementation": "0x0A29BFd8f1FCc07936c627855132D42a5a799f30",
+    "escrowDstImplementation": "0xd95786B7c4987301023B5E289aA994a70C853D7E",
+    "claimFee": "0.001",
+    "refundFee": "0.0005",
+    "totalFeesCollected": "0.0"
+  }
+}

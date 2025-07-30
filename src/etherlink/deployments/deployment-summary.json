@@ -1,0 +1,9 @@
+{
+  "sepolia-11155111": {
+    "contractAddress": "0x28c91484b55b6991d8f5e4fe2ff313024532537e",
+    "deployer": "0xf0d056015Bdd86C0EFD07000F75Ea10873A1d0A7",
+    "deploymentTime": "2025-07-30T21:24:30.125Z",
+    "transactionHash": "0x7b4752abc5cb9421d6c0f991d81f4c9d7af84f49c0fb9a3b07a8a0940131ef17",
+    "icpNetworkSigner": "0x6a3Ff928a09D21D82B27e9B002BBAea7fc123A00"
+  }
+}

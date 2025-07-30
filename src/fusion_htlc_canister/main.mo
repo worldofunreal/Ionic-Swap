@@ -182,6 +182,14 @@ actor {
     htlc_contract_address = null;
   };
   
+  let SEPOLIA_TESTNET : EvmChainConfig = {
+    chain_id = 11155111;
+    rpc_services = #EthMainnet(null); // Use EthMainnet for now, will be updated when Sepolia is supported
+    gas_limit = 300_000;
+    gas_price = 20_000_000_000; // 20 gwei
+    htlc_contract_address = ?"0x28c91484b55b6991d8f5e4fe2ff313024532537e"; // Your deployed factory address
+  };
+  
   let POLYGON_MAINNET : EvmChainConfig = {
     chain_id = 137;
     rpc_services = #EthMainnet(null); // Use EthMainnet for now, will be updated when Polygon is supported
@@ -255,6 +263,7 @@ actor {
     // Initialize default chain configs if empty
     if (evm_chain_config_store.size() == 0) {
       evm_chain_config_store.put(1, ETHEREUM_MAINNET);
+      evm_chain_config_store.put(11155111, SEPOLIA_TESTNET);
       evm_chain_config_store.put(137, POLYGON_MAINNET);
       evm_chain_config_store.put(42161, ARBITRUM_ONE);
     };
@@ -1522,6 +1531,57 @@ actor {
         #ok("EVM RPC working - Latest block: " # Nat.toText(block_number));
       };
       case (#err(error)) { #err("EVM RPC test failed: " # error) };
+    };
+  };
+  
+  /// Test Sepolia contract interaction
+  public func test_sepolia_contract() : async Result.Result<Text, Text> {
+    let chain_id = 11155111; // Sepolia
+    let contract_address = "0x28c91484b55b6991d8f5e4fe2ff313024532537e"; // Your factory address
+    
+    switch (get_chain_config_internal(chain_id)) {
+      case (#ok(config)) {
+        Cycles.add<system>(EVM_RPC_CYCLES);
+        
+        // Call the icpNetworkSigner() function on your contract
+        let result = await EvmRpc.eth_call(
+          config.rpc_services,
+          null,
+          {
+            block = null;
+            transaction = {
+              to = ?contract_address;
+              input = ?"0x8d1fdf2f"; // icpNetworkSigner() function selector
+              accessList = null;
+              blobVersionedHashes = null;
+              blobs = null;
+              chainId = null;
+              from = null;
+              gas = null;
+              gasPrice = null;
+              maxFeePerBlobGas = null;
+              maxFeePerGas = null;
+              maxPriorityFeePerGas = null;
+              nonce = null;
+              type_ = null;
+              value = null;
+            };
+          }
+        );
+        
+        switch (result) {
+          case (#Consistent(#Ok response)) {
+            #ok("Sepolia contract call successful: " # response);
+          };
+          case (#Consistent(#Err error)) {
+            #err("RPC error: " # debug_show(error));
+          };
+          case (#Inconsistent(_)) {
+            #err("Inconsistent RPC results");
+          };
+        };
+      };
+      case (#err(error)) { #err(error) };
     };
   };
   

@@ -8,6 +8,10 @@
       "main": "src/cross_chain_orderbook/main.mo",
       "type": "motoko"
     },
+    "sepolia_test": {
+      "main": "src/sepolia_test/main.mo",
+      "type": "motoko"
+    },
     "evm_rpc": {
       "type": "pull",
       "id": "7hfb6-caaaa-aaaar-qadga-cai"
