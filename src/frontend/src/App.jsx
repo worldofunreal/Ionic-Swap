@@ -1,16 +1,41 @@
 import { useState } from 'react';
-import { fusion_htlc_canister } from 'declarations/fusion_htlc_canister';
+import { useActor } from './useActor';
 
 function App() {
   const [greeting, setGreeting] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { actor, loading: actorLoading } = useActor();
 
-  function handleSubmit(event) {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    const name = event.target.elements.name.value;
-    fusion_htlc_canister.greet(name).then((greeting) => {
-      setGreeting(greeting);
-    });
-    return false;
+    
+    if (!actor) {
+      setGreeting("Actor not initialized. Please check your connection.");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const name = event.target.elements.name.value;
+      const result = await actor.greet(name);
+      setGreeting(result);
+    } catch (error) {
+      console.error("Error:", error);
+      setGreeting("Failed to fetch greeting. Please ensure the canister is deployed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (actorLoading) {
+    return (
+      <main>
+        <img src="/logo2.svg" alt="DFINITY logo" />
+        <br />
+        <br />
+        <div>Initializing...</div>
+      </main>
+    );
   }
 
   return (
@@ -18,10 +43,12 @@ function App() {
       <img src="/logo2.svg" alt="DFINITY logo" />
       <br />
       <br />
-      <form action="#" onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit}>
         <label htmlFor="name">Enter your name: &nbsp;</label>
-        <input id="name" alt="Name" type="text" />
-        <button type="submit">Click Me!</button>
+        <input id="name" alt="Name" type="text" disabled={loading} />
+        <button type="submit" disabled={loading}>
+          {loading ? "Loading..." : "Click Me!"}
+        </button>
       </form>
       <section id="greeting">{greeting}</section>
     </main>
