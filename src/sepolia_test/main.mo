@@ -15,17 +15,17 @@ actor {
   
   // Sepolia configuration
   let SEPOLIA_CHAIN_ID : Nat = 11155111;
-  let FACTORY_ADDRESS : Text = "0x28c91484b55b6991d8f5e4fe2ff313024532537e";
+  let FACTORY_ADDRESS : Text = "0xBe953413e9FAB2642625D4043e4dcc0D16d14e77";
   let ICP_SIGNER_ADDRESS : Text = "0x6a3Ff928a09D21D82B27e9B002BBAea7fc123A00";
   
   // EVM RPC cycles
   let EVM_RPC_CYCLES : Nat = 2_000_000_000; // 2B cycles for RPC calls
   
   // Function selectors for your contract
-  let ICP_NETWORK_SIGNER_SELECTOR : Text = "0x8d1fdf2f"; // icpNetworkSigner()
-  let CLAIM_FEE_SELECTOR : Text = "0x8456cb59"; // claimFee()
-  let REFUND_FEE_SELECTOR : Text = "0x3d18b912"; // refundFee()
-  let TOTAL_FEES_SELECTOR : Text = "0x18160ddd"; // totalFeesCollected()
+  let ICP_NETWORK_SIGNER_SELECTOR : Text = "0x2a92b710"; // icpNetworkSigner()
+  let CLAIM_FEE_SELECTOR : Text = "0x99d32fc4"; // claimFee()
+  let REFUND_FEE_SELECTOR : Text = "0x90fe6ddb"; // refundFee()
+  let TOTAL_FEES_SELECTOR : Text = "0x60c6d8ae"; // totalFeesCollected()
   
   // ============================================================================
   // EVM RPC METHODS

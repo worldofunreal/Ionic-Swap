@@ -1,0 +1,17 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "contractAddress": "0xb3684bC4c3AcEDf35bC83E02A954B546103313e1",
+  "deployer": "0xf0d056015Bdd86C0EFD07000F75Ea10873A1d0A7",
+  "deploymentTime": "2025-07-30T23:45:05.453Z",
+  "transactionHash": "0x23ee5a770a88c026528f646f3e98f515475c18d899fa5b0170f87cb188afd288",
+  "blockNumber": null,
+  "gasUsed": "645058",
+  "tokenInfo": {
+    "name": "Spiral",
+    "symbol": "SPIRAL",
+    "decimals": 8,
+    "totalSupply": "1000000.0",
+    "deployerBalance": "1000000.0"
+  }
+}
