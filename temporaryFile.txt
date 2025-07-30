@@ -1,0 +1,692 @@
+Atomic Swap is a two-party swap mechanism, optimized for EVM-compatible chains with well-aligned incentives to ensure fair and fast execution for all participants.
+
+This protocol implies some off-chain mechanism to verify the created escrow and distribute user defined secret.
+
+Design
+Key protocol entities
+EscrowSrc clones hold the user's tokens and EscrowDst clones hold the resolver's tokens. Both allow tokens to be withdrawn to the recipient.
+EscrowFactory deploys EscrowSrc and EscrowDst clones for each swap.
+General concept
+Set up two escrows
+Resolvers play a major role in the execution of transactions. The user off-chain signs an order, which the Resolver then executes on-chain via the Limit Order Protocol. As a result, an EscrowSrc clone is created on the source chain, where the user's tokens are stored. Then, Resolver deploys the EscrowDst clone to the destination chain and deposits tokens that will go to the user at the end of the swap. Also, Resolver deposits in escrow clones safety deposit in native tokens on both chains.
+
+Important aspects of deploying clone contracts:
+
+The swap parameters used to deploy both clones must be relevant and match where applicable, otherwise the secret will not be given to the Resolver. This applies, for example, to the hash of an order or of a user's secret.
+Unlike a regular token swap, the taking token in the order will not be the token the user wants to receive, but a token that always returns true instead of a transfer. This is due to the need to send real taking tokens to a user on a different chain.
+Withdraw tokens
+Once the Resolver has received the secret, it becomes possible to use it to withdraw tokens to the user on the destination chain and to the Resolver itself on the source chain. If the Resolver fails to withdraw tokens to a user within a certain period of time, this option is open to all other Resolvers. The motivation for them to do so is the safety deposit, which is sent to the token withdrawer.
+
+Cancel swap
+If none of the Resolvers wanted to withdraw tokens to the user on the destination chain, then after a certain period the Resolver can cancel the escrow and reclaim their tokens. The same possibility arises for a Resolver after some time on the source chain, but in this case the tokens will be sent back to the user. If the Resolver has not cancelled the escrow on the source chain within a certain period of time, this option is available to other Resolvers. The motivation for them is the same as for withdrawals: the safety deposit is sent to the one who cancels the escrow.
+
+Timelocks
+The time periods in which certain escrow operations are available are defined by Timelocks. They contain the duration of the periods in seconds relative to the deployment timestamp. To get information about a particular period, including its start, the TimelocksLib library is used. The following image shows the periods and their mutual arrangement:
+
+Timelocks Key stages of Atomic Swap
+
+Rescue funds
+After a period set when EscrowSrc and EscrowDst contracts are deployed, Resolver has an option to withdraw assets that are accidentally stuck on a contract. The rescueFunds function is implemented for this purpose.
+
+Partial fills
+Order can be split into a number of equal parts and can be partially filled. For N parts there will be generated N + 1 secrets to be used later in escrows. Each secret is indexed and prorated to the cumulative values of all fills done. A Merkle tree is built from all secrets where the leaf is keccak256(index, hashedSecret). Each Resolver has a copy of the created Merkle tree and uses it to fill part of the order. Index of the hashed secret used to create escrows corresponds to the fill percentage. The secret with index N should be used for final complete fill.
+
+For example, if the order is divided into four parts (25% each), the index of the required hashed secret is:
+
+0 for (0%, 25%] fill
+1 for (25%, 50%]
+2 for (50%, 75%]
+3 for (75%, 100%), N-1
+4 for 100% completion, N
+Hashlock cannot be reused, so if order part completion was unsuccessful and escrows were cancelled, other secrets should be used. Thus, the next attempt must include at least the unfilled amount from the failed attempt plus some extra tokens to result in the next index of hashed secret.
+
+Contracts deployed once for the chain
+For each chain participating in the Atomic Swap mechanism, one copy of the EscrowSrc, EscrowDst and EscrowFactory contracts is deployed. They each contain a set of functions that need to be called to execute the swap.
+
+One-time contracts for each swap
+The EscrowSrc or EscrowDst contract itself does not hold tokens for the swap. Instead, for each swap, a proxy contract is deployed on each of the chains involved in the swap. Address of the contract is determined by the swap parameters.
+
+To deploy a proxy contract on the source chain the order signed by the user must be filled. On the destination chain call the createEscrowDst function.
+
+Functions for Resolver to use
+Deploy Escrow clones
+EscrowFactory.addressOfEscrowSrc to get the future EscrowSrc clone contract address on the source chain. This is to send the safety deposit in native tokens before the order is filled.
+Limit Order Protocol OrderMixin.sol:
+fillOrderArgs or fillContractOrderArgs to fill the Fusion order and deploy the EscrowSrc clone on the source chain.
+EscrowFactory.createDstEscrow on the destination chain to deploy the EscrowDst clone.
+Withdraw tokens
+Escrow.withdraw to withdraw tokens.
+Escrow.withdrawTo to withdraw tokens to the specified address on the source chain.
+EscrowDst.publicWithdraw to withdraw tokens during the public withdrawal period.
+Cancel escrows
+Escrow.cancel to cancel escrow.
+EscrowSrc.publicCancel to cancel escrow during the public cancellation period.
+Security considerations
+The security of protocol transactions is affected by the off-chain distribution of the user's secret. It is recommended to pay proper attention to the implementation of this process. Resolvers are recommended to watch for the event emitted in EscrowDst.publicWithdraw function. If the secret hasn't been received, it can be retrieved from the mentioned event. This will allow the Resolver to withdraw tokens on the source chain before escrow is cancelled.
+
+/BaseEscrow.sol:
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.23;
+
+import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import { AddressLib, Address } from "solidity-utils/contracts/libraries/AddressLib.sol";
+import { SafeERC20 } from "solidity-utils/contracts/libraries/SafeERC20.sol";
+
+import { ImmutablesLib } from "./libraries/ImmutablesLib.sol";
+import { Timelocks, TimelocksLib } from "./libraries/TimelocksLib.sol";
+
+import { IBaseEscrow } from "./interfaces/IBaseEscrow.sol";
+
+/**
+ * @title Base abstract Escrow contract for cross-chain atomic swap.
+ * @dev {IBaseEscrow-withdraw}, {IBaseEscrow-cancel} and _validateImmutables functions must be implemented in the derived contracts.
+ * @custom:security-contact security@1inch.io
+ */
+abstract contract BaseEscrow is IBaseEscrow {
+    using AddressLib for Address;
+    using SafeERC20 for IERC20;
+    using TimelocksLib for Timelocks;
+    using ImmutablesLib for Immutables;
+
+    // Token that is used to access public withdraw or cancel functions.
+    IERC20 private immutable _ACCESS_TOKEN;
+
+    /// @notice See {IBaseEscrow-RESCUE_DELAY}.
+    uint256 public immutable RESCUE_DELAY;
+    /// @notice See {IBaseEscrow-FACTORY}.
+    address public immutable FACTORY = msg.sender;
+
+    constructor(uint32 rescueDelay, IERC20 accessToken) {
+        RESCUE_DELAY = rescueDelay;
+        _ACCESS_TOKEN = accessToken;
+    }
+
+    modifier onlyTaker(Immutables calldata immutables) {
+        if (msg.sender != immutables.taker.get()) revert InvalidCaller();
+        _;
+    }
+
+    modifier onlyValidImmutables(Immutables calldata immutables) virtual {
+        _validateImmutables(immutables);
+        _;
+    }
+
+    modifier onlyValidSecret(bytes32 secret, Immutables calldata immutables) {
+        if (_keccakBytes32(secret) != immutables.hashlock) revert InvalidSecret();
+        _;
+    }
+
+    modifier onlyAfter(uint256 start) {
+        if (block.timestamp < start) revert InvalidTime();
+        _;
+    }
+
+    modifier onlyBefore(uint256 stop) {
+        if (block.timestamp >= stop) revert InvalidTime();
+        _;
+    }
+
+    modifier onlyAccessTokenHolder() {
+        if (_ACCESS_TOKEN.balanceOf(msg.sender) == 0) revert InvalidCaller();
+        _;
+    }
+
+    /**
+     * @notice See {IBaseEscrow-rescueFunds}.
+     */
+    function rescueFunds(address token, uint256 amount, Immutables calldata immutables)
+        external
+        onlyTaker(immutables)
+        onlyValidImmutables(immutables)
+        onlyAfter(immutables.timelocks.rescueStart(RESCUE_DELAY))
+    {
+        _uniTransfer(token, msg.sender, amount);
+        emit FundsRescued(token, amount);
+    }
+
+    /**
+     * @dev Transfers ERC20 or native tokens to the recipient.
+     */
+    function _uniTransfer(address token, address to, uint256 amount) internal {
+        if (token == address(0)) {
+            _ethTransfer(to, amount);
+        } else {
+            IERC20(token).safeTransfer(to, amount);
+        }
+    }
+
+    /**
+     * @dev Transfers native tokens to the recipient.
+     */
+    function _ethTransfer(address to, uint256 amount) internal {
+        (bool success,) = to.call{ value: amount }("");
+        if (!success) revert NativeTokenSendingFailure();
+    }
+
+    /**
+     * @dev Should verify that the computed escrow address matches the address of this contract.
+     */
+    function _validateImmutables(Immutables calldata immutables) internal view virtual;
+
+    /**
+     * @dev Computes the Keccak-256 hash of the secret.
+     * @param secret The secret that unlocks the escrow.
+     * @return ret The computed hash.
+     */
+    function _keccakBytes32(bytes32 secret) private pure returns (bytes32 ret) {
+        assembly ("memory-safe") {
+            mstore(0, secret)
+            ret := keccak256(0, 0x20)
+        }
+    }
+}
+
+
+
+
+BaseEscrowFactory.sol:
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.23;
+
+import { Clones } from "openzeppelin-contracts/contracts/proxy/Clones.sol";
+import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import { Create2 } from "openzeppelin-contracts/contracts/utils/Create2.sol";
+import { Address, AddressLib } from "solidity-utils/contracts/libraries/AddressLib.sol";
+import { SafeERC20 } from "solidity-utils/contracts/libraries/SafeERC20.sol";
+
+import { IOrderMixin } from "limit-order-protocol/contracts/interfaces/IOrderMixin.sol";
+import { MakerTraitsLib } from "limit-order-protocol/contracts/libraries/MakerTraitsLib.sol";
+import { ResolverValidationExtension } from "limit-order-settlement/contracts/extensions/ResolverValidationExtension.sol";
+
+import { ImmutablesLib } from "./libraries/ImmutablesLib.sol";
+import { Timelocks, TimelocksLib } from "./libraries/TimelocksLib.sol";
+
+import { IEscrowFactory } from "./interfaces/IEscrowFactory.sol";
+import { IBaseEscrow } from "./interfaces/IBaseEscrow.sol";
+import { SRC_IMMUTABLES_LENGTH } from "./EscrowFactoryContext.sol";
+import { MerkleStorageInvalidator } from "./MerkleStorageInvalidator.sol";
+
+/**
+ * @title Abstract contract for escrow factory
+ * @notice Contract to create escrow contracts for cross-chain atomic swap.
+ * @dev Immutable variables must be set in the constructor of the derived contracts.
+ * @custom:security-contact security@1inch.io
+ */
+abstract contract BaseEscrowFactory is IEscrowFactory, ResolverValidationExtension, MerkleStorageInvalidator {
+    using AddressLib for Address;
+    using Clones for address;
+    using ImmutablesLib for IBaseEscrow.Immutables;
+    using SafeERC20 for IERC20;
+    using TimelocksLib for Timelocks;
+
+    /// @notice See {IEscrowFactory-ESCROW_SRC_IMPLEMENTATION}.
+    address public immutable ESCROW_SRC_IMPLEMENTATION;
+    /// @notice See {IEscrowFactory-ESCROW_DST_IMPLEMENTATION}.
+    address public immutable ESCROW_DST_IMPLEMENTATION;
+    bytes32 internal immutable _PROXY_SRC_BYTECODE_HASH;
+    bytes32 internal immutable _PROXY_DST_BYTECODE_HASH;
+
+    /**
+     * @notice Creates a new escrow contract for maker on the source chain.
+     * @dev The caller must be whitelisted and pre-send the safety deposit in a native token
+     * to a pre-computed deterministic address of the created escrow.
+     * The external postInteraction function call will be made from the Limit Order Protocol
+     * after all funds have been transferred. See {IPostInteraction-postInteraction}.
+     * `extraData` consists of:
+     *   - ExtraDataArgs struct
+     *   - whitelist
+     *   - 0 / 4 bytes for the fee
+     *   - 1 byte for the bitmap
+     */
+    function _postInteraction(
+        IOrderMixin.Order calldata order,
+        bytes calldata extension,
+        bytes32 orderHash,
+        address taker,
+        uint256 makingAmount,
+        uint256 takingAmount,
+        uint256 remainingMakingAmount,
+        bytes calldata extraData
+    ) internal override(ResolverValidationExtension) {
+        uint256 superArgsLength = extraData.length - SRC_IMMUTABLES_LENGTH;
+        super._postInteraction(
+            order, extension, orderHash, taker, makingAmount, takingAmount, remainingMakingAmount, extraData[:superArgsLength]
+        );
+
+        ExtraDataArgs calldata extraDataArgs;
+        assembly ("memory-safe") {
+            extraDataArgs := add(extraData.offset, superArgsLength)
+        }
+
+        bytes32 hashlock;
+
+        if (MakerTraitsLib.allowMultipleFills(order.makerTraits)) {
+            uint256 partsAmount = uint256(extraDataArgs.hashlockInfo) >> 240;
+            if (partsAmount < 2) revert InvalidSecretsAmount();
+            bytes32 key = keccak256(abi.encodePacked(orderHash, uint240(uint256(extraDataArgs.hashlockInfo))));
+            ValidationData memory validated = lastValidated[key];
+            hashlock = validated.leaf;
+            if (!_isValidPartialFill(makingAmount, remainingMakingAmount, order.makingAmount, partsAmount, validated.index)) {
+                revert InvalidPartialFill();
+            }
+        } else {
+            hashlock = extraDataArgs.hashlockInfo;
+        }
+
+        IBaseEscrow.Immutables memory immutables = IBaseEscrow.Immutables({
+            orderHash: orderHash,
+            hashlock: hashlock,
+            maker: order.maker,
+            taker: Address.wrap(uint160(taker)),
+            token: order.makerAsset,
+            amount: makingAmount,
+            safetyDeposit: extraDataArgs.deposits >> 128,
+            timelocks: extraDataArgs.timelocks.setDeployedAt(block.timestamp)
+        });
+
+        DstImmutablesComplement memory immutablesComplement = DstImmutablesComplement({
+            maker: order.receiver.get() == address(0) ? order.maker : order.receiver,
+            amount: takingAmount,
+            token: extraDataArgs.dstToken,
+            safetyDeposit: extraDataArgs.deposits & type(uint128).max,
+            chainId: extraDataArgs.dstChainId
+        });
+
+        emit SrcEscrowCreated(immutables, immutablesComplement);
+
+        bytes32 salt = immutables.hashMem();
+        address escrow = _deployEscrow(salt, 0, ESCROW_SRC_IMPLEMENTATION);
+        if (escrow.balance < immutables.safetyDeposit || IERC20(order.makerAsset.get()).safeBalanceOf(escrow) < makingAmount) {
+            revert InsufficientEscrowBalance();
+        }
+    }
+
+    /**
+     * @notice See {IEscrowFactory-createDstEscrow}.
+     */
+    function createDstEscrow(IBaseEscrow.Immutables calldata dstImmutables, uint256 srcCancellationTimestamp) external payable {
+        address token = dstImmutables.token.get();
+        uint256 nativeAmount = dstImmutables.safetyDeposit;
+        if (token == address(0)) {
+            nativeAmount += dstImmutables.amount;
+        }
+        if (msg.value != nativeAmount) revert InsufficientEscrowBalance();
+
+        IBaseEscrow.Immutables memory immutables = dstImmutables;
+        immutables.timelocks = immutables.timelocks.setDeployedAt(block.timestamp);
+        // Check that the escrow cancellation will start not later than the cancellation time on the source chain.
+        if (immutables.timelocks.get(TimelocksLib.Stage.DstCancellation) > srcCancellationTimestamp) revert InvalidCreationTime();
+
+        bytes32 salt = immutables.hashMem();
+        address escrow = _deployEscrow(salt, msg.value, ESCROW_DST_IMPLEMENTATION);
+        if (token != address(0)) {
+            IERC20(token).safeTransferFrom(msg.sender, escrow, immutables.amount);
+        }
+
+        emit DstEscrowCreated(escrow, dstImmutables.hashlock, dstImmutables.taker);
+    }
+
+    /**
+     * @notice See {IEscrowFactory-addressOfEscrowSrc}.
+     */
+    function addressOfEscrowSrc(IBaseEscrow.Immutables calldata immutables) external view virtual returns (address) {
+        return Create2.computeAddress(immutables.hash(), _PROXY_SRC_BYTECODE_HASH);
+    }
+
+    /**
+     * @notice See {IEscrowFactory-addressOfEscrowDst}.
+     */
+    function addressOfEscrowDst(IBaseEscrow.Immutables calldata immutables) external view virtual returns (address) {
+        return Create2.computeAddress(immutables.hash(), _PROXY_DST_BYTECODE_HASH);
+    }
+
+    /**
+     * @notice Deploys a new escrow contract.
+     * @param salt The salt for the deterministic address computation.
+     * @param value The value to be sent to the escrow contract.
+     * @param implementation Address of the implementation.
+     * @return escrow The address of the deployed escrow contract.
+     */
+    function _deployEscrow(bytes32 salt, uint256 value, address implementation) internal virtual returns (address escrow) {
+        escrow = implementation.cloneDeterministic(salt, value);
+    }
+
+    function _isValidPartialFill(
+        uint256 makingAmount,
+        uint256 remainingMakingAmount,
+        uint256 orderMakingAmount,
+        uint256 partsAmount,
+        uint256 validatedIndex
+    ) internal pure returns (bool) {
+        uint256 calculatedIndex = (orderMakingAmount - remainingMakingAmount + makingAmount - 1) * partsAmount / orderMakingAmount;
+
+        if (remainingMakingAmount == makingAmount) {
+            // If the order is filled to completion, a secret with index i + 1 must be used
+            // where i is the index of the secret for the last part.
+            return (calculatedIndex + 2 == validatedIndex);
+        } else if (orderMakingAmount != remainingMakingAmount) {
+            // Calculate the previous fill index only if this is not the first fill.
+            uint256 prevCalculatedIndex = (orderMakingAmount - remainingMakingAmount - 1) * partsAmount / orderMakingAmount;
+            if (calculatedIndex == prevCalculatedIndex) return false;
+        }
+
+        return calculatedIndex + 1 == validatedIndex;
+    }
+}
+
+
+
+Escrow.sol:
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.23;
+
+import { Create2 } from "openzeppelin-contracts/contracts/utils/Create2.sol";
+
+import { ImmutablesLib } from "./libraries/ImmutablesLib.sol";
+import { ProxyHashLib } from "./libraries/ProxyHashLib.sol";
+
+import { IEscrow } from "./interfaces/IEscrow.sol";
+import { BaseEscrow } from "./BaseEscrow.sol";
+
+/**
+ * @title Abstract Escrow contract for cross-chain atomic swap.
+ * @dev {IBaseEscrow-withdraw} and {IBaseEscrow-cancel} functions must be implemented in the derived contracts.
+ * @custom:security-contact security@1inch.io
+ */
+abstract contract Escrow is BaseEscrow, IEscrow {
+    using ImmutablesLib for Immutables;
+
+    /// @notice See {IEscrow-PROXY_BYTECODE_HASH}.
+    bytes32 public immutable PROXY_BYTECODE_HASH = ProxyHashLib.computeProxyBytecodeHash(address(this));
+
+
+    /**
+     * @dev Verifies that the computed escrow address matches the address of this contract.
+     */
+    function _validateImmutables(Immutables calldata immutables) internal view virtual override {
+        bytes32 salt = immutables.hash();
+        if (Create2.computeAddress(salt, PROXY_BYTECODE_HASH, FACTORY) != address(this)) {
+            revert InvalidImmutables();
+        }
+    }
+}
+
+
+EscrowDst.sol:
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.23;
+
+import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "solidity-utils/contracts/libraries/SafeERC20.sol";
+import { AddressLib, Address } from "solidity-utils/contracts/libraries/AddressLib.sol";
+
+import { Timelocks, TimelocksLib } from "./libraries/TimelocksLib.sol";
+
+import { IEscrowDst } from "./interfaces/IEscrowDst.sol";
+import { BaseEscrow } from "./BaseEscrow.sol";
+import { Escrow } from "./Escrow.sol";
+
+/**
+ * @title Destination Escrow contract for cross-chain atomic swap.
+ * @notice Contract to initially lock funds and then unlock them with verification of the secret presented.
+ * @dev Funds are locked in at the time of contract deployment. For this taker calls the `EscrowFactory.createDstEscrow` function.
+ * To perform any action, the caller must provide the same Immutables values used to deploy the clone contract.
+ * @custom:security-contact security@1inch.io
+ */
+contract EscrowDst is Escrow, IEscrowDst {
+    using SafeERC20 for IERC20;
+    using AddressLib for Address;
+    using TimelocksLib for Timelocks;
+
+    constructor(uint32 rescueDelay, IERC20 accessToken) BaseEscrow(rescueDelay, accessToken) {}
+
+    /**
+     * @notice See {IBaseEscrow-withdraw}.
+     * @dev The function works on the time intervals highlighted with capital letters:
+     * ---- contract deployed --/-- finality --/-- PRIVATE WITHDRAWAL --/-- PUBLIC WITHDRAWAL --/-- private cancellation ----
+     */
+    function withdraw(bytes32 secret, Immutables calldata immutables)
+        external
+        onlyTaker(immutables)
+        onlyAfter(immutables.timelocks.get(TimelocksLib.Stage.DstWithdrawal))
+        onlyBefore(immutables.timelocks.get(TimelocksLib.Stage.DstCancellation))
+    {
+        _withdraw(secret, immutables);
+    }
+
+    /**
+     * @notice See {IBaseEscrow-publicWithdraw}.
+     * @dev The function works on the time intervals highlighted with capital letters:
+     * ---- contract deployed --/-- finality --/-- private withdrawal --/-- PUBLIC WITHDRAWAL --/-- private cancellation ----
+     */
+    function publicWithdraw(bytes32 secret, Immutables calldata immutables)
+        external
+        onlyAccessTokenHolder()
+        onlyAfter(immutables.timelocks.get(TimelocksLib.Stage.DstPublicWithdrawal))
+        onlyBefore(immutables.timelocks.get(TimelocksLib.Stage.DstCancellation))
+    {
+        _withdraw(secret, immutables);
+    }
+
+    /**
+     * @notice See {IBaseEscrow-cancel}.
+     * @dev The function works on the time interval highlighted with capital letters:
+     * ---- contract deployed --/-- finality --/-- private withdrawal --/-- public withdrawal --/-- PRIVATE CANCELLATION ----
+     */
+    function cancel(Immutables calldata immutables)
+        external
+        onlyTaker(immutables)
+        onlyValidImmutables(immutables)
+        onlyAfter(immutables.timelocks.get(TimelocksLib.Stage.DstCancellation))
+    {
+        _uniTransfer(immutables.token.get(), immutables.taker.get(), immutables.amount);
+        _ethTransfer(msg.sender, immutables.safetyDeposit);
+        emit EscrowCancelled();
+    }
+
+    /**
+     * @dev Transfers ERC20 (or native) tokens to the maker and native tokens to the caller.
+     * @param immutables The immutable values used to deploy the clone contract.
+     */
+    function _withdraw(bytes32 secret, Immutables calldata immutables)
+        internal
+        onlyValidImmutables(immutables)
+        onlyValidSecret(secret, immutables)
+    {
+        _uniTransfer(immutables.token.get(), immutables.maker.get(), immutables.amount);
+        _ethTransfer(msg.sender, immutables.safetyDeposit);
+        emit EscrowWithdrawal(secret);
+    }
+}
+
+
+
+EscrowFactory.sol:
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.23;
+
+import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+
+import { BaseExtension } from "limit-order-settlement/contracts/extensions/BaseExtension.sol";
+import { ResolverValidationExtension } from "limit-order-settlement/contracts/extensions/ResolverValidationExtension.sol";
+
+import { ProxyHashLib } from "./libraries/ProxyHashLib.sol";
+
+import { BaseEscrowFactory } from "./BaseEscrowFactory.sol";
+import { EscrowDst } from "./EscrowDst.sol";
+import { EscrowSrc } from "./EscrowSrc.sol";
+import { MerkleStorageInvalidator } from "./MerkleStorageInvalidator.sol";
+
+
+/**
+ * @title Escrow Factory contract
+ * @notice Contract to create escrow contracts for cross-chain atomic swap.
+ * @custom:security-contact security@1inch.io
+ */
+contract EscrowFactory is BaseEscrowFactory {
+    constructor(
+        address limitOrderProtocol,
+        IERC20 feeToken,
+        IERC20 accessToken,
+        address owner,
+        uint32 rescueDelaySrc,
+        uint32 rescueDelayDst
+    )
+    BaseExtension(limitOrderProtocol)
+    ResolverValidationExtension(feeToken, accessToken, owner)
+    MerkleStorageInvalidator(limitOrderProtocol) {
+        ESCROW_SRC_IMPLEMENTATION = address(new EscrowSrc(rescueDelaySrc, accessToken));
+        ESCROW_DST_IMPLEMENTATION = address(new EscrowDst(rescueDelayDst, accessToken));
+        _PROXY_SRC_BYTECODE_HASH = ProxyHashLib.computeProxyBytecodeHash(ESCROW_SRC_IMPLEMENTATION);
+        _PROXY_DST_BYTECODE_HASH = ProxyHashLib.computeProxyBytecodeHash(ESCROW_DST_IMPLEMENTATION);
+    }
+}
+
+
+
+EscrowFactoryContext.sol:
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.23;
+
+uint256 constant SRC_IMMUTABLES_LENGTH = 160;
+
+
+EscrowSrc.sol:
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.23;
+
+import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "solidity-utils/contracts/libraries/SafeERC20.sol";
+import { AddressLib, Address } from "solidity-utils/contracts/libraries/AddressLib.sol";
+
+import { Timelocks, TimelocksLib } from "./libraries/TimelocksLib.sol";
+import { ImmutablesLib } from "./libraries/ImmutablesLib.sol";
+
+import { IEscrowSrc } from "./interfaces/IEscrowSrc.sol";
+import { BaseEscrow } from "./BaseEscrow.sol";
+import { Escrow } from "./Escrow.sol";
+
+/**
+ * @title Source Escrow contract for cross-chain atomic swap.
+ * @notice Contract to initially lock funds and then unlock them with verification of the secret presented.
+ * @dev Funds are locked in at the time of contract deployment. For this Limit Order Protocol
+ * calls the `EscrowFactory.postInteraction` function.
+ * To perform any action, the caller must provide the same Immutables values used to deploy the clone contract.
+ * @custom:security-contact security@1inch.io
+ */
+contract EscrowSrc is Escrow, IEscrowSrc {
+    using AddressLib for Address;
+    using ImmutablesLib for Immutables;
+    using SafeERC20 for IERC20;
+    using TimelocksLib for Timelocks;
+
+    constructor(uint32 rescueDelay, IERC20 accessToken) BaseEscrow(rescueDelay, accessToken) {}
+
+    /**
+     * @notice See {IBaseEscrow-withdraw}.
+     * @dev The function works on the time interval highlighted with capital letters:
+     * ---- contract deployed --/-- finality --/-- PRIVATE WITHDRAWAL --/-- PUBLIC WITHDRAWAL --/--
+     * --/-- private cancellation --/-- public cancellation ----
+     */
+    function withdraw(bytes32 secret, Immutables calldata immutables)
+        external
+        onlyTaker(immutables)
+        onlyAfter(immutables.timelocks.get(TimelocksLib.Stage.SrcWithdrawal))
+        onlyBefore(immutables.timelocks.get(TimelocksLib.Stage.SrcCancellation))
+    {
+        _withdrawTo(secret, msg.sender, immutables);
+    }
+
+    /**
+     * @notice See {IEscrowSrc-withdrawTo}.
+     * @dev The function works on the time interval highlighted with capital letters:
+     * ---- contract deployed --/-- finality --/-- PRIVATE WITHDRAWAL --/-- PUBLIC WITHDRAWAL --/--
+     * --/-- private cancellation --/-- public cancellation ----
+     */
+    function withdrawTo(bytes32 secret, address target, Immutables calldata immutables)
+        external
+        onlyTaker(immutables)
+        onlyAfter(immutables.timelocks.get(TimelocksLib.Stage.SrcWithdrawal))
+        onlyBefore(immutables.timelocks.get(TimelocksLib.Stage.SrcCancellation))
+    {
+        _withdrawTo(secret, target, immutables);
+    }
+
+    /**
+     * @notice See {IEscrowSrc-publicWithdraw}.
+     * @dev The function works on the time interval highlighted with capital letters:
+     * ---- contract deployed --/-- finality --/-- private withdrawal --/-- PUBLIC WITHDRAWAL --/--
+     * --/-- private cancellation --/-- public cancellation ----
+     */
+    function publicWithdraw(bytes32 secret, Immutables calldata immutables)
+        external
+        onlyAccessTokenHolder()
+        onlyAfter(immutables.timelocks.get(TimelocksLib.Stage.SrcPublicWithdrawal))
+        onlyBefore(immutables.timelocks.get(TimelocksLib.Stage.SrcCancellation))
+    {
+        _withdrawTo(secret, immutables.taker.get(), immutables);
+    }
+
+    /**
+     * @notice See {IBaseEscrow-cancel}.
+     * @dev The function works on the time intervals highlighted with capital letters:
+     * ---- contract deployed --/-- finality --/-- private withdrawal --/-- public withdrawal --/--
+     * --/-- PRIVATE CANCELLATION --/-- PUBLIC CANCELLATION ----
+     */
+    function cancel(Immutables calldata immutables)
+        external
+        onlyTaker(immutables)
+        onlyAfter(immutables.timelocks.get(TimelocksLib.Stage.SrcCancellation))
+    {
+        _cancel(immutables);
+    }
+
+    /**
+     * @notice See {IEscrowSrc-publicCancel}.
+     * @dev The function works on the time intervals highlighted with capital letters:
+     * ---- contract deployed --/-- finality --/-- private withdrawal --/-- public withdrawal --/--
+     * --/-- private cancellation --/-- PUBLIC CANCELLATION ----
+     */
+    function publicCancel(Immutables calldata immutables)
+        external
+        onlyAccessTokenHolder()
+        onlyAfter(immutables.timelocks.get(TimelocksLib.Stage.SrcPublicCancellation))
+    {
+        _cancel(immutables);
+    }
+
+    /**
+     * @dev Transfers ERC20 tokens to the target and native tokens to the caller.
+     * @param secret The secret that unlocks the escrow.
+     * @param target The address to transfer ERC20 tokens to.
+     * @param immutables The immutable values used to deploy the clone contract.
+     */
+    function _withdrawTo(bytes32 secret, address target, Immutables calldata immutables)
+        internal
+        onlyValidImmutables(immutables)
+        onlyValidSecret(secret, immutables)
+    {
+        IERC20(immutables.token.get()).safeTransfer(target, immutables.amount);
+        _ethTransfer(msg.sender, immutables.safetyDeposit);
+        emit EscrowWithdrawal(secret);
+    }
+
+    /**
+     * @dev Transfers ERC20 tokens to the maker and native tokens to the caller.
+     * @param immutables The immutable values used to deploy the clone contract.
+     */
+    function _cancel(Immutables calldata immutables) internal onlyValidImmutables(immutables) {
+        IERC20(immutables.token.get()).safeTransfer(immutables.maker.get(), immutables.amount);
+        _ethTransfer(msg.sender, immutables.safetyDeposit);
+        emit EscrowCancelled();
+    }
+}
+
+
