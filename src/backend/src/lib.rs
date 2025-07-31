@@ -1,5 +1,5 @@
-use candid::{CandidType, Deserialize, Principal};
-use ic_cdk::api::caller;
+use candid::Principal;
+
 use ic_cdk_macros::*;
 use serde_json::{json, Value};
 use ic_http_certification::{
@@ -7,22 +7,22 @@ use ic_http_certification::{
     HttpCertificationTree, HttpCertificationTreeEntry, HttpCertificationPath,
     CERTIFICATE_EXPRESSION_HEADER_NAME,
 };
-use ic_evm_utils::{
-    evm_signer::{get_canister_public_key, pubkey_bytes_to_address},
-    eth_send_raw_transaction::{transfer_eth, contract_interaction, ContractDetails},
-    fees::estimate_transaction_fees,
+use ic_web3_rs::{
+    transports::ICHttp, Web3, ic::{get_eth_addr, KeyInfo},
+    ethabi::ethereum_types::U256,
+    types::{TransactionParameters, Bytes},
 };
-use evm_rpc_canister_types::{EvmRpcCanister, RpcServices};
-use ethers_core::{
-    abi::{Contract, Token},
-    types::{Address, U256, U64},
-};
+use std::str::FromStr;
+
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
 const SEPOLIA_CHAIN_ID: u64 = 11155111;
+const EIP1559_TX_ID: u8 = 2;
+
+
 const FACTORY_ADDRESS: &str = "0xBe953413e9FAB2642625D4043e4dcc0D16d14e77";
 const ICP_SIGNER_ADDRESS: &str = "0x6a3Ff928a09D21d82B27e9B002BBAea7fc123A00";
 const INFURA_URL: &str = "https://sepolia.infura.io/v3/70b7e4d32357459a9af10d6503eae303";
@@ -33,13 +33,17 @@ const CLAIM_FEE_SELECTOR: &str = "0x99d32fc4";
 const REFUND_FEE_SELECTOR: &str = "0x90fe6ddb";
 const TOTAL_FEES_SELECTOR: &str = "0x60c6d8ae";
 
+// ============================================================================
+// TRANSACTION TYPES
+// ============================================================================
+
+
+
+// ============================================================================
 // ECDSA Key configuration
-fn get_ecdsa_key_id() -> ic_cdk::api::management_canister::ecdsa::EcdsaKeyId {
-    ic_cdk::api::management_canister::ecdsa::EcdsaKeyId {
-        curve: ic_cdk::api::management_canister::ecdsa::EcdsaCurve::Secp256k1,
-        name: "dfx_test_key".to_string(),
-    }
-}
+// ============================================================================
+
+
 
 // ============================================================================
 // GLOBAL STATE
@@ -53,10 +57,13 @@ static mut HTTP_CERTIFICATION_TREE: Option<HttpCertificationTree> = None;
 
 fn get_http_certification_tree() -> &'static mut HttpCertificationTree {
     unsafe {
-        if HTTP_CERTIFICATION_TREE.is_none() {
-            HTTP_CERTIFICATION_TREE = Some(HttpCertificationTree::default());
+        match &mut HTTP_CERTIFICATION_TREE {
+            Some(tree) => tree,
+            None => {
+                HTTP_CERTIFICATION_TREE = Some(HttpCertificationTree::default());
+                HTTP_CERTIFICATION_TREE.as_mut().unwrap()
+            }
         }
-        HTTP_CERTIFICATION_TREE.as_mut().unwrap()
     }
 }
 
@@ -143,6 +150,16 @@ async fn make_json_rpc_call(method: &str, params: &str) -> Result<String, String
     String::from_utf8(response.body().to_vec())
         .map_err(|e| format!("Failed to decode response: {}", e))
 }
+
+// ============================================================================
+// TRANSACTION SIGNING FUNCTIONS
+// ============================================================================
+
+
+
+
+
+
 
 // ============================================================================
 // JSON-RPC METHODS
@@ -282,24 +299,24 @@ fn get_contract_info() -> String {
 }
 
 // ============================================================================
-// EVM INTEGRATION METHODS (USING ic-evm-utils)
+// EVM INTEGRATION METHODS (USING IC CDK APIs)
 // ============================================================================
 
 #[update]
 async fn get_public_key() -> Result<String, String> {
-    let caller_blob = caller().as_slice().to_vec();
-    
-    let public_key = get_canister_public_key(get_ecdsa_key_id(), None, vec![caller_blob]).await;
-    Ok(hex::encode(public_key))
+    // Get the Ethereum address which is derived from the public key
+    match get_eth_addr(None, None, "dfx_test_key".to_string()).await {
+        Ok(addr) => Ok(format!("0x{}", hex::encode(addr))),
+        Err(e) => Err(format!("Failed to get address: {}", e)),
+    }
 }
 
 #[update]
 async fn get_ethereum_address() -> Result<String, String> {
-    let caller_blob = caller().as_slice().to_vec();
-    
-    let public_key = get_canister_public_key(get_ecdsa_key_id(), None, vec![caller_blob]).await;
-    let address = pubkey_bytes_to_address(&public_key);
-    Ok(address)
+    match get_eth_addr(None, None, "dfx_test_key".to_string()).await {
+        Ok(addr) => Ok(format!("0x{}", hex::encode(addr))),
+        Err(e) => Err(format!("Failed to get address: {}", e)),
+    }
 }
 
 #[update]
@@ -309,11 +326,58 @@ async fn sign_transaction(
     data: String,
     nonce: String,
 ) -> Result<String, String> {
-    // This is a placeholder for now - we'll implement full transaction signing
-    // using ic-evm-utils in the next step
+    // Setup Web3 connection
+    let w3 = match ICHttp::new(INFURA_URL, None) {
+        Ok(v) => Web3::new(v),
+        Err(e) => return Err(e.to_string()),
+    };
+    
+    // ECDSA key info
+    let derivation_path = vec![ic_cdk::api::caller().as_slice().to_vec()];
+    let key_info = KeyInfo { 
+        derivation_path, 
+        key_name: "dfx_test_key".to_string(),
+        ecdsa_sign_cycles: None,
+    };
+    
+    // Get canister's Ethereum address
+    let from_addr = get_eth_addr(None, None, "dfx_test_key".to_string())
+        .await
+        .map_err(|e| format!("get canister eth addr failed: {}", e))?;
+    
+    // Parse inputs
+    let to_addr = ic_web3_rs::ethabi::Address::from_str(&to).map_err(|e| format!("Invalid to address: {}", e))?;
+    let value_u256 = U256::from_str_radix(&value.trim_start_matches("0x"), 16)
+        .map_err(|e| format!("Invalid value: {}", e))?;
+    let nonce_u256 = U256::from_str_radix(&nonce.trim_start_matches("0x"), 16)
+        .map_err(|e| format!("Invalid nonce: {}", e))?;
+    let data_bytes = if data.starts_with("0x") {
+        hex::decode(&data[2..]).unwrap_or_default()
+    } else {
+        hex::decode(&data).unwrap_or_default()
+    };
+    
+    // Construct transaction
+    let tx = TransactionParameters {
+        to: Some(to_addr),
+        nonce: Some(nonce_u256),
+        value: value_u256,
+        gas_price: Some(U256::exp10(10)), // 10 gwei
+        gas: U256::from(21000),
+        data: Bytes::from(data_bytes),
+        ..Default::default()
+    };
+    
+    // Sign the transaction
+    let signed_tx = w3.accounts()
+        .sign_transaction(tx, "dfx_test_key".to_string(), key_info, 11155111) // Sepolia chain ID
+        .await
+        .map_err(|e| format!("sign tx error: {}", e))?;
+    
     Ok(format!(
-        "Transaction signing with ic-evm-utils - to: {}, value: {}, data: {}, nonce: {}",
-        to, value, data, nonce
+        "Signed transaction: 0x{}\nTransaction hash: 0x{}",
+        hex::encode(&signed_tx.raw_transaction.0),
+        hex::encode(signed_tx.message_hash.as_ref())
     ))
 }
 
@@ -321,6 +385,76 @@ async fn sign_transaction(
 async fn send_raw_transaction(signed_tx: String) -> Result<String, String> {
     let params = format!("[\"{}\"]", signed_tx);
     make_json_rpc_call("eth_sendRawTransaction", &params).await
+}
+
+#[update]
+async fn sign_eip1559_transaction(
+    to: String,
+    value: String,
+    gas: String,
+    max_fee_per_gas: String,
+    max_priority_fee_per_gas: String,
+    nonce: String,
+    chain_id: String,
+    data: String,
+) -> Result<(String, String), String> {
+    // Setup Web3 connection
+    let w3 = match ICHttp::new(INFURA_URL, None) {
+        Ok(v) => Web3::new(v),
+        Err(e) => return Err(e.to_string()),
+    };
+    
+    // ECDSA key info
+    let derivation_path = vec![ic_cdk::api::caller().as_slice().to_vec()];
+    let key_info = KeyInfo { 
+        derivation_path, 
+        key_name: "dfx_test_key".to_string(),
+        ecdsa_sign_cycles: None,
+    };
+    
+    // Parse inputs
+    let to_addr = ic_web3_rs::ethabi::Address::from_str(&to).map_err(|e| format!("Invalid to address: {}", e))?;
+    let value_u256 = U256::from_str_radix(&value.trim_start_matches("0x"), 16)
+        .map_err(|e| format!("Invalid value: {}", e))?;
+    let gas_u256 = U256::from_str_radix(&gas.trim_start_matches("0x"), 16)
+        .map_err(|e| format!("Invalid gas: {}", e))?;
+    let max_fee_per_gas_u256 = U256::from_str_radix(&max_fee_per_gas.trim_start_matches("0x"), 16)
+        .map_err(|e| format!("Invalid max_fee_per_gas: {}", e))?;
+    let max_priority_fee_per_gas_u256 = U256::from_str_radix(&max_priority_fee_per_gas.trim_start_matches("0x"), 16)
+        .map_err(|e| format!("Invalid max_priority_fee_per_gas: {}", e))?;
+    let nonce_u256 = U256::from_str_radix(&nonce.trim_start_matches("0x"), 16)
+        .map_err(|e| format!("Invalid nonce: {}", e))?;
+    let chain_id_u64 = chain_id.trim_start_matches("0x").parse::<u64>()
+        .map_err(|e| format!("Invalid chain_id: {}", e))?;
+    let data_bytes = if data.starts_with("0x") {
+        hex::decode(&data[2..]).unwrap_or_default()
+    } else {
+        hex::decode(&data).unwrap_or_default()
+    };
+    
+    // Construct EIP-1559 transaction
+    let tx = TransactionParameters {
+        to: Some(to_addr),
+        nonce: Some(nonce_u256),
+        value: value_u256,
+        gas: gas_u256,
+        gas_price: Some(max_fee_per_gas_u256), // For EIP-1559, this is max_fee_per_gas
+        max_fee_per_gas: Some(max_fee_per_gas_u256),
+        max_priority_fee_per_gas: Some(max_priority_fee_per_gas_u256),
+        data: Bytes::from(data_bytes),
+        ..Default::default()
+    };
+    
+    // Sign the transaction
+    let signed_tx = w3.accounts()
+        .sign_transaction(tx, "dfx_test_key".to_string(), key_info, chain_id_u64)
+        .await
+        .map_err(|e| format!("sign tx error: {}", e))?;
+    
+    Ok((
+        format!("0x{}", hex::encode(&signed_tx.raw_transaction.0)),
+        format!("0x{}", hex::encode(signed_tx.message_hash.as_ref()))
+    ))
 }
 
 // ============================================================================
