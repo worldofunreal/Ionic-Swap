@@ -33,22 +33,6 @@ const CLAIM_FEE_SELECTOR: &str = "0x99d32fc4";
 const REFUND_FEE_SELECTOR: &str = "0x90fe6ddb";
 const TOTAL_FEES_SELECTOR: &str = "0x60c6d8ae";
 
-// ============================================================================
-// TRANSACTION TYPES
-// ============================================================================
-
-
-
-// ============================================================================
-// ECDSA Key configuration
-// ============================================================================
-
-
-
-// ============================================================================
-// GLOBAL STATE
-// ============================================================================
-
 static mut HTTP_CERTIFICATION_TREE: Option<HttpCertificationTree> = None;
 
 // ============================================================================
@@ -57,12 +41,12 @@ static mut HTTP_CERTIFICATION_TREE: Option<HttpCertificationTree> = None;
 
 fn get_http_certification_tree() -> &'static mut HttpCertificationTree {
     unsafe {
-        match &mut HTTP_CERTIFICATION_TREE {
-            Some(tree) => tree,
-            None => {
-                HTTP_CERTIFICATION_TREE = Some(HttpCertificationTree::default());
-                HTTP_CERTIFICATION_TREE.as_mut().unwrap()
-            }
+        let ptr = &raw mut HTTP_CERTIFICATION_TREE;
+        if let Some(tree) = &mut *ptr {
+            tree
+        } else {
+            HTTP_CERTIFICATION_TREE = Some(HttpCertificationTree::default());
+            (&mut *ptr).as_mut().unwrap()
         }
     }
 }
@@ -150,16 +134,6 @@ async fn make_json_rpc_call(method: &str, params: &str) -> Result<String, String
     String::from_utf8(response.body().to_vec())
         .map_err(|e| format!("Failed to decode response: {}", e))
 }
-
-// ============================================================================
-// TRANSACTION SIGNING FUNCTIONS
-// ============================================================================
-
-
-
-
-
-
 
 // ============================================================================
 // JSON-RPC METHODS
@@ -341,7 +315,7 @@ async fn sign_transaction(
     };
     
     // Get canister's Ethereum address
-    let from_addr = get_eth_addr(None, None, "dfx_test_key".to_string())
+    let _from_addr = get_eth_addr(None, None, "dfx_test_key".to_string())
         .await
         .map_err(|e| format!("get canister eth addr failed: {}", e))?;
     
@@ -438,10 +412,11 @@ async fn sign_eip1559_transaction(
         nonce: Some(nonce_u256),
         value: value_u256,
         gas: gas_u256,
-        gas_price: Some(max_fee_per_gas_u256), // For EIP-1559, this is max_fee_per_gas
+        gas_price: None, // Must be None for EIP-1559 transactions
         max_fee_per_gas: Some(max_fee_per_gas_u256),
         max_priority_fee_per_gas: Some(max_priority_fee_per_gas_u256),
         data: Bytes::from(data_bytes),
+        transaction_type: Some(EIP1559_TX_ID.into()), // EIP-1559 transaction type
         ..Default::default()
     };
     
