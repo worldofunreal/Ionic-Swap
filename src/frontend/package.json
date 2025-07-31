@@ -12,11 +12,13 @@
     "format": "prettier --write \"src/**/*.{json,js,jsx,ts,tsx,css,scss}\""
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "@1inch/cross-chain-sdk": "^0.2.1-rc.62",
+    "@1inch/fusion-sdk": "^2.1.11-rc.2",
     "@dfinity/agent": "^2.1.3",
     "@dfinity/candid": "^2.1.3",
-    "@dfinity/principal": "^2.1.3"
+    "@dfinity/principal": "^2.1.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.14",

@@ -30,10 +30,10 @@ function App() {
   if (actorLoading) {
     return (
       <main>
-        <img src="/logo2.svg" alt="DFINITY logo" />
+         <img src="/logo2.svg" alt="DFINITY logo" />
         <br />
         <br />
-        <div>Initializing...</div>
+        <div>Initializing...</div> 
       </main>
     );
   }
