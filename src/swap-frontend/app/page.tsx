@@ -96,6 +96,7 @@ export default function SwapInterface() {
   const [htlcId, setHtlcId] = useState<string>('');
   const [secret, setSecret] = useState<string>('');
   const [hashlock, setHashlock] = useState<string>('');
+  const [activeTab, setActiveTab] = useState('Swap');
   
   // Services
   const { actor } = useActor();
@@ -397,12 +398,12 @@ export default function SwapInterface() {
   };
 
   return (
-    <div className="min-h-screen bg-radial from-blue-900 via-blue-900 to-blue-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-100 to-pink-100">
     {/* <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white"> */}
       <Toaster position="top-right" />
       
       {/* Header */}
-      <header className="bg-white/5 backdrop-blur-lg border-b border-white/10">
+      <header className="bg-white/80 backdrop-blur-lg border-b border-gray-200/50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -413,13 +414,13 @@ export default function SwapInterface() {
                 </svg>
               </div>
               <div className="text-xl font-bold">
-                <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">IONIC</span>
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">IONIC</span>
                 <span className="text-gray-300"> SWAP</span>
               </div>
             </div>
 
             {/* Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
+            {/* <nav className="hidden md:flex items-center space-x-8">
               <div className="flex items-center space-x-2 cursor-pointer">
                 <span className="text-gray-300">Trade</span>
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -429,6 +430,21 @@ export default function SwapInterface() {
               <div className="flex items-center space-x-2 cursor-pointer">
                 <span className="text-gray-300">Pool</span>
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </nav> */}
+            {/* Navigation */}
+            <nav className="hidden md:flex items-center space-x-8">
+              <div className="flex items-center space-x-2 cursor-pointer text-gray-700 hover:text-blue-600 transition-colors">
+                <span>Trade</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              <div className="flex items-center space-x-2 cursor-pointer text-gray-700 hover:text-blue-600 transition-colors">
+                <span>Pool</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
@@ -465,10 +481,24 @@ export default function SwapInterface() {
           {/* Tabs */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex space-x-1 bg-white/10 rounded-lg p-1">
-              <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-400 rounded-lg text-white font-semibold">
+            <button 
+                onClick={() => setActiveTab('Swap')}
+                className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+                  activeTab === 'Swap' 
+                    ? 'bg-blue-500 text-white shadow-lg' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
                 Swap
               </button>
-              <button className="px-4 py-2 text-gray-400 hover:text-white transition-colors font-semibold">
+              <button 
+                onClick={() => setActiveTab('Limit')}
+                className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+                  activeTab === 'Limit' 
+                    ? 'bg-blue-500 text-white shadow-lg' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
                 Limit
               </button>
             </div>
@@ -500,16 +530,16 @@ export default function SwapInterface() {
                     <span className="text-white text-sm font-bold">Ξ</span>
                   </div>
                   <div>
-                    <div className="font-medium">ETH</div>
+                    <div className="font-medium text-gray-800">ETH</div>
                     <div className="text-xs text-gray-400">on Ethereum</div>
                   </div>
                   <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
-                <div className="text-right">
+                <div className="text-right text-gray-800">
                   <div className="text-xl font-bold">{amount}</div>
-                  <div className="text-sm text-gray-400">~$3,944.12</div>
+                  <div className="text-sm">~$3,944.12</div>
                 </div>
               </div>
             </div>
@@ -532,13 +562,13 @@ export default function SwapInterface() {
           {/* You Get Section */}
           <div className="mb-6">
             <div className="flex justify-between items-center mb-2">
-              <label className="text-sm font-medium text-gray-300">You Get</label>
+              <label className="text-sm font-medium text-gray-700">You Get</label>
             </div>
             <div className="bg-white/5 rounded-xl p-4 border border-white/10">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 text-gray-700">
                   <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">$</span>
+                    <span className="text-sm font-bold">$</span>
                   </div>
                   <div>
                     <div className="font-medium">USDC</div>
@@ -549,16 +579,22 @@ export default function SwapInterface() {
                   </svg>
                 </div>
                 <div className="text-right">
-                  <div className="text-xl font-bold">3,932.54</div>
-                  <div className="text-sm text-gray-400">~$3,938.21 (-0.39%)</div>
+                  <div className="text-xl font-bold text-gray-600">3,932.54</div>
+                  <div className="text-sm text-gray-800">~$3,938.21 (-0.39%)</div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Powered By */}
-          <div className="text-center text-sm text-gray-400 mb-6">
-            Powered by: <span className="text-blue-400">1inch</span>
+          <div className="flex items-center justify-center space-x-2 text-sm text-gray-500 mb-6">
+            Powered by: 
+            <div className="flex items-center space-x-1">
+              <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs font-bold">1</span>
+              </div>
+              <span className="font-medium text-gray-700">1inch</span>
+            </div>
           </div>
 
           {/* HTLC Management Section */}
