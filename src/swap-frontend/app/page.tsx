@@ -1,63 +1,77 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useActor } from './useActor';
-import { SDK, NetworkEnum } from "@1inch/cross-chain-sdk";
 import { AuthClient } from "@dfinity/auth-client";
 import { Principal } from "@dfinity/principal";
 import toast, { Toaster } from 'react-hot-toast';
+import { ethers } from 'ethers';
+
+// Type definitions
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
+
+interface Token {
+  address: string | Principal;
+  symbol: string;
+  decimals: number;
+  logo: string;
+  name: string;
+  chain: string;
+}
+
+// Contract addresses
+const HTLC_CONTRACT_ADDRESS = '0xBe953413e9FAB2642625D4043e4dcc0D16d14e77';
+const TEST_TOKEN_ADDRESS = '0xb3684bC4c3AcEDf35bC83E02A954B546103313e1';
 
 // Token configuration
-const ETHEREUM_TOKENS = [
+const ETHEREUM_TOKENS: Token[] = [
   { 
     address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', 
     symbol: 'ETH', 
     decimals: 18,
     logo: '🔵',
-    name: 'Ethereum'
+    name: 'Ethereum',
+    chain: 'Ethereum'
   },
   { 
     address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', 
     symbol: 'DAI', 
     decimals: 18,
     logo: '🟡',
-    name: 'Dai Stablecoin'
+    name: 'Dai Stablecoin',
+    chain: 'Ethereum'
   },
   { 
     address: '0xA0b86a33E6441b8c4C8C8C8C8C8C8C8C8C8C8C8C', 
     symbol: 'USDC', 
     decimals: 6,
     logo: '🔵',
-    name: 'USD Coin'
+    name: 'USD Coin',
+    chain: 'Ethereum'
   }
 ];
 
-const ICP_TOKENS = [
+const ICP_TOKENS: Token[] = [
   { 
     address: Principal.anonymous(), 
     symbol: 'ICP', 
     decimals: 8,
     logo: '🟣',
-    name: 'Internet Computer'
+    name: 'Internet Computer',
+    chain: 'Solana'
   },
   { 
     address: Principal.anonymous(), 
     symbol: 'XTC', 
     decimals: 12,
     logo: '🟠',
-    name: 'Cycles Token'
+    name: 'Cycles Token',
+    chain: 'Solana'
   }
 ];
-
-interface SwapOrder {
-  orderHash: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
-  fromChain: string;
-  toChain: string;
-  fromToken: string;
-  toToken: string;
-  amount: string;
-  timestamp: number;
-}
 
 export default function SwapInterface() {
   // State management
@@ -65,14 +79,15 @@ export default function SwapInterface() {
   const [icpAddress, setIcpAddress] = useState<string>('');
   const [fromChain, setFromChain] = useState<'ethereum' | 'icp'>('ethereum');
   const [toChain, setToChain] = useState<'ethereum' | 'icp'>('icp');
-  const [fromToken, setFromToken] = useState(ETHEREUM_TOKENS[0]);
-  const [toToken, setToToken] = useState(ICP_TOKENS[0]);
-  const [amount, setAmount] = useState('');
+  const [fromToken, setFromToken] = useState<Token>(ETHEREUM_TOKENS[0]);
+  const [toToken, setToToken] = useState<Token>(ICP_TOKENS[0]);
+  const [amount, setAmount] = useState('1');
   const [quote, setQuote] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [swapOrders, setSwapOrders] = useState<SwapOrder[]>([]);
   const [isEthConnected, setIsEthConnected] = useState(false);
   const [isIcpConnected, setIsIcpConnected] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [ethBalance, setEthBalance] = useState('40');
   
   // ICP actor
   const { actor } = useActor();
@@ -84,6 +99,7 @@ export default function SwapInterface() {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         setEthAddress(accounts[0]);
         setIsEthConnected(true);
+        setShowWalletModal(false);
         toast.success('Ethereum wallet connected!');
       } catch (error) {
         toast.error('Failed to connect Ethereum wallet');
@@ -106,12 +122,47 @@ export default function SwapInterface() {
           const principal = identity.getPrincipal().toString();
           setIcpAddress(principal);
           setIsIcpConnected(true);
+          setShowWalletModal(false);
           toast.success('ICP wallet connected!');
         }
       });
     } catch (error) {
       toast.error('Failed to connect ICP wallet');
     }
+  };
+
+  // EIP-2771 Meta-transaction signing
+  const signMetaTransaction = async (userAddress: string, contractAddress: string, functionData: string, nonce: number) => {
+    if (typeof window.ethereum === 'undefined') {
+      throw new Error('MetaMask not available');
+    }
+
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    
+    const domain = {
+      name: "HTLC Contract",
+      version: "1",
+      verifyingContract: contractAddress,
+      chainId: await provider.getNetwork().then(n => Number(n.chainId)),
+    };
+
+    const types = {
+      MetaTransaction: [
+        { name: "nonce", type: "uint256" },
+        { name: "from", type: "address" },
+        { name: "functionSignature", type: "bytes" }
+      ],
+    };
+
+    const value = {
+      nonce,
+      from: userAddress,
+      functionSignature: functionData,
+    };
+
+    const signature = await signer.signTypedData(domain, types, value);
+    return ethers.Signature.from(signature);
   };
 
   // Switch chains and tokens
@@ -162,45 +213,9 @@ export default function SwapInterface() {
     setLoading(true);
     
     try {
-      // Create a new swap order
-      const newOrder: SwapOrder = {
-        orderHash: `0x${Math.random().toString(36).substr(2, 9)}`,
-        status: 'pending',
-        fromChain,
-        toChain,
-        fromToken: fromToken.symbol,
-        toToken: toToken.symbol,
-        amount,
-        timestamp: Date.now()
-      };
-
-      setSwapOrders(prev => [newOrder, ...prev]);
-      toast.success('Swap order created!');
-
-      // Simulate order processing
-      setTimeout(() => {
-        setSwapOrders(prev => 
-          prev.map(order => 
-            order.orderHash === newOrder.orderHash 
-              ? { ...order, status: 'processing' }
-              : order
-          )
-        );
-        toast.success('Order is being processed...');
-      }, 2000);
-
-      // Simulate completion
-      setTimeout(() => {
-        setSwapOrders(prev => 
-          prev.map(order => 
-            order.orderHash === newOrder.orderHash 
-              ? { ...order, status: 'completed' }
-              : order
-          )
-        );
-        toast.success('Swap completed successfully!');
-      }, 8000);
-
+      // Here you would implement the actual swap logic
+      // For now, we'll simulate it
+      toast.success('Swap executed successfully!');
     } catch (error) {
       console.error("Swap error:", error);
       toast.error('Swap failed');
@@ -209,268 +224,326 @@ export default function SwapInterface() {
     }
   };
 
-  // Get status color
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'text-yellow-400';
-      case 'processing': return 'text-blue-400';
-      case 'completed': return 'text-green-400';
-      case 'failed': return 'text-red-400';
-      default: return 'text-gray-400';
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white">
       <Toaster position="top-right" />
       
-      <div className="max-w-4xl mx-auto p-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            Cross-Chain Swap
-          </h1>
-          <p className="text-xl text-gray-300">
-            Swap tokens between Ethereum and Internet Computer using 1inch Fusion+
-          </p>
-        </div>
-
-        {/* Wallet Connection */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white/20">
-          <h2 className="text-2xl font-semibold mb-6 text-center">Connect Wallets</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="text-center">
-              <div className="text-4xl mb-4">🔵</div>
-              <h3 className="text-lg font-medium mb-2">Ethereum</h3>
-              <button 
-                onClick={connectEthWallet}
-                className={`w-full py-3 px-6 rounded-xl transition-all duration-200 ${
-                  isEthConnected 
-                    ? 'bg-green-600 hover:bg-green-700' 
-                    : 'bg-blue-600 hover:bg-blue-700 hover:scale-105'
-                }`}
-              >
-                {isEthConnected 
-                  ? `Connected: ${ethAddress.slice(0,6)}...${ethAddress.slice(-4)}`
-                  : "Connect MetaMask"
-                }
-              </button>
+      {/* Header */}
+      <header className="bg-white/5 backdrop-blur-lg border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 12a2 2 0 114 0 2 2 0 01-4 0z"/>
+                </svg>
+              </div>
+              <div className="text-xl font-bold">
+                <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">IONIC</span>
+                <span className="text-gray-300"> SWAP</span>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-4xl mb-4">🟣</div>
-              <h3 className="text-lg font-medium mb-2">Internet Computer</h3>
-              <button 
-                onClick={connectICWallet}
-                className={`w-full py-3 px-6 rounded-xl transition-all duration-200 ${
-                  isIcpConnected 
-                    ? 'bg-green-600 hover:bg-green-700' 
-                    : 'bg-purple-600 hover:bg-purple-700 hover:scale-105'
-                }`}
+
+            {/* Navigation */}
+            <nav className="hidden md:flex items-center space-x-8">
+              <div className="flex items-center space-x-2 cursor-pointer">
+                <span className="text-gray-300">Trade</span>
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              <div className="flex items-center space-x-2 cursor-pointer">
+                <span className="text-gray-300">Pool</span>
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </nav>
+
+            {/* Action Buttons */}
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setShowWalletModal(true)}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-6 py-2 rounded-lg font-medium transition-all duration-200"
               >
-                {isIcpConnected 
-                  ? `Connected: ${icpAddress.slice(0,6)}...${icpAddress.slice(-4)}`
-                  : "Connect Internet Identity"
-                }
+                Connect Wallet
+              </button>
+              <button className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-all duration-200">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+              <button className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-all duration-200">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
               </button>
             </div>
           </div>
         </div>
+      </header>
 
-        {/* Swap Interface */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 mb-8 border border-white/20">
-          <h2 className="text-2xl font-semibold mb-6 text-center">Swap Tokens</h2>
-          
-          {/* Chain Switch Button */}
-          <div className="flex justify-center mb-8">
+      {/* Main Content */}
+      <div className="max-w-2xl mx-auto p-6 pt-12">
+        {/* Swap Widget */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 shadow-2xl">
+          {/* Tabs */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex space-x-1 bg-white/10 rounded-lg p-1">
+              <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-md text-white font-medium">
+                Swap
+              </button>
+              <button className="px-4 py-2 text-gray-400 hover:text-white transition-colors">
+                Limit
+              </button>
+            </div>
+            <div className="flex space-x-2">
+              <button className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-all duration-200">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+              <button className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-all duration-200">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* You Send Section */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-sm font-medium text-gray-300">You Send</label>
+              <span className="text-sm text-gray-400">Balance: {ethBalance} ETH</span>
+            </div>
+            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">Ξ</span>
+                  </div>
+                  <div>
+                    <div className="font-medium">ETH</div>
+                    <div className="text-xs text-gray-400">on Ethereum</div>
+                  </div>
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+                <div className="text-right">
+                  <div className="text-xl font-bold">{amount}</div>
+                  <div className="text-sm text-gray-400">~$3,944.12</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Swap Direction Button */}
+          <div className="flex justify-center mb-6">
             <button 
               onClick={switchChains}
-              className="p-4 bg-white/20 rounded-full hover:bg-white/30 transition-all duration-200 hover:scale-110"
+              className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-200 hover:scale-110"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-              </svg>
+              <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 12a2 2 0 114 0 2 2 0 01-4 0z"/>
+                </svg>
+              </div>
             </button>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* From Section */}
-            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <label className="block text-sm font-medium mb-4 text-gray-300">From</label>
-              <div className="space-y-4">
-                <div className="flex gap-3">
-                  <select 
-                    value={fromChain}
-                    onChange={(e) => setFromChain(e.target.value as any)}
-                    className="bg-white/10 text-white rounded-lg p-3 flex-1 border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="ethereum">🔵 Ethereum</option>
-                    <option value="icp">🟣 Internet Computer</option>
-                  </select>
-                </div>
-                <div className="flex gap-3">
-                  <select 
-                    value={fromToken.symbol}
-                    onChange={(e) => {
-                      const tokens = fromChain === 'ethereum' ? ETHEREUM_TOKENS : ICP_TOKENS;
-                      const token = tokens.find(t => t.symbol === e.target.value);
-                      if (token) setFromToken(token);
-                    }}
-                    className="bg-white/10 text-white rounded-lg p-3 flex-1 border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {(fromChain === 'ethereum' ? ETHEREUM_TOKENS : ICP_TOKENS).map(token => (
-                      <option key={token.symbol} value={token.symbol}>
-                        {token.logo} {token.symbol}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="relative">
-                  <input 
-                    type="number" 
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.0"
-                    className="bg-white/10 text-white rounded-lg p-3 w-full border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-lg"
-                  />
-                  <div className="absolute right-3 top-3 text-gray-400 text-sm">
-                    {fromToken.symbol}
-                  </div>
-                </div>
-              </div>
+
+          {/* You Get Section */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-sm font-medium text-gray-300">You Get</label>
             </div>
-            
-            {/* To Section */}
-            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <label className="block text-sm font-medium mb-4 text-gray-300">To</label>
-              <div className="space-y-4">
-                <div className="flex gap-3">
-                  <div className="bg-white/10 text-white rounded-lg p-3 flex-1 border border-white/20 opacity-50">
-                    {toChain === 'ethereum' ? '🔵 Ethereum' : '🟣 Internet Computer'}
+            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">$</span>
                   </div>
+                  <div>
+                    <div className="font-medium">USDC</div>
+                    <div className="text-xs text-gray-400">on Solana</div>
+                  </div>
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
-                <div className="flex gap-3">
-                  <select 
-                    value={toToken.symbol}
-                    onChange={(e) => {
-                      const tokens = toChain === 'ethereum' ? ETHEREUM_TOKENS : ICP_TOKENS;
-                      const token = tokens.find(t => t.symbol === e.target.value);
-                      if (token) setToToken(token);
-                    }}
-                    className="bg-white/10 text-white rounded-lg p-3 flex-1 border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {(toChain === 'ethereum' ? ETHEREUM_TOKENS : ICP_TOKENS).map(token => (
-                      <option key={token.symbol} value={token.symbol}>
-                        {token.logo} {token.symbol}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="relative">
-                  <div className="bg-white/10 text-white rounded-lg p-3 w-full border border-white/20 text-right text-lg">
-                    {quote ? quote.dstAmount : '0.0'}
-                  </div>
-                  <div className="absolute right-3 top-3 text-gray-400 text-sm">
-                    {toToken.symbol}
-                  </div>
+                <div className="text-right">
+                  <div className="text-xl font-bold">3,932.54</div>
+                  <div className="text-sm text-gray-400">~$3,938.21 (-0.39%)</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Quote Display */}
-          {quote && (
-            <div className="mt-6 bg-white/5 rounded-xl p-6 border border-white/10">
-              <h3 className="text-lg font-medium mb-4">Swap Details</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <p className="text-gray-400">Rate</p>
-                  <p className="font-medium">1 {fromToken.symbol} = {quote.rate} {toToken.symbol}</p>
-                </div>
-                <div>
-                  <p className="text-gray-400">Fee</p>
-                  <p className="font-medium">{quote.fee} {fromToken.symbol}</p>
-                </div>
-                <div>
-                  <p className="text-gray-400">Est. Time</p>
-                  <p className="font-medium">{quote.estimatedTime}</p>
-                </div>
-                <div>
-                  <p className="text-gray-400">You'll Receive</p>
-                  <p className="font-medium text-green-400">{quote.dstAmount} {toToken.symbol}</p>
-                </div>
-
-              </div>
-            </div>
-          )}
-          
-          {/* Action Buttons */}
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button
-              onClick={fetchQuote}
-              disabled={!isEthConnected || !isIcpConnected || !amount || loading}
-              className={`py-4 px-8 rounded-xl transition-all duration-200 text-lg font-medium ${
-                !isEthConnected || !isIcpConnected || !amount || loading
-                  ? 'bg-gray-600 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 hover:scale-105'
-              }`}
-            >
-              {loading ? '⏳ Getting Quote...' : '📊 Get Quote'}
-            </button>
-            <button
-              onClick={executeSwap}
-              disabled={!quote || loading}
-              className={`py-4 px-8 rounded-xl transition-all duration-200 text-lg font-medium ${
-                !quote || loading
-                  ? 'bg-gray-600 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 hover:scale-105'
-              }`}
-            >
-              {loading ? '⏳ Processing...' : '🚀 Execute Swap'}
-            </button>
+          {/* Powered By */}
+          <div className="text-center text-sm text-gray-400 mb-6">
+            Powered by: <span className="text-blue-400">1inch</span>
           </div>
-        </div>
 
-        {/* Order History */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
-          <h2 className="text-2xl font-semibold mb-6 text-center">Recent Swaps</h2>
-          <div className="space-y-4">
-            {swapOrders.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
-                <div className="text-4xl mb-4">📋</div>
-                <p>No swaps yet. Create your first cross-chain swap above!</p>
-              </div>
-            ) : (
-              swapOrders.map((order) => (
-                <div key={order.orderHash} className="bg-white/5 rounded-xl p-6 border border-white/10">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                      <div className="text-2xl">
-                        {order.fromChain === 'ethereum' ? '🔵' : '🟣'} → {order.toChain === 'ethereum' ? '🔵' : '🟣'}
-                      </div>
-                      <div>
-                        <p className="font-medium">
-                          {order.amount} {order.fromToken} → {order.toToken}
-                        </p>
-                        <p className="text-sm text-gray-400">
-                          {new Date(order.timestamp).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className={`font-medium ${getStatusColor(order.status)}`}>
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {order.orderHash.slice(0, 8)}...{order.orderHash.slice(-6)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          {/* Connect Wallet Button */}
+          <button
+            onClick={() => setShowWalletModal(true)}
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-4 rounded-xl font-medium text-lg transition-all duration-200"
+          >
+            Connect Wallet
+          </button>
         </div>
       </div>
+
+      {/* Wallet Connection Modal */}
+      {showWalletModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-900 rounded-2xl p-8 max-w-md w-full mx-4 border border-white/20">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Connect wallet</h2>
+              <button 
+                onClick={() => setShowWalletModal(false)}
+                className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-all duration-200"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <p className="text-gray-400 mb-6">Connect wallet to make transactions on the dApp.</p>
+            
+            <div className="space-y-3">
+              {/* 1inch Wallet */}
+              <button className="w-full flex items-center justify-between p-4 bg-blue-600 rounded-xl hover:bg-blue-700 transition-all duration-200">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 font-bold text-sm">1</span>
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium">1inch Wallet</div>
+                    <div className="text-sm text-blue-200">Scan QR code to connect</div>
+                  </div>
+                </div>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              {/* MetaMask */}
+              <button 
+                onClick={connectEthWallet}
+                className="w-full flex items-center justify-between p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-all duration-200"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium">MetaMask</div>
+                    <div className="text-sm text-gray-400">Detected</div>
+                  </div>
+                </div>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              {/* Phantom */}
+              <button className="w-full flex items-center justify-between p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-all duration-200">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium">Phantom</div>
+                    <div className="text-sm text-gray-400">Detected</div>
+                  </div>
+                </div>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              {/* WalletConnect */}
+              <button className="w-full flex items-center justify-between p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-all duration-200">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium">WalletConnect</div>
+                  </div>
+                </div>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              {/* Internet Identity */}
+              <button 
+                onClick={connectICWallet}
+                className="w-full flex items-center justify-between p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-all duration-200"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium">Internet Identity</div>
+                  </div>
+                </div>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              {/* Browser Wallet */}
+              <button className="w-full flex items-center justify-between p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-all duration-200">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium">Browser Wallet</div>
+                  </div>
+                </div>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mt-6 text-center">
+              <button className="text-blue-400 hover:text-blue-300 transition-colors">
+                More wallets
+              </button>
+            </div>
+
+            <div className="mt-6 text-xs text-gray-400 text-center">
+              By connecting your wallet, you agree to our{' '}
+              <a href="#" className="text-blue-400 hover:text-blue-300">Terms of Use</a>
+              {' '}and{' '}
+              <a href="#" className="text-blue-400 hover:text-blue-300">Privacy Policy</a>
+              <br />
+              Last update of Terms of Use: 15/05/2025
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+} 
