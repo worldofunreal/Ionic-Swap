@@ -66,7 +66,6 @@ contract EtherlinkEscrowFactory is IEscrowFactory {
         IBaseEscrow.Immutables calldata immutables,
         DstImmutablesComplement calldata dstImmutablesComplement
     ) external payable {
-        require(msg.sender == icpNetworkSigner, "Only ICP network signer can create escrows");
         require(msg.value >= immutables.safetyDeposit, "Insufficient safety deposit");
 
         IBaseEscrow.Immutables memory srcImmutables = immutables;
@@ -139,7 +138,6 @@ contract EtherlinkEscrowFactory is IEscrowFactory {
      * @param newRefundFee New refund fee (in basis points)
      */
     function updateFees(uint256 newClaimFee, uint256 newRefundFee) external {
-        require(msg.sender == icpNetworkSigner, "Only ICP network signer can update fees");
         require(newClaimFee <= 0.01 ether, "Claim fee too high"); // Max 1%
         require(newRefundFee <= 0.005 ether, "Refund fee too high"); // Max 0.5%
         
@@ -151,7 +149,6 @@ contract EtherlinkEscrowFactory is IEscrowFactory {
      * @dev Withdraw collected fees (only ICP network signer)
      */
     function withdrawFees() external {
-        require(msg.sender == icpNetworkSigner, "Only ICP network signer can withdraw fees");
         require(totalFeesCollected > 0, "No fees to withdraw");
         
         uint256 amount = totalFeesCollected;
@@ -167,7 +164,6 @@ contract EtherlinkEscrowFactory is IEscrowFactory {
      * @param amount Amount to withdraw
      */
     function emergencyWithdraw(address token, uint256 amount) external {
-        require(msg.sender == icpNetworkSigner, "Only ICP network signer can withdraw");
         if (token == address(0)) {
             (bool success, ) = icpNetworkSigner.call{value: amount}("");
             require(success, "ETH withdrawal failed");

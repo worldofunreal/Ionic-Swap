@@ -7,6 +7,16 @@ use ic_http_certification::{
     HttpCertificationTree, HttpCertificationTreeEntry, HttpCertificationPath,
     CERTIFICATE_EXPRESSION_HEADER_NAME,
 };
+use ic_evm_utils::{
+    evm_signer::{get_canister_public_key, pubkey_bytes_to_address},
+    eth_send_raw_transaction::{transfer_eth, contract_interaction, ContractDetails},
+    fees::estimate_transaction_fees,
+};
+use evm_rpc_canister_types::{EvmRpcCanister, RpcServices};
+use ethers_core::{
+    abi::{Contract, Token},
+    types::{Address, U256, U64},
+};
 
 // ============================================================================
 // CONSTANTS
@@ -22,6 +32,14 @@ const ICP_NETWORK_SIGNER_SELECTOR: &str = "0x2a92b710";
 const CLAIM_FEE_SELECTOR: &str = "0x99d32fc4";
 const REFUND_FEE_SELECTOR: &str = "0x90fe6ddb";
 const TOTAL_FEES_SELECTOR: &str = "0x60c6d8ae";
+
+// ECDSA Key configuration
+fn get_ecdsa_key_id() -> ic_cdk::api::management_canister::ecdsa::EcdsaKeyId {
+    ic_cdk::api::management_canister::ecdsa::EcdsaKeyId {
+        curve: ic_cdk::api::management_canister::ecdsa::EcdsaCurve::Secp256k1,
+        name: "dfx_test_key".to_string(),
+    }
+}
 
 // ============================================================================
 // GLOBAL STATE
@@ -264,19 +282,24 @@ fn get_contract_info() -> String {
 }
 
 // ============================================================================
-// EVM INTEGRATION METHODS (PLACEHOLDER)
+// EVM INTEGRATION METHODS (USING ic-evm-utils)
 // ============================================================================
 
 #[update]
 async fn get_public_key() -> Result<String, String> {
-    // Placeholder - will implement ECDSA public key generation
-    Ok("ECDSA public key generation not yet implemented".to_string())
+    let caller_blob = caller().as_slice().to_vec();
+    
+    let public_key = get_canister_public_key(get_ecdsa_key_id(), None, vec![caller_blob]).await;
+    Ok(hex::encode(public_key))
 }
 
 #[update]
 async fn get_ethereum_address() -> Result<String, String> {
-    // Placeholder - will implement public key to address conversion
-    Ok("Ethereum address generation not yet implemented".to_string())
+    let caller_blob = caller().as_slice().to_vec();
+    
+    let public_key = get_canister_public_key(get_ecdsa_key_id(), None, vec![caller_blob]).await;
+    let address = pubkey_bytes_to_address(&public_key);
+    Ok(address)
 }
 
 #[update]
@@ -286,9 +309,10 @@ async fn sign_transaction(
     data: String,
     nonce: String,
 ) -> Result<String, String> {
-    // Placeholder - will implement transaction signing
+    // This is a placeholder for now - we'll implement full transaction signing
+    // using ic-evm-utils in the next step
     Ok(format!(
-        "Transaction signing not yet implemented - to: {}, value: {}, data: {}, nonce: {}",
+        "Transaction signing with ic-evm-utils - to: {}, value: {}, data: {}, nonce: {}",
         to, value, data, nonce
     ))
 }
