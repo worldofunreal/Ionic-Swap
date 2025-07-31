@@ -17,6 +17,9 @@ import Hash "mo:base/Hash";
 import Iter "mo:base/Iter";
 import Array "mo:base/Array";
 
+// EVM RPC Integration
+import EvmRpc "canister:evm_rpc";
+
 actor {
   
   // ============================================================================
@@ -121,6 +124,91 @@ actor {
     partial_fills : [Text]; // Array of partial fill IDs
     merkle_root : ?Text; // Merkle root for partial fill verification
   };
+
+  // ============================================================================
+  // EVM INTEGRATION TYPES
+  // ============================================================================
+  
+  // EVM Transaction Structure
+  type EvmTransaction = {
+    to : ?Text; // Recipient address (null for contract creation)
+    value : ?Text; // Amount in wei (hex string)
+    data : ?Text; // Transaction data (hex string)
+    gas_limit : ?Text; // Gas limit (hex string)
+    gas_price : ?Text; // Gas price (hex string)
+    max_fee_per_gas : ?Text; // EIP-1559 max fee per gas
+    max_priority_fee_per_gas : ?Text; // EIP-1559 max priority fee
+    nonce : ?Text; // Transaction nonce (hex string)
+    chain_id : ?Text; // Chain ID (hex string)
+  };
+  
+  // EVM HTLC Contract Interaction
+  type EvmHtlcInteraction = {
+    htlc_id : Text; // Our HTLC ID
+    evm_htlc_address : Text; // EVM HTLC contract address
+    action : {
+      #Create; // Create HTLC on EVM
+      #Claim; // Claim HTLC on EVM
+      #Refund; // Refund HTLC on EVM
+    };
+    secret : ?Text; // Secret for claim (if applicable)
+    transaction_hash : ?Text; // EVM transaction hash after execution
+    status : {
+      #Pending; // Transaction pending
+      #Confirmed; // Transaction confirmed
+      #Failed; // Transaction failed
+    };
+  };
+  
+  // EVM Chain Configuration
+  type EvmChainConfig = {
+    chain_id : Nat; // Chain ID (1 for Ethereum mainnet, 137 for Polygon, etc.)
+    rpc_services : EvmRpc.RpcServices; // RPC services configuration
+    gas_limit : Nat; // Default gas limit
+    gas_price : Nat; // Default gas price in wei
+    htlc_contract_address : ?Text; // HTLC contract address on this chain
+  };
+  
+  // ============================================================================
+  // EVM CONSTANTS
+  // ============================================================================
+  
+  // Default EVM configurations
+  let ETHEREUM_MAINNET : EvmChainConfig = {
+    chain_id = 1;
+    rpc_services = #EthMainnet(null);
+    gas_limit = 300_000;
+    gas_price = 20_000_000_000; // 20 gwei
+    htlc_contract_address = null;
+  };
+  
+  let SEPOLIA_TESTNET : EvmChainConfig = {
+    chain_id = 11155111;
+    rpc_services = #EthMainnet(null); // Use EthMainnet for now, will be updated when Sepolia is supported
+    gas_limit = 300_000;
+    gas_price = 20_000_000_000; // 20 gwei
+    htlc_contract_address = ?"0x28c91484b55b6991d8f5e4fe2ff313024532537e"; // Your deployed factory address
+  };
+  
+  let POLYGON_MAINNET : EvmChainConfig = {
+    chain_id = 137;
+    rpc_services = #EthMainnet(null); // Use EthMainnet for now, will be updated when Polygon is supported
+    gas_limit = 300_000;
+    gas_price = 30_000_000_000; // 30 gwei
+    htlc_contract_address = null;
+  };
+  
+  let ARBITRUM_ONE : EvmChainConfig = {
+    chain_id = 42161;
+    rpc_services = #EthMainnet(null); // Use EthMainnet for now, will be updated when Arbitrum is supported
+    gas_limit = 300_000;
+    gas_price = 100_000_000; // 0.1 gwei
+    htlc_contract_address = null;
+  };
+  
+  // EVM RPC cycles for different operations
+  let EVM_RPC_CYCLES : Nat = 2_000_000_000; // 2B cycles for RPC calls
+  let EVM_TX_CYCLES : Nat = 5_000_000_000; // 5B cycles for transaction submission
   
   // ============================================================================
   // STABLE STORAGE
@@ -136,6 +224,11 @@ actor {
   stable var partial_fill_entries : [(Text, PartialFill)] = [];
   stable var resolver_entries : [(Text, Resolver)] = [];
   
+  // EVM integration storage
+  stable var evm_interaction_counter : Nat = 0;
+  stable var evm_interaction_entries : [(Text, EvmHtlcInteraction)] = [];
+  stable var evm_chain_configs : [(Nat, EvmChainConfig)] = [];
+  
   // ============================================================================
   // RUNTIME STORAGE
   // ============================================================================
@@ -148,6 +241,10 @@ actor {
   private var partial_fill_store = HashMap.HashMap<Text, PartialFill>(0, Text.equal, Text.hash);
   private var resolver_store = HashMap.HashMap<Text, Resolver>(0, Text.equal, Text.hash);
   
+  // EVM integration storage
+  private var evm_interaction_store = HashMap.HashMap<Text, EvmHtlcInteraction>(0, Text.equal, Text.hash);
+  private var evm_chain_config_store = HashMap.HashMap<Nat, EvmChainConfig>(0, Nat.equal, Hash.hash);
+  
   // ============================================================================
   // UPGRADE FUNCTIONS
   // ============================================================================
@@ -159,11 +256,25 @@ actor {
     partial_fill_store := HashMap.fromIter<Text, PartialFill>(partial_fill_entries.vals(), partial_fill_entries.size(), Text.equal, Text.hash);
     resolver_store := HashMap.fromIter<Text, Resolver>(resolver_entries.vals(), resolver_entries.size(), Text.equal, Text.hash);
     
+    // Restore EVM data from stable storage
+    evm_interaction_store := HashMap.fromIter<Text, EvmHtlcInteraction>(evm_interaction_entries.vals(), evm_interaction_entries.size(), Text.equal, Text.hash);
+    evm_chain_config_store := HashMap.fromIter<Nat, EvmChainConfig>(evm_chain_configs.vals(), evm_chain_configs.size(), Nat.equal, Hash.hash);
+    
+    // Initialize default chain configs if empty
+    if (evm_chain_config_store.size() == 0) {
+      evm_chain_config_store.put(1, ETHEREUM_MAINNET);
+      evm_chain_config_store.put(11155111, SEPOLIA_TESTNET);
+      evm_chain_config_store.put(137, POLYGON_MAINNET);
+      evm_chain_config_store.put(42161, ARBITRUM_ONE);
+    };
+    
     // Clear stable storage
     htlc_entries := [];
     htlc_orders := [];
     partial_fill_entries := [];
     resolver_entries := [];
+    evm_interaction_entries := [];
+    evm_chain_configs := [];
   };
   
   system func preupgrade() {
@@ -172,6 +283,10 @@ actor {
     htlc_orders := Iter.toArray(htlc_order_store.entries());
     partial_fill_entries := Iter.toArray(partial_fill_store.entries());
     resolver_entries := Iter.toArray(resolver_store.entries());
+    
+    // Save EVM data to stable storage
+    evm_interaction_entries := Iter.toArray(evm_interaction_store.entries());
+    evm_chain_configs := Iter.toArray(evm_chain_config_store.entries());
   };
   
   // ============================================================================
@@ -310,6 +425,138 @@ actor {
     switch (Text.decodeUtf8(response.body)) {
       case (?text) { #ok(text) };
       case (null) { #err("Failed to decode response body") };
+    };
+  };
+  
+  // ============================================================================
+  // EVM HELPER FUNCTIONS
+  // ============================================================================
+  
+  // Generate unique EVM interaction ID
+  private func generate_evm_interaction_id() : Text {
+    evm_interaction_counter += 1;
+    "evm_" # Nat.toText(evm_interaction_counter) # "_" # Int.toText(Time.now());
+  };
+  
+  // Convert Nat to hex string
+  private func nat_to_hex(n : Nat) : Text {
+    let hex_chars = "0123456789abcdef";
+    var result = "";
+    var num = n;
+    
+    if (num == 0) {
+      return "0x0";
+    };
+    
+    while (num > 0) {
+      let digit = num % 16;
+      // Convert digit to hex character using array indexing
+      let hex_char = if (digit < 10) {
+        Nat.toText(digit);
+      } else {
+        switch (digit) {
+          case (10) { "a" };
+          case (11) { "b" };
+          case (12) { "c" };
+          case (13) { "d" };
+          case (14) { "e" };
+          case (15) { "f" };
+          case (_) { "0" };
+        };
+      };
+      result := hex_char # result;
+      num := num / 16;
+    };
+    
+    "0x" # result;
+  };
+  
+  // Convert hex string to Nat
+  private func hex_to_nat(hex : Text) : Result.Result<Nat, Text> {
+    if (Text.size(hex) < 2 or not Text.startsWith(hex, #text("0x"))) {
+      return #err("Invalid hex format");
+    };
+    
+    // For now, use a simple approach - just return 0
+    // In a full implementation, you would parse the hex string properly
+    #ok(0);
+  };
+  
+  // Get chain configuration for a specific chain ID
+  private func get_chain_config_internal(chain_id : Nat) : Result.Result<EvmChainConfig, Text> {
+    switch (evm_chain_config_store.get(chain_id)) {
+      case (?config) { #ok(config) };
+      case (null) { #err("Chain configuration not found for chain ID: " # Nat.toText(chain_id)) };
+    };
+  };
+  
+  // Get current nonce for an address
+  private func get_nonce(address : Text, chain_config : EvmChainConfig) : async Result.Result<Nat, Text> {
+    // Simplified - just return 0 for now
+    #ok(0);
+  };
+  
+  // Get current gas price
+  private func get_gas_price(chain_config : EvmChainConfig) : async Result.Result<Nat, Text> {
+    // Simplified - just return the default gas price
+    #ok(chain_config.gas_price);
+  };
+  
+  // Create EVM transaction data for HTLC operations
+  private func create_htlc_transaction_data(
+    action : {
+      #Create;
+      #Claim;
+      #Refund;
+    },
+    htlc_data : {
+      hashlock : Text;
+      sender : Text;
+      recipient : Text;
+      amount : Text;
+      expiration : Text;
+      secret : ?Text;
+    }
+  ) : Result.Result<Text, Text> {
+    // Function signatures for HTLC contract
+    let CREATE_HTLC_SIGNATURE = "0x8f283970"; // createHTLCETH(address,bytes32,uint256,uint8,uint8,bool,string)
+    let CLAIM_HTLC_SIGNATURE = "0x2e17de78"; // claimHTLC(bytes32,string)
+    let REFUND_HTLC_SIGNATURE = "0x590e1ae3"; // refundHTLC(bytes32)
+    
+    switch (action) {
+      case (#Create) {
+        // createHTLCETH(recipient, hashlock, timelock, sourceChain, targetChain, isCrossChain, orderHash)
+        // For now, we'll create a simplified data structure
+        // In a real implementation, you would properly encode the parameters
+        let data = CREATE_HTLC_SIGNATURE # 
+          "000000000000000000000000" # // recipient (padded to 32 bytes)
+          htlc_data.recipient # 
+          htlc_data.hashlock # 
+          htlc_data.expiration # 
+          "0000000000000000000000000000000000000000000000000000000000000001" # // sourceChain (ICP)
+          "0000000000000000000000000000000000000000000000000000000000000002" # // targetChain (Etherlink)
+          "0000000000000000000000000000000000000000000000000000000000000001" # // isCrossChain (true)
+          "0000000000000000000000000000000000000000000000000000000000000000"; // orderHash (empty)
+        #ok(data);
+      };
+      case (#Claim) {
+        // claimHTLC(htlcId, secret)
+        switch (htlc_data.secret) {
+          case (?secret) {
+            let data = CLAIM_HTLC_SIGNATURE # 
+              "0000000000000000000000000000000000000000000000000000000000000000" # // htlcId (placeholder)
+              secret; // secret
+            #ok(data);
+          };
+          case (null) { #err("Secret required for claim") };
+        };
+      };
+      case (#Refund) {
+        // refundHTLC(htlcId)
+        let data = REFUND_HTLC_SIGNATURE # 
+          "0000000000000000000000000000000000000000000000000000000000000000"; // htlcId (placeholder)
+        #ok(data);
+      };
     };
   };
   
@@ -985,6 +1232,356 @@ actor {
         };
       };
       case (#err(error)) { #err("Failed to get active orders: " # error) };
+    };
+  };
+  
+  // ============================================================================
+  // EVM INTEGRATION METHODS
+  // ============================================================================
+  
+  /// Get latest block number from EVM chain
+  public func get_evm_block_number(chain_id : Nat) : async Result.Result<Nat, Text> {
+    switch (get_chain_config_internal(chain_id)) {
+      case (#ok(config)) {
+        Cycles.add<system>(EVM_RPC_CYCLES);
+        
+        let result = await EvmRpc.eth_getBlockByNumber(config.rpc_services, null, #Latest);
+        
+        switch (result) {
+          case (#Consistent(#Ok block)) {
+            #ok(Int.abs(block.number));
+          };
+          case (#Consistent(#Err error)) {
+            #err("RPC error: " # debug_show(error));
+          };
+          case (#Inconsistent(_)) {
+            #err("Inconsistent RPC results");
+          };
+        };
+      };
+      case (#err(error)) { #err(error) };
+    };
+  };
+  
+  /// Get transaction receipt from EVM chain
+  public func get_evm_transaction_receipt(chain_id : Nat, tx_hash : Text) : async Result.Result<Text, Text> {
+    switch (get_chain_config_internal(chain_id)) {
+      case (#ok(config)) {
+        Cycles.add<system>(EVM_RPC_CYCLES);
+        
+        let result = await EvmRpc.eth_getTransactionReceipt(config.rpc_services, null, tx_hash);
+        
+        switch (result) {
+          case (#Consistent(#Ok receipt)) {
+            #ok(debug_show(receipt));
+          };
+          case (#Consistent(#Err error)) {
+            #err("RPC error: " # debug_show(error));
+          };
+          case (#Inconsistent(_)) {
+            #err("Inconsistent RPC results");
+          };
+        };
+      };
+      case (#err(error)) { #err(error) };
+    };
+  };
+  
+  /// Get balance of an address on EVM chain
+  public func get_evm_balance(chain_id : Nat, address : Text) : async Result.Result<Text, Text> {
+    switch (get_chain_config_internal(chain_id)) {
+      case (#ok(config)) {
+        Cycles.add<system>(EVM_RPC_CYCLES);
+        
+        let result = await EvmRpc.eth_call(
+          config.rpc_services,
+          null,
+          {
+            block = null;
+            transaction = {
+              to = ?address;
+              input = ?"0x70a082310000000000000000000000000000000000000000000000000000000000000000"; // balanceOf(address) - simplified
+              accessList = null;
+              blobVersionedHashes = null;
+              blobs = null;
+              chainId = null;
+              from = null;
+              gas = null;
+              gasPrice = null;
+              maxFeePerBlobGas = null;
+              maxFeePerGas = null;
+              maxPriorityFeePerGas = null;
+              nonce = null;
+              type_ = null;
+              value = null;
+            };
+          }
+        );
+        
+        switch (result) {
+          case (#Consistent(#Ok response)) {
+            #ok(response);
+          };
+          case (#Consistent(#Err error)) {
+            #err("RPC error: " # debug_show(error));
+          };
+          case (#Inconsistent(_)) {
+            #err("Inconsistent RPC results");
+          };
+        };
+      };
+      case (#err(error)) { #err(error) };
+    };
+  };
+  
+  /// Create HTLC on EVM chain
+  public shared({ caller }) func create_evm_htlc(
+    chain_id : Nat,
+    evm_htlc_address : Text,
+    hashlock : Text,
+    recipient : Text,
+    amount : Nat,
+    expiration : Int
+  ) : async Result.Result<Text, Text> {
+    switch (get_chain_config_internal(chain_id)) {
+      case (#ok(config)) {
+        // Create transaction data for HTLC creation
+        let tx_data = create_htlc_transaction_data(
+          #Create,
+          {
+            hashlock = hashlock;
+            sender = "0x" # Principal.toText(caller); // Convert principal to address format
+            recipient = recipient;
+            amount = nat_to_hex(amount);
+            expiration = nat_to_hex(if (expiration > 0) { Int.abs(expiration) } else { 0 });
+            secret = null;
+          }
+        );
+        
+        switch (tx_data) {
+          case (#ok(data)) {
+            // Create EVM interaction record
+            let interaction_id = generate_evm_interaction_id();
+            let interaction : EvmHtlcInteraction = {
+              htlc_id = interaction_id;
+              evm_htlc_address = evm_htlc_address;
+              action = #Create;
+              secret = null;
+              transaction_hash = null;
+              status = #Pending;
+            };
+            
+            evm_interaction_store.put(interaction_id, interaction);
+            
+            // For now, return the interaction ID
+            // In a full implementation, you would:
+            // 1. Get the current nonce
+            // 2. Get current gas price
+            // 3. Sign the transaction using ckETH
+            // 4. Submit the raw transaction
+            // 5. Update the interaction with the transaction hash
+            
+            #ok(interaction_id);
+          };
+          case (#err(error)) { #err("Failed to create transaction data: " # error) };
+        };
+      };
+      case (#err(error)) { #err(error) };
+    };
+  };
+  
+  /// Claim HTLC on EVM chain
+  public shared({ caller }) func claim_evm_htlc(
+    chain_id : Nat,
+    evm_htlc_address : Text,
+    secret : Text
+  ) : async Result.Result<Text, Text> {
+    switch (get_chain_config_internal(chain_id)) {
+      case (#ok(config)) {
+        // Create transaction data for HTLC claim
+        let tx_data = create_htlc_transaction_data(
+          #Claim,
+          {
+            hashlock = ""; // Not needed for claim
+            sender = "0x" # Principal.toText(caller);
+            recipient = evm_htlc_address;
+            amount = "0x0";
+            expiration = "0x0";
+            secret = ?secret;
+          }
+        );
+        
+        switch (tx_data) {
+          case (#ok(data)) {
+            // Create EVM interaction record
+            let interaction_id = generate_evm_interaction_id();
+            let interaction : EvmHtlcInteraction = {
+              htlc_id = interaction_id;
+              evm_htlc_address = evm_htlc_address;
+              action = #Claim;
+              secret = ?secret;
+              transaction_hash = null;
+              status = #Pending;
+            };
+            
+            evm_interaction_store.put(interaction_id, interaction);
+            
+            // For now, return the interaction ID
+            // In a full implementation, you would submit the transaction
+            
+            #ok(interaction_id);
+          };
+          case (#err(error)) { #err("Failed to create transaction data: " # error) };
+        };
+      };
+      case (#err(error)) { #err(error) };
+    };
+  };
+  
+  /// Refund HTLC on EVM chain
+  public shared({ caller }) func refund_evm_htlc(
+    chain_id : Nat,
+    evm_htlc_address : Text
+  ) : async Result.Result<Text, Text> {
+    switch (get_chain_config_internal(chain_id)) {
+      case (#ok(config)) {
+        // Create transaction data for HTLC refund
+        let tx_data = create_htlc_transaction_data(
+          #Refund,
+          {
+            hashlock = "";
+            sender = "0x" # Principal.toText(caller);
+            recipient = evm_htlc_address;
+            amount = "0x0";
+            expiration = "0x0";
+            secret = null;
+          }
+        );
+        
+        switch (tx_data) {
+          case (#ok(data)) {
+            // Create EVM interaction record
+            let interaction_id = generate_evm_interaction_id();
+            let interaction : EvmHtlcInteraction = {
+              htlc_id = interaction_id;
+              evm_htlc_address = evm_htlc_address;
+              action = #Refund;
+              secret = null;
+              transaction_hash = null;
+              status = #Pending;
+            };
+            
+            evm_interaction_store.put(interaction_id, interaction);
+            
+            // For now, return the interaction ID
+            // In a full implementation, you would submit the transaction
+            
+            #ok(interaction_id);
+          };
+          case (#err(error)) { #err("Failed to create transaction data: " # error) };
+        };
+      };
+      case (#err(error)) { #err(error) };
+    };
+  };
+  
+  /// Get EVM interaction details
+  public query func get_evm_interaction(interaction_id : Text) : async Result.Result<EvmHtlcInteraction, Text> {
+    switch (evm_interaction_store.get(interaction_id)) {
+      case (?interaction) { #ok(interaction) };
+      case (null) { #err("EVM interaction not found") };
+    };
+  };
+  
+  /// Get all EVM interactions for an HTLC
+  public query func get_evm_interactions_by_htlc(htlc_id : Text) : async [EvmHtlcInteraction] {
+    let interactions = Buffer.Buffer<EvmHtlcInteraction>(0);
+    
+    for ((id, interaction) in evm_interaction_store.entries()) {
+      if (Text.contains(id, #text(htlc_id))) {
+        interactions.add(interaction);
+      };
+    };
+    
+    Buffer.toArray(interactions);
+  };
+  
+  /// Update chain configuration
+  public shared({ caller }) func update_chain_config(
+    chain_id : Nat,
+    config : EvmChainConfig
+  ) : async Result.Result<(), Text> {
+    // In a real implementation, you would add authorization checks here
+    evm_chain_config_store.put(chain_id, config);
+    #ok(());
+  };
+  
+  /// Get chain configuration
+  public query func get_chain_config(chain_id : Nat) : async Result.Result<EvmChainConfig, Text> {
+    switch (evm_chain_config_store.get(chain_id)) {
+      case (?config) { #ok(config) };
+      case (null) { #err("Chain configuration not found") };
+    };
+  };
+  
+  /// Test EVM RPC connectivity
+  public func test_evm_rpc(chain_id : Nat) : async Result.Result<Text, Text> {
+    switch (await get_evm_block_number(chain_id)) {
+      case (#ok(block_number)) {
+        #ok("EVM RPC working - Latest block: " # Nat.toText(block_number));
+      };
+      case (#err(error)) { #err("EVM RPC test failed: " # error) };
+    };
+  };
+  
+  /// Test Sepolia contract interaction
+  public func test_sepolia_contract() : async Result.Result<Text, Text> {
+    let chain_id = 11155111; // Sepolia
+    let contract_address = "0x28c91484b55b6991d8f5e4fe2ff313024532537e"; // Your factory address
+    
+    switch (get_chain_config_internal(chain_id)) {
+      case (#ok(config)) {
+        Cycles.add<system>(EVM_RPC_CYCLES);
+        
+        // Call the icpNetworkSigner() function on your contract
+        let result = await EvmRpc.eth_call(
+          config.rpc_services,
+          null,
+          {
+            block = null;
+            transaction = {
+              to = ?contract_address;
+              input = ?"0x8d1fdf2f"; // icpNetworkSigner() function selector
+              accessList = null;
+              blobVersionedHashes = null;
+              blobs = null;
+              chainId = null;
+              from = null;
+              gas = null;
+              gasPrice = null;
+              maxFeePerBlobGas = null;
+              maxFeePerGas = null;
+              maxPriorityFeePerGas = null;
+              nonce = null;
+              type_ = null;
+              value = null;
+            };
+          }
+        );
+        
+        switch (result) {
+          case (#Consistent(#Ok response)) {
+            #ok("Sepolia contract call successful: " # response);
+          };
+          case (#Consistent(#Err error)) {
+            #err("RPC error: " # debug_show(error));
+          };
+          case (#Inconsistent(_)) {
+            #err("Inconsistent RPC results");
+          };
+        };
+      };
+      case (#err(error)) { #err(error) };
     };
   };
   

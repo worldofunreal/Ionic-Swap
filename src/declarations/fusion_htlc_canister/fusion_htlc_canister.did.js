@@ -1,4 +1,5 @@
 export const idlFactory = ({ IDL }) => {
+  const Result_1 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const ChainType = IDL.Variant({
     'ICP' : IDL.Null,
@@ -8,7 +9,6 @@ export const idlFactory = ({ IDL }) => {
     'Optimism' : IDL.Null,
     'Arbitrum' : IDL.Null,
   });
-  const Result_1 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const OneInchOrder = IDL.Record({
     'fills' : IDL.Vec(IDL.Text),
     'maker' : IDL.Text,
@@ -34,7 +34,7 @@ export const idlFactory = ({ IDL }) => {
     'total_filled' : IDL.Nat,
     'remaining_amount' : IDL.Nat,
   });
-  const Result_7 = IDL.Variant({ 'ok' : HTLCOrder, 'err' : IDL.Text });
+  const Result_10 = IDL.Variant({ 'ok' : HTLCOrder, 'err' : IDL.Text });
   const Resolver = IDL.Record({
     'last_active' : IDL.Int,
     'total_fills' : IDL.Nat,
@@ -43,6 +43,70 @@ export const idlFactory = ({ IDL }) => {
     'is_active' : IDL.Bool,
     'supported_chains' : IDL.Vec(ChainType),
   });
+  const EthSepoliaService = IDL.Variant({
+    'Alchemy' : IDL.Null,
+    'BlockPi' : IDL.Null,
+    'PublicNode' : IDL.Null,
+    'Ankr' : IDL.Null,
+    'Sepolia' : IDL.Null,
+  });
+  const L2MainnetService = IDL.Variant({
+    'Alchemy' : IDL.Null,
+    'Llama' : IDL.Null,
+    'BlockPi' : IDL.Null,
+    'PublicNode' : IDL.Null,
+    'Ankr' : IDL.Null,
+  });
+  const HttpHeader = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
+  const RpcApi = IDL.Record({
+    'url' : IDL.Text,
+    'headers' : IDL.Opt(IDL.Vec(HttpHeader)),
+  });
+  const EthMainnetService = IDL.Variant({
+    'Alchemy' : IDL.Null,
+    'Llama' : IDL.Null,
+    'BlockPi' : IDL.Null,
+    'Cloudflare' : IDL.Null,
+    'PublicNode' : IDL.Null,
+    'Ankr' : IDL.Null,
+  });
+  const RpcServices = IDL.Variant({
+    'EthSepolia' : IDL.Opt(IDL.Vec(EthSepoliaService)),
+    'BaseMainnet' : IDL.Opt(IDL.Vec(L2MainnetService)),
+    'Custom' : IDL.Record({
+      'chainId' : IDL.Nat64,
+      'services' : IDL.Vec(RpcApi),
+    }),
+    'OptimismMainnet' : IDL.Opt(IDL.Vec(L2MainnetService)),
+    'ArbitrumOne' : IDL.Opt(IDL.Vec(L2MainnetService)),
+    'EthMainnet' : IDL.Opt(IDL.Vec(EthMainnetService)),
+  });
+  const EvmChainConfig = IDL.Record({
+    'htlc_contract_address' : IDL.Opt(IDL.Text),
+    'rpc_services' : RpcServices,
+    'chain_id' : IDL.Nat,
+    'gas_limit' : IDL.Nat,
+    'gas_price' : IDL.Nat,
+  });
+  const Result_9 = IDL.Variant({ 'ok' : EvmChainConfig, 'err' : IDL.Text });
+  const Result_8 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
+  const EvmHtlcInteraction = IDL.Record({
+    'status' : IDL.Variant({
+      'Failed' : IDL.Null,
+      'Confirmed' : IDL.Null,
+      'Pending' : IDL.Null,
+    }),
+    'action' : IDL.Variant({
+      'Refund' : IDL.Null,
+      'Create' : IDL.Null,
+      'Claim' : IDL.Null,
+    }),
+    'transaction_hash' : IDL.Opt(IDL.Text),
+    'secret' : IDL.Opt(IDL.Text),
+    'evm_htlc_address' : IDL.Text,
+    'htlc_id' : IDL.Text,
+  });
+  const Result_7 = IDL.Variant({ 'ok' : EvmHtlcInteraction, 'err' : IDL.Text });
   const HTLCStatus = IDL.Variant({
     'Refunded' : IDL.Null,
     'Claimed' : IDL.Null,
@@ -91,8 +155,14 @@ export const idlFactory = ({ IDL }) => {
     'headers' : IDL.Vec(http_header),
   });
   return IDL.Service({
+    'claim_evm_htlc' : IDL.Func([IDL.Nat, IDL.Text, IDL.Text], [Result_1], []),
     'claim_htlc' : IDL.Func([IDL.Text, IDL.Text], [Result], []),
     'complete_partial_fill' : IDL.Func([IDL.Text, IDL.Text], [Result], []),
+    'create_evm_htlc' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Int],
+        [Result_1],
+        [],
+      ),
     'create_htlc' : IDL.Func(
         [
           IDL.Principal,
@@ -111,7 +181,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'deposit_cycles' : IDL.Func([], [], []),
-    'get_1inch_order' : IDL.Func([IDL.Text], [Result_7], ['query']),
+    'get_1inch_order' : IDL.Func([IDL.Text], [Result_10], ['query']),
     'get_active_orders' : IDL.Func(
         [
           IDL.Opt(IDL.Nat),
@@ -123,8 +193,22 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'get_active_resolvers' : IDL.Func([], [IDL.Vec(Resolver)], ['query']),
+    'get_chain_config' : IDL.Func([IDL.Nat], [Result_9], ['query']),
     'get_cycles_balance' : IDL.Func([], [IDL.Nat], ['query']),
     'get_escrow_factory_address' : IDL.Func([IDL.Nat], [Result_1], []),
+    'get_evm_balance' : IDL.Func([IDL.Nat, IDL.Text], [Result_1], []),
+    'get_evm_block_number' : IDL.Func([IDL.Nat], [Result_8], []),
+    'get_evm_interaction' : IDL.Func([IDL.Text], [Result_7], ['query']),
+    'get_evm_interactions_by_htlc' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(EvmHtlcInteraction)],
+        ['query'],
+      ),
+    'get_evm_transaction_receipt' : IDL.Func(
+        [IDL.Nat, IDL.Text],
+        [Result_1],
+        [],
+      ),
     'get_htlc' : IDL.Func([IDL.Text], [Result_6], ['query']),
     'get_htlc_partial_fills' : IDL.Func([IDL.Text], [Result_5], ['query']),
     'get_htlcs_by_principal' : IDL.Func(
@@ -160,6 +244,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'parse_order_secrets_for_htlc' : IDL.Func([IDL.Text], [Result_1], []),
+    'refund_evm_htlc' : IDL.Func([IDL.Nat, IDL.Text], [Result_1], []),
     'refund_htlc' : IDL.Func([IDL.Text], [Result], []),
     'register_resolver' : IDL.Func(
         [IDL.Text, IDL.Vec(ChainType)],
@@ -168,6 +253,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'set_htlc_hashlock' : IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8)], [Result], []),
     'test_1inch_api' : IDL.Func([], [Result_1], []),
+    'test_evm_rpc' : IDL.Func([IDL.Nat], [Result_1], []),
     'test_get_active_orders' : IDL.Func([], [Result_1], []),
     'test_http_request' : IDL.Func([], [Result_1], []),
     'transform' : IDL.Func(
@@ -180,6 +266,7 @@ export const idlFactory = ({ IDL }) => {
         [HttpResponseResult],
         ['query'],
       ),
+    'update_chain_config' : IDL.Func([IDL.Nat, EvmChainConfig], [Result], []),
     'update_resolver_status' : IDL.Func([IDL.Text, IDL.Bool], [Result], []),
   });
 };

@@ -134,3 +134,6 @@ dist
 .dfx/
 .mops/
 artifacts/
+
+# Cargo
+target/
