@@ -387,7 +387,7 @@ export default function SwapInterface() {
     
     try {
       // Here you would implement the actual swap logic
-      // For now, we'll simulate it
+      // For now, we'll simulate
       toast.success('Swap executed successfully!');
     } catch (error) {
       console.error("Swap error:", error);
