@@ -1,7 +1,6 @@
 // Contract addresses
-export const SPIRAL_SEPOLIA = "0x8528A46CcDdbC488Fa6D82580fE3844abA4B5D83";
-export const HTLC_CONTRACT = "0xBe953413e9FAB2642625D4043e4dcc0D16d14e77";
-export const FORWARDER_CONTRACT = "0xb68126CF8BB3EB1f0C6CC8EB5aDf860751A8fc98";
+export const SPIRAL_SEPOLIA = "0xdE7409EDeA573D090c3C6123458D6242E26b425E"; // New SpiralToken
+export const HTLC_CONTRACT = "0x5e8b5b36F81A723Cdf42771e7aAc943b360c4751"; // New EtherlinkEscrowFactory
 
 // Network configuration
 export const SEPOLIA_CHAIN_ID = 11155111;

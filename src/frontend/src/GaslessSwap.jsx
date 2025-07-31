@@ -18,7 +18,7 @@ const GaslessSwap = () => {
   const [amount, setAmount] = useState('');
   const [txHash, setTxHash] = useState('');
   
-  const { actor: htlcActor } = useActor();
+  const { actor: backendActor } = useActor();
 
   // Custom hooks for business logic
   const {
@@ -61,13 +61,13 @@ const GaslessSwap = () => {
   // Handle approval
   const handleApprove = async () => {
     if (!amount) return;
-    await gaslessApprove(amount, htlcActor);
+    await gaslessApprove(amount, backendActor);
   };
 
   // Handle swap intent submission
   const handleSubmitIntent = async () => {
     if (!amount) return;
-    await submitGaslessSwapIntent(amount, htlcActor);
+    await submitGaslessSwapIntent(amount, backendActor);
   };
 
   // Combine all errors

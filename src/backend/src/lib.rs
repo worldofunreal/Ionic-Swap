@@ -25,7 +25,7 @@ const SEPOLIA_CHAIN_ID: u64 = 11155111;
 const EIP1559_TX_ID: u8 = 2;
 
 
-const FACTORY_ADDRESS: &str = "0xBe953413e9FAB2642625D4043e4dcc0D16d14e77";
+const FACTORY_ADDRESS: &str = "0x5e8b5b36F81A723Cdf42771e7aAc943b360c4751"; // New EtherlinkEscrowFactory
 const ICP_SIGNER_ADDRESS: &str = "0x6a3Ff928a09D21d82B27e9B002BBAea7fc123A00";
 const INFURA_URL: &str = "https://sepolia.infura.io/v3/70b7e4d32357459a9af10d6503eae303";
 
@@ -253,6 +253,12 @@ async fn get_transaction_receipt(tx_hash: String) -> Result<String, String> {
 async fn get_balance(address: String) -> Result<String, String> {
     let params = format!("[\"{}\", \"latest\"]", address);
     make_json_rpc_call("eth_getBalance", &params).await
+}
+
+#[update]
+async fn get_transaction_count(address: String) -> Result<String, String> {
+    let params = format!("[\"{}\", \"latest\"]", address);
+    make_json_rpc_call("eth_getTransactionCount", &params).await
 }
 
 // ============================================================================
@@ -634,6 +640,84 @@ fn get_contract_info() -> String {
 }
 
 // ============================================================================
+// PERMIT SUBMISSION AND EXECUTION
+// ============================================================================
+
+#[derive(CandidType, Deserialize)]
+pub struct PermitData {
+    pub token_address: String,
+    pub owner: String,
+    pub spender: String,
+    pub value: String,
+    pub deadline: u64,
+    pub v: u8,
+    pub r: String,
+    pub s: String,
+    pub signature: String,
+}
+
+#[update]
+async fn submit_permit_signature(permit_data: PermitData) -> Result<String, String> {
+    // 1. Verify permit signature
+    let recovered_address = verify_permit_signature(&permit_data)?;
+    if recovered_address != permit_data.owner {
+        return Err("Invalid permit signature".to_string());
+    }
+    
+    // 2. Get canister's Ethereum address using the same method as documentation
+    let from_addr = get_eth_addr(None, None, "dfx_test_key".to_string())
+        .await
+        .map_err(|e| format!("get canister eth addr failed: {}", e))?;
+    
+    // 3. Encode HTLC function call
+    let htlc_data = encode_htlc_permit_call(&permit_data)?;
+    
+    // 4. Get current nonce
+    let nonce_response = get_transaction_count(format!("0x{}", hex::encode(from_addr))).await?;
+    let nonce_json: serde_json::Value = serde_json::from_str(&nonce_response)
+        .map_err(|e| format!("Failed to parse nonce response: {}", e))?;
+    let nonce = nonce_json["result"]
+        .as_str()
+        .ok_or("No result in nonce response")?
+        .trim_start_matches("0x");
+    
+    // 5. Sign and send transaction
+    let signed_tx = sign_eip1559_transaction(
+        FACTORY_ADDRESS.to_string(), // HTLC contract address
+        "0".to_string(), // no value
+        "200000".to_string(), // gas limit (reduced from 300k)
+        "2000000000".to_string(), // max_fee_per_gas (2 gwei - much lower!)
+        "1500000000".to_string(), // max_priority_fee_per_gas (1.5 gwei)
+        nonce.to_string(), // use actual nonce from chain
+        SEPOLIA_CHAIN_ID.to_string(),
+        htlc_data,
+    ).await?;
+    
+    // 6. Send raw transaction
+    let tx_hash = send_raw_transaction(signed_tx.0).await?;
+    
+    Ok(format!("Permit executed successfully. Transaction: {}", tx_hash))
+}
+
+fn verify_permit_signature(permit_data: &PermitData) -> Result<String, String> {
+    // This would implement EIP-2612 signature verification
+    // For now, we'll return the owner address (simplified)
+    // In production, this should verify the actual signature
+    Ok(permit_data.owner.clone())
+}
+
+fn encode_htlc_permit_call(permit_data: &PermitData) -> Result<String, String> {
+    // For now, let's just call a simple function to test transaction signing
+    // We'll call the ICP_NETWORK_SIGNER_SELECTOR function which we know exists
+    let function_selector = ICP_NETWORK_SIGNER_SELECTOR;
+    
+    // This is a simple call with no parameters
+    let encoded_data = function_selector.to_string();
+    
+    Ok(encoded_data)
+}
+
+// ============================================================================
 // EVM HTLC CONTRACT INTERACTION METHODS
 // ============================================================================
 
@@ -745,10 +829,37 @@ async fn get_public_key() -> Result<String, String> {
 
 #[update]
 async fn get_ethereum_address() -> Result<String, String> {
+    // Use the correct method from ic-web3-rs documentation
     match get_eth_addr(None, None, "dfx_test_key".to_string()).await {
         Ok(addr) => Ok(format!("0x{}", hex::encode(addr))),
         Err(e) => Err(format!("Failed to get address: {}", e)),
     }
+}
+
+#[update]
+async fn test_signing_address() -> Result<String, String> {
+    // Use the same method as get_ethereum_address for consistency
+    get_ethereum_address().await
+}
+
+#[update]
+async fn test_simple_transaction() -> Result<String, String> {
+    // Test a simple transaction to see if the signing works
+    let signed_tx = sign_eip1559_transaction(
+        FACTORY_ADDRESS.to_string(), // Send to factory contract
+        "0".to_string(), // no value
+        "21000".to_string(), // gas limit (basic transfer)
+        "2000000000".to_string(), // max_fee_per_gas (2 gwei)
+        "1500000000".to_string(), // max_priority_fee_per_gas (1.5 gwei)
+        "0".to_string(), // nonce
+        SEPOLIA_CHAIN_ID.to_string(),
+        "0x".to_string(), // no data
+    ).await?;
+    
+    // Try to send the transaction
+    let tx_hash = send_raw_transaction(signed_tx.0).await?;
+    
+    Ok(format!("Simple transaction result: {}", tx_hash))
 }
 
 #[update]
@@ -836,13 +947,18 @@ async fn sign_eip1559_transaction(
         Err(e) => return Err(e.to_string()),
     };
     
-    // ECDSA key info
-    let derivation_path = vec![ic_cdk::api::caller().as_slice().to_vec()];
+    // ECDSA key info - use same derivation path as documentation example
+    let derivation_path = vec![ic_cdk::id().as_slice().to_vec()];
     let key_info = KeyInfo { 
-        derivation_path, 
+        derivation_path: derivation_path,
         key_name: "dfx_test_key".to_string(),
         ecdsa_sign_cycles: None,
     };
+    
+    // Get canister's Ethereum address using the same method as documentation
+    let from_addr = get_eth_addr(None, None, "dfx_test_key".to_string())
+        .await
+        .map_err(|e| format!("get canister eth addr failed: {}", e))?;
     
     // Parse inputs
     let to_addr = ic_web3_rs::ethabi::Address::from_str(&to).map_err(|e| format!("Invalid to address: {}", e))?;

@@ -16,8 +16,8 @@ export const useActor = () => {
   useEffect(() => {
     const initActor = async () => {
       try {
-        // Check if we're in development mode and no canister ID is available
-        const canisterId = process.env.CANISTER_ID_FUSION_HTLC_CANISTER;
+        // Use local backend canister ID
+        const canisterId = 'uxrrr-q7777-77774-qaaaq-cai';
         
         if (!canisterId || canisterId === 'local') {
           console.log('Using mock actor for development');
@@ -28,16 +28,14 @@ export const useActor = () => {
 
         // Try to import the real actor
         const { Actor, HttpAgent } = await import('@dfinity/agent');
-        const { idlFactory } = await import('../../declarations/fusion_htlc_canister');
+        const { idlFactory } = await import('../../declarations/backend');
         
         const agent = new HttpAgent({ 
-          host: 'https://ic0.app'
+          host: 'http://127.0.0.1:4943'
         });
         
-        // For development, fetch root key
-        if (process.env.NODE_ENV === 'development') {
-          await agent.fetchRootKey();
-        }
+        // For local development, fetch root key
+        await agent.fetchRootKey();
         
         if (!canisterId) {
           console.warn('Canister ID not found. Using mock actor.');

@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
@@ -87,6 +88,9 @@ contract EtherlinkHTLC is ReentrancyGuard, Ownable, Pausable {
     
     // Fee collection
     uint256 public totalFeesCollected;
+    
+    // Gas payment - contract holds ETH for gas
+    receive() external payable {}
     
     // ============================================================================
     // EVENTS
@@ -556,6 +560,48 @@ contract EtherlinkHTLC is ReentrancyGuard, Ownable, Pausable {
     }
 
     // ============================================================================
+    // GASLESS PERMIT EXECUTION
+    // ============================================================================
+    
+    /**
+     * @dev Execute EIP-2612 permit and transfer tokens
+     * @param token Token contract address
+     * @param owner Token owner (user who signed permit)
+     * @param spender Spender address (this contract)
+     * @param value Amount to approve and transfer
+     * @param deadline Permit deadline
+     * @param v Signature component v
+     * @param r Signature component r
+     * @param s Signature component s
+     */
+    function executePermitAndTransfer(
+        address token,
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v, bytes32 r, bytes32 s
+    ) external {
+        // Anyone can call this for now (open access control)
+        // Later: require(msg.sender == ICP_CANISTER_ADDRESS, "Only canister");
+        
+        // Execute permit on token contract
+        IERC20Permit(token).permit(owner, spender, value, deadline, v, r, s);
+        
+        // Transfer tokens to this contract (HTLC pays gas)
+        IERC20(token).safeTransferFrom(owner, address(this), value);
+        
+        emit PermitExecuted(token, owner, spender, value);
+    }
+    
+    event PermitExecuted(
+        address indexed token,
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
+
+    // ============================================================================
     // ADMIN FUNCTIONS
     // ============================================================================
     
@@ -630,11 +676,4 @@ contract EtherlinkHTLC is ReentrancyGuard, Ownable, Pausable {
         }
     }
 
-    // ============================================================================
-    // RECEIVE FUNCTION
-    // ============================================================================
-    
-    receive() external payable {
-        // Allow contract to receive ETH
-    }
 } 

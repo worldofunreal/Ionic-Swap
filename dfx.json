@@ -1,31 +1,10 @@
 {
   "canisters": {
-    "fusion_htlc_canister": {
-      "main": "src/fusion_htlc_canister/main.mo",
-      "type": "motoko"
-    },
-    "cross_chain_orderbook": {
-      "main": "src/cross_chain_orderbook/main.mo",
-      "type": "motoko"
-    },
-    "sepolia_test": {
-      "main": "src/sepolia_test/main.mo",
-      "type": "motoko"
-    },
     "backend": {
       "type": "rust",
       "package": "backend",
       "candid": "src/backend/backend.did"
-    },
-    "evm_rpc": {
-      "type": "pull",
-      "id": "7hfb6-caaaa-aaaar-qadga-cai"
-    },
-    "token": {
-          "type": "motoko",
-          "main": "src/token/Token.mo",
-          "args": "-v --incremental-gc"  
-     }
+    }
   },
   "defaults": {
     "build": {

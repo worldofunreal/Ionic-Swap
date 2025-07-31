@@ -630,8 +630,8 @@
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/EtherlinkHTLC.sol": {
-      "lastModificationDate": 1753879412007,
-      "contentHash": "6ffae1d32bf99dacd910f1bc587c5d04",
+      "lastModificationDate": 1753989791187,
+      "contentHash": "b7556bfbaf376afc2035faea3fd270cd",
       "sourceName": "contracts/EtherlinkHTLC.sol",
       "solcConfig": {
         "version": "0.8.23",
@@ -663,6 +663,7 @@
         "@openzeppelin/contracts/access/Ownable.sol",
         "@openzeppelin/contracts/token/ERC20/IERC20.sol",
         "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol",
+        "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol",
         "@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
         "@openzeppelin/contracts/security/Pausable.sol"
       ],

@@ -1,16 +1,16 @@
 import { useState } from 'react';
-import { HTLC_CONTRACT } from '../utils/contractUtils.js';
+import { ethers } from 'ethers';
+import { SPIRAL_SEPOLIA, HTLC_CONTRACT } from '../utils/contractUtils.js';
 import { 
   signPermitMessage, 
-  verifyPermitSignature, 
-  createPermitData 
+  verifyPermitSignature
 } from '../utils/gaslessUtils.js';
 
 export const useGaslessApproval = (signer, userAddress, tokenContract, getNonce) => {
   const [approvalStatus, setApprovalStatus] = useState('idle');
   const [error, setError] = useState('');
 
-  const gaslessApprove = async (amount, htlcActor) => {
+  const gaslessApprove = async (amount, backendActor) => {
     if (!signer || !userAddress || !tokenContract || !getNonce) {
       setError('Wallet or token contract not initialized');
       return false;
@@ -50,20 +50,20 @@ export const useGaslessApproval = (signer, userAddress, tokenContract, getNonce)
       console.log('This is TRUE gasless - user only signs, ICP handles permit execution!');
       
       // Create permit data for ICP submission
-      const permitData = createPermitData(
-        userAddress,
-        HTLC_CONTRACT,
-        amount,
-        deadline,
-        sig,
-        signature
-      );
+      const permitData = {
+        token_address: SPIRAL_SEPOLIA,
+        owner: userAddress,
+        spender: HTLC_CONTRACT,
+        value: ethers.utils.parseUnits(amount, 8).toString(),
+        deadline: deadline,
+        v: sig.v,
+        r: sig.r,
+        s: sig.s,
+        signature: signature
+      };
 
-      // Submit to ICP canister (this should handle the permit call)
-      const result = await htlcActor.submit_permit_signature({
-        permit_data: permitData,
-        user_address: userAddress,
-      });
+      // Submit to ICP canister
+              const result = await backendActor.submit_permit_signature(permitData);
 
       if (result.Ok) {
         setApprovalStatus('approved');

@@ -6,7 +6,7 @@ export const useSwapIntent = (signer, userAddress) => {
   const [intentStatus, setIntentStatus] = useState('idle');
   const [error, setError] = useState('');
 
-  const submitGaslessSwapIntent = async (amount, htlcActor) => {
+  const submitGaslessSwapIntent = async (amount, backendActor) => {
     if (!signer || !userAddress) {
       setError('Wallet not connected');
       return false;
@@ -50,7 +50,7 @@ export const useSwapIntent = (signer, userAddress) => {
       );
 
       // Submit to ICP canister
-      const result = await htlcActor.submit_swap_intent({
+      const result = await backendActor.submit_swap_intent({
         intent: intent,
         signature: intentSignature,
         user_address: userAddress,
