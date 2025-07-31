@@ -5,6 +5,9 @@ import { AuthClient } from "@dfinity/auth-client";
 import { Principal } from "@dfinity/principal";
 import toast, { Toaster } from 'react-hot-toast';
 import { ethers } from 'ethers';
+import MetaTransactionService, { HTLCData } from './services/metaTransactionService';
+import { relayMetaTransaction } from './services/relayerService';
+import ICPService, { ICPHTLCData } from './services/icpService';
 
 // Type definitions
 declare global {
@@ -88,9 +91,59 @@ export default function SwapInterface() {
   const [isIcpConnected, setIsIcpConnected] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [ethBalance, setEthBalance] = useState('40');
+  const [tokenBalance, setTokenBalance] = useState('0');
+  const [tokenAllowance, setTokenAllowance] = useState('0');
+  const [htlcId, setHtlcId] = useState<string>('');
+  const [secret, setSecret] = useState<string>('');
+  const [hashlock, setHashlock] = useState<string>('');
   
-  // ICP actor
+  // Services
   const { actor } = useActor();
+  const [metaTxService, setMetaTxService] = useState<MetaTransactionService | null>(null);
+  const [icpService, setIcpService] = useState<ICPService | null>(null);
+
+  // Initialize services when wallet connects
+  useEffect(() => {
+    if (isEthConnected && ethAddress) {
+      try {
+        const service = new MetaTransactionService();
+        setMetaTxService(service);
+        loadBalances();
+      } catch (error) {
+        console.error('Failed to initialize MetaTransaction service:', error);
+      }
+    }
+  }, [isEthConnected, ethAddress]);
+
+  useEffect(() => {
+    if (isIcpConnected && actor) {
+      try {
+        const service = new ICPService();
+        setIcpService(service);
+      } catch (error) {
+        console.error('Failed to initialize ICP service:', error);
+      }
+    }
+  }, [isIcpConnected, actor]);
+
+  // Load balances and allowances
+  const loadBalances = async () => {
+    if (!metaTxService || !ethAddress) return;
+    
+    try {
+      const [ethBal, tokenBal, tokenAllow] = await Promise.all([
+        metaTxService.getEthBalance(ethAddress),
+        metaTxService.getTokenBalance(ethAddress),
+        metaTxService.getTokenAllowance(ethAddress)
+      ]);
+      
+      setEthBalance(ethBal);
+      setTokenBalance(tokenBal);
+      setTokenAllowance(tokenAllow);
+    } catch (error) {
+      console.error('Failed to load balances:', error);
+    }
+  };
 
   // Connect Ethereum wallet (MetaMask)
   const connectEthWallet = async () => {
@@ -131,38 +184,157 @@ export default function SwapInterface() {
     }
   };
 
-  // EIP-2771 Meta-transaction signing
-  const signMetaTransaction = async (userAddress: string, contractAddress: string, functionData: string, nonce: number) => {
-    if (typeof window.ethereum === 'undefined') {
-      throw new Error('MetaMask not available');
+  // Generate secret and hashlock
+  const generateSecretAndHashlock = () => {
+    if (!metaTxService) return;
+    
+    const { secret: newSecret, hashlock: newHashlock } = metaTxService.generateSecretAndHashlock();
+    setSecret(newSecret);
+    setHashlock(newHashlock);
+    toast.success('Secret and hashlock generated!');
+  };
+
+  // Approve tokens for HTLC contract
+  const approveTokens = async () => {
+    if (!metaTxService || !amount) {
+      toast.error('Please connect wallet and enter amount');
+      return;
     }
 
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    
-    const domain = {
-      name: "HTLC Contract",
-      version: "1",
-      verifyingContract: contractAddress,
-      chainId: await provider.getNetwork().then(n => Number(n.chainId)),
-    };
+    setLoading(true);
+    try {
+      const txHash = await metaTxService.approveTokens(amount);
+      toast.success(`Tokens approved! TX: ${txHash}`);
+      await loadBalances(); // Reload allowances
+    } catch (error) {
+      console.error('Token approval error:', error);
+      toast.error('Failed to approve tokens');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const types = {
-      MetaTransaction: [
-        { name: "nonce", type: "uint256" },
-        { name: "from", type: "address" },
-        { name: "functionSignature", type: "bytes" }
-      ],
-    };
+  // Create HTLC on Ethereum (gasless)
+  const createHTLCGasless = async () => {
+    if (!metaTxService || !ethAddress || !amount || !hashlock) {
+      toast.error('Please connect wallet, enter amount, and generate hashlock');
+      return;
+    }
 
-    const value = {
-      nonce,
-      from: userAddress,
-      functionSignature: functionData,
-    };
+    setLoading(true);
+    try {
+      // Generate timelock (1 hour from now)
+      const timelock = Math.floor(Date.now() / 1000) + 3600;
+      
+      const htlcData: HTLCData = {
+        recipient: ethAddress, // For demo, recipient is same as sender
+        amount: amount,
+        hashlock: hashlock,
+        timelock: timelock,
+        token: '0x0000000000000000000000000000000000000000', // ETH
+        sourceChain: 1, // Ethereum
+        targetChain: 0, // ICP
+        orderHash: ''
+      };
 
-    const signature = await signer.signTypedData(domain, types, value);
-    return ethers.Signature.from(signature);
+      // Sign meta-transaction
+      const metaTxData = await metaTxService.signCreateHTLCMetaTransaction(ethAddress, htlcData);
+      
+      // Send to relayer
+      const result = await relayMetaTransaction(HTLC_CONTRACT_ADDRESS, metaTxData);
+      
+      if (result.success) {
+        toast.success(`HTLC created! TX: ${result.transactionHash}`);
+        setHtlcId(result.transactionHash || '');
+      } else {
+        toast.error(`Failed to create HTLC: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('HTLC creation error:', error);
+      toast.error('Failed to create HTLC');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Create HTLC on ICP
+  const createHTLCOnICP = async () => {
+    if (!icpService || !icpAddress || !amount || !hashlock) {
+      toast.error('Please connect ICP wallet, enter amount, and generate hashlock');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const recipient = Principal.fromText(icpAddress);
+      const tokenCanister = Principal.anonymous(); // Use anonymous principal for demo
+      const expirationTime = BigInt(Math.floor(Date.now() / 1000) + 3600); // 1 hour
+      
+      const htlcData: ICPHTLCData = {
+        recipient: recipient,
+        amount: BigInt(parseFloat(amount) * 1e8), // Convert to ICP units (8 decimals)
+        tokenCanister: tokenCanister,
+        expirationTime: expirationTime,
+        chainType: 'ICP',
+        ethereumAddress: ethAddress || undefined
+      };
+
+      const htlcId = await icpService.createHTLC(htlcData);
+      setHtlcId(htlcId);
+      toast.success(`ICP HTLC created! ID: ${htlcId}`);
+    } catch (error) {
+      console.error('ICP HTLC creation error:', error);
+      toast.error('Failed to create ICP HTLC');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Claim HTLC on Ethereum (gasless)
+  const claimHTLCGasless = async () => {
+    if (!metaTxService || !ethAddress || !htlcId || !secret) {
+      toast.error('Please connect wallet, enter HTLC ID, and secret');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Sign meta-transaction
+      const metaTxData = await metaTxService.signClaimHTLCMetaTransaction(ethAddress, htlcId, secret);
+      
+      // Send to relayer
+      const result = await relayMetaTransaction(HTLC_CONTRACT_ADDRESS, metaTxData);
+      
+      if (result.success) {
+        toast.success(`HTLC claimed! TX: ${result.transactionHash}`);
+      } else {
+        toast.error(`Failed to claim HTLC: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('HTLC claim error:', error);
+      toast.error('Failed to claim HTLC');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Claim HTLC on ICP
+  const claimHTLCOnICP = async () => {
+    if (!icpService || !htlcId || !secret) {
+      toast.error('Please connect ICP wallet, enter HTLC ID, and secret');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await icpService.claimHTLC(htlcId, secret);
+      toast.success('ICP HTLC claimed successfully!');
+    } catch (error) {
+      console.error('ICP HTLC claim error:', error);
+      toast.error('Failed to claim ICP HTLC');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Switch chains and tokens
@@ -225,7 +397,8 @@ export default function SwapInterface() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white">
+    <div className="min-h-screen bg-radial from-blue-900 via-blue-900 to-blue-900 text-white">
+    {/* <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white"> */}
       <Toaster position="top-right" />
       
       {/* Header */}
@@ -292,10 +465,10 @@ export default function SwapInterface() {
           {/* Tabs */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex space-x-1 bg-white/10 rounded-lg p-1">
-              <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-md text-white font-medium">
+              <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-400 rounded-lg text-white font-semibold">
                 Swap
               </button>
-              <button className="px-4 py-2 text-gray-400 hover:text-white transition-colors">
+              <button className="px-4 py-2 text-gray-400 hover:text-white transition-colors font-semibold">
                 Limit
               </button>
             </div>
@@ -388,13 +561,126 @@ export default function SwapInterface() {
             Powered by: <span className="text-blue-400">1inch</span>
           </div>
 
+          {/* HTLC Management Section */}
+          {isEthConnected && (
+            <div className="mt-6 p-4 bg-white/5 rounded-xl border border-white/10">
+              <h3 className="text-lg font-semibold mb-4">HTLC Management</h3>
+              
+              {/* Generate Secret & Hashlock */}
+              <div className="mb-4">
+                <button
+                  onClick={generateSecretAndHashlock}
+                  className="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg font-medium transition-all duration-200"
+                >
+                  Generate Secret & Hashlock
+                </button>
+              </div>
+
+              {/* Secret and Hashlock Display */}
+              {secret && hashlock && (
+                <div className="mb-4 space-y-2">
+                  <div>
+                    <label className="text-sm text-gray-300">Secret:</label>
+                    <div className="text-xs bg-gray-800 p-2 rounded break-all">{secret}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-300">Hashlock:</label>
+                    <div className="text-xs bg-gray-800 p-2 rounded break-all">{hashlock}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Token Approval */}
+              <div className="mb-4">
+                <button
+                  onClick={approveTokens}
+                  disabled={loading}
+                  className="w-full bg-yellow-600 hover:bg-yellow-700 disabled:opacity-50 py-2 rounded-lg font-medium transition-all duration-200"
+                >
+                  {loading ? 'Approving...' : 'Approve Tokens'}
+                </button>
+                <div className="text-xs text-gray-400 mt-1">
+                  Allowance: {tokenAllowance} | Balance: {tokenBalance}
+                </div>
+              </div>
+
+              {/* Create HTLC */}
+              <div className="mb-4 space-y-2">
+                <button
+                  onClick={createHTLCGasless}
+                  disabled={loading || !hashlock}
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 py-2 rounded-lg font-medium transition-all duration-200"
+                >
+                  {loading ? 'Creating...' : 'Create HTLC (Gasless)'}
+                </button>
+                
+                {isIcpConnected && (
+                  <button
+                    onClick={createHTLCOnICP}
+                    disabled={loading || !hashlock}
+                    className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 py-2 rounded-lg font-medium transition-all duration-200"
+                  >
+                    {loading ? 'Creating...' : 'Create HTLC on ICP'}
+                  </button>
+                )}
+              </div>
+
+              {/* HTLC ID Input */}
+              <div className="mb-4">
+                <label className="text-sm text-gray-300">HTLC ID:</label>
+                <input
+                  type="text"
+                  value={htlcId}
+                  onChange={(e) => setHtlcId(e.target.value)}
+                  placeholder="Enter HTLC ID to claim/refund"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                />
+              </div>
+
+              {/* Secret Input */}
+              <div className="mb-4">
+                <label className="text-sm text-gray-300">Secret:</label>
+                <input
+                  type="text"
+                  value={secret}
+                  onChange={(e) => setSecret(e.target.value)}
+                  placeholder="Enter secret to claim HTLC"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+                />
+              </div>
+
+              {/* Claim HTLC */}
+              <div className="mb-4 space-y-2">
+                <button
+                  onClick={claimHTLCGasless}
+                  disabled={loading || !htlcId || !secret}
+                  className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 py-2 rounded-lg font-medium transition-all duration-200"
+                >
+                  {loading ? 'Claiming...' : 'Claim HTLC (Gasless)'}
+                </button>
+                
+                {isIcpConnected && (
+                  <button
+                    onClick={claimHTLCOnICP}
+                    disabled={loading || !htlcId || !secret}
+                    className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 py-2 rounded-lg font-medium transition-all duration-200"
+                  >
+                    {loading ? 'Claiming...' : 'Claim HTLC on ICP'}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Connect Wallet Button */}
-          <button
-            onClick={() => setShowWalletModal(true)}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-4 rounded-xl font-medium text-lg transition-all duration-200"
-          >
-            Connect Wallet
-          </button>
+          {!isEthConnected && (
+            <button
+              onClick={() => setShowWalletModal(true)}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-purple-700 py-4 rounded-xl font-medium text-lg transition-all duration-200"
+            >
+              Connect Wallet
+            </button>
+          )}
         </div>
       </div>
 
