@@ -10,6 +10,8 @@
     "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
     "deploy:bsc": "hardhat run scripts/deploy.js --network bsc",
     "deploy:etherlink": "hardhat run scripts/deploy.js --network etherlink",
+    "deploy:token": "hardhat run scripts/deploy-token.js --network sepolia",
+    "deploy:forwarder": "hardhat run scripts/deploy-forwarder.js --network sepolia",
     "verify:sepolia": "hardhat verify --network sepolia",
     "verify:bsc": "hardhat verify --network bsc",
     "verify:etherlink": "hardhat verify --network etherlink",

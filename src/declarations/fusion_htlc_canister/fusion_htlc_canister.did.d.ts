@@ -202,6 +202,7 @@ export interface _SERVICE {
   'test_evm_rpc' : ActorMethod<[bigint], Result_1>,
   'test_get_active_orders' : ActorMethod<[], Result_1>,
   'test_http_request' : ActorMethod<[], Result_1>,
+  'test_sepolia_contract' : ActorMethod<[], Result_1>,
   'transform' : ActorMethod<
     [{ 'context' : Uint8Array | number[], 'response' : HttpResponseResult }],
     HttpResponseResult

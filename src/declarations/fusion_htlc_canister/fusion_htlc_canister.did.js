@@ -256,6 +256,7 @@ export const idlFactory = ({ IDL }) => {
     'test_evm_rpc' : IDL.Func([IDL.Nat], [Result_1], []),
     'test_get_active_orders' : IDL.Func([], [Result_1], []),
     'test_http_request' : IDL.Func([], [Result_1], []),
+    'test_sepolia_contract' : IDL.Func([], [Result_1], []),
     'transform' : IDL.Func(
         [
           IDL.Record({

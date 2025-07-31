@@ -306,6 +306,8 @@ service : {
   test_get_active_orders: () -> (Result_1);
   /// Test method to check if we can make a basic HTTP request
   test_http_request: () -> (Result_1);
+  /// Test Sepolia contract interaction
+  test_sepolia_contract: () -> (Result_1);
   transform: (record {
                 context: blob;
                 response: HttpResponseResult;

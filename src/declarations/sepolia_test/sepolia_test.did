@@ -1,0 +1,48 @@
+type http_header = 
+ record {
+   name: text;
+   value: text;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type HttpResponseResult = 
+ record {
+   body: blob;
+   headers: vec http_header;
+   status: nat;
+ };
+service : {
+  /// Deposit cycles into the canister
+  deposit_cycles: () -> ();
+  /// Get balance of an address on Sepolia
+  get_balance: (address: text) -> (Result);
+  /// Call claimFee() on your factory contract
+  get_claim_fee: () -> (Result);
+  /// Get contract information
+  get_contract_info: () -> (text) query;
+  /// Get cycles balance
+  get_cycles_balance: () -> (nat) query;
+  /// Call icpNetworkSigner() on your factory contract
+  get_icp_network_signer: () -> (Result);
+  /// Call refundFee() on your factory contract
+  get_refund_fee: () -> (Result);
+  /// Get latest block number from Sepolia
+  get_sepolia_block_number: () -> (Result);
+  /// Call totalFeesCollected() on your factory contract
+  get_total_fees: () -> (Result);
+  /// Get transaction receipt from Sepolia
+  get_transaction_receipt: (tx_hash: text) -> (Result);
+  /// Test all contract functions
+  test_all_contract_functions: () -> (Result);
+  /// Test basic RPC functionality
+  test_basic_rpc: () -> (Result);
+  /// Test your deployment transaction
+  test_deployment_transaction: () -> (Result);
+  transform: (record {
+                context: blob;
+                response: HttpResponseResult;
+              }) -> (HttpResponseResult) query;
+}

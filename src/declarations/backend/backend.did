@@ -1,0 +1,26 @@
+service : {
+  // JSON-RPC Methods
+  "get_sepolia_block_number" : () -> (variant { Ok : text; Err : text });
+  "get_transaction_receipt" : (text) -> (variant { Ok : text; Err : text });
+  "get_balance" : (text) -> (variant { Ok : text; Err : text });
+  
+  // Contract Interaction Methods
+  "get_icp_network_signer" : () -> (variant { Ok : text; Err : text });
+  "get_claim_fee" : () -> (variant { Ok : text; Err : text });
+  "get_refund_fee" : () -> (variant { Ok : text; Err : text });
+  "get_total_fees" : () -> (variant { Ok : text; Err : text });
+  
+  // Testing Methods
+  "test_all_contract_functions" : () -> (variant { Ok : text; Err : text });
+  "test_basic_rpc" : () -> (variant { Ok : text; Err : text });
+  "test_deployment_transaction" : () -> (variant { Ok : text; Err : text });
+  
+  // Utility Methods
+  "get_contract_info" : () -> (text);
+  
+  // EVM Integration Methods (new)
+  "get_public_key" : () -> (variant { Ok : text; Err : text });
+  "get_ethereum_address" : () -> (variant { Ok : text; Err : text });
+  "sign_transaction" : (text, text, text, text) -> (variant { Ok : text; Err : text });
+  "send_raw_transaction" : (text) -> (variant { Ok : text; Err : text });
+} 

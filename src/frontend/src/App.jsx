@@ -1,38 +1,31 @@
 import { useState } from 'react';
 import { useActor } from './useActor';
+import GaslessSwap from './GaslessSwap';
 
 function App() {
-  const [greeting, setGreeting] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [userAddress, setUserAddress] = useState('');
   const { actor, loading: actorLoading } = useActor();
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    
-    if (!actor) {
-      setGreeting("Actor not initialized. Please check your connection.");
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      const name = event.target.elements.name.value;
-      const result = await actor.greet(name);
-      setGreeting(result);
-    } catch (error) {
-      console.error("Error:", error);
-      setGreeting("Failed to fetch greeting. Please ensure the canister is deployed.");
-    } finally {
-      setLoading(false);
+  const connectWallet = async () => {
+    if (window.ethereum) {
+      try {
+        const accounts = await window.ethereum.request({ 
+          method: 'eth_requestAccounts' 
+        });
+        setUserAddress(accounts[0]);
+        setIsConnected(true);
+      } catch (error) {
+        console.error('Failed to connect wallet:', error);
+      }
+    } else {
+      alert('Please install MetaMask!');
     }
   };
 
   if (actorLoading) {
     return (
       <main>
-        <img src="/logo2.svg" alt="DFINITY logo" />
-        <br />
-        <br />
         <div>Initializing...</div>
       </main>
     );
@@ -40,17 +33,23 @@ function App() {
 
   return (
     <main>
-      <img src="/logo2.svg" alt="DFINITY logo" />
-      <br />
-      <br />
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="name">Enter your name: &nbsp;</label>
-        <input id="name" alt="Name" type="text" disabled={loading} />
-        <button type="submit" disabled={loading}>
-          {loading ? "Loading..." : "Click Me!"}
-        </button>
-      </form>
-      <section id="greeting">{greeting}</section>
+      <h1>Ionic Swap</h1>
+      
+      {!isConnected ? (
+        <div className="connect-wallet">
+          <button onClick={connectWallet} className="connect-btn">
+            Connect MetaMask
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="wallet-info">
+            <p>Connected: {userAddress}</p>
+          </div>
+          
+          <GaslessSwap />
+        </>
+      )}
     </main>
   );
 }

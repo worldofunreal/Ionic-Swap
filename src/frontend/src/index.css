@@ -1,19 +1,402 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  padding: 20px;
+  -webkit-text-size-adjust: 100%;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
 }
 
-#root {
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+main {
+  width: 100%;
   max-width: 800px;
   margin: 0 auto;
+  padding: 20px;
+  text-align: center;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+  margin-bottom: 30px;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  color: white;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Connect Wallet */
+.connect-wallet {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.connect-btn {
+  background-color: #646cff;
+  border-color: #646cff;
+  font-size: 1.2em;
+  padding: 15px 30px;
+}
+
+.connect-btn:hover {
+  background-color: #535bf2;
+  border-color: #535bf2;
+}
+
+/* Wallet Info */
+.wallet-info {
+  background: #333;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.wallet-info p {
+  margin: 0;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.tab-navigation button {
+  background-color: #333;
+  border: 1px solid #555;
+  padding: 10px 20px;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.tab-navigation button.active {
+  background-color: #646cff;
+  border-color: #646cff;
+}
+
+.tab-navigation button:hover {
+  background-color: #535bf2;
+  border-color: #535bf2;
+}
+
+/* Tab Content */
+.tab-content {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Gasless Swap Styles */
+.gasless-swap-container {
+  background: #1a1a1a;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 20px 0;
+  text-align: center;
+}
+
+.gasless-swap-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #646cff;
+}
+
+.swap-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.input-group label {
+  font-weight: 500;
+  color: #ccc;
+  text-align: left;
+}
+
+.input-group input {
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #555;
+  background-color: #333;
+  color: white;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #646cff;
+}
+
+.balance-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 0.9em;
+}
+
+.balance-info span {
+  color: #ccc;
+  font-weight: 500;
+}
+
+.balance-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.balance-buttons button {
+  padding: 4px 8px;
+  font-size: 0.8em;
+  background-color: #333;
+  border: 1px solid #555;
+  color: #ccc;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.balance-buttons button:hover:not(:disabled) {
+  background-color: #646cff;
+  border-color: #646cff;
+  color: white;
+}
+
+.balance-buttons button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status-display {
+  background: #333;
+  padding: 15px;
+  border-radius: 5px;
+  border-left: 4px solid #646cff;
+  width: 100%;
+  max-width: 400px;
+  text-align: left;
+}
+
+.status-display p {
+  margin: 5px 0;
+}
+
+.error {
+  color: #ff6b6b;
+  font-weight: 500;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.button-group button {
+  min-width: 150px;
+  background-color: #646cff;
+  border-color: #646cff;
+}
+
+.button-group button:hover {
+  background-color: #535bf2;
+  border-color: #535bf2;
+}
+
+.button-group button:disabled {
+  background-color: #555;
+  border-color: #555;
+  cursor: not-allowed;
+}
+
+.success-message {
+  background: #2d5a2d;
+  padding: 15px;
+  border-radius: 5px;
+  text-align: center;
+  border-left: 4px solid #4caf50;
+  width: 100%;
+  max-width: 400px;
+}
+
+.info-panel {
+  background: #333;
+  padding: 20px;
+  border-radius: 5px;
+  margin-top: 20px;
+  text-align: left;
+}
+
+.info-panel h3 {
+  color: #646cff;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.info-panel ol {
+  padding-left: 20px;
+}
+
+.info-panel li {
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+.info-panel strong {
+  color: #646cff;
+}
+
+/* Transaction hash link */
+.status-display a {
+  color: #646cff;
+  word-break: break-all;
+}
+
+.status-display a:hover {
+  color: #535bf2;
+  text-decoration: underline;
+}
+
+/* Swap Container */
+.swap-container {
+  background: #1a1a1a;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 20px 0;
+  text-align: center;
+}
+
+.swap-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #646cff;
+}
+
+/* Network Warning */
+.network-warning {
+  background: #ff6b6b;
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.network-warning p {
+  margin: 0 0 10px 0;
+  font-weight: 500;
+}
+
+.switch-network-btn {
+  background-color: white;
+  color: #ff6b6b;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.switch-network-btn:hover {
+  background-color: #f0f0f0;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+    color: #213547;
+  }
+  
+  .gasless-swap-container,
+  .swap-container {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+  }
+  
+  .input-group input {
+    background-color: white;
+    color: #213547;
+    border: 1px solid #ccc;
+  }
+  
+  .status-display {
+    background: #f5f5f5;
+    border-left-color: #646cff;
+  }
+  
+  .info-panel {
+    background: #f5f5f5;
+  }
+  
+  .wallet-info {
+    background: #f5f5f5;
+  }
 }
