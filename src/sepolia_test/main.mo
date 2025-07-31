@@ -3,9 +3,9 @@ import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import Text "mo:base/Text";
 import Result "mo:base/Result";
-
-// EVM RPC Integration
-import EvmRpc "canister:evm_rpc";
+import Blob "mo:base/Blob";
+import Error "mo:base/Error";
+import IC "ic:aaaaa-aa";
 
 actor {
   
@@ -16,10 +16,10 @@ actor {
   // Sepolia configuration
   let SEPOLIA_CHAIN_ID : Nat = 11155111;
   let FACTORY_ADDRESS : Text = "0xBe953413e9FAB2642625D4043e4dcc0D16d14e77";
-  let ICP_SIGNER_ADDRESS : Text = "0x6a3Ff928a09D21D82B27e9B002BBAea7fc123A00";
+  let ICP_SIGNER_ADDRESS : Text = "0x6a3Ff928a09D21d82B27e9B002BBAea7fc123A00";
   
-  // EVM RPC cycles
-  let EVM_RPC_CYCLES : Nat = 2_000_000_000; // 2B cycles for RPC calls
+  // HTTP cycles for JSON-RPC calls
+  let HTTP_CYCLES : Nat = 230_949_972_000; // Same as main canister
   
   // Function selectors for your contract
   let ICP_NETWORK_SIGNER_SELECTOR : Text = "0x2a92b710"; // icpNetworkSigner()
@@ -28,151 +28,131 @@ actor {
   let TOTAL_FEES_SELECTOR : Text = "0x60c6d8ae"; // totalFeesCollected()
   
   // ============================================================================
-  // EVM RPC METHODS
+  // HTTP TYPES
   // ============================================================================
   
-  /// Get latest block number from Sepolia using custom Infura RPC
-  public func get_sepolia_block_number() : async Result.Result<Text, Text> {
-    let json_request = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":1}";
-    
-    let result = await (with cycles = EVM_RPC_CYCLES) EvmRpc.request(
-      #Custom({
-        url = "https://sepolia.infura.io/v3/70b7e4d32357459a9af10d6503eae303";
-        headers = null;
-      }),
-      json_request,
-      10000
-    );
-    
-    switch (result) {
-      case (#Ok response) {
-        #ok("Block Number Response: " # response);
-      };
-      case (#Err error) {
-        #err("RPC error: " # debug_show(error));
-      };
+  type HttpRequestArgs = IC.http_request_args;
+  type HttpResponseResult = IC.http_request_result;
+  type HttpHeader = IC.http_header;
+  
+  // ============================================================================
+  // HTTP HELPER FUNCTIONS
+  // ============================================================================
+  
+  public query func transform({
+    context : Blob;
+    response : HttpResponseResult;
+  }) : async HttpResponseResult {
+    {
+      response with headers = []; // Remove headers to avoid consensus issues
     };
+  };
+  
+  private func createHttpRequest(
+    url : Text,
+    method : Text,
+    body : ?Text,
+    headers : [HttpHeader]
+  ) : HttpRequestArgs {
+    {
+      url = url;
+      max_response_bytes = null;
+      headers = headers;
+      body = switch (body) {
+        case (?b) { ?Text.encodeUtf8(b) };
+        case (null) { null };
+      };
+      method = switch (method) {
+        case ("GET") { #get };
+        case ("POST") { #post };
+        case ("HEAD") { #head };
+        case (_) { #get };
+      };
+      transform = ?{
+        function = transform;
+        context = Blob.fromArray([]);
+      };
+      is_replicated = null;
+    };
+  };
+  
+  private func decodeHttpResponse(response : HttpResponseResult) : Result.Result<Text, Text> {
+    switch (Text.decodeUtf8(response.body)) {
+      case (?text) { #ok(text) };
+      case (null) { #err("Failed to decode response body") };
+    };
+  };
+  
+  // ============================================================================
+  // JSON-RPC METHODS
+  // ============================================================================
+  
+  /// Make a JSON-RPC call to Sepolia via Infura
+  private func makeJsonRpcCall(method : Text, params : Text) : async Result.Result<Text, Text> {
+    let url = "https://sepolia.infura.io/v3/70b7e4d32357459a9af10d6503eae303";
+    let json_request = "{\"jsonrpc\":\"2.0\",\"method\":\"" # method # "\",\"params\":" # params # ",\"id\":1}";
+    
+    let request_headers = [
+      { name = "Content-Type"; value = "application/json" },
+      { name = "User-Agent"; value = "ionic-swap-sepolia-test" },
+    ];
+    
+    let http_request = createHttpRequest(url, "POST", ?json_request, request_headers);
+    
+    try {
+      Cycles.add<system>(HTTP_CYCLES);
+      let http_response = await IC.http_request(http_request);
+      
+      switch (decodeHttpResponse(http_response)) {
+        case (#ok(response_text)) { #ok(response_text) };
+        case (#err(error)) { #err("Failed to decode response: " # error) };
+      };
+    } catch (error) {
+      #err("HTTP request failed: " # Error.message(error));
+    };
+  };
+  
+  /// Get latest block number from Sepolia
+  public func get_sepolia_block_number() : async Result.Result<Text, Text> {
+    await makeJsonRpcCall("eth_blockNumber", "[]");
   };
   
   /// Get transaction receipt from Sepolia
   public func get_transaction_receipt(tx_hash : Text) : async Result.Result<Text, Text> {
-    let result = await (with cycles = EVM_RPC_CYCLES) EvmRpc.eth_getTransactionReceipt(#EthSepolia(?[#Alchemy]), null, tx_hash);
-    
-    switch (result) {
-      case (#Consistent(#Ok receipt)) {
-        #ok(debug_show(receipt));
-      };
-      case (#Consistent(#Err error)) {
-        #err("RPC error: " # debug_show(error));
-      };
-      case (#Inconsistent(_)) {
-        #err("Inconsistent RPC results");
-      };
-    };
+    await makeJsonRpcCall("eth_getTransactionReceipt", "[\"" # tx_hash # "\"]");
   };
   
-  /// Get balance of an address on Sepolia (using eth_call to a dummy contract)
-  public func get_balance(_address : Text) : async Result.Result<Text, Text> {
-    // Note: EVM RPC canister doesn't have eth_getBalance
-    // We'll use eth_call to get the balance instead
-    // For native ETH balance, we need to use a different approach
-    #err("eth_getBalance not available in EVM RPC canister. Use eth_call for contract balances instead.");
+  /// Get balance of an address on Sepolia
+  public func get_balance(address : Text) : async Result.Result<Text, Text> {
+    await makeJsonRpcCall("eth_getBalance", "[\"" # address # "\", \"latest\"]");
   };
   
   // ============================================================================
   // CONTRACT INTERACTION METHODS
   // ============================================================================
   
-  /// Call icpNetworkSigner() on your factory contract using custom Infura RPC
+  /// Call icpNetworkSigner() on your factory contract
   public func get_icp_network_signer() : async Result.Result<Text, Text> {
-    let json_request = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"" # FACTORY_ADDRESS # "\",\"data\":\"" # ICP_NETWORK_SIGNER_SELECTOR # "\"}, \"latest\"],\"id\":1}";
-    
-    let result = await (with cycles = EVM_RPC_CYCLES) EvmRpc.request(
-      #Custom({
-        url = "https://sepolia.infura.io/v3/70b7e4d32357459a9af10d6503eae303";
-        headers = null;
-      }),
-      json_request,
-      10000
-    );
-    
-    switch (result) {
-      case (#Ok response) {
-        #ok("ICP Network Signer Response: " # response);
-      };
-      case (#Err error) {
-        #err("RPC error: " # debug_show(error));
-      };
-    };
+    let params = "[{\"to\":\"" # FACTORY_ADDRESS # "\",\"data\":\"" # ICP_NETWORK_SIGNER_SELECTOR # "\"}, \"latest\"]";
+    await makeJsonRpcCall("eth_call", params);
   };
   
-  /// Call claimFee() on your factory contract using custom Infura RPC
+  /// Call claimFee() on your factory contract
   public func get_claim_fee() : async Result.Result<Text, Text> {
-    let json_request = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"" # FACTORY_ADDRESS # "\",\"data\":\"" # CLAIM_FEE_SELECTOR # "\"}, \"latest\"],\"id\":1}";
-    
-    let result = await (with cycles = EVM_RPC_CYCLES) EvmRpc.request(
-      #Custom({
-        url = "https://sepolia.infura.io/v3/70b7e4d32357459a9af10d6503eae303";
-        headers = null;
-      }),
-      json_request,
-      10000
-    );
-    
-    switch (result) {
-      case (#Ok response) {
-        #ok("Claim Fee Response: " # response);
-      };
-      case (#Err error) {
-        #err("RPC error: " # debug_show(error));
-      };
-    };
+    let params = "[{\"to\":\"" # FACTORY_ADDRESS # "\",\"data\":\"" # CLAIM_FEE_SELECTOR # "\"}, \"latest\"]";
+    await makeJsonRpcCall("eth_call", params);
   };
   
-  /// Call refundFee() on your factory contract using custom Infura RPC
+  /// Call refundFee() on your factory contract
   public func get_refund_fee() : async Result.Result<Text, Text> {
-    let json_request = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"" # FACTORY_ADDRESS # "\",\"data\":\"" # REFUND_FEE_SELECTOR # "\"}, \"latest\"],\"id\":1}";
-    
-    let result = await (with cycles = EVM_RPC_CYCLES) EvmRpc.request(
-      #Custom({
-        url = "https://sepolia.infura.io/v3/70b7e4d32357459a9af10d6503eae303";
-        headers = null;
-      }),
-      json_request,
-      10000
-    );
-    
-    switch (result) {
-      case (#Ok response) {
-        #ok("Refund Fee Response: " # response);
-      };
-      case (#Err error) {
-        #err("RPC error: " # debug_show(error));
-      };
-    };
+    let params = "[{\"to\":\"" # FACTORY_ADDRESS # "\",\"data\":\"" # REFUND_FEE_SELECTOR # "\"}, \"latest\"]";
+    await makeJsonRpcCall("eth_call", params);
   };
   
-  /// Call totalFeesCollected() on your factory contract using custom Infura RPC
+  /// Call totalFeesCollected() on your factory contract
   public func get_total_fees() : async Result.Result<Text, Text> {
-    let json_request = "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"" # FACTORY_ADDRESS # "\",\"data\":\"" # TOTAL_FEES_SELECTOR # "\"}, \"latest\"],\"id\":1}";
-    
-    let result = await (with cycles = EVM_RPC_CYCLES) EvmRpc.request(
-      #Custom({
-        url = "https://sepolia.infura.io/v3/70b7e4d32357459a9af10d6503eae303";
-        headers = null;
-      }),
-      json_request,
-      10000
-    );
-    
-    switch (result) {
-      case (#Ok response) {
-        #ok("Total Fees Response: " # response);
-      };
-      case (#Err error) {
-        #err("RPC error: " # debug_show(error));
-      };
-    };
+    let params = "[{\"to\":\"" # FACTORY_ADDRESS # "\",\"data\":\"" # TOTAL_FEES_SELECTOR # "\"}, \"latest\"]";
+    await makeJsonRpcCall("eth_call", params);
   };
   
   // ============================================================================
@@ -185,25 +165,25 @@ actor {
     
     // Test ICP Network Signer
     switch (await get_icp_network_signer()) {
-      case (#ok(response)) { result := result # "✅ " # response # "\n"; };
+      case (#ok(response)) { result := result # "✅ ICP Network Signer: " # response # "\n"; };
       case (#err(error)) { result := result # "❌ ICP Network Signer: " # error # "\n"; };
     };
     
     // Test Claim Fee
     switch (await get_claim_fee()) {
-      case (#ok(response)) { result := result # "✅ " # response # "\n"; };
+      case (#ok(response)) { result := result # "✅ Claim Fee: " # response # "\n"; };
       case (#err(error)) { result := result # "❌ Claim Fee: " # error # "\n"; };
     };
     
     // Test Refund Fee
     switch (await get_refund_fee()) {
-      case (#ok(response)) { result := result # "✅ " # response # "\n"; };
+      case (#ok(response)) { result := result # "✅ Refund Fee: " # response # "\n"; };
       case (#err(error)) { result := result # "❌ Refund Fee: " # error # "\n"; };
     };
     
     // Test Total Fees
     switch (await get_total_fees()) {
-      case (#ok(response)) { result := result # "✅ " # response # "\n"; };
+      case (#ok(response)) { result := result # "✅ Total Fees: " # response # "\n"; };
       case (#err(error)) { result := result # "❌ Total Fees: " # error # "\n"; };
     };
     
@@ -220,15 +200,18 @@ actor {
       case (#err(error)) { result := result # "❌ Block Number: " # error # "\n"; };
     };
     
-    // Note: eth_getBalance not available in EVM RPC canister
-    result := result # "ℹ️  Balance checks not available (eth_getBalance not supported)\n";
+    // Test balance
+    switch (await get_balance(ICP_SIGNER_ADDRESS)) {
+      case (#ok(balance)) { result := result # "✅ ICP Signer Balance: " # balance # "\n"; };
+      case (#err(error)) { result := result # "❌ Balance: " # error # "\n"; };
+    };
     
     #ok(result);
   };
   
   /// Test your deployment transaction
   public func test_deployment_transaction() : async Result.Result<Text, Text> {
-    let deployment_tx = "0x7b4752abc5cb9421d6c0f991d81f4c9d7af84f49c0fb9a3b07a8a0940131ef17";
+    let deployment_tx = "0x632b719a0b30557774ad8e4a7025ccb75497bf38818cd16c9263c03b641c7338";
     
     switch (await get_transaction_receipt(deployment_tx)) {
       case (#ok(receipt)) {
