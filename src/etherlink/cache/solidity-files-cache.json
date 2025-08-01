@@ -2,7 +2,7 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/BaseEscrow.sol": {
-      "lastModificationDate": 1753909519071,
+      "lastModificationDate": 1753993986928,
       "contentHash": "c0d6fd6a0d0d5d551a7212d304d1b227",
       "sourceName": "contracts/BaseEscrow.sol",
       "solcConfig": {
@@ -46,7 +46,7 @@
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/libraries/AddressLib.sol": {
-      "lastModificationDate": 1753909519072,
+      "lastModificationDate": 1753993986929,
       "contentHash": "a74a3072daf80f941d83adbf00599d76",
       "sourceName": "contracts/libraries/AddressLib.sol",
       "solcConfig": {
@@ -82,48 +82,8 @@
         "AddressLib"
       ]
     },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/libraries/SafeERC20.sol": {
-      "lastModificationDate": 1753909519072,
-      "contentHash": "6a674fb8873351efba8cbdc5be2e2444",
-      "sourceName": "contracts/libraries/SafeERC20.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
-        "./AddressLib.sol"
-      ],
-      "versionPragmas": [
-        "0.8.23"
-      ],
-      "artifacts": [
-        "SafeERC20"
-      ]
-    },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/libraries/ImmutablesLib.sol": {
-      "lastModificationDate": 1753909519072,
+      "lastModificationDate": 1753993986929,
       "contentHash": "5e076e2fc3e6ca6ed4756d836c605830",
       "sourceName": "contracts/libraries/ImmutablesLib.sol",
       "solcConfig": {
@@ -162,8 +122,85 @@
         "ImmutablesLib"
       ]
     },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/libraries/SafeERC20.sol": {
+      "lastModificationDate": 1753993986929,
+      "contentHash": "6a674fb8873351efba8cbdc5be2e2444",
+      "sourceName": "contracts/libraries/SafeERC20.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "./AddressLib.sol"
+      ],
+      "versionPragmas": [
+        "0.8.23"
+      ],
+      "artifacts": [
+        "SafeERC20"
+      ]
+    },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/libraries/TimelocksLib.sol": {
+      "lastModificationDate": 1753993986929,
+      "contentHash": "bc8d5c78cddb7d1af93d03391cdb3871",
+      "sourceName": "contracts/libraries/TimelocksLib.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.23"
+      ],
+      "artifacts": [
+        "TimelocksLib"
+      ]
+    },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/interfaces/IBaseEscrow.sol": {
-      "lastModificationDate": 1753909519071,
+      "lastModificationDate": 1753993986928,
       "contentHash": "6d681733ac07d1f71462168cd2036830",
       "sourceName": "contracts/interfaces/IBaseEscrow.sol",
       "solcConfig": {
@@ -201,45 +238,8 @@
         "IBaseEscrow"
       ]
     },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/libraries/TimelocksLib.sol": {
-      "lastModificationDate": 1753909519072,
-      "contentHash": "bc8d5c78cddb7d1af93d03391cdb3871",
-      "sourceName": "contracts/libraries/TimelocksLib.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "0.8.23"
-      ],
-      "artifacts": [
-        "TimelocksLib"
-      ]
-    },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol": {
-      "lastModificationDate": 1753880993111,
+      "lastModificationDate": 1754000398690,
       "contentHash": "df36f7051335cd1e748b1b6463b7fdd3",
       "sourceName": "@openzeppelin/contracts/token/ERC20/IERC20.sol",
       "solcConfig": {
@@ -276,7 +276,7 @@
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/EtherlinkEscrowSrc.sol": {
-      "lastModificationDate": 1753909519071,
+      "lastModificationDate": 1753993986928,
       "contentHash": "322fdc9d9911d6f99005c27c064096be",
       "sourceName": "contracts/EtherlinkEscrowSrc.sol",
       "solcConfig": {
@@ -322,7 +322,7 @@
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/interfaces/IEscrowSrc.sol": {
-      "lastModificationDate": 1753909519072,
+      "lastModificationDate": 1753993986929,
       "contentHash": "4ab9e037b00e5c7b8df877f95ba86b1f",
       "sourceName": "contracts/interfaces/IEscrowSrc.sol",
       "solcConfig": {
@@ -361,7 +361,7 @@
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/Escrow.sol": {
-      "lastModificationDate": 1753909519071,
+      "lastModificationDate": 1753993986928,
       "contentHash": "4b646de3b9ef471ffb54a5586ccd0e74",
       "sourceName": "contracts/Escrow.sol",
       "solcConfig": {
@@ -403,45 +403,8 @@
         "Escrow"
       ]
     },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/libraries/ProxyHashLib.sol": {
-      "lastModificationDate": 1753909519072,
-      "contentHash": "a2bb39f06be65e5d7a613da9426b76ce",
-      "sourceName": "contracts/libraries/ProxyHashLib.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "0.8.23"
-      ],
-      "artifacts": [
-        "ProxyHashLib"
-      ]
-    },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/interfaces/IEscrow.sol": {
-      "lastModificationDate": 1753909519072,
+      "lastModificationDate": 1753993986929,
       "contentHash": "a1ed54b890f96a396ddd63cf85cd3de2",
       "sourceName": "contracts/interfaces/IEscrow.sol",
       "solcConfig": {
@@ -477,8 +440,45 @@
         "IEscrow"
       ]
     },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/libraries/ProxyHashLib.sol": {
+      "lastModificationDate": 1753993986929,
+      "contentHash": "a2bb39f06be65e5d7a613da9426b76ce",
+      "sourceName": "contracts/libraries/ProxyHashLib.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.23"
+      ],
+      "artifacts": [
+        "ProxyHashLib"
+      ]
+    },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/Create2.sol": {
-      "lastModificationDate": 1753880992781,
+      "lastModificationDate": 1754000398541,
       "contentHash": "752ff0901adbdac182deace414d9e75f",
       "sourceName": "@openzeppelin/contracts/utils/Create2.sol",
       "solcConfig": {
@@ -514,8 +514,549 @@
         "Create2"
       ]
     },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol": {
+      "lastModificationDate": 1754000398692,
+      "contentHash": "909ab67fc5c25033fe6cd364f8c056f9",
+      "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../IERC20.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IERC20Metadata"
+      ]
+    },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol": {
+      "lastModificationDate": 1754000398599,
+      "contentHash": "3ae5166c6827a9cf1a7a462d1632b464",
+      "sourceName": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IERC20.sol",
+        "./extensions/IERC20Metadata.sol",
+        "../../utils/Context.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ERC20"
+      ]
+    },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/Context.sol": {
+      "lastModificationDate": 1754000398538,
+      "contentHash": "5f2c5c4b6af2dd4551027144797bc8be",
+      "sourceName": "@openzeppelin/contracts/utils/Context.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Context"
+      ]
+    },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol": {
+      "lastModificationDate": 1754000398604,
+      "contentHash": "c8946432e6d37418cb12a15668e3c0cd",
+      "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IERC20Permit.sol",
+        "../ERC20.sol",
+        "../../../utils/cryptography/ECDSA.sol",
+        "../../../utils/cryptography/EIP712.sol",
+        "../../../utils/Counters.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ERC20Permit"
+      ]
+    },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol": {
+      "lastModificationDate": 1754000398569,
+      "contentHash": "d822a8a9468649cab463f29f5decf5cc",
+      "sourceName": "@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../Strings.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ECDSA"
+      ]
+    },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/cryptography/EIP712.sol": {
+      "lastModificationDate": 1754000398570,
+      "contentHash": "459aeb9cc3fc3c6d67d30ffefb724aba",
+      "sourceName": "@openzeppelin/contracts/utils/cryptography/EIP712.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ECDSA.sol",
+        "../ShortStrings.sol",
+        "../../interfaces/IERC5267.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.8"
+      ],
+      "artifacts": [
+        "EIP712"
+      ]
+    },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol": {
+      "lastModificationDate": 1754000398693,
+      "contentHash": "aa849939a4ae83a4dcb2dca9b3e9e707",
+      "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IERC20Permit"
+      ]
+    },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/Counters.sol": {
+      "lastModificationDate": 1754000398539,
+      "contentHash": "74654e3ae5d7f39555055dfe244dab7a",
+      "sourceName": "@openzeppelin/contracts/utils/Counters.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Counters"
+      ]
+    },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/Strings.sol": {
+      "lastModificationDate": 1754000398753,
+      "contentHash": "48686fc32a22a3754b8e63321857dd2a",
+      "sourceName": "@openzeppelin/contracts/utils/Strings.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./math/Math.sol",
+        "./math/SignedMath.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Strings"
+      ]
+    },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/math/SignedMath.sol": {
+      "lastModificationDate": 1754000398751,
+      "contentHash": "9488ebd4daacfee8ad04811600d7d061",
+      "sourceName": "@openzeppelin/contracts/utils/math/SignedMath.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "SignedMath"
+      ]
+    },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/math/Math.sol": {
+      "lastModificationDate": 1754000398732,
+      "contentHash": "fe63409d8a06818b926cf89e0ea88b1b",
+      "sourceName": "@openzeppelin/contracts/utils/math/Math.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "Math"
+      ]
+    },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/interfaces/IERC5267.sol": {
+      "lastModificationDate": 1754000398703,
+      "contentHash": "b1756048024350a162c3be27c04aa652",
+      "sourceName": "@openzeppelin/contracts/interfaces/IERC5267.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IERC5267"
+      ]
+    },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/ShortStrings.sol": {
+      "lastModificationDate": 1754000398750,
+      "contentHash": "8dde288da49722a70f34ee369be4bfba",
+      "sourceName": "@openzeppelin/contracts/utils/ShortStrings.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./StorageSlot.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.8"
+      ],
+      "artifacts": [
+        "ShortStrings"
+      ]
+    },
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/StorageSlot.sol": {
+      "lastModificationDate": 1754000398753,
+      "contentHash": "682f7dd1f2e1147c8390e7575deceb2d",
+      "sourceName": "@openzeppelin/contracts/utils/StorageSlot.sol",
+      "solcConfig": {
+        "version": "0.8.23",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "StorageSlot"
+      ]
+    },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol": {
-      "lastModificationDate": 1753880993174,
+      "lastModificationDate": 1754000398748,
       "contentHash": "1b5d667d3740d866eca0352758e59827",
       "sourceName": "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol",
       "solcConfig": {
@@ -556,7 +1097,7 @@
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/Address.sol": {
-      "lastModificationDate": 1753880992742,
+      "lastModificationDate": 1754000398512,
       "contentHash": "211ffd288c1588ba8c10eae668ca3c66",
       "sourceName": "@openzeppelin/contracts/utils/Address.sol",
       "solcConfig": {
@@ -592,45 +1133,8 @@
         "Address"
       ]
     },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol": {
-      "lastModificationDate": 1753880993113,
-      "contentHash": "aa849939a4ae83a4dcb2dca9b3e9e707",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "IERC20Permit"
-      ]
-    },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/EtherlinkHTLC.sol": {
-      "lastModificationDate": 1753989791187,
+      "lastModificationDate": 1753999399253,
       "contentHash": "b7556bfbaf376afc2035faea3fd270cd",
       "sourceName": "contracts/EtherlinkHTLC.sol",
       "solcConfig": {
@@ -675,7 +1179,7 @@
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/access/Ownable.sol": {
-      "lastModificationDate": 1753880993163,
+      "lastModificationDate": 1754000398738,
       "contentHash": "5a20b2cad87ddb61c7a3a6af21289e28",
       "sourceName": "@openzeppelin/contracts/access/Ownable.sol",
       "solcConfig": {
@@ -714,7 +1218,7 @@
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol": {
-      "lastModificationDate": 1753880993169,
+      "lastModificationDate": 1754000398742,
       "contentHash": "1535f8c0c68463f8c1b5239f7584e71f",
       "sourceName": "@openzeppelin/contracts/security/ReentrancyGuard.sol",
       "solcConfig": {
@@ -751,7 +1255,7 @@
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/security/Pausable.sol": {
-      "lastModificationDate": 1753880993164,
+      "lastModificationDate": 1754000398740,
       "contentHash": "25c8108f36fdd472bc78d4c4af240c11",
       "sourceName": "@openzeppelin/contracts/security/Pausable.sol",
       "solcConfig": {
@@ -789,10 +1293,10 @@
         "Pausable"
       ]
     },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/cryptography/ECDSA.sol": {
-      "lastModificationDate": 1753880992851,
-      "contentHash": "d822a8a9468649cab463f29f5decf5cc",
-      "sourceName": "@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/MinimalForwarder.sol": {
+      "lastModificationDate": 1753999399253,
+      "contentHash": "00b735162bf980cb160bba08a3ff502d",
+      "sourceName": "contracts/MinimalForwarder.sol",
       "solcConfig": {
         "version": "0.8.23",
         "settings": {
@@ -819,56 +1323,20 @@
         }
       },
       "imports": [
-        "../Strings.sol"
+        "@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
+        "@openzeppelin/contracts/utils/cryptography/EIP712.sol"
       ],
       "versionPragmas": [
-        "^0.8.0"
+        "0.8.23"
       ],
       "artifacts": [
-        "ECDSA"
+        "MinimalForwarder"
       ]
     },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/Context.sol": {
-      "lastModificationDate": 1753880992777,
-      "contentHash": "5f2c5c4b6af2dd4551027144797bc8be",
-      "sourceName": "@openzeppelin/contracts/utils/Context.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "Context"
-      ]
-    },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/Strings.sol": {
-      "lastModificationDate": 1753880993182,
-      "contentHash": "48686fc32a22a3754b8e63321857dd2a",
-      "sourceName": "@openzeppelin/contracts/utils/Strings.sol",
+    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/SpiralToken.sol": {
+      "lastModificationDate": 1753999399253,
+      "contentHash": "8356321536b9337417489b68fd0af5ac",
+      "sourceName": "contracts/SpiralToken.sol",
       "solcConfig": {
         "version": "0.8.23",
         "settings": {
@@ -895,92 +1363,18 @@
         }
       },
       "imports": [
-        "./math/Math.sol",
-        "./math/SignedMath.sol"
+        "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol"
       ],
       "versionPragmas": [
-        "^0.8.0"
+        "0.8.23"
       ],
       "artifacts": [
-        "Strings"
-      ]
-    },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/math/SignedMath.sol": {
-      "lastModificationDate": 1753880993181,
-      "contentHash": "9488ebd4daacfee8ad04811600d7d061",
-      "sourceName": "@openzeppelin/contracts/utils/math/SignedMath.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "SignedMath"
-      ]
-    },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/math/Math.sol": {
-      "lastModificationDate": 1753880993156,
-      "contentHash": "fe63409d8a06818b926cf89e0ea88b1b",
-      "sourceName": "@openzeppelin/contracts/utils/math/Math.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "Math"
+        "SpiralToken"
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/interfaces/IEscrowFactory.sol": {
-      "lastModificationDate": 1753909519072,
+      "lastModificationDate": 1753993986929,
       "contentHash": "b22955e12c009865b01b26a78fe7e3b2",
       "sourceName": "contracts/interfaces/IEscrowFactory.sol",
       "solcConfig": {
@@ -1019,7 +1413,7 @@
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/EtherlinkEscrowFactory.sol": {
-      "lastModificationDate": 1753918419448,
+      "lastModificationDate": 1753999399253,
       "contentHash": "db096774a26666ed5afbbec3f2ca10b7",
       "sourceName": "contracts/EtherlinkEscrowFactory.sol",
       "solcConfig": {
@@ -1069,7 +1463,7 @@
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/EtherlinkEscrowDst.sol": {
-      "lastModificationDate": 1753909519071,
+      "lastModificationDate": 1753993986928,
       "contentHash": "491d5fd08ff56bb7be0442eb7d7bec81",
       "sourceName": "contracts/EtherlinkEscrowDst.sol",
       "solcConfig": {
@@ -1114,7 +1508,7 @@
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/proxy/Clones.sol": {
-      "lastModificationDate": 1753880992772,
+      "lastModificationDate": 1754000398533,
       "contentHash": "89c075565795af5e3e88fc75642a4af8",
       "sourceName": "@openzeppelin/contracts/proxy/Clones.sol",
       "solcConfig": {
@@ -1151,7 +1545,7 @@
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/interfaces/IEscrowDst.sol": {
-      "lastModificationDate": 1753909519072,
+      "lastModificationDate": 1753993986929,
       "contentHash": "8eea3d5427e957e846b0a8c19252d399",
       "sourceName": "contracts/interfaces/IEscrowDst.sol",
       "solcConfig": {
@@ -1190,7 +1584,7 @@
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/MockERC20.sol": {
-      "lastModificationDate": 1753879412008,
+      "lastModificationDate": 1753993986928,
       "contentHash": "9c2fb183d8141e06efef4c38fc808202",
       "sourceName": "contracts/MockERC20.sol",
       "solcConfig": {
@@ -1224,400 +1618,6 @@
       ],
       "artifacts": [
         "MockERC20"
-      ]
-    },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol": {
-      "lastModificationDate": 1753880993112,
-      "contentHash": "909ab67fc5c25033fe6cd364f8c056f9",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../IERC20.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "IERC20Metadata"
-      ]
-    },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol": {
-      "lastModificationDate": 1753880992929,
-      "contentHash": "3ae5166c6827a9cf1a7a462d1632b464",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/ERC20.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./IERC20.sol",
-        "./extensions/IERC20Metadata.sol",
-        "../../utils/Context.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "ERC20"
-      ]
-    },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/SpiralToken.sol": {
-      "lastModificationDate": 1753973538472,
-      "contentHash": "8356321536b9337417489b68fd0af5ac",
-      "sourceName": "contracts/SpiralToken.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/token/ERC20/ERC20.sol",
-        "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol"
-      ],
-      "versionPragmas": [
-        "0.8.23"
-      ],
-      "artifacts": [
-        "SpiralToken"
-      ]
-    },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol": {
-      "lastModificationDate": 1753880992943,
-      "contentHash": "c8946432e6d37418cb12a15668e3c0cd",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./IERC20Permit.sol",
-        "../ERC20.sol",
-        "../../../utils/cryptography/ECDSA.sol",
-        "../../../utils/cryptography/EIP712.sol",
-        "../../../utils/Counters.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "ERC20Permit"
-      ]
-    },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/Counters.sol": {
-      "lastModificationDate": 1753880992780,
-      "contentHash": "74654e3ae5d7f39555055dfe244dab7a",
-      "sourceName": "@openzeppelin/contracts/utils/Counters.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "Counters"
-      ]
-    },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/cryptography/EIP712.sol": {
-      "lastModificationDate": 1753880992854,
-      "contentHash": "459aeb9cc3fc3c6d67d30ffefb724aba",
-      "sourceName": "@openzeppelin/contracts/utils/cryptography/EIP712.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./ECDSA.sol",
-        "../ShortStrings.sol",
-        "../../interfaces/IERC5267.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.8"
-      ],
-      "artifacts": [
-        "EIP712"
-      ]
-    },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/ShortStrings.sol": {
-      "lastModificationDate": 1753880993177,
-      "contentHash": "8dde288da49722a70f34ee369be4bfba",
-      "sourceName": "@openzeppelin/contracts/utils/ShortStrings.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./StorageSlot.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.8"
-      ],
-      "artifacts": [
-        "ShortStrings"
-      ]
-    },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/interfaces/IERC5267.sol": {
-      "lastModificationDate": 1753880993122,
-      "contentHash": "b1756048024350a162c3be27c04aa652",
-      "sourceName": "@openzeppelin/contracts/interfaces/IERC5267.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "IERC5267"
-      ]
-    },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/node_modules/@openzeppelin/contracts/utils/StorageSlot.sol": {
-      "lastModificationDate": 1753880993181,
-      "contentHash": "682f7dd1f2e1147c8390e7575deceb2d",
-      "sourceName": "@openzeppelin/contracts/utils/StorageSlot.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "StorageSlot"
-      ]
-    },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/MinimalForwarder.sol": {
-      "lastModificationDate": 1753986183271,
-      "contentHash": "00b735162bf980cb160bba08a3ff502d",
-      "sourceName": "contracts/MinimalForwarder.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
-        "@openzeppelin/contracts/utils/cryptography/EIP712.sol"
-      ],
-      "versionPragmas": [
-        "0.8.23"
-      ],
-      "artifacts": [
-        "MinimalForwarder"
       ]
     }
   }

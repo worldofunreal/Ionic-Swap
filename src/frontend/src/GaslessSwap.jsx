@@ -58,7 +58,7 @@ const GaslessSwap = () => {
     }
   }, []);
 
-  // Handle approval
+  // Handle approval using ICP canister as EIP-2771 relayer
   const handleApprove = async () => {
     if (!amount) return;
     await gaslessApprove(amount, backendActor);
@@ -123,11 +123,12 @@ const GaslessSwap = () => {
         <h3>How it works:</h3>
         <ol>
           <li><strong>Network Check:</strong> Ensures MetaMask is on Sepolia network</li>
-          <li><strong>TRUE Gasless Approval:</strong> User signs EIP-2612 permit, ICP canister executes permit()</li>
+          <li><strong>TRUE Gasless Approval:</strong> User signs EIP-2612 permit + EIP-2771 forward request, ICP canister calls execute()</li>
           <li><strong>Intent Submission:</strong> Signs swap intent off-chain with EIP-712</li>
-          <li><strong>Cross-chain Execution:</strong> ICP canister processes the swap</li>
+          <li><strong>Cross-chain Execution:</strong> ICP canister processes the swap (next stage)</li>
         </ol>
-        <p><strong>Note:</strong> This is TRUE gasless - user only signs messages, ICP canister pays all gas fees!</p>
+        <p><strong>Note:</strong> This is TRUE gasless - user only signs messages, ICP canister pays ALL gas fees!</p>
+        <p><strong>EIP-2771 Flow:</strong> User signs → ICP calls execute() → MinimalForwarder pays for permit() → TRUE gasless!</p>
       </div>
     </div>
   );

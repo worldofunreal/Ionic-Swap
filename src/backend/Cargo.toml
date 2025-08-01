@@ -15,5 +15,9 @@ serde_json = "1.0"
 hex = "0.4"
 getrandom = { version = "0.2", default-features = false, features = ["custom"] }
 ic-http-certification = "3.0"
-evm-rpc-canister-types = { version = "5.0.1", default-features = false }
-ic-web3-rs = { git = "https://github.com/horizonx-tech/ic-web3-rs", default-features = false } 
+ic-evm-utils = { version = "4.0.0", default-features = false }
+primitive-types = "0.12"
+ethabi = "18.0"
+rlp = "0.5"
+ethers-core = "2.0"
+sha3 = "0.10" 
