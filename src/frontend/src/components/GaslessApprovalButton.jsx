@@ -6,14 +6,6 @@ const GaslessApprovalButton = ({
   approvalStatus, 
   onApprove 
 }) => {
-  if (approvalStatus === 'idle' && isCorrectNetwork) {
-    return (
-      <button onClick={onApprove} disabled={!amount}>
-        TRUE Gasless Approve (ICP Handles Permit)
-      </button>
-    );
-  }
-
   if (approvalStatus === 'approved') {
     return (
       <div className="success-message">
@@ -23,7 +15,11 @@ const GaslessApprovalButton = ({
     );
   }
 
-  return null;
+  return (
+    <button onClick={onApprove} disabled={!amount}>
+      TRUE Gasless Approve (ICP Handles Permit)
+    </button>
+  );
 };
 
 export default GaslessApprovalButton; 

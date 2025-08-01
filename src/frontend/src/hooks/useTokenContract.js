@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { SPIRAL_SEPOLIA, ERC20_ABI } from '../utils/contractUtils.js';
+import { SPIRAL_TOKEN, ERC20_ABI } from '../utils/contractUtils.js';
 
 export const useTokenContract = (provider, signer, userAddress) => {
   const [tokenContract, setTokenContract] = useState(null);
@@ -12,7 +12,7 @@ export const useTokenContract = (provider, signer, userAddress) => {
   useEffect(() => {
     if (provider && signer && userAddress) {
       try {
-        const token = new ethers.Contract(SPIRAL_SEPOLIA, ERC20_ABI, signer);
+        const token = new ethers.Contract(SPIRAL_TOKEN, ERC20_ABI, signer);
         setTokenContract(token);
         setError('');
       } catch (err) {

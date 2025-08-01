@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { SPIRAL_SEPOLIA, SEPOLIA_CHAIN_ID } from './contractUtils.js';
+import { SPIRAL_TOKEN, SEPOLIA_CHAIN_ID } from './contractUtils.js';
 
 /**
  * Create EIP-2612 permit domain for Spiral token
@@ -8,7 +8,7 @@ export const createPermitDomain = () => ({
   name: 'Spiral',
   version: '1',
   chainId: SEPOLIA_CHAIN_ID,
-  verifyingContract: SPIRAL_SEPOLIA
+  verifyingContract: SPIRAL_TOKEN
 });
 
 /**

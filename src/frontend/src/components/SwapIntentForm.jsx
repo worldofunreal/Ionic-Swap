@@ -5,14 +5,6 @@ const SwapIntentForm = ({
   intentStatus, 
   onSubmitIntent 
 }) => {
-  if (approvalStatus === 'approved' && intentStatus === 'idle') {
-    return (
-      <button onClick={onSubmitIntent}>
-        Submit Gasless Swap Intent
-      </button>
-    );
-  }
-
   if (intentStatus === 'intent-submitted') {
     return (
       <div className="success-message">
@@ -22,7 +14,11 @@ const SwapIntentForm = ({
     );
   }
 
-  return null;
+  return (
+    <button onClick={onSubmitIntent}>
+      Submit Gasless Swap Intent
+    </button>
+  );
 };
 
 export default SwapIntentForm; 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ethers } from 'ethers';
-import { SPIRAL_SEPOLIA, HTLC_CONTRACT, MINIMAL_FORWARDER, MINIMAL_FORWARDER_ABI } from '../utils/contractUtils.js';
+import { SPIRAL_TOKEN, HTLC_CONTRACT } from '../utils/contractUtils.js';
 import { 
   signPermitMessage, 
   verifyPermitSignature
@@ -20,106 +20,87 @@ export const useGaslessApproval = (signer, userAddress, tokenContract, getNonce)
       setApprovalStatus('approving');
       setError('');
 
-      // Use ICP canister as EIP-2771 relayer for TRUE gasless approval
-      console.log('🚀 Using ICP canister as EIP-2771 relayer for TRUE gasless approval...');
+      // Use ICP canister to directly call permit on the token contract
+      console.log('🚀 Using ICP canister to directly call permit on token contract...');
       
-      // Connect to MinimalForwarder contract (only for nonce)
-      const forwarderContract = new ethers.Contract(
-        MINIMAL_FORWARDER,
-        MINIMAL_FORWARDER_ABI,
-        signer
-      );
-
-      // Get forwarder nonce
-      const forwarderNonce = await forwarderContract.getNonce(userAddress);
-      console.log('🔍 DEBUG: Forwarder nonce:', forwarderNonce.toString());
-
-      // Get token nonce for permit
-      const tokenNonce = await getNonce();
+      // Get current nonce RIGHT BEFORE signing to ensure it's fresh (same as PermitTest.jsx)
+      const tokenNonce = await tokenContract.nonces(userAddress);
       const deadline = Math.floor(Date.now() / 1000) + 3600;
       
-      console.log('🔍 DEBUG: Token nonce:', tokenNonce.toString());
+      console.log('🔍 DEBUG: Current token nonce:', tokenNonce.toString());
       console.log('🔍 DEBUG: Deadline:', deadline);
       
-      // Sign the permit message first
-      const { signature, sig } = await signPermitMessage(
-        signer,
-        userAddress,
-        HTLC_CONTRACT,
-        amount,
-        tokenNonce,
-        deadline
-      );
+      // Sign the permit message using the exact same domain structure as the working test
+      const domain = {
+        name: 'Spiral',
+        version: '1',
+        chainId: 11155111,
+        verifyingContract: SPIRAL_TOKEN
+      };
+      const types = {
+        Permit: [
+          { name: 'owner', type: 'address' },
+          { name: 'spender', type: 'address' },
+          { name: 'value', type: 'uint256' },
+          { name: 'nonce', type: 'uint256' },
+          { name: 'deadline', type: 'uint256' }
+        ]
+      };
+      const message = {
+        owner: userAddress,
+        spender: HTLC_CONTRACT,
+        value: ethers.utils.parseUnits(amount, 8),
+        nonce: tokenNonce,
+        deadline: deadline
+      };
+
+      const signature = await signer._signTypedData(domain, types, message);
+      const sig = ethers.utils.splitSignature(signature);
 
       console.log('✅ Permit signature created:', signature);
       console.log('🔍 DEBUG: Permit sig v:', sig.v);
       console.log('🔍 DEBUG: Permit sig r:', sig.r);
       console.log('🔍 DEBUG: Permit sig s:', sig.s);
 
-      // Encode permit function call
-      const permitInterface = new ethers.utils.Interface([
-        "function permit(address owner, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s)"
-      ]);
-      
-      const permitData = permitInterface.encodeFunctionData("permit", [
-        userAddress,
-        HTLC_CONTRACT,
-        ethers.utils.parseUnits(amount, 8),
-        deadline,
-        sig.v,
-        sig.r,
-        sig.s
-      ]);
-
-      console.log('🔍 DEBUG: Permit data length:', permitData.length);
-      console.log('🔍 DEBUG: Permit data:', permitData);
-
-      // Create forward request
-      const forwardRequest = {
-        from: userAddress,
-        to: SPIRAL_SEPOLIA,
-        value: "0",
-        gas: "200000",
-        nonce: forwarderNonce.toString(),
-        data: permitData,
-        validUntil: deadline.toString()
+      // Create permit request for ICP canister
+      const permitRequest = {
+        owner: userAddress,
+        spender: HTLC_CONTRACT,
+        value: ethers.utils.parseUnits(amount, 8).toString(),
+        nonce: tokenNonce.toString(), // Send the user's nonce that was used in the signature
+        deadline: deadline.toString(),
+        v: sig.v.toString(),
+        r: sig.r.toString(),
+        s: sig.s.toString(),
+        signature: signature
       };
 
-      console.log('📝 Creating forward request...');
-      console.log('🔍 DEBUG: Forward request:', forwardRequest);
+      console.log('📝 Creating permit request...');
+      console.log('🔍 DEBUG: Permit request:', permitRequest);
+      console.log('🔍 DEBUG: sig.r type:', typeof sig.r, 'value:', sig.r);
+      console.log('🔍 DEBUG: sig.s type:', typeof sig.s, 'value:', sig.s);
+      console.log('🔍 DEBUG: permitRequest.r type:', typeof permitRequest.r, 'value:', permitRequest.r);
+      console.log('🔍 DEBUG: permitRequest.s type:', typeof permitRequest.s, 'value:', permitRequest.s);
 
-      // Sign the forward request
-      const forwarderSignature = await signer._signTypedData(
-        {
-          name: "MinimalForwarder",
-          version: "0.0.1",
-          chainId: 11155111,
-          verifyingContract: MINIMAL_FORWARDER
-        },
-        {
-          ForwardRequest: [
-            { name: "from", type: "address" },
-            { name: "to", type: "address" },
-            { name: "value", type: "uint256" },
-            { name: "gas", type: "uint256" },
-            { name: "nonce", type: "uint256" },
-            { name: "data", type: "bytes" },
-            { name: "validUntil", type: "uint256" }
-          ]
-        },
-        forwardRequest
-      );
+      // Verify all required fields are present
+      const requiredFields = ['owner', 'spender', 'value', 'deadline', 'v', 'r', 's', 'signature'];
+      const missingFields = requiredFields.filter(field => !permitRequest.hasOwnProperty(field));
+      if (missingFields.length > 0) {
+        throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+      }
 
-      console.log('✅ Forward request signed, submitting to ICP canister...');
-      console.log('🔍 DEBUG: Forwarder signature:', forwarderSignature);
-
-      // Submit to ICP canister for execution (ICP pays gas for execute() call)
-      const result = await backendActor.execute_gasless_approval({
-        forward_request: forwardRequest,
-        forward_signature: forwarderSignature,
+      // Submit to ICP canister for direct execution
+      const requestData = {
+        permit_request: permitRequest,
         user_address: userAddress,
         amount: amount
-      });
+      };
+      
+      console.log('🔍 DEBUG: Full request data:', requestData);
+      console.log('🔍 DEBUG: permit_request keys:', Object.keys(permitRequest));
+      console.log('🔍 DEBUG: requestData keys:', Object.keys(requestData));
+      
+      const result = await backendActor.execute_gasless_approval(requestData);
 
       if (result.Ok) {
         setApprovalStatus('approved');

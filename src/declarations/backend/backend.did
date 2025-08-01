@@ -1,3 +1,21 @@
+type PermitRequest = record {
+  owner : text;
+  spender : text;
+  value : text;
+  nonce : text;
+  deadline : text;
+  v : text;
+  r : text;
+  s : text;
+  signature : text;
+};
+
+type GaslessApprovalRequest = record {
+  permit_request : PermitRequest;
+  user_address : text;
+  amount : text;
+};
+
 service : {
   // JSON-RPC Methods
   "get_sepolia_block_number" : () -> (variant { Ok : text; Err : text });
@@ -23,4 +41,7 @@ service : {
   "get_ethereum_address" : () -> (variant { Ok : text; Err : text });
   "sign_transaction" : (text, text, text, text) -> (variant { Ok : text; Err : text });
   "send_raw_transaction" : (text) -> (variant { Ok : text; Err : text });
-} 
+  
+  // Gasless Approval Method
+  "execute_gasless_approval" : (GaslessApprovalRequest) -> (variant { Ok : text; Err : text });
+}

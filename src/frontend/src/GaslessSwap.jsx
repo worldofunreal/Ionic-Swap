@@ -13,6 +13,7 @@ import TokenBalance from './components/TokenBalance';
 import StatusDisplay from './components/StatusDisplay';
 import GaslessApprovalButton from './components/GaslessApprovalButton';
 import SwapIntentForm from './components/SwapIntentForm';
+import PermitTest from './PermitTest';
 
 const GaslessSwap = () => {
   const [amount, setAmount] = useState('');
@@ -118,6 +119,8 @@ const GaslessSwap = () => {
           />
         </div>
       </div>
+
+      <PermitTest signer={signer} userAddress={userAddress} />
 
       <div className="info-panel">
         <h3>How it works:</h3>

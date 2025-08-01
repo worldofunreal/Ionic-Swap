@@ -1,4 +1,4 @@
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize, Principal, candid_method};
 
 use ic_cdk_macros::*;
 use serde_json::{json, Value};
@@ -664,51 +664,57 @@ fn get_contract_info() -> String {
 
 
 #[derive(CandidType, Deserialize)]
-pub struct ForwardRequest {
-    pub from: String,
-    pub to: String,
+pub struct PermitRequest {
+    pub owner: String,
+    pub spender: String,
     pub value: String,
-    pub gas: String,
-    pub nonce: String,
-    pub data: String,
-    pub validUntil: String,
+    pub nonce: String, // User's nonce that was used in the permit signature
+    pub deadline: String,
+    pub v: String,
+    pub r: String,
+    pub s: String,
+    pub signature: String,
 }
 
 #[derive(CandidType, Deserialize)]
 pub struct GaslessApprovalRequest {
-    pub forward_request: ForwardRequest,
-    pub forward_signature: String,
+    pub permit_request: PermitRequest,
     pub user_address: String,
     pub amount: String,
 }
 
 #[update]
+#[candid_method(update)]
 async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<String, String> {
-    // 1. Verify the forward request signature
-    let is_valid = verify_forward_request(&request.forward_request, &request.forward_signature).await?;
+    // 1. Verify the permit signature
+    let is_valid = verify_permit_signature(&request.permit_request).await?;
     if !is_valid {
-        return Err("Invalid forward request signature".to_string());
+        return Err("Invalid permit signature".to_string());
     }
     
     // 2. Get canister's Ethereum address
     let from_addr_str = get_public_key().await?;
     
-    // 3. Get current nonce for the canister
+    // 3. Get current nonce for the canister (this is for the transaction, not the permit)
     let nonce_response = get_transaction_count(from_addr_str.clone()).await?;
     let nonce_json: serde_json::Value = serde_json::from_str(&nonce_response)
         .map_err(|e| format!("Failed to parse nonce response: {}", e))?;
-    let nonce = nonce_json["result"]
+    let canister_nonce = nonce_json["result"]
         .as_str()
         .ok_or("No result in nonce response")?
         .trim_start_matches("0x");
     
-    // 4. Encode the execute function call
-    let execute_data = encode_forwarder_execute_call(&request.forward_request, &request.forward_signature)?;
+    // Debug: Log the nonces
+    ic_cdk::println!("Debug - User nonce from permit: {}", request.permit_request.nonce);
+    ic_cdk::println!("Debug - Canister nonce for transaction: {}", canister_nonce);
     
-    // Debug: Check if the execute_data has odd length
-    let data_clean = execute_data.trim_start_matches("0x");
+    // 4. Encode the permit function call directly on the token contract
+    let permit_data = encode_permit_call(&request.permit_request)?;
+    
+    // Debug: Check if the permit_data has odd length
+    let data_clean = permit_data.trim_start_matches("0x");
     if data_clean.len() % 2 != 0 {
-        return Err(format!("Execute data has odd length: {} chars", data_clean.len()));
+        return Err(format!("Permit data has odd length: {} chars", data_clean.len()));
     }
     
     // 5. Get current gas price and block info
@@ -729,25 +735,25 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
         .unwrap_or("0x3b9aca00") // 1 gwei default
         .trim_start_matches("0x");
     
-    // 7. Construct and sign EIP-1559 transaction
-    let to_address = &request.forward_request.to; // MinimalForwarder address
+    // 7. Construct and sign EIP-1559 transaction to the token contract
+    let token_address = "0xdE7409EDeA573D090c3C6123458D6242E26b425E"; // SpiralToken address
     
     // Debug: Check the addresses
-    if to_address.len() != 42 || !to_address.starts_with("0x") {
-        return Err(format!("Invalid to address: {} (length: {})", to_address, to_address.len()));
+    if token_address.len() != 42 || !token_address.starts_with("0x") {
+        return Err(format!("Invalid token address: {} (length: {})", token_address, token_address.len()));
     }
     
     // Debug: Print the addresses for verification
     ic_cdk::println!("Debug - From address: {}", from_addr_str);
-    ic_cdk::println!("Debug - To address: {}", to_address);
+    ic_cdk::println!("Debug - To address (token): {}", token_address);
     
     let signed_tx = sign_eip1559_transaction(
         &from_addr_str,
-        to_address,
-        &nonce,
+        token_address,
+        &canister_nonce,
         &gas_price,
         &base_fee_per_gas,
-        &execute_data,
+        &permit_data,
     ).await?;
     
     // 8. Send the signed transaction
@@ -759,147 +765,96 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
     ))
 }
 
-async fn verify_forward_request(forward_request: &ForwardRequest, signature: &str) -> Result<bool, String> {
-    // This would implement EIP-712 signature verification for the forward request
+async fn verify_permit_signature(permit_request: &PermitRequest) -> Result<bool, String> {
+    // This would implement EIP-2612 signature verification for the permit
     // For now, we'll return true (simplified)
     // In production, this should verify the actual signature
     
+    // Debug: Log the permit request details
+    ic_cdk::println!("Debug - Permit request owner: {}", permit_request.owner);
+    ic_cdk::println!("Debug - Permit request spender: {}", permit_request.spender);
+    ic_cdk::println!("Debug - Permit request value: {}", permit_request.value);
+    ic_cdk::println!("Debug - Permit request deadline: {}", permit_request.deadline);
+    ic_cdk::println!("Debug - Permit request v: {}", permit_request.v);
+    ic_cdk::println!("Debug - Permit request r: {}", permit_request.r);
+    ic_cdk::println!("Debug - Permit request s: {}", permit_request.s);
+    
     // The verification should:
-    // 1. Reconstruct the EIP-712 message
+    // 1. Reconstruct the permit message according to EIP-2612
     // 2. Hash it according to EIP-712
     // 3. Recover the signer address from the signature
-    // 4. Compare with the from address
+    // 4. Compare with the owner address
     
     Ok(true)
 }
 
-fn encode_forwarder_execute_call(forward_request: &ForwardRequest, signature: &str) -> Result<String, String> {
-    // MinimalForwarder execute function selector: execute(bytes,bytes)
-    let function_selector = "0x1f6a1eb9";
+fn encode_permit_call(permit_request: &PermitRequest) -> Result<String, String> {
+    // EIP-2612 permit function selector: permit(address,address,uint256,uint256,uint8,bytes32,bytes32)
+    let function_selector = "d505accf";
     
-    // Encode the forward request as bytes
-    let forward_request_encoded = encode_forward_request_struct(forward_request)?;
+    // Encode permit parameters: (owner, spender, value, deadline, v, r, s)
+    let owner_padded = format!("{:0>64}", permit_request.owner.trim_start_matches("0x"));
+    let spender_padded = format!("{:0>64}", permit_request.spender.trim_start_matches("0x"));
     
-    // Encode the signature (remove 0x prefix if present)
-    let signature_clean = signature.trim_start_matches("0x");
+    // Convert value to proper hex format (same as ethers.utils.parseUnits)
+    let value_decimal: u128 = permit_request.value.parse().map_err(|e| format!("Invalid value: {}", e))?;
+    let value_hex = format!("{:x}", value_decimal);
+    let value_padded = format!("{:0>64}", value_hex);
     
-    // Encode the function parameters: (bytes req, bytes signature)
-    let req_offset = "40"; // offset to req data (32 bytes)
-    let req_length_bytes = forward_request_encoded.len() / 2;
-    let sig_offset = format!("{:x}", 40 + 32 + req_length_bytes); // offset to signature data
-    let req_length = format!("{:x}", req_length_bytes);
-    let sig_length = format!("{:x}", signature_clean.len() / 2);
-    
-    // Debug: Print the values to ensure they're correct
-    if forward_request_encoded.len() % 2 != 0 || signature_clean.len() % 2 != 0 {
-        return Err(format!("Invalid hex lengths - req: {} chars, sig: {} chars", forward_request_encoded.len(), signature_clean.len()));
-    }
-    
-    let req_offset_padded = format!("{:0>64}", req_offset);
-    let sig_offset_padded = format!("{:0>64}", sig_offset);
-    let req_length_padded = format!("{:0>64}", req_length);
-    let sig_length_padded = format!("{:0>64}", sig_length);
+    // Convert deadline from decimal string to hex and pad to 64 characters
+    let deadline_decimal: u64 = permit_request.deadline.parse().map_err(|e| format!("Invalid deadline: {}", e))?;
+    let deadline_hex = format!("{:x}", deadline_decimal);
+    let deadline_padded = format!("{:0>64}", deadline_hex);
+    // Convert v from decimal string to hex and pad to 64 characters
+    let v_decimal: u64 = permit_request.v.parse().map_err(|e| format!("Invalid v value: {}", e))?;
+    let v_padded = format!("{:0>64}", format!("{:x}", v_decimal));
+    let r_padded = format!("{:0>64}", permit_request.r.trim_start_matches("0x"));
+    let s_padded = format!("{:0>64}", permit_request.s.trim_start_matches("0x"));
     
     // Debug: Check each component for odd length
-    if req_offset_padded.len() % 2 != 0 || sig_offset_padded.len() % 2 != 0 || 
-       req_length_padded.len() % 2 != 0 || sig_length_padded.len() % 2 != 0 ||
-       forward_request_encoded.len() % 2 != 0 || signature_clean.len() % 2 != 0 {
+    if owner_padded.len() % 2 != 0 || spender_padded.len() % 2 != 0 || 
+       value_padded.len() % 2 != 0 || deadline_padded.len() % 2 != 0 ||
+       v_padded.len() % 2 != 0 || r_padded.len() % 2 != 0 || s_padded.len() % 2 != 0 {
         return Err(format!(
-            "Component lengths - req_offset: {}, sig_offset: {}, req_length: {}, sig_length: {}, forward_request: {}, signature: {}",
-            req_offset_padded.len(), sig_offset_padded.len(), req_length_padded.len(), 
-            sig_length_padded.len(), forward_request_encoded.len(), signature_clean.len()
+            "Permit component lengths - owner: {}, spender: {}, value: {}, deadline: {}, v: {}, r: {}, s: {}",
+            owner_padded.len(), spender_padded.len(), value_padded.len(), deadline_padded.len(),
+            v_padded.len(), r_padded.len(), s_padded.len()
         ));
     }
     
     let encoded_data = format!(
-        "0x{}{}{}{}{}{}{}",
+        "0x{}{}{}{}{}{}{}{}",
         function_selector,
-        req_offset_padded,
-        sig_offset_padded,
-        req_length_padded,
-        forward_request_encoded,
-        sig_length_padded,
-        signature_clean
+        owner_padded,
+        spender_padded,
+        value_padded,
+        deadline_padded,
+        v_padded,
+        r_padded,
+        s_padded
     );
+    
+    // Debug: Log the encoded permit data
+    ic_cdk::println!("Debug - Encoded permit data: {}", encoded_data);
+    ic_cdk::println!("Debug - Function selector: {}", function_selector);
+    ic_cdk::println!("Debug - Owner padded: {}", owner_padded);
+    ic_cdk::println!("Debug - Spender padded: {}", spender_padded);
+    ic_cdk::println!("Debug - Value padded: {}", value_padded);
+    ic_cdk::println!("Debug - Deadline padded: {}", deadline_padded);
+    ic_cdk::println!("Debug - V padded: {}", v_padded);
+    ic_cdk::println!("Debug - R padded: {}", r_padded);
+    ic_cdk::println!("Debug - S padded: {}", s_padded);
     
     // Debug: Check if the final encoded data has odd length
     let final_clean = encoded_data.trim_start_matches("0x");
     if final_clean.len() % 2 != 0 {
-        return Err(format!("Final encoded data has odd length: {} chars", final_clean.len()));
+        return Err(format!("Final permit data has odd length: {} chars", final_clean.len()));
     }
     
     Ok(encoded_data)
 }
 
-fn encode_forward_request_struct(forward_request: &ForwardRequest) -> Result<String, String> {
-    // Encode ForwardRequest struct as bytes
-    // struct ForwardRequest {
-    //     address from;
-    //     address to;
-    //     uint256 value;
-    //     uint256 gas;
-    //     uint256 nonce;
-    //     bytes data;
-    //     uint256 validUntil;
-    // }
-    
-    let mut data_clean = forward_request.data.trim_start_matches("0x").to_string();
-    
-    // Ensure data has even length by padding with 0 if needed
-    if data_clean.len() % 2 != 0 {
-        data_clean.push('0');
-    }
-    
-    let data_length = format!("{:x}", data_clean.len() / 2);
-    
-    // Debug: Print the data length for verification
-    if data_clean.len() % 2 != 0 {
-        return Err(format!("Data still has odd length after padding: {} chars", data_clean.len()));
-    }
-    
-    let from_padded = format!("{:0>64}", forward_request.from.trim_start_matches("0x"));
-    let to_padded = format!("{:0>64}", forward_request.to.trim_start_matches("0x"));
-    let value_padded = format!("{:0>64}", forward_request.value.trim_start_matches("0x"));
-    let gas_padded = format!("{:0>64}", forward_request.gas.trim_start_matches("0x"));
-    let nonce_padded = format!("{:0>64}", forward_request.nonce.trim_start_matches("0x"));
-    let data_offset_padded = format!("{:0>64}", "e0");
-    let valid_until_padded = format!("{:0>64}", forward_request.validUntil.trim_start_matches("0x"));
-    let data_length_padded = format!("{:0>64}", data_length);
-    
-    // Debug: Check each component for odd length
-    if from_padded.len() % 2 != 0 || to_padded.len() % 2 != 0 || value_padded.len() % 2 != 0 ||
-       gas_padded.len() % 2 != 0 || nonce_padded.len() % 2 != 0 || data_offset_padded.len() % 2 != 0 ||
-       valid_until_padded.len() % 2 != 0 || data_length_padded.len() % 2 != 0 || data_clean.len() % 2 != 0 {
-        return Err(format!(
-            "Forward request component lengths - from: {}, to: {}, value: {}, gas: {}, nonce: {}, data_offset: {}, valid_until: {}, data_length: {}, data: {}",
-            from_padded.len(), to_padded.len(), value_padded.len(), gas_padded.len(), 
-            nonce_padded.len(), data_offset_padded.len(), valid_until_padded.len(), 
-            data_length_padded.len(), data_clean.len()
-        ));
-    }
-    
-    let encoded = format!(
-        "{}{}{}{}{}{}{}{}{}",
-        from_padded,
-        to_padded,
-        value_padded,
-        gas_padded,
-        nonce_padded,
-        data_offset_padded,
-        valid_until_padded,
-        data_length_padded,
-        data_clean
-    );
-    
-    // Debug: Check the total length
-    if encoded.len() % 2 != 0 {
-        return Err(format!("Total encoded length is odd: {} chars. Component lengths: from={}, to={}, value={}, gas={}, nonce={}, data_offset={}, valid_until={}, data_length={}, data={}", 
-            encoded.len(), from_padded.len(), to_padded.len(), value_padded.len(), gas_padded.len(), 
-            nonce_padded.len(), data_offset_padded.len(), valid_until_padded.len(), data_length_padded.len(), data_clean.len()));
-    }
-    
-    Ok(encoded)
-}
+
 
 // ============================================================================
 // PERMIT SUBMISSION AND EXECUTION (LEGACY - KEEPING FOR REFERENCE)
@@ -921,7 +876,7 @@ pub struct PermitData {
 #[update]
 async fn submit_permit_signature(permit_data: PermitData) -> Result<String, String> {
     // 1. Verify permit signature
-    let recovered_address = verify_permit_signature(&permit_data)?;
+    let recovered_address = verify_permit_signature_legacy(&permit_data)?;
     if recovered_address != permit_data.owner {
         return Err("Invalid permit signature".to_string());
     }
@@ -951,7 +906,9 @@ async fn submit_permit_signature(permit_data: PermitData) -> Result<String, Stri
     ))
 }
 
-fn verify_permit_signature(permit_data: &PermitData) -> Result<String, String> {
+
+
+fn verify_permit_signature_legacy(permit_data: &PermitData) -> Result<String, String> {
     // TODO: Implement proper EIP-2612 signature verification
     // For now, we'll return the owner address (simplified)
     // In production, this should verify the actual signature using web3-rs

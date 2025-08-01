@@ -19,7 +19,7 @@ export const useActor = () => {
         // Use local backend canister ID
         const canisterId = 'uxrrr-q7777-77774-qaaaq-cai';
         
-        if (!canisterId || canisterId === 'local') {
+        if (!canisterId) {
           console.log('Using mock actor for development');
           setActor(createMockActor());
           setLoading(false);

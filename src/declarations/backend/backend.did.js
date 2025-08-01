@@ -1,5 +1,26 @@
 export const idlFactory = ({ IDL }) => {
+  const PermitRequest = IDL.Record({
+    'r' : IDL.Text,
+    's' : IDL.Text,
+    'v' : IDL.Text,
+    'signature' : IDL.Text,
+    'value' : IDL.Text,
+    'owner' : IDL.Text,
+    'deadline' : IDL.Text,
+    'nonce' : IDL.Text,
+    'spender' : IDL.Text,
+  });
+  const GaslessApprovalRequest = IDL.Record({
+    'user_address' : IDL.Text,
+    'permit_request' : PermitRequest,
+    'amount' : IDL.Text,
+  });
   return IDL.Service({
+    'execute_gasless_approval' : IDL.Func(
+        [GaslessApprovalRequest],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        [],
+      ),
     'get_balance' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ethers } from 'ethers';
-import { SPIRAL_SEPOLIA, SEPOLIA_CHAIN_ID } from '../utils/contractUtils.js';
+import { SPIRAL_TOKEN, SEPOLIA_CHAIN_ID } from '../utils/contractUtils.js';
 
 export const useSwapIntent = (signer, userAddress) => {
   const [intentStatus, setIntentStatus] = useState('idle');
@@ -20,7 +20,7 @@ export const useSwapIntent = (signer, userAddress) => {
       const intent = {
         user: userAddress,
         amountIn: amount,
-        tokenIn: SPIRAL_SEPOLIA,
+        tokenIn: SPIRAL_TOKEN,
         tokenOut: "0xICP_ADDRESS", // ICP token address
         deadline: Math.floor(Date.now() / 1000) + 3600,
         nonce: Date.now(),
