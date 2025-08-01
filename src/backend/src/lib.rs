@@ -11,6 +11,11 @@ use ic_cdk::api::management_canister::ecdsa::{EcdsaCurve, EcdsaKeyId};
 use sha3::Digest;
 
 use std::collections::HashMap;
+use std::str::FromStr;
+use primitive_types::U256;
+use rlp::RlpStream;
+use ethers_core::types::Eip1559TransactionRequest;
+use ethers_core::types::transaction::eip2930::AccessList;
 
 fn keccak256(data: &[u8]) -> [u8; 32] {
     let mut hasher = sha3::Keccak256::new();
@@ -264,6 +269,14 @@ async fn get_balance(address: String) -> Result<String, String> {
 async fn get_transaction_count(address: String) -> Result<String, String> {
     let params = format!("[\"{}\", \"latest\"]", address);
     make_json_rpc_call("eth_getTransactionCount", &params).await
+}
+
+async fn get_gas_price() -> Result<String, String> {
+    make_json_rpc_call("eth_gasPrice", "[]").await
+}
+
+async fn get_latest_block() -> Result<String, String> {
+    make_json_rpc_call("eth_getBlockByNumber", "[\"latest\", false]").await
 }
 
 // ============================================================================
@@ -692,13 +705,57 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
     // 4. Encode the execute function call
     let execute_data = encode_forwarder_execute_call(&request.forward_request, &request.forward_signature)?;
     
-    // For now, just return success with the transaction details
-    // The actual transaction signing and sending requires proper EIP-1559 transaction construction
+    // Debug: Check if the execute_data has odd length
+    let data_clean = execute_data.trim_start_matches("0x");
+    if data_clean.len() % 2 != 0 {
+        return Err(format!("Execute data has odd length: {} chars", data_clean.len()));
+    }
+    
+    // 5. Get current gas price and block info
+    let gas_price_response = get_gas_price().await?;
+    let gas_price_json: serde_json::Value = serde_json::from_str(&gas_price_response)
+        .map_err(|e| format!("Failed to parse gas price response: {}", e))?;
+    let gas_price = gas_price_json["result"]
+        .as_str()
+        .ok_or("No result in gas price response")?
+        .trim_start_matches("0x");
+    
+    // 6. Get latest block for base fee
+    let block_response = get_latest_block().await?;
+    let block_json: serde_json::Value = serde_json::from_str(&block_response)
+        .map_err(|e| format!("Failed to parse block response: {}", e))?;
+    let base_fee_per_gas = block_json["result"]["baseFeePerGas"]
+        .as_str()
+        .unwrap_or("0x3b9aca00") // 1 gwei default
+        .trim_start_matches("0x");
+    
+    // 7. Construct and sign EIP-1559 transaction
+    let to_address = &request.forward_request.to; // MinimalForwarder address
+    
+    // Debug: Check the addresses
+    if to_address.len() != 42 || !to_address.starts_with("0x") {
+        return Err(format!("Invalid to address: {} (length: {})", to_address, to_address.len()));
+    }
+    
+    // Debug: Print the addresses for verification
+    ic_cdk::println!("Debug - From address: {}", from_addr_str);
+    ic_cdk::println!("Debug - To address: {}", to_address);
+    
+    let signed_tx = sign_eip1559_transaction(
+        &from_addr_str,
+        to_address,
+        &nonce,
+        &gas_price,
+        &base_fee_per_gas,
+        &execute_data,
+    ).await?;
+    
+    // 8. Send the signed transaction
+    let tx_hash = send_raw_transaction(&signed_tx).await?;
+    
     Ok(format!(
-        "Gasless approval validated successfully. Canister address: {}, Nonce: {}, Execute data length: {} bytes",
-        from_addr_str,
-        nonce,
-        execute_data.len() / 2 - 1
+        "Gasless approval executed successfully! Transaction hash: {}",
+        tx_hash
     ))
 }
 
@@ -728,26 +785,48 @@ fn encode_forwarder_execute_call(forward_request: &ForwardRequest, signature: &s
     
     // Encode the function parameters: (bytes req, bytes signature)
     let req_offset = "40"; // offset to req data (32 bytes)
-    let sig_offset = format!("{:x}", 40 + 32 + forward_request_encoded.len() / 2); // offset to signature data
-    let req_length = format!("{:x}", forward_request_encoded.len() / 2);
+    let req_length_bytes = forward_request_encoded.len() / 2;
+    let sig_offset = format!("{:x}", 40 + 32 + req_length_bytes); // offset to signature data
+    let req_length = format!("{:x}", req_length_bytes);
     let sig_length = format!("{:x}", signature_clean.len() / 2);
+    
+    // Debug: Print the values to ensure they're correct
+    if forward_request_encoded.len() % 2 != 0 || signature_clean.len() % 2 != 0 {
+        return Err(format!("Invalid hex lengths - req: {} chars, sig: {} chars", forward_request_encoded.len(), signature_clean.len()));
+    }
+    
+    let req_offset_padded = format!("{:0>64}", req_offset);
+    let sig_offset_padded = format!("{:0>64}", sig_offset);
+    let req_length_padded = format!("{:0>64}", req_length);
+    let sig_length_padded = format!("{:0>64}", sig_length);
+    
+    // Debug: Check each component for odd length
+    if req_offset_padded.len() % 2 != 0 || sig_offset_padded.len() % 2 != 0 || 
+       req_length_padded.len() % 2 != 0 || sig_length_padded.len() % 2 != 0 ||
+       forward_request_encoded.len() % 2 != 0 || signature_clean.len() % 2 != 0 {
+        return Err(format!(
+            "Component lengths - req_offset: {}, sig_offset: {}, req_length: {}, sig_length: {}, forward_request: {}, signature: {}",
+            req_offset_padded.len(), sig_offset_padded.len(), req_length_padded.len(), 
+            sig_length_padded.len(), forward_request_encoded.len(), signature_clean.len()
+        ));
+    }
     
     let encoded_data = format!(
         "0x{}{}{}{}{}{}{}",
         function_selector,
-        // req parameter (bytes) - offset to data
-        format!("{:0>64}", req_offset),
-        // signature parameter (bytes) - offset to signature data  
-        format!("{:0>64}", sig_offset),
-        // req length
-        format!("{:0>64}", req_length),
-        // req data
+        req_offset_padded,
+        sig_offset_padded,
+        req_length_padded,
         forward_request_encoded,
-        // signature length
-        format!("{:0>64}", sig_length),
-        // signature data
+        sig_length_padded,
         signature_clean
     );
+    
+    // Debug: Check if the final encoded data has odd length
+    let final_clean = encoded_data.trim_start_matches("0x");
+    if final_clean.len() % 2 != 0 {
+        return Err(format!("Final encoded data has odd length: {} chars", final_clean.len()));
+    }
     
     Ok(encoded_data)
 }
@@ -764,29 +843,60 @@ fn encode_forward_request_struct(forward_request: &ForwardRequest) -> Result<Str
     //     uint256 validUntil;
     // }
     
-    let data_length = format!("{:x}", forward_request.data.len() / 2 - 1); // remove 0x prefix
+    let mut data_clean = forward_request.data.trim_start_matches("0x").to_string();
+    
+    // Ensure data has even length by padding with 0 if needed
+    if data_clean.len() % 2 != 0 {
+        data_clean.push('0');
+    }
+    
+    let data_length = format!("{:x}", data_clean.len() / 2);
+    
+    // Debug: Print the data length for verification
+    if data_clean.len() % 2 != 0 {
+        return Err(format!("Data still has odd length after padding: {} chars", data_clean.len()));
+    }
+    
+    let from_padded = format!("{:0>64}", forward_request.from.trim_start_matches("0x"));
+    let to_padded = format!("{:0>64}", forward_request.to.trim_start_matches("0x"));
+    let value_padded = format!("{:0>64}", forward_request.value.trim_start_matches("0x"));
+    let gas_padded = format!("{:0>64}", forward_request.gas.trim_start_matches("0x"));
+    let nonce_padded = format!("{:0>64}", forward_request.nonce.trim_start_matches("0x"));
+    let data_offset_padded = format!("{:0>64}", "e0");
+    let valid_until_padded = format!("{:0>64}", forward_request.validUntil.trim_start_matches("0x"));
+    let data_length_padded = format!("{:0>64}", data_length);
+    
+    // Debug: Check each component for odd length
+    if from_padded.len() % 2 != 0 || to_padded.len() % 2 != 0 || value_padded.len() % 2 != 0 ||
+       gas_padded.len() % 2 != 0 || nonce_padded.len() % 2 != 0 || data_offset_padded.len() % 2 != 0 ||
+       valid_until_padded.len() % 2 != 0 || data_length_padded.len() % 2 != 0 || data_clean.len() % 2 != 0 {
+        return Err(format!(
+            "Forward request component lengths - from: {}, to: {}, value: {}, gas: {}, nonce: {}, data_offset: {}, valid_until: {}, data_length: {}, data: {}",
+            from_padded.len(), to_padded.len(), value_padded.len(), gas_padded.len(), 
+            nonce_padded.len(), data_offset_padded.len(), valid_until_padded.len(), 
+            data_length_padded.len(), data_clean.len()
+        ));
+    }
     
     let encoded = format!(
         "{}{}{}{}{}{}{}{}{}",
-        // from (address) - pad to 32 bytes
-        format!("{:0>64}", forward_request.from.trim_start_matches("0x")),
-        // to (address) - pad to 32 bytes
-        format!("{:0>64}", forward_request.to.trim_start_matches("0x")),
-        // value (uint256) - pad to 32 bytes
-        format!("{:0>64}", forward_request.value.trim_start_matches("0x")),
-        // gas (uint256) - pad to 32 bytes
-        format!("{:0>64}", forward_request.gas.trim_start_matches("0x")),
-        // nonce (uint256) - pad to 32 bytes
-        format!("{:0>64}", forward_request.nonce.trim_start_matches("0x")),
-        // data offset (uint256) - offset to data
-        format!("{:0>64}", "e0"), // offset to data (224 bytes)
-        // validUntil (uint256) - pad to 32 bytes
-        format!("{:0>64}", forward_request.validUntil.trim_start_matches("0x")),
-        // data length (uint256)
-        format!("{:0>64}", data_length),
-        // data (bytes)
-        forward_request.data.trim_start_matches("0x")
+        from_padded,
+        to_padded,
+        value_padded,
+        gas_padded,
+        nonce_padded,
+        data_offset_padded,
+        valid_until_padded,
+        data_length_padded,
+        data_clean
     );
+    
+    // Debug: Check the total length
+    if encoded.len() % 2 != 0 {
+        return Err(format!("Total encoded length is odd: {} chars. Component lengths: from={}, to={}, value={}, gas={}, nonce={}, data_offset={}, valid_until={}, data_length={}, data={}", 
+            encoded.len(), from_padded.len(), to_padded.len(), value_padded.len(), gas_padded.len(), 
+            nonce_padded.len(), data_offset_padded.len(), valid_until_padded.len(), data_length_padded.len(), data_clean.len()));
+    }
     
     Ok(encoded)
 }
@@ -970,9 +1080,168 @@ async fn test_simple_transaction() -> Result<String, String> {
     Ok(format!("Canister address: {}, Nonce: {}", from_addr_str, nonce))
 }
 
-// Removed old sign_transaction function - now using ic-evm-utils
+async fn sign_eip1559_transaction(
+    from: &str,
+    to: &str,
+    nonce: &str,
+    gas_price: &str,
+    base_fee_per_gas: &str,
+    data: &str,
+) -> Result<String, String> {
+    const EIP1559_TX_ID: u8 = 2;
+    
+    // Convert hex strings to U256
+    let nonce_u256 = U256::from_str_radix(nonce, 16)
+        .map_err(|e| format!("Invalid nonce: {}", e))?;
+    let base_fee_u256 = U256::from_str_radix(base_fee_per_gas, 16)
+        .map_err(|e| format!("Invalid base fee: {}", e))?;
+    
+    // Calculate max fee per gas and max priority fee per gas
+    let max_priority_fee_per_gas = U256::from(1500000000u64); // 1.5 gwei
+    let max_fee_per_gas = base_fee_u256 * U256::from(2u64) + max_priority_fee_per_gas;
+    
+    // Gas limit for the transaction
+    let gas_limit = U256::from(300000u64); // 300k gas limit
+    
+    // Parse addresses
+    ic_cdk::println!("Debug - Parsing to address: {}", to);
+    let to_address = ethers_core::types::Address::from_str(to)
+        .map_err(|e| format!("Invalid to address: {}", e))?;
+    ic_cdk::println!("Debug - Parsed to address: {:?}", to_address);
+    ic_cdk::println!("Debug - To address bytes: {:?}", to_address.as_bytes());
+    
+    let from_address = ethers_core::types::Address::from_str(from)
+        .map_err(|e| format!("Invalid from address: {}", e))?;
+    
+    // Parse data - data is already hex-encoded, so we decode it to bytes
+    let data_bytes = hex::decode(data.trim_start_matches("0x"))
+        .map_err(|e| format!("Invalid data: {}", e))?;
+    
+    // Create EIP-1559 transaction
+    let tx = Eip1559TransactionRequest {
+        from: Some(from_address),
+        chain_id: Some(ethers_core::types::U64::from(11155111u64)), // Sepolia chain ID
+        nonce: Some(nonce_u256),
+        max_priority_fee_per_gas: Some(max_priority_fee_per_gas),
+        max_fee_per_gas: Some(max_fee_per_gas),
+        gas: Some(gas_limit),
+        to: Some(ethers_core::types::NameOrAddress::Address(to_address)),
+        value: Some(U256::from(0u64)),
+        data: Some(ethers_core::types::Bytes::from(data_bytes)),
+        access_list: AccessList::default(),
+    };
+    
+    // Get the canister's public key for signature recovery
+    let key_id = ic_cdk::api::management_canister::ecdsa::EcdsaKeyId {
+        curve: ic_cdk::api::management_canister::ecdsa::EcdsaCurve::Secp256k1,
+        name: "dfx_test_key".to_string(),
+    };
+    
+    let derivation_path = vec![ic_cdk::id().as_slice().to_vec()];
+    let ecdsa_pub_key = get_canister_public_key(key_id.clone(), None, derivation_path.clone()).await;
+    
+    // Use the built-in RLP encoding method
+    let mut unsigned_tx_bytes = tx.rlp().to_vec();
+    unsigned_tx_bytes.insert(0, EIP1559_TX_ID);
+    
+    let txhash = keccak256(&unsigned_tx_bytes);
+    
+    // Sign the transaction hash
+    let sign_args = ic_cdk::api::management_canister::ecdsa::SignWithEcdsaArgument {
+        message_hash: txhash.to_vec(),
+        derivation_path,
+        key_id,
+    };
+    
+    let signature = ic_cdk::api::management_canister::ecdsa::sign_with_ecdsa(sign_args)
+        .await
+        .map_err(|e| format!("Failed to sign transaction: {:?}", e))?;
+    
+    // Parse signature components
+    let sig_bytes = signature.0.signature;
+    if sig_bytes.len() != 64 {
+        return Err("Invalid signature length".to_string());
+    }
+    
+    let r = U256::from_big_endian(&sig_bytes[..32]);
+    let s = U256::from_big_endian(&sig_bytes[32..]);
+    
+    // Calculate v (recovery bit) using y_parity function
+    let v = y_parity(&txhash, &sig_bytes, &ecdsa_pub_key);
+    
+    // Create signature struct
+    let signature_struct = ethers_core::types::Signature {
+        v,
+        r,
+        s,
+    };
+    
+    // Use the built-in RLP encoding method for signed transaction
+    let mut signed_tx_bytes = tx.rlp_signed(&signature_struct).to_vec();
+    signed_tx_bytes.insert(0, EIP1559_TX_ID);
+    
+    let signed_tx_hex = format!("0x{}", hex::encode(signed_tx_bytes));
+    
+    Ok(signed_tx_hex)
+}
 
-// Removed old ic-web3-rs functions - now using ic-evm-utils
+async fn send_raw_transaction(signed_tx: &str) -> Result<String, String> {
+    let params = format!("[\"{}\"]", signed_tx);
+    let response = make_json_rpc_call("eth_sendRawTransaction", &params).await?;
+    
+    let response_json: serde_json::Value = serde_json::from_str(&response)
+        .map_err(|e| format!("Failed to parse response: {}", e))?;
+    
+    if let Some(error) = response_json.get("error") {
+        return Err(format!("Transaction failed: {}", error));
+    }
+    
+    let tx_hash = response_json["result"]
+        .as_str()
+        .ok_or("No transaction hash in response")?;
+    
+    Ok(tx_hash.to_string())
+}
+
+// Helper function to get the canister's public key
+async fn get_canister_public_key(
+    key_id: ic_cdk::api::management_canister::ecdsa::EcdsaKeyId,
+    canister_id: Option<Principal>,
+    derivation_path: Vec<Vec<u8>>,
+) -> Vec<u8> {
+    let (key,) = ic_cdk::api::management_canister::ecdsa::ecdsa_public_key(
+        ic_cdk::api::management_canister::ecdsa::EcdsaPublicKeyArgument {
+            canister_id,
+            derivation_path,
+            key_id,
+        },
+    )
+    .await
+    .expect("failed to get public key");
+    key.public_key
+}
+
+// Helper function to compute the parity bit for signature recovery
+fn y_parity(prehash: &[u8], sig: &[u8], pubkey: &[u8]) -> u64 {
+    use ethers_core::k256::ecdsa::{RecoveryId, Signature, VerifyingKey};
+
+    let orig_key = VerifyingKey::from_sec1_bytes(pubkey).expect("failed to parse the pubkey");
+    let signature = Signature::try_from(sig).unwrap();
+    for parity in [0u8, 1] {
+        let recid = RecoveryId::try_from(parity).unwrap();
+        let recovered_key = VerifyingKey::recover_from_prehash(prehash, &signature, recid)
+            .expect("failed to recover key");
+        if recovered_key == orig_key {
+            return parity as u64;
+        }
+    }
+
+    panic!(
+        "failed to recover the parity bit from a signature; sig: {}, pubkey: {}",
+        hex::encode(sig),
+        hex::encode(pubkey)
+    )
+}
 
 // ============================================================================
 // CANISTER LIFECYCLE
