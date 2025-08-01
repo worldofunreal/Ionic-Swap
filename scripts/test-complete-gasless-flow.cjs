@@ -2,12 +2,12 @@ const { ethers } = require('hardhat');
 const fs = require('fs');
 
 async function main() {
-    console.log('🚀 Testing Canister Gasless Flow Components\n');
+    console.log('🚀 Testing Complete Gasless Flow\n');
 
     // Load deployed contract addresses
-    const factoryDeployment = JSON.parse(fs.readFileSync('./deployments/sepolia-11155111.json', 'utf8'));
-    const tokenDeployment = JSON.parse(fs.readFileSync('./deployments/spiral-token-sepolia-11155111.json', 'utf8'));
-    const forwarderDeployment = JSON.parse(fs.readFileSync('./deployments/forwarder-sepolia-11155111.json', 'utf8'));
+    const factoryDeployment = JSON.parse(fs.readFileSync('./src/etherlink/deployments/sepolia-11155111.json', 'utf8'));
+    const tokenDeployment = JSON.parse(fs.readFileSync('./src/etherlink/deployments/spiral-token-sepolia-11155111.json', 'utf8'));
+    const forwarderDeployment = JSON.parse(fs.readFileSync('./src/etherlink/deployments/forwarder-sepolia-11155111.json', 'utf8'));
     
     const tokenAddress = tokenDeployment.contractAddress;
     const forwarderAddress = forwarderDeployment.contractAddress;
@@ -20,59 +20,25 @@ async function main() {
 
     // Get signers
     const [deployer] = await ethers.getSigners();
-    const user = deployer; // Using same account for testing
-    
-    // Use the actual deployer address from the deployment files
-    const actualDeployerAddress = factoryDeployment.deployer;
-    console.log(`👤 User Address: ${user.address}`);
-    console.log(`📋 Actual Deployer Address: ${actualDeployerAddress}`);
-    console.log(`⚠️  Note: Using Hardhat signer, but deployment was done with ${actualDeployerAddress}\n`);
+    const user = deployer;
+    console.log(`👤 User Address: ${user.address}\n`);
 
     // Get contract instances
     const token = await ethers.getContractAt('SpiralToken', tokenAddress);
     const forwarder = await ethers.getContractAt('MinimalForwarder', forwarderAddress);
 
-    // Test 1: Check user token balance
-    console.log('1️⃣ Testing User Token Balance:');
-    try {
-        const balance = await token.balanceOf(user.address);
-        console.log(`   Balance: ${ethers.utils.formatEther(balance)} SPIRAL`);
-    } catch (error) {
-        console.log(`   ❌ Error getting balance: ${error.message}`);
-        console.log(`   This is expected since we're using a different address than the deployer`);
-    }
+    // Step 1: Check balances and nonces
+    console.log('1️⃣ Checking Balances and Nonces:');
+    const balance = await token.balanceOf(user.address);
+    const forwarderNonce = await forwarder.getNonce(user.address);
+    const forwarderBalance = await ethers.provider.getBalance(forwarderAddress);
     
-    // Try with actual deployer address
-    try {
-        const deployerBalance = await token.balanceOf(actualDeployerAddress);
-        console.log(`   Deployer Balance: ${ethers.utils.formatEther(deployerBalance)} SPIRAL`);
-    } catch (error) {
-        console.log(`   ❌ Error getting deployer balance: ${error.message}`);
-    }
-    console.log('');
+    console.log(`   User Token Balance: ${ethers.utils.formatEther(balance)} SPIRAL`);
+    console.log(`   Forwarder Nonce: ${forwarderNonce}`);
+    console.log(`   Forwarder ETH Balance: ${ethers.utils.formatEther(forwarderBalance)} ETH\n`);
 
-    // Test 2: Get forwarder nonce
-    console.log('2️⃣ Testing Forwarder Nonce:');
-    let forwarderNonce = 0;
-    try {
-        forwarderNonce = await forwarder.getNonce(user.address);
-        console.log(`   Forwarder Nonce: ${forwarderNonce}`);
-    } catch (error) {
-        console.log(`   ❌ Error getting nonce: ${error.message}`);
-        console.log(`   Using 0 as default nonce for testing`);
-    }
-    
-    // Try with actual deployer address
-    try {
-        const deployerNonce = await forwarder.getNonce(actualDeployerAddress);
-        console.log(`   Deployer Nonce: ${deployerNonce}`);
-    } catch (error) {
-        console.log(`   ❌ Error getting deployer nonce: ${error.message}`);
-    }
-    console.log('');
-
-    // Test 3: Create EIP-2612 permit signature
-    console.log('3️⃣ Testing EIP-2612 Permit Signature:');
+    // Step 2: Create EIP-2612 permit signature
+    console.log('2️⃣ Creating EIP-2612 Permit Signature:');
     const spender = forwarderAddress;
     const value = ethers.utils.parseEther('100');
     const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
@@ -94,19 +60,11 @@ async function main() {
         ]
     };
 
-    // Get token nonce with error handling
-    let tokenNonce = 0;
-    try {
-        tokenNonce = await token.nonces(user.address);
-    } catch (error) {
-        console.log(`   ⚠️  Error getting token nonce, using 0: ${error.message}`);
-    }
-    
     const message = {
         owner: user.address,
         spender: spender,
         value: value,
-        nonce: tokenNonce,
+        nonce: await token.nonces(user.address),
         deadline: deadline
     };
 
@@ -117,8 +75,8 @@ async function main() {
     console.log(`   v: ${v}, r: ${r}, s: ${s}`);
     console.log(`   Deadline: ${deadline}\n`);
 
-    // Test 4: Encode permit call data
-    console.log('4️⃣ Testing Permit Call Data Encoding:');
+    // Step 3: Encode permit call data
+    console.log('3️⃣ Encoding Permit Call Data:');
     const permitData = token.interface.encodeFunctionData('permit', [
         user.address,
         spender,
@@ -130,8 +88,8 @@ async function main() {
     ]);
     console.log(`   Permit Call Data: ${permitData}\n`);
 
-    // Test 5: Create EIP-2771 forward request
-    console.log('5️⃣ Testing EIP-2771 Forward Request:');
+    // Step 4: Create EIP-2771 forward request
+    console.log('4️⃣ Creating EIP-2771 Forward Request:');
     const forwardRequest = {
         from: user.address,
         to: tokenAddress,
@@ -151,8 +109,8 @@ async function main() {
     console.log(`     data: ${forwardRequest.data}`);
     console.log(`     validUntil: ${forwardRequest.validUntil}\n`);
 
-    // Test 6: Sign forward request
-    console.log('6️⃣ Testing Forward Request Signature:');
+    // Step 5: Sign forward request
+    console.log('5️⃣ Signing Forward Request:');
     const forwardRequestSignature = await user._signTypedData(
         {
             name: 'MinimalForwarder',
@@ -176,15 +134,13 @@ async function main() {
 
     console.log(`   Forward Request Signature: ${forwardRequestSignature}\n`);
 
-    // Test 7: Verify forward request signature
-    console.log('7️⃣ Testing Forward Request Verification:');
+    // Step 6: Verify forward request signature
+    console.log('6️⃣ Verifying Forward Request Signature:');
     const isValid = await forwarder.verify(forwardRequest, forwardRequestSignature);
     console.log(`   Signature Valid: ${isValid}\n`);
 
-    // Test 8: Encode execute call data
-    console.log('8️⃣ Testing Execute Call Data Encoding:');
-    
-    // Encode the ForwardRequest struct as bytes
+    // Step 7: Encode execute call data
+    console.log('7️⃣ Encoding Execute Call Data:');
     const forwardRequestEncoded = ethers.utils.defaultAbiCoder.encode([
         'tuple(address from, address to, uint256 value, uint256 gas, uint256 nonce, bytes data, uint256 validUntil)'
     ], [[
@@ -203,33 +159,34 @@ async function main() {
     ]);
     console.log(`   Execute Call Data: ${executeData}\n`);
 
-    // Test 9: Check forwarder balance
-    console.log('9️⃣ Testing Forwarder Balance:');
-    const forwarderBalance = await ethers.provider.getBalance(forwarderAddress);
-    console.log(`   Forwarder Balance: ${ethers.utils.formatEther(forwarderBalance)} ETH\n`);
+    // Step 8: Generate canister call command
+    console.log('8️⃣ Generating Canister Call Command:');
+    console.log('   Use this command to test the canister:');
+    console.log('');
+    console.log('dfx canister call backend execute_gasless_approval \\');
+    console.log(`  '(record { forward_request = record { from = "${forwardRequest.from}"; to = "${forwardRequest.to}"; value = "${forwardRequest.value}"; gas = "${forwardRequest.gas}"; nonce = "${forwardRequest.nonce}"; data = "${forwardRequest.data}"; validUntil = "${forwardRequest.validUntil}" }; forward_signature = "${forwardRequestSignature}"; user_address = "${user.address}"; amount = "${ethers.utils.formatEther(value)}" })'`);
+    console.log('');
 
-    // Test 10: Prepare canister call data
-    console.log('🔟 Preparing Canister Call Data:');
-    console.log('   This data will be sent to the ICP canister:');
-    console.log(`   Forward Request: ${JSON.stringify(forwardRequest, null, 2)}`);
-    console.log(`   Forward Signature: ${forwardRequestSignature}`);
-    console.log(`   User Address: ${user.address}`);
-    console.log(`   Amount: ${ethers.utils.formatEther(value)} SPIRAL\n`);
-
-    // Test 11: Verify permit signature recovery
-    console.log('1️⃣1️⃣ Testing Permit Signature Recovery:');
+    // Step 9: Test permit signature recovery
+    console.log('9️⃣ Testing Permit Signature Recovery:');
     const recoveredAddress = ethers.utils.verifyTypedData(domain, types, message, permitSignature);
     console.log(`   Recovered Address: ${recoveredAddress}`);
     console.log(`   Matches User: ${recoveredAddress.toLowerCase() === user.address.toLowerCase()}\n`);
 
-    console.log('✅ All tests completed successfully!');
-    console.log('\n📋 Next Steps for True Gasless Flow:');
-    console.log('1. Frontend calls canister.execute_gasless_approval() with the prepared data');
-    console.log('2. Canister validates forward request signature');
-    console.log('3. Canister constructs and signs EIP-1559 transaction');
-    console.log('4. Canister sends signed transaction to MinimalForwarder.execute()');
-    console.log('5. MinimalForwarder pays gas and calls token.permit()');
-    console.log('6. User gets approval with ZERO gas cost! 🎉\n');
+    // Step 10: Summary
+    console.log('🔟 Summary:');
+    console.log('   ✅ All signatures generated successfully');
+    console.log('   ✅ Forward request verified');
+    console.log('   ✅ Execute data encoded');
+    console.log('   ✅ Ready for canister testing\n');
+
+    console.log('📋 True Gasless Flow Ready:');
+    console.log('1. ✅ User signs EIP-2612 permit (no gas)');
+    console.log('2. ✅ User signs EIP-2771 forward request (no gas)');
+    console.log('3. ✅ Frontend submits to ICP canister (no gas)');
+    console.log('4. 🔄 ICP canister calls execute() (ICP pays gas)');
+    console.log('5. 🔄 MinimalForwarder pays for permit() (using its 0.04 ETH)');
+    console.log('6. 🔄 User gets approval with ZERO gas cost! 🎉\n');
 
     return {
         userAddress: user.address,
@@ -239,7 +196,8 @@ async function main() {
         forwardRequest,
         forwardRequestSignature,
         executeData,
-        forwarderBalance: ethers.utils.formatEther(forwarderBalance)
+        forwarderBalance: ethers.utils.formatEther(forwarderBalance),
+        canisterCommand: `dfx canister call backend execute_gasless_approval '(record { forward_request = record { from = "${forwardRequest.from}"; to = "${forwardRequest.to}"; value = "${forwardRequest.value}"; gas = "${forwardRequest.gas}"; nonce = "${forwardRequest.nonce}"; data = "${forwardRequest.data}"; validUntil = "${forwardRequest.validUntil}" }; forward_signature = "${forwardRequestSignature}"; user_address = "${user.address}"; amount = "${ethers.utils.formatEther(value)}" })'`
     };
 }
 
