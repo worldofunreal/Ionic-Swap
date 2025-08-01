@@ -1,0 +1,159 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "hashlock",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timelock",
+        "type": "uint256"
+      },
+      {
+        "internalType": "enum EtherlinkHTLC.ChainType",
+        "name": "sourceChain",
+        "type": "uint8"
+      },
+      {
+        "internalType": "enum EtherlinkHTLC.ChainType",
+        "name": "targetChain",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bool",
+        "name": "isCrossChain",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "orderHash",
+        "type": "string"
+      }
+    ],
+    "name": "createHTLCERC20",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "htlcId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "string",
+        "name": "secret",
+        "type": "string"
+      }
+    ],
+    "name": "claimHTLC",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "htlcId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getHTLC",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "sender",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "recipient",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "hashlock",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "timelock",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum EtherlinkHTLC.HTLCStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "string",
+            "name": "secret",
+            "type": "string"
+          },
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "enum EtherlinkHTLC.ChainType",
+            "name": "sourceChain",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum EtherlinkHTLC.ChainType",
+            "name": "targetChain",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "isCrossChain",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "orderHash",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "createdAt",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct EtherlinkHTLC.HTLC",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+] 

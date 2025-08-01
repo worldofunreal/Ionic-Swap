@@ -2,6 +2,23 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
+export interface AtomicSwapOrder {
+  'maker' : string,
+  'status' : SwapOrderStatus,
+  'taker' : string,
+  'destination_htlc_id' : [] | [string],
+  'destination_amount' : string,
+  'hashlock' : string,
+  'secret' : string,
+  'created_at' : bigint,
+  'source_htlc_id' : [] | [string],
+  'order_id' : string,
+  'source_amount' : string,
+  'source_token' : string,
+  'expires_at' : bigint,
+  'destination_token' : string,
+  'timelock' : bigint,
+}
 export interface GaslessApprovalRequest {
   'user_address' : string,
   'permit_request' : PermitRequest,
@@ -18,12 +35,42 @@ export interface PermitRequest {
   'nonce' : string,
   'spender' : string,
 }
+export type SwapOrderStatus = { 'DestinationHTLCClaimed' : null } |
+  { 'SourceHTLCCreated' : null } |
+  { 'SourceHTLCClaimed' : null } |
+  { 'Cancelled' : null } |
+  { 'Created' : null } |
+  { 'Completed' : null } |
+  { 'Expired' : null } |
+  { 'DestinationHTLCCreated' : null };
 export interface _SERVICE {
+  'claim_evm_htlc' : ActorMethod<
+    [string, string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'create_atomic_swap_order' : ActorMethod<
+    [string, string, string, string, string, string, bigint],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'create_evm_htlc' : ActorMethod<
+    [string, boolean],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'execute_atomic_swap' : ActorMethod<
+    [string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
   'execute_gasless_approval' : ActorMethod<
     [GaslessApprovalRequest],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
+  'get_all_atomic_swap_orders' : ActorMethod<[], Array<AtomicSwapOrder>>,
+  'get_atomic_swap_order' : ActorMethod<[string], [] | [AtomicSwapOrder]>,
   'get_balance' : ActorMethod<[string], { 'Ok' : string } | { 'Err' : string }>,
   'get_claim_fee' : ActorMethod<[], { 'Ok' : string } | { 'Err' : string }>,
   'get_contract_info' : ActorMethod<[], string>,

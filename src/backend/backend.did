@@ -16,6 +16,36 @@ type GaslessApprovalRequest = record {
   amount : text;
 };
 
+// Atomic Swap Types
+type SwapOrderStatus = variant {
+  Created;
+  SourceHTLCCreated;
+  DestinationHTLCCreated;
+  SourceHTLCClaimed;
+  DestinationHTLCClaimed;
+  Completed;
+  Expired;
+  Cancelled;
+};
+
+type AtomicSwapOrder = record {
+  order_id : text;
+  maker : text;
+  taker : text;
+  source_token : text;
+  destination_token : text;
+  source_amount : text;
+  destination_amount : text;
+  secret : text;
+  hashlock : text;
+  timelock : nat64;
+  source_htlc_id : opt text;
+  destination_htlc_id : opt text;
+  status : SwapOrderStatus;
+  created_at : nat64;
+  expires_at : nat64;
+};
+
 service : {
   // JSON-RPC Methods
   "get_sepolia_block_number" : () -> (variant { Ok : text; Err : text });
@@ -44,4 +74,12 @@ service : {
   
   // Gasless Approval Method
   "execute_gasless_approval" : (GaslessApprovalRequest) -> (variant { Ok : text; Err : text });
+  
+  // Atomic Swap Methods
+  "create_atomic_swap_order" : (text, text, text, text, text, text, nat64) -> (variant { Ok : text; Err : text });
+  "create_evm_htlc" : (text, bool) -> (variant { Ok : text; Err : text });
+  "claim_evm_htlc" : (text, text) -> (variant { Ok : text; Err : text });
+  "execute_atomic_swap" : (text) -> (variant { Ok : text; Err : text });
+  "get_atomic_swap_order" : (text) -> (opt AtomicSwapOrder);
+  "get_all_atomic_swap_orders" : () -> (vec AtomicSwapOrder);
 }
