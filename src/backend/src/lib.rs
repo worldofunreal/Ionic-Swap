@@ -708,13 +708,13 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
     ic_cdk::println!("Debug - User nonce from permit: {}", request.permit_request.nonce);
     ic_cdk::println!("Debug - Canister nonce for transaction: {}", canister_nonce);
     
-    // 4. Encode the permit function call directly on the token contract
-    let permit_data = encode_permit_call(&request.permit_request)?;
+    // 4. Encode the executePermitAndTransfer function call on the HTLC contract
+    let htlc_data = encode_htlc_permit_and_transfer_call(&request.permit_request)?;
     
-    // Debug: Check if the permit_data has odd length
-    let data_clean = permit_data.trim_start_matches("0x");
+    // Debug: Check if the htlc_data has odd length
+    let data_clean = htlc_data.trim_start_matches("0x");
     if data_clean.len() % 2 != 0 {
-        return Err(format!("Permit data has odd length: {} chars", data_clean.len()));
+        return Err(format!("HTLC data has odd length: {} chars", data_clean.len()));
     }
     
     // 5. Get current gas price and block info
@@ -735,25 +735,25 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
         .unwrap_or("0x3b9aca00") // 1 gwei default
         .trim_start_matches("0x");
     
-    // 7. Construct and sign EIP-1559 transaction to the token contract
-    let token_address = "0xdE7409EDeA573D090c3C6123458D6242E26b425E"; // SpiralToken address
+    // 7. Construct and sign EIP-1559 transaction to the HTLC contract
+    let htlc_address = "0x5e8b5b36F81A723Cdf42771e7aAc943b360c4751"; // EtherlinkHTLC address
     
     // Debug: Check the addresses
-    if token_address.len() != 42 || !token_address.starts_with("0x") {
-        return Err(format!("Invalid token address: {} (length: {})", token_address, token_address.len()));
+    if htlc_address.len() != 42 || !htlc_address.starts_with("0x") {
+        return Err(format!("Invalid HTLC address: {} (length: {})", htlc_address, htlc_address.len()));
     }
     
     // Debug: Print the addresses for verification
     ic_cdk::println!("Debug - From address: {}", from_addr_str);
-    ic_cdk::println!("Debug - To address (token): {}", token_address);
+    ic_cdk::println!("Debug - To address (HTLC): {}", htlc_address);
     
     let signed_tx = sign_eip1559_transaction(
         &from_addr_str,
-        token_address,
+        htlc_address,
         &canister_nonce,
         &gas_price,
         &base_fee_per_gas,
-        &permit_data,
+        &htlc_data,
     ).await?;
     
     // 8. Send the signed transaction
@@ -849,6 +849,83 @@ fn encode_permit_call(permit_request: &PermitRequest) -> Result<String, String> 
     let final_clean = encoded_data.trim_start_matches("0x");
     if final_clean.len() % 2 != 0 {
         return Err(format!("Final permit data has odd length: {} chars", final_clean.len()));
+    }
+    
+    Ok(encoded_data)
+}
+
+fn encode_htlc_permit_and_transfer_call(permit_request: &PermitRequest) -> Result<String, String> {
+    // executePermitAndTransfer function selector: executePermitAndTransfer(address,address,address,uint256,uint256,uint8,bytes32,bytes32)
+    // Function signature: executePermitAndTransfer(address,address,address,uint256,uint256,uint8,bytes32,bytes32)
+    let function_selector = "executePermitAndTransfer";
+    
+    // Function selector for executePermitAndTransfer(address,address,address,uint256,uint256,uint8,bytes32,bytes32)
+    let function_selector_hash = "2e456695";
+    
+    // Token address (SpiralToken)
+    let token_address = "0xdE7409EDeA573D090c3C6123458D6242E26b425E";
+    let token_padded = format!("{:0>64}", token_address.trim_start_matches("0x"));
+    
+    // Encode permit parameters: (token, owner, spender, value, deadline, v, r, s)
+    let owner_padded = format!("{:0>64}", permit_request.owner.trim_start_matches("0x"));
+    let spender_padded = format!("{:0>64}", permit_request.spender.trim_start_matches("0x"));
+    
+    // Convert value to proper hex format
+    let value_decimal: u128 = permit_request.value.parse().map_err(|e| format!("Invalid value: {}", e))?;
+    let value_hex = format!("{:x}", value_decimal);
+    let value_padded = format!("{:0>64}", value_hex);
+    
+    // Convert deadline from decimal string to hex and pad to 64 characters
+    let deadline_decimal: u64 = permit_request.deadline.parse().map_err(|e| format!("Invalid deadline: {}", e))?;
+    let deadline_hex = format!("{:x}", deadline_decimal);
+    let deadline_padded = format!("{:0>64}", deadline_hex);
+    
+    // Convert v from decimal string to hex and pad to 64 characters
+    let v_decimal: u64 = permit_request.v.parse().map_err(|e| format!("Invalid v value: {}", e))?;
+    let v_padded = format!("{:0>64}", format!("{:x}", v_decimal));
+    let r_padded = format!("{:0>64}", permit_request.r.trim_start_matches("0x"));
+    let s_padded = format!("{:0>64}", permit_request.s.trim_start_matches("0x"));
+    
+    // Debug: Check each component for odd length
+    if token_padded.len() % 2 != 0 || owner_padded.len() % 2 != 0 || spender_padded.len() % 2 != 0 || 
+       value_padded.len() % 2 != 0 || deadline_padded.len() % 2 != 0 ||
+       v_padded.len() % 2 != 0 || r_padded.len() % 2 != 0 || s_padded.len() % 2 != 0 {
+        return Err(format!(
+            "HTLC component lengths - token: {}, owner: {}, spender: {}, value: {}, deadline: {}, v: {}, r: {}, s: {}",
+            token_padded.len(), owner_padded.len(), spender_padded.len(), value_padded.len(), deadline_padded.len(),
+            v_padded.len(), r_padded.len(), s_padded.len()
+        ));
+    }
+    
+    let encoded_data = format!(
+        "0x{}{}{}{}{}{}{}{}{}",
+        function_selector_hash,
+        token_padded,
+        owner_padded,
+        spender_padded,
+        value_padded,
+        deadline_padded,
+        v_padded,
+        r_padded,
+        s_padded
+    );
+    
+    // Debug: Log the encoded HTLC data
+    ic_cdk::println!("Debug - Encoded HTLC data: {}", encoded_data);
+    ic_cdk::println!("Debug - Function selector: {}", function_selector);
+    ic_cdk::println!("Debug - Token padded: {}", token_padded);
+    ic_cdk::println!("Debug - Owner padded: {}", owner_padded);
+    ic_cdk::println!("Debug - Spender padded: {}", spender_padded);
+    ic_cdk::println!("Debug - Value padded: {}", value_padded);
+    ic_cdk::println!("Debug - Deadline padded: {}", deadline_padded);
+    ic_cdk::println!("Debug - V padded: {}", v_padded);
+    ic_cdk::println!("Debug - R padded: {}", r_padded);
+    ic_cdk::println!("Debug - S padded: {}", s_padded);
+    
+    // Debug: Check if the final encoded data has odd length
+    let final_clean = encoded_data.trim_start_matches("0x");
+    if final_clean.len() % 2 != 0 {
+        return Err(format!("Final HTLC data has odd length: {} chars", final_clean.len()));
     }
     
     Ok(encoded_data)

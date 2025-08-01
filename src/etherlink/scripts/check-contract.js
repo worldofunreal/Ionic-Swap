@@ -1,42 +1,70 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-    console.log("🔍 Checking MinimalForwarder Contract");
-    console.log("=====================================");
+    console.log("🔍 Checking deployed HTLC contract functions...\n");
 
-    // Forwarder contract address
-    const FORWARDER_ADDRESS = "0x3C78EB288802D35EB158e4f699481d66613348Fa";
+    // Load deployed contract address
+    const htlcDeployment = JSON.parse(require('fs').readFileSync('./deployments/sepolia-11155111.json', 'utf8'));
+    const htlcAddress = htlcDeployment.contractAddress;
     
-    console.log(`📦 Forwarder Address: ${FORWARDER_ADDRESS}`);
-    
-    // Check if contract exists
-    const contractCode = await ethers.provider.getCode(FORWARDER_ADDRESS);
-    console.log(`📋 Contract code exists: ${contractCode !== '0x'}`);
-    console.log(`📏 Contract code length: ${contractCode.length}`);
-    
-    if (contractCode === '0x') {
-        console.log("❌ No contract code found at address");
-        return;
-    }
-    
-    // Check balance
-    const balance = await ethers.provider.getBalance(FORWARDER_ADDRESS);
-    console.log(`💰 Contract balance: ${ethers.utils.formatEther(balance)} ETH`);
-    
-    // Try to call getNonce function
+    console.log("📋 HTLC Contract Address:", htlcAddress);
+    console.log("");
+
+    // Try to get contract instance
     try {
-        const forwarder = new ethers.Contract(FORWARDER_ADDRESS, [
-            "function getNonce(address from) view returns (uint256)"
-        ], ethers.provider);
+        const htlcContract = await ethers.getContractAt("EtherlinkHTLC", htlcAddress);
+        console.log("✅ Successfully connected to HTLC contract");
         
-        const [deployer] = await ethers.getSigners();
-        const nonce = await forwarder.getNonce(deployer.address);
-        console.log(`✅ getNonce function works: ${nonce.toString()}`);
-    } catch (err) {
-        console.log(`❌ getNonce function failed: ${err.message}`);
+        // Try to call basic functions
+        console.log("\n🔍 Testing basic functions...");
+        
+        try {
+            const htlcCounter = await htlcContract.htlcCounter();
+            console.log("  htlcCounter():", htlcCounter.toString());
+        } catch (error) {
+            console.log("  ❌ htlcCounter() failed:", error.message);
+        }
+        
+        try {
+            const icpNetworkSigner = await htlcContract.icpNetworkSigner();
+            console.log("  icpNetworkSigner():", icpNetworkSigner);
+        } catch (error) {
+            console.log("  ❌ icpNetworkSigner() failed:", error.message);
+        }
+        
+        try {
+            const claimFee = await htlcContract.claimFee();
+            console.log("  claimFee():", ethers.utils.formatEther(claimFee));
+        } catch (error) {
+            console.log("  ❌ claimFee() failed:", error.message);
+        }
+        
+        try {
+            const owner = await htlcContract.owner();
+            console.log("  owner():", owner);
+        } catch (error) {
+            console.log("  ❌ owner() failed:", error.message);
+        }
+        
+        try {
+            const isPaused = await htlcContract.paused();
+            console.log("  paused():", isPaused);
+        } catch (error) {
+            console.log("  ❌ paused() failed:", error.message);
+        }
+        
+    } catch (error) {
+        console.log("❌ Failed to connect to HTLC contract:", error.message);
+        
+        // Try to get contract code
+        const code = await ethers.provider.getCode(htlcAddress);
+        if (code === "0x") {
+            console.log("❌ No contract code found at address");
+        } else {
+            console.log("✅ Contract code exists at address");
+            console.log("  Code length:", code.length, "characters");
+        }
     }
-    
-    console.log("✅ Contract check completed!");
 }
 
 main()
