@@ -135,21 +135,24 @@ async function main() {
                 
                 const nonce = await tokenContract.nonces(userAddress);
                 const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
-                const permitAmount = order.source_amount; // Use the same amount as the swap
+                // Convert the raw amount to human-readable format for permit signing
+                const permitAmountHuman = ethers.utils.formatUnits(order.source_amount, 8); // Convert from wei to tokens
+                const permitAmount = order.source_amount; // Keep raw amount for the request
                 
                 console.log("  Permit details:");
                 console.log("    Owner:", userAddress);
                 console.log("    Spender:", HTLC_CONTRACT);
-                console.log("    Amount:", permitAmount);
+                console.log("    Amount (human):", permitAmountHuman);
+                console.log("    Amount (raw):", permitAmount);
                 console.log("    Nonce:", nonce.toString());
                 console.log("    Deadline:", deadline);
                 
-                // Sign the permit
+                // Sign the permit using human-readable amount
                 const permitResult = await signPermitMessage(
                     signer,
                     userAddress,
                     HTLC_CONTRACT,
-                    permitAmount,
+                    permitAmountHuman,
                     nonce,
                     deadline
                 );
@@ -163,6 +166,7 @@ async function main() {
                 // Test 4: Execute permit via ICP canister (EIP-2771)
                 console.log("\n📋 Test 4: Executing permit via ICP canister...");
                 
+                // Create permit data matching the frontend structure
                 const permitRequest = {
                     owner: userAddress,
                     spender: HTLC_CONTRACT,

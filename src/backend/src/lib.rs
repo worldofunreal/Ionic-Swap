@@ -49,6 +49,8 @@ fn keccak256(data: &[u8]) -> [u8; 32] {
 const SEPOLIA_CHAIN_ID: u64 = 11155111;
 const EIP1559_TX_ID: u8 = 2;
 
+// Factory Contract (legacy - keeping for compatibility)
+const FACTORY_ADDRESS: &str = "0x288AA4c267408adE0e01463fBD5DECC824e96E8D";
 
 // HTLC Contract (newly deployed)
 const HTLC_CONTRACT_ADDRESS: &str = "0x288AA4c267408adE0e01463fBD5DECC824e96E8D";
@@ -778,13 +780,13 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
     ic_cdk::println!("Debug - User nonce from permit: {}", request.permit_request.nonce);
     ic_cdk::println!("Debug - Canister nonce for transaction: {}", canister_nonce);
     
-    // 4. Encode the executePermitAndTransfer function call on the HTLC contract
-    let htlc_data = encode_htlc_permit_and_transfer_call(&request.permit_request)?;
+    // 4. Encode the permit function call on the token contract
+    let permit_data = encode_permit_call(&request.permit_request)?;
     
-    // Debug: Check if the htlc_data has odd length
-    let data_clean = htlc_data.trim_start_matches("0x");
+    // Debug: Check if the permit_data has odd length
+    let data_clean = permit_data.trim_start_matches("0x");
     if data_clean.len() % 2 != 0 {
-        return Err(format!("HTLC data has odd length: {} chars", data_clean.len()));
+        return Err(format!("Permit data has odd length: {} chars", data_clean.len()));
     }
     
     // 5. Get current gas price and block info
@@ -805,25 +807,26 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
         .unwrap_or("0x3b9aca00") // 1 gwei default
         .trim_start_matches("0x");
     
-    // 7. Construct and sign EIP-1559 transaction to the HTLC contract
-    let htlc_address = "0x5e8b5b36F81A723Cdf42771e7aAc943b360c4751"; // EtherlinkHTLC address
+    // 7. Construct and sign EIP-1559 transaction to the token contract
+    // Use the SpiralToken address for now (can be made dynamic later)
+    let token_address = "0xdE7409EDeA573D090c3C6123458D6242E26b425E"; // SpiralToken address
     
     // Debug: Check the addresses
-    if htlc_address.len() != 42 || !htlc_address.starts_with("0x") {
-        return Err(format!("Invalid HTLC address: {} (length: {})", htlc_address, htlc_address.len()));
+    if token_address.len() != 42 || !token_address.starts_with("0x") {
+        return Err(format!("Invalid token address: {} (length: {})", token_address, token_address.len()));
     }
     
     // Debug: Print the addresses for verification
     ic_cdk::println!("Debug - From address: {}", from_addr_str);
-    ic_cdk::println!("Debug - To address (HTLC): {}", htlc_address);
+    ic_cdk::println!("Debug - To address (token): {}", token_address);
     
     let signed_tx = sign_eip1559_transaction(
         &from_addr_str,
-        htlc_address,
+        token_address,
         &canister_nonce,
         &gas_price,
         &base_fee_per_gas,
-        &htlc_data,
+        &permit_data,
     ).await?;
     
     // 8. Send the signed transaction
