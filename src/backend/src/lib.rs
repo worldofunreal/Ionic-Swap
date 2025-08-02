@@ -571,6 +571,80 @@ pub fn list_icp_htlcs_public() -> Vec<crate::types::HTLC> {
     list_icp_htlcs()
 }
 
+// ============================================================================
+// CROSS-CHAIN SWAP PUBLIC API ENDPOINTS
+// ============================================================================
+
+/// Create a cross-chain swap order (public API)
+#[update]
+#[candid_method]
+pub fn create_cross_chain_order_public(
+    maker: String,
+    taker: String,
+    source_token: String,
+    destination_token: String,
+    source_amount: String,
+    destination_amount: String,
+    direction: crate::types::SwapDirection,
+    timelock: u64,
+) -> Result<String, String> {
+    create_cross_chain_order(&maker, &taker, &source_token, &destination_token, &source_amount, &destination_amount, direction, timelock)
+}
+
+/// Execute EVM→ICP swap (public API)
+#[update]
+#[candid_method]
+pub async fn execute_evm_to_icp_swap_public(
+    order_id: String,
+    evm_htlc_id: String,
+) -> Result<String, String> {
+    execute_evm_to_icp_swap(&order_id, &evm_htlc_id).await
+}
+
+/// Execute ICP→EVM swap (public API)
+#[update]
+#[candid_method]
+pub async fn execute_icp_to_evm_swap_public(
+    order_id: String,
+    icp_htlc_id: String,
+) -> Result<String, String> {
+    execute_icp_to_evm_swap(&order_id, &icp_htlc_id).await
+}
+
+/// Coordinate cross-chain swap (public API)
+#[update]
+#[candid_method]
+pub async fn coordinate_cross_chain_swap_public(
+    order_id: String,
+    direction: crate::types::SwapDirection,
+) -> Result<String, String> {
+    coordinate_cross_chain_swap(&order_id, direction).await
+}
+
+/// Validate cross-chain order (public API)
+#[query]
+#[candid_method]
+pub fn validate_cross_chain_order_public(order_id: String) -> Result<bool, String> {
+    validate_cross_chain_order(&order_id)
+}
+
+/// Get cross-chain swap status (public API)
+#[query]
+#[candid_method]
+pub fn get_cross_chain_swap_status_public(order_id: String) -> Result<crate::types::SwapOrderStatus, String> {
+    get_cross_chain_swap_status(&order_id)
+}
+
+/// Complete cross-chain swap (public API)
+#[update]
+#[candid_method]
+pub async fn complete_cross_chain_swap_public(
+    order_id: String,
+    secret: String,
+) -> Result<String, String> {
+    icp::complete_cross_chain_swap(&order_id, &secret).await
+}
+
 
 // ============================================================================
 // UTILITY METHODS

@@ -3,8 +3,8 @@ use ic_cdk::call;
 use serde_json::Value;
 use std::collections::HashMap;
 use sha3::{Keccak256, Digest};
-use crate::storage::{get_htlc_store, get_atomic_swap_orders};
-use crate::types::{HTLC, AtomicSwapOrder};
+use crate::storage::{get_htlc_store, get_atomic_swap_orders, generate_order_id};
+use crate::types::{HTLC, AtomicSwapOrder, SwapOrderStatus, SwapDirection};
 
 // ============================================================================
 // ICRC-1 TOKEN FUNCTIONS
@@ -357,6 +357,273 @@ pub fn list_icp_htlcs() -> Vec<HTLC> {
         .filter(|htlc| htlc.source_chain == 0) // ICP chain ID
         .cloned()
         .collect()
+}
+
+// ============================================================================
+// CROSS-CHAIN SWAP COORDINATION FUNCTIONS
+// ============================================================================
+
+/// Create a cross-chain swap order for EVM<>ICP swaps
+pub fn create_cross_chain_order(
+    maker: &str,
+    taker: &str,
+    source_token: &str,
+    destination_token: &str,
+    source_amount: &str,
+    destination_amount: &str,
+    direction: SwapDirection,
+    timelock: u64,
+) -> Result<String, String> {
+    // Generate a unique order ID
+    let order_id = generate_order_id();
+    
+    // Generate a secret for the HTLC
+    let secret = format!("htlc_secret_{}", ic_cdk::api::time());
+    let secret_hash = format!("0x{}", hex::encode(sha3::Keccak256::digest(secret.as_bytes())));
+    
+    // Calculate expiration time (2 hours from now)
+    let expires_at = ic_cdk::api::time() + (2 * 60 * 60 * 1_000_000_000); // 2 hours in nanoseconds
+    
+    // Create the atomic swap order
+    let order = AtomicSwapOrder {
+        order_id: order_id.clone(),
+        maker: maker.to_string(),
+        taker: taker.to_string(),
+        source_token: source_token.to_string(),
+        destination_token: destination_token.to_string(),
+        source_amount: source_amount.to_string(),
+        destination_amount: destination_amount.to_string(),
+        secret,
+        hashlock: secret_hash,
+        timelock,
+        source_htlc_id: None,
+        destination_htlc_id: None,
+        status: SwapOrderStatus::Created,
+        created_at: ic_cdk::api::time(),
+        expires_at,
+    };
+    
+    // Store the order
+    let orders = get_atomic_swap_orders();
+    orders.insert(order_id.clone(), order);
+    
+    Ok(order_id)
+}
+
+/// Execute a complete EVM→ICP swap flow
+pub async fn execute_evm_to_icp_swap(
+    order_id: &str,
+    evm_htlc_id: &str,
+) -> Result<String, String> {
+    // Get the atomic swap order
+    let orders = get_atomic_swap_orders();
+    let order = orders.get(order_id)
+        .ok_or_else(|| format!("Order {} not found", order_id))?;
+    
+    // Validate the order is in the correct state
+    match order.status {
+        SwapOrderStatus::Created => {},
+        _ => return Err("Order is not in Created state".to_string()),
+    }
+    
+    // Clone the values we need before borrowing mutably
+    let destination_token = order.destination_token.clone();
+    let taker = order.taker.clone();
+    let destination_amount = order.destination_amount.clone();
+    let hashlock = order.hashlock.clone();
+    let timelock = order.timelock;
+    
+    // Update order status to indicate EVM HTLC is created
+    if let Some(order) = orders.get_mut(order_id) {
+        order.source_htlc_id = Some(evm_htlc_id.to_string());
+        order.status = SwapOrderStatus::SourceHTLCCreated;
+    }
+    
+    // Create ICP HTLC (destination HTLC)
+    let icp_htlc_result = create_icp_htlc(
+        order_id,
+        &destination_token, // ICP token canister ID
+        &taker, // Recipient on ICP
+        destination_amount.parse::<u128>().unwrap(),
+        &hashlock,
+        timelock,
+    ).await?;
+    
+    // Extract HTLC ID from result
+    let icp_htlc_id = icp_htlc_result.split("HTLC ID: ").last()
+        .ok_or_else(|| "Failed to extract ICP HTLC ID".to_string())?;
+    
+    // Update order status to indicate ICP HTLC is created
+    if let Some(order) = orders.get_mut(order_id) {
+        order.destination_htlc_id = Some(icp_htlc_id.to_string());
+        order.status = SwapOrderStatus::DestinationHTLCCreated;
+    }
+    
+    Ok(format!("EVM→ICP swap initiated successfully! Order: {}, ICP HTLC: {}", order_id, icp_htlc_id))
+}
+
+/// Execute a complete ICP→EVM swap flow
+pub async fn execute_icp_to_evm_swap(
+    order_id: &str,
+    icp_htlc_id: &str,
+) -> Result<String, String> {
+    // Get the atomic swap order
+    let orders = get_atomic_swap_orders();
+    let order = orders.get(order_id)
+        .ok_or_else(|| format!("Order {} not found", order_id))?;
+    
+    // Validate the order is in the correct state
+    match order.status {
+        SwapOrderStatus::Created => {},
+        _ => return Err("Order is not in Created state".to_string()),
+    }
+    
+    // Update order status to indicate ICP HTLC is created
+    if let Some(order) = orders.get_mut(order_id) {
+        order.source_htlc_id = Some(icp_htlc_id.to_string());
+        order.status = SwapOrderStatus::SourceHTLCCreated;
+    }
+    
+    // For ICP→EVM, we need to create the EVM HTLC
+    // This would typically be done by calling the EVM module
+    // For now, we'll simulate this by updating the order
+    if let Some(order) = orders.get_mut(order_id) {
+        order.destination_htlc_id = Some("evm_htlc_pending".to_string());
+        order.status = SwapOrderStatus::DestinationHTLCCreated;
+    }
+    
+    Ok(format!("ICP→EVM swap initiated successfully! Order: {}, EVM HTLC: pending", order_id))
+}
+
+/// Coordinate a complete cross-chain swap (bidirectional)
+pub async fn coordinate_cross_chain_swap(
+    order_id: &str,
+    direction: SwapDirection,
+) -> Result<String, String> {
+    // Get the atomic swap order
+    let orders = get_atomic_swap_orders();
+    let order = orders.get(order_id)
+        .ok_or_else(|| format!("Order {} not found", order_id))?;
+    
+    // Validate the order is in the correct state
+    match order.status {
+        SwapOrderStatus::Created => {},
+        _ => return Err("Order is not in Created state".to_string()),
+    }
+    
+    match direction {
+        SwapDirection::EVMtoICP => {
+            // For EVM→ICP, we need the EVM HTLC to be created first
+            // This would be done by the frontend/client
+            // We'll simulate the coordination
+            if let Some(order) = orders.get_mut(order_id) {
+                order.status = SwapOrderStatus::SourceHTLCCreated;
+            }
+            Ok(format!("EVM→ICP swap coordination initiated for order: {}", order_id))
+        },
+        SwapDirection::ICPtoEVM => {
+            // For ICP→EVM, we create the ICP HTLC first
+            let icp_htlc_result = create_icp_htlc(
+                order_id,
+                &order.source_token, // ICP token canister ID
+                &order.maker, // Recipient on ICP
+                order.source_amount.parse::<u128>().unwrap(),
+                &order.hashlock,
+                order.timelock,
+            ).await?;
+            
+            if let Some(order) = orders.get_mut(order_id) {
+                order.source_htlc_id = Some("icp_htlc_created".to_string());
+                order.status = SwapOrderStatus::SourceHTLCCreated;
+            }
+            
+            Ok(format!("ICP→EVM swap coordination initiated for order: {}", order_id))
+        },
+    }
+}
+
+/// Validate a cross-chain swap order
+pub fn validate_cross_chain_order(order_id: &str) -> Result<bool, String> {
+    // Get the atomic swap order
+    let orders = get_atomic_swap_orders();
+    let order = orders.get(order_id)
+        .ok_or_else(|| format!("Order {} not found", order_id))?;
+    
+    // Check if order has expired
+    let current_time = ic_cdk::api::time();
+    if current_time > order.expires_at {
+        return Err("Order has expired".to_string());
+    }
+    
+    // Check if order is in a valid state
+    match order.status {
+        SwapOrderStatus::Created |
+        SwapOrderStatus::SourceHTLCCreated |
+        SwapOrderStatus::DestinationHTLCCreated |
+        SwapOrderStatus::SourceHTLCClaimed |
+        SwapOrderStatus::DestinationHTLCClaimed => Ok(true),
+        SwapOrderStatus::Completed => Ok(true),
+        SwapOrderStatus::Expired |
+        SwapOrderStatus::Cancelled => Err("Order is not in a valid state".to_string()),
+    }
+}
+
+/// Get the status of a cross-chain swap
+pub fn get_cross_chain_swap_status(order_id: &str) -> Result<SwapOrderStatus, String> {
+    // Get the atomic swap order
+    let orders = get_atomic_swap_orders();
+    let order = orders.get(order_id)
+        .ok_or_else(|| format!("Order {} not found", order_id))?;
+    
+    Ok(order.status.clone())
+}
+
+/// Complete a cross-chain swap by claiming both HTLCs
+pub async fn complete_cross_chain_swap(
+    order_id: &str,
+    secret: &str,
+) -> Result<String, String> {
+    // Get the atomic swap order
+    let orders = get_atomic_swap_orders();
+    let order = orders.get(order_id)
+        .ok_or_else(|| format!("Order {} not found", order_id))?;
+    
+    // Validate the secret matches the hashlock
+    let secret_hash = format!("0x{}", hex::encode(sha3::Keccak256::digest(secret.as_bytes())));
+    if secret_hash != order.hashlock {
+        return Err("Invalid secret for swap".to_string());
+    }
+    
+    // Validate the order is in the correct state
+    match order.status {
+        SwapOrderStatus::DestinationHTLCCreated => {},
+        _ => return Err("Order is not ready for completion".to_string()),
+    }
+    
+    // Claim the destination HTLC (ICP HTLC for EVM→ICP, EVM HTLC for ICP→EVM)
+    if let Some(htlc_id) = &order.destination_htlc_id {
+        if htlc_id.starts_with("icp_htlc_") {
+            // Claim ICP HTLC
+            let claim_result = claim_icp_htlc(order_id, htlc_id, secret).await?;
+            
+            // Update order status
+            if let Some(order) = orders.get_mut(order_id) {
+                order.status = SwapOrderStatus::DestinationHTLCClaimed;
+            }
+            
+            Ok(format!("Cross-chain swap completed! ICP HTLC claimed: {}", claim_result))
+        } else {
+            // Claim EVM HTLC (this would be done by the EVM module)
+            // For now, we'll simulate this
+            if let Some(order) = orders.get_mut(order_id) {
+                order.status = SwapOrderStatus::DestinationHTLCClaimed;
+            }
+            
+            Ok(format!("Cross-chain swap completed! EVM HTLC claimed: simulated"))
+        }
+    } else {
+        Err("No destination HTLC found".to_string())
+    }
 }
 
 // ============================================================================
