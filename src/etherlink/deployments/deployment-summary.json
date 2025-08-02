@@ -1,9 +1,26 @@
 {
   "sepolia-11155111": {
-    "contractAddress": "0x7159da7AAc8fE699e977A321bdF77aA06C6A760F",
+    "contractAddress": "0xfF6027804B405cE234cbCc116B1658D5F7A732A8",
     "deployer": "0xf0d056015Bdd86C0EFD07000F75Ea10873A1d0A7",
-    "deploymentTime": "2025-08-02T01:04:28.793Z",
-    "transactionHash": "0xbff21d5180c67d44528ea6e0f0540cc0476b56c8fd3ee9a39abf7d3a0749d628",
-    "icpNetworkSigner": "0xf0d056015Bdd86C0EFD07000F75Ea10873A1d0A7"
+    "deploymentTime": "2025-08-02T04:01:18.197Z",
+    "transactionHash": "0xd7a38bb7c4d557e6cc078f96c99d7ac596db27294f0ae30f64138c8373610791",
+    "icpNetworkSigner": "0xf0d056015Bdd86C0EFD07000F75Ea10873A1d0A7",
+    "htlcContract": {
+      "network": "sepolia",
+      "chainId": 11155111,
+      "contractAddress": "0x7cFC05b92549ae96D758516B9A2b50D114d6ad0d",
+      "deployer": "0xf0d056015Bdd86C0EFD07000F75Ea10873A1d0A7",
+      "icpNetworkSigner": "0xf0d056015Bdd86C0EFD07000F75Ea10873A1d0A7",
+      "deploymentTime": "2025-08-02T04:02:14.945Z",
+      "transactionHash": "0x8cac2cb496f03683fcb2ae230a172c864d4fb1adde9e929891805fb5e89f98a1",
+      "blockNumber": null,
+      "gasUsed": "3240512",
+      "initialState": {
+        "icpNetworkSigner": "0xf0d056015Bdd86C0EFD07000F75Ea10873A1d0A7",
+        "claimFee": "0.001",
+        "refundFee": "0.0005",
+        "totalFeesCollected": "0.0"
+      }
+    }
   }
 }

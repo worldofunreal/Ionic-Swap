@@ -1134,8 +1134,8 @@
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/EtherlinkHTLC.sol": {
-      "lastModificationDate": 1754096358620,
-      "contentHash": "d13df3074383f220acb29e001895c627",
+      "lastModificationDate": 1754107178547,
+      "contentHash": "a50b1b8cfd703f75883b90f32f823ccf",
       "sourceName": "contracts/EtherlinkHTLC.sol",
       "solcConfig": {
         "version": "0.8.23",

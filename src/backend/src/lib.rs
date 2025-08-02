@@ -52,10 +52,10 @@ const SEPOLIA_CHAIN_ID: u64 = 11155111;
 const EIP1559_TX_ID: u8 = 2;
 
 // Factory Contract (legacy - keeping for compatibility - old deployment)
-const FACTORY_ADDRESS: &str = "0x288AA4c267408adE0e01463fBD5DECC824e96E8D";
+const FACTORY_ADDRESS: &str = "0x7cFC05b92549ae96D758516B9A2b50D114d6ad0d";
 
 // HTLC Contract (newly deployed)
-const HTLC_CONTRACT_ADDRESS: &str = "0x294b513c6b14d9BAA8F03703ADEf50f8dBf93913";
+const HTLC_CONTRACT_ADDRESS: &str = "0x7cFC05b92549ae96D758516B9A2b50D114d6ad0d";
 const SPIRAL_TOKEN_ADDRESS: &str = "0xdE7409EDeA573D090c3C6123458D6242E26b425E";
 const STARDUST_TOKEN_ADDRESS: &str = "0x6ca99fc9bDed10004FE9CC6ce40914b98490Dc90";
 
@@ -1646,8 +1646,17 @@ pub async fn claim_evm_htlc(
         return Err("Order not ready for claiming".to_string());
     }
     
-    // Encode claimHTLC function call
-    let encoded_data = encode_claim_htlc_call(&htlc_id, &order.secret)?;
+    // Determine the recipient based on HTLC type
+    let recipient = if order.source_htlc_id.as_ref() == Some(&htlc_id) {
+        &order.taker // Source HTLC: taker claims maker's tokens
+    } else if order.destination_htlc_id.as_ref() == Some(&htlc_id) {
+        &order.maker // Destination HTLC: maker claims taker's tokens
+    } else {
+        return Err("HTLC ID not found in order".to_string());
+    };
+    
+    // Encode claimHTLCByICP function call
+    let encoded_data = encode_claim_htlc_by_icp_call(&htlc_id, &order.secret, recipient)?;
     
     // Get canister's Ethereum address
     let canister_address = get_ethereum_address().await?;
@@ -1871,6 +1880,57 @@ fn encode_claim_htlc_call(htlc_id: &str, secret: &str) -> Result<String, String>
     ic_cdk::println!("  Function: claimHTLC");
     ic_cdk::println!("  HTLC ID: 0x{}", hex::encode(&htlc_id_bytes));
     ic_cdk::println!("  Secret: '{}'", secret);
+    ic_cdk::println!("  Encoded Data: {}", encoded_hex);
+    
+    Ok(encoded_hex)
+}
+
+/// Encode claimHTLCByICP function call
+fn encode_claim_htlc_by_icp_call(htlc_id: &str, secret: &str, recipient: &str) -> Result<String, String> {
+    // Define the function signature
+    let function = Function {
+        name: "claimHTLCByICP".to_string(),
+        inputs: vec![
+            ethabi::Param { name: "htlcId".to_string(), kind: ParamType::FixedBytes(32), internal_type: None },
+            ethabi::Param { name: "secret".to_string(), kind: ParamType::String, internal_type: None },
+            ethabi::Param { name: "recipient".to_string(), kind: ParamType::Address, internal_type: None },
+        ],
+        outputs: vec![],
+        constant: None,
+        state_mutability: ethabi::StateMutability::NonPayable,
+    };
+    
+    // Parse htlc_id (remove 0x prefix and convert to bytes)
+    let htlc_id_clean = htlc_id.trim_start_matches("0x");
+    let htlc_id_bytes = hex::decode(htlc_id_clean)
+        .map_err(|e| format!("Invalid htlc_id: {}", e))?;
+    if htlc_id_bytes.len() != 32 {
+        return Err("HTLC ID must be 32 bytes".to_string());
+    }
+    
+    // Parse recipient address
+    let recipient_addr = Address::from_str(recipient.trim_start_matches("0x"))
+        .map_err(|e| format!("Invalid recipient address: {}", e))?;
+    
+    // Convert parameters to tokens
+    let tokens = vec![
+        Token::FixedBytes(htlc_id_bytes.clone()),
+        Token::String(secret.to_string()),
+        Token::Address(recipient_addr),
+    ];
+    
+    // Encode the function call
+    let encoded = function.encode_input(&tokens)
+        .map_err(|e| format!("Failed to encode function call: {}", e))?;
+    
+    let encoded_hex = format!("0x{}", hex::encode(encoded));
+    
+    // Debug logging
+    ic_cdk::println!("🔧 Claim HTLC By ICP ABI Encoding Debug:");
+    ic_cdk::println!("  Function: claimHTLCByICP");
+    ic_cdk::println!("  HTLC ID: 0x{}", hex::encode(&htlc_id_bytes));
+    ic_cdk::println!("  Secret: '{}'", secret);
+    ic_cdk::println!("  Recipient: {}", recipient_addr);
     ic_cdk::println!("  Encoded Data: {}", encoded_hex);
     
     Ok(encoded_hex)

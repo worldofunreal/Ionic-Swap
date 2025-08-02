@@ -388,6 +388,46 @@ contract EtherlinkHTLC is ReentrancyGuard, Ownable, Pausable {
     }
     
     /**
+     * @dev Claim an HTLC with the secret (gasless version for ICP canister)
+     * @param htlcId ID of the HTLC to claim
+     * @param secret The secret that unlocks the HTLC
+     * @param recipient The address that should receive the funds
+     */
+    function claimHTLCByICP(bytes32 htlcId, string memory secret, address recipient) 
+        external 
+        nonReentrant 
+        htlcExists(htlcId) 
+        htlcNotExpired(htlcId) 
+    {
+        // TODO: Add security check for ICP network signer in production
+        // require(msg.sender == icpNetworkSigner, "Only ICP network signer can call this");
+        
+        HTLC storage htlc = htlcContracts[htlcId];
+        require(htlc.recipient == recipient, "Invalid recipient");
+        require(htlc.status == HTLCStatus.Locked, "HTLC is not in locked state");
+        require(keccak256(abi.encodePacked(secret)) == htlc.hashlock, "Invalid secret");
+        
+        htlc.status = HTLCStatus.Claimed;
+        htlc.secret = secret;
+        
+        uint256 feeAmount = (htlc.amount * claimFee) / 1 ether;
+        uint256 transferAmount = htlc.amount - feeAmount;
+        
+        totalFeesCollected += feeAmount;
+        
+        if (htlc.token == address(0)) {
+            // ETH HTLC
+            (bool success, ) = recipient.call{value: transferAmount}("");
+            require(success, "ETH transfer failed");
+        } else {
+            // ERC20 HTLC
+            IERC20(htlc.token).safeTransfer(recipient, transferAmount);
+        }
+        
+        emit HTLCClaimed(htlcId, recipient, secret, transferAmount);
+    }
+    
+    /**
      * @dev Refund an expired HTLC
      * @param htlcId ID of the HTLC to refund
      */
