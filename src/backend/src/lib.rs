@@ -59,6 +59,10 @@ const HTLC_CONTRACT_ADDRESS: &str = "0x7cFC05b92549ae96D758516B9A2b50D114d6ad0d"
 const SPIRAL_TOKEN_ADDRESS: &str = "0xdE7409EDeA573D090c3C6123458D6242E26b425E";
 const STARDUST_TOKEN_ADDRESS: &str = "0x6ca99fc9bDed10004FE9CC6ce40914b98490Dc90";
 
+// ICRC-1 Token Canister IDs (placeholder - will be updated after deployment)
+const SPIRAL_ICRC_CANISTER_ID: &str = "mxzaz-hqaaa-aaaar-qaada-cai";
+const STARDUST_ICRC_CANISTER_ID: &str = "myb77-3aaaa-aaaar-qaaea-cai";
+
 const ICP_SIGNER_ADDRESS: &str = "0x6a3Ff928a09D21d82B27e9B002BBAea7fc123A00";
 const INFURA_URL: &str = "https://sepolia.infura.io/v3/70b7e4d32357459a9af10d6503eae303";
 
