@@ -85,8 +85,18 @@ export type SwapOrderStatus = { 'DestinationHTLCClaimed' : null } |
   { 'Expired' : null } |
   { 'DestinationHTLCCreated' : null };
 export interface _SERVICE {
+  'approve_backend_for_icrc_tokens_public' : ActorMethod<
+    [string, string, bigint],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
   'approve_icrc_tokens_public' : ActorMethod<
     [string, string, bigint],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'check_expired_orders' : ActorMethod<
+    [],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
@@ -111,6 +121,11 @@ export interface _SERVICE {
       { 'Err' : string }
   >,
   'complete_cross_chain_swap_public' : ActorMethod<
+    [string, string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'complete_unified_cross_chain_swap' : ActorMethod<
     [string, string],
     { 'Ok' : string } |
       { 'Err' : string }
@@ -161,6 +176,11 @@ export interface _SERVICE {
     { 'Ok' : string } |
       { 'Err' : string }
   >,
+  'create_unified_cross_chain_order' : ActorMethod<
+    [string, string, string, string, string, string, SwapDirection, bigint],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
   'deposit_to_htlc' : ActorMethod<
     [string],
     { 'Ok' : string } |
@@ -188,6 +208,11 @@ export interface _SERVICE {
   >,
   'execute_icp_to_evm_swap_public' : ActorMethod<
     [string, string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'execute_unified_cross_chain_swap' : ActorMethod<
+    [string, SwapDirection],
     { 'Ok' : string } |
       { 'Err' : string }
   >,

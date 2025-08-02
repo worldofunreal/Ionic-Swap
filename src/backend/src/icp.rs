@@ -176,21 +176,24 @@ pub async fn create_icp_htlc(
     // Validate the order is in the correct state
     match order.status {
         crate::types::SwapOrderStatus::Created => {},
-        _ => return Err("Order is not in Created state".to_string()),
+        crate::types::SwapOrderStatus::SourceHTLCCreated => {},
+        _ => return Err("Order is not in Created or SourceHTLCCreated state".to_string()),
     }
     
     // Create the HTLC on ICP side
     // This involves transferring tokens to the HTLC canister with specific metadata
     let htlc_metadata = format!("HTLC:{}:{}:{}", hashlock, timelock, recipient);
     
-    // Transfer tokens to the HTLC canister (this would be a special HTLC canister)
-    // For now, we'll simulate this by transferring to the backend canister
+    // For ICRC-2 flow, we need to transfer from the user to the backend canister
+    // The user should have already called icrc2_approve to allow the backend to pull tokens
     let backend_principal = ic_cdk::api::id();
     let backend_account = backend_principal.to_string();
     
-    let transfer_result = transfer_icrc_tokens(
+    // Use transfer_from to pull tokens from the user (maker) to the backend
+    let transfer_result = transfer_from_icrc_tokens(
         token_canister_id,
-        &backend_account,
+        &order.maker, // from: user (maker)
+        &backend_account, // to: backend canister
         amount,
     ).await?;
     
@@ -421,7 +424,8 @@ pub async fn execute_evm_to_icp_swap(
     // Validate the order is in the correct state
     match order.status {
         SwapOrderStatus::Created => {},
-        _ => return Err("Order is not in Created state".to_string()),
+        SwapOrderStatus::SourceHTLCCreated => {},
+        _ => return Err("Order is not in Created or SourceHTLCCreated state".to_string()),
     }
     
     // Clone the values we need before borrowing mutably
@@ -562,7 +566,8 @@ pub fn validate_cross_chain_order(order_id: &str) -> Result<bool, String> {
         SwapOrderStatus::DestinationHTLCClaimed => Ok(true),
         SwapOrderStatus::Completed => Ok(true),
         SwapOrderStatus::Expired |
-        SwapOrderStatus::Cancelled => Err("Order is not in a valid state".to_string()),
+        SwapOrderStatus::Cancelled |
+        SwapOrderStatus::Refunded => Err("Order is not in a valid state".to_string()),
     }
 }
 

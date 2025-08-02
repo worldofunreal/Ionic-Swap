@@ -152,6 +152,7 @@ service : {
   "execute_atomic_swap" : (text) -> (variant { Ok : text; Err : text });
   "get_atomic_swap_order" : (text) -> (opt AtomicSwapOrder);
   "get_all_atomic_swap_orders" : () -> (vec AtomicSwapOrder);
+  "check_expired_orders" : () -> (variant { Ok : text; Err : text });
   
   // ICRC Public API Endpoints
   "transfer_icrc_tokens_public" : (text, text, nat) -> (variant { Ok : text; Err : text });
@@ -160,6 +161,7 @@ service : {
   "transfer_from_icrc_tokens_public" : (text, text, text, nat) -> (variant { Ok : text; Err : text });
   
   // ICP HTLC Public API Endpoints
+  "approve_backend_for_icrc_tokens_public" : (text, text, nat) -> (variant { Ok : text; Err : text });
   "create_icp_htlc_public" : (text, text, text, nat, text, nat64) -> (variant { Ok : text; Err : text });
   "claim_icp_htlc_public" : (text, text, text) -> (variant { Ok : text; Err : text });
   "refund_icp_htlc_public" : (text, text) -> (variant { Ok : text; Err : text });
@@ -174,4 +176,12 @@ service : {
   "validate_cross_chain_order_public" : (text) -> (variant { Ok : bool; Err : text }) query;
   "get_cross_chain_swap_status_public" : (text) -> (variant { Ok : SwapOrderStatus; Err : text }) query;
   "complete_cross_chain_swap_public" : (text, text) -> (variant { Ok : text; Err : text });
+  
+  // ============================================================================
+  // UNIFIED CROSS-CHAIN SWAP FUNCTIONS
+  // ============================================================================
+  
+  "create_unified_cross_chain_order" : (text, text, text, text, text, text, SwapDirection, nat64) -> (variant { Ok : text; Err : text });
+  "execute_unified_cross_chain_swap" : (text, SwapDirection) -> (variant { Ok : text; Err : text });
+  "complete_unified_cross_chain_swap" : (text, text) -> (variant { Ok : text; Err : text });
 }

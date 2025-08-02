@@ -971,4 +971,83 @@ pub async fn execute_atomic_swap(order_id: String) -> Result<String, String> {
     
     Ok(format!("Atomic swap completed! Source HTLC: {}, Dest HTLC: {}, Source Claim: {}, Dest Claim: {}", 
                source_htlc_tx, dest_htlc_tx, source_claim_tx, dest_claim_tx))
+}
+
+/// Refund HTLC on EVM chain
+pub async fn refund_evm_htlc(
+    order_id: String,
+    htlc_id: String,
+) -> Result<String, String> {
+    let orders = crate::storage::get_atomic_swap_orders();
+    let order = orders.get(&order_id)
+        .ok_or("Atomic swap order not found")?;
+    
+    // Check if order has expired
+    let current_time = ic_cdk::api::time() / 1_000_000_000;
+    if current_time <= order.timelock {
+        return Err("HTLC has not expired yet".to_string());
+    }
+    
+    // Encode refundHTLC function call
+    let encoded_data = encode_refund_htlc_call(&htlc_id)?;
+    
+    // Get canister's Ethereum address
+    let canister_address = get_ethereum_address().await?;
+    
+    // Get fresh nonce for this transaction
+    let nonce = crate::storage::get_next_nonce();
+    let nonce_hex = format!("{:x}", nonce);
+    
+    // Get fresh gas price for this transaction
+    let gas_price_response = crate::http_client::get_gas_price().await?;
+    let gas_price_json: serde_json::Value = serde_json::from_str(&gas_price_response)
+        .map_err(|e| format!("Failed to parse gas price response: {}", e))?;
+    let gas_price = gas_price_json["result"]
+        .as_str()
+        .ok_or("No result in gas price response")?
+        .trim_start_matches("0x");
+    let gas_price_u256 = primitive_types::U256::from_str_radix(gas_price, 16).map_err(|e| format!("Invalid gas price: {}", e))?;
+    let base_fee_per_gas = gas_price_u256;
+    
+    // Sign and send transaction
+    let signed_tx = sign_eip1559_transaction(
+        &canister_address,
+        crate::constants::HTLC_CONTRACT_ADDRESS,
+        &nonce_hex,
+        &gas_price,
+        &base_fee_per_gas.to_string(),
+        &encoded_data,
+    ).await?;
+    
+    let tx_hash = send_raw_transaction(&signed_tx).await?;
+    
+    // Update order status
+    let orders = crate::storage::get_atomic_swap_orders();
+    if let Some(order) = orders.get_mut(&order_id) {
+        order.status = crate::types::SwapOrderStatus::Refunded;
+    }
+    
+    Ok(tx_hash)
+}
+
+/// Encode refundHTLC function call
+fn encode_refund_htlc_call(htlc_id: &str) -> Result<String, String> {
+    let htlc_id_bytes = hex::decode(htlc_id.trim_start_matches("0x"))
+        .map_err(|e| format!("Invalid HTLC ID: {}", e))?;
+    
+    // Function signature: refundHTLC(bytes32 htlcId)
+    let function_signature = "refundHTLC(bytes32)";
+    let function_selector = keccak256(function_signature.as_bytes());
+    let selector = &function_selector[..4];
+    
+    // Encode the HTLC ID as bytes32
+    let mut encoded_data = selector.to_vec();
+    encoded_data.extend_from_slice(&htlc_id_bytes);
+    
+    // Pad to 32 bytes if needed
+    while encoded_data.len() < 36 {
+        encoded_data.push(0);
+    }
+    
+    Ok(format!("0x{}", hex::encode(&encoded_data)))
 } 

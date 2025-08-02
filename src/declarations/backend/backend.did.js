@@ -88,8 +88,18 @@ export const idlFactory = ({ IDL }) => {
     'destination_chain_id' : IDL.Nat64,
   });
   return IDL.Service({
+    'approve_backend_for_icrc_tokens_public' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Nat],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        [],
+      ),
     'approve_icrc_tokens_public' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Nat],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        [],
+      ),
+    'check_expired_orders' : IDL.Func(
+        [],
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
         [],
       ),
@@ -114,6 +124,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'complete_cross_chain_swap_public' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        [],
+      ),
+    'complete_unified_cross_chain_swap' : IDL.Func(
         [IDL.Text, IDL.Text],
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
         [],
@@ -183,6 +198,20 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
         [],
       ),
+    'create_unified_cross_chain_order' : IDL.Func(
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          SwapDirection,
+          IDL.Nat64,
+        ],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        [],
+      ),
     'deposit_to_htlc' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
@@ -210,6 +239,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'execute_icp_to_evm_swap_public' : IDL.Func(
         [IDL.Text, IDL.Text],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        [],
+      ),
+    'execute_unified_cross_chain_swap' : IDL.Func(
+        [IDL.Text, SwapDirection],
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
         [],
       ),

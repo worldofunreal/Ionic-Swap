@@ -371,7 +371,7 @@ fn generate_htlc_secret() -> String {
     format!("htlc_secret_{}", hex::encode(random_bytes))
 }
 
-/// Create a new atomic swap order
+/// Create a new atomic swap order with automatic pairing
 #[update]
 #[candid_method]
 pub async fn create_atomic_swap_order(
@@ -417,6 +417,11 @@ pub async fn create_atomic_swap_order(
     // Store the order
     get_atomic_swap_orders().insert(order_id.clone(), atomic_order);
     
+    // Try to automatically pair with existing orders
+    if let Some(paired_order_id) = try_pair_orders(&order_id).await {
+        return Ok(format!("Order {} created and paired with {}", order_id, paired_order_id));
+    }
+    
     Ok(order_id)
 }
 
@@ -459,6 +464,53 @@ pub fn get_atomic_swap_order(order_id: String) -> Option<AtomicSwapOrder> {
 #[candid_method]
 pub fn get_all_atomic_swap_orders() -> Vec<AtomicSwapOrder> {
     get_atomic_swap_orders().values().cloned().collect()
+}
+
+/// Check and process expired orders (automatic refund)
+#[update]
+#[candid_method]
+pub async fn check_expired_orders() -> Result<String, String> {
+    let orders = get_atomic_swap_orders();
+    let current_time = ic_cdk::api::time() / 1_000_000_000;
+    let mut refunded_count = 0;
+    
+    for (order_id, order) in orders.iter() {
+        if order.status == SwapOrderStatus::Created && current_time > order.timelock {
+            // Order has expired, process refund
+            if let Ok(_) = process_order_refund(order_id).await {
+                refunded_count += 1;
+            }
+        }
+    }
+    
+    Ok(format!("Processed {} expired orders", refunded_count))
+}
+
+/// Process refund for an expired order
+async fn process_order_refund(order_id: &str) -> Result<String, String> {
+    let orders = get_atomic_swap_orders();
+    let order = orders.get(order_id).ok_or("Order not found")?;
+    
+    // Process refund based on token type
+    if order.source_token.contains("0x") {
+        // EVM token - refund through EVM HTLC
+        if let Some(htlc_id) = &order.source_htlc_id {
+            evm::refund_evm_htlc(order_id.to_string(), htlc_id.clone()).await?;
+        }
+    } else {
+        // ICP token - refund through ICP HTLC
+        if let Some(htlc_id) = &order.source_htlc_id {
+            refund_icp_htlc(order_id, htlc_id).await?;
+        }
+    }
+    
+    // Update order status after processing refund
+    let orders = get_atomic_swap_orders();
+    if let Some(order_mut) = orders.get_mut(order_id) {
+        order_mut.status = SwapOrderStatus::Refunded;
+    }
+    
+    Ok("Order refunded successfully".to_string())
 }
 
 // ============================================================================
@@ -514,6 +566,27 @@ pub async fn transfer_from_icrc_tokens_public(
 // ============================================================================
 // ICP HTLC PUBLIC API ENDPOINTS
 // ============================================================================
+
+/// Approve backend canister to spend user's ICRC tokens (ICRC-2) - Public API
+#[update]
+#[candid_method]
+pub async fn approve_backend_for_icrc_tokens_public(
+    token_canister_id: String,
+    user_principal: String,
+    amount: u128,
+) -> Result<String, String> {
+    // The user calls this function to approve the backend canister to spend their tokens
+    let backend_principal = ic_cdk::api::id();
+    let backend_account = backend_principal.to_string();
+    
+    let approve_result = icp::approve_icrc_tokens(
+        &token_canister_id,
+        &backend_account, // spender: backend canister
+        amount,
+    ).await?;
+    
+    Ok(format!("Backend approved to spend {} tokens from user {}", amount, user_principal))
+}
 
 /// Create an ICP HTLC (public API)
 #[update]
@@ -652,6 +725,95 @@ fn get_contract_info() -> String {
 }
 
 // ============================================================================
+// ORDER PAIRING AND AUTOMATION
+// ============================================================================
+
+/// Try to pair a new order with existing orders
+async fn try_pair_orders(new_order_id: &str) -> Option<String> {
+    let orders = get_atomic_swap_orders();
+    let new_order = orders.get(new_order_id)?;
+    
+    // Find compatible orders (opposite direction, same tokens, similar amounts)
+    for (existing_order_id, existing_order) in orders.iter() {
+        if existing_order_id == new_order_id {
+            continue; // Skip self
+        }
+        
+        if existing_order.status != SwapOrderStatus::Created {
+            continue; // Only pair with created orders
+        }
+        
+        // Check if orders are compatible (opposite direction)
+        if is_compatible_orders(new_order, existing_order) {
+            // Automatically create HTLCs for both orders
+            if let Ok(_) = create_htlcs_for_paired_orders(new_order_id, existing_order_id).await {
+                return Some(existing_order_id.clone());
+            }
+        }
+    }
+    
+    None
+}
+
+/// Check if two orders are compatible for pairing
+fn is_compatible_orders(order1: &AtomicSwapOrder, order2: &AtomicSwapOrder) -> bool {
+    // Check if tokens match (order1 source = order2 destination, order1 destination = order2 source)
+    let tokens_match = (order1.source_token == order2.destination_token) && 
+                      (order1.destination_token == order2.source_token);
+    
+    // Check if amounts are similar (within 10% tolerance)
+    let amount1: u128 = order1.source_amount.parse().unwrap_or(0);
+    let amount2: u128 = order2.destination_amount.parse().unwrap_or(0);
+    let amount_tolerance = amount1 * 10 / 100; // 10% tolerance
+    
+    let amounts_compatible = amount1 >= (amount2 - amount_tolerance) && 
+                           amount1 <= (amount2 + amount_tolerance);
+    
+    tokens_match && amounts_compatible
+}
+
+/// Create HTLCs for paired orders
+async fn create_htlcs_for_paired_orders(order1_id: &str, order2_id: &str) -> Result<String, String> {
+    let orders = get_atomic_swap_orders();
+    let order1 = orders.get(order1_id).ok_or("Order 1 not found")?;
+    let order2 = orders.get(order2_id).ok_or("Order 2 not found")?;
+    
+    // Create HTLCs for order1
+    if order1.source_token.contains("0x") {
+        // EVM token - create EVM HTLC
+        evm::create_evm_htlc(order1_id.to_string(), true).await?;
+    } else {
+        // ICP token - create ICP HTLC
+        create_icp_htlc(
+            order1_id,
+            &order1.source_token,
+            &order1.taker,
+            order1.source_amount.parse().unwrap_or(0),
+            &order1.hashlock,
+            order1.timelock,
+        ).await?;
+    }
+    
+    // Create HTLCs for order2
+    if order2.source_token.contains("0x") {
+        // EVM token - create EVM HTLC
+        evm::create_evm_htlc(order2_id.to_string(), true).await?;
+    } else {
+        // ICP token - create ICP HTLC
+        create_icp_htlc(
+            order2_id,
+            &order2.source_token,
+            &order2.taker,
+            order2.source_amount.parse().unwrap_or(0),
+            &order2.hashlock,
+            order2.timelock,
+        ).await?;
+    }
+    
+    Ok("HTLCs created for paired orders".to_string())
+}
+
+// ============================================================================
 // HELPER FUNCTIONS FOR HTLC CONTRACT INTERACTION
 // ============================================================================
 
@@ -787,4 +949,63 @@ fn post_upgrade() {
 #[update]
 async fn submit_permit_signature(permit_data: PermitData) -> Result<String, String> {
     evm::submit_permit_signature(permit_data).await
+}
+
+// ============================================================================
+// UNIFIED CROSS-CHAIN SWAP FUNCTIONS
+// ============================================================================
+
+/// Create a unified cross-chain swap order that handles both EVM→ICP and ICP→EVM
+#[update]
+#[candid_method]
+pub async fn create_unified_cross_chain_order(
+    maker: String,
+    taker: String,
+    source_token: String,
+    destination_token: String,
+    source_amount: String,
+    destination_amount: String,
+    direction: crate::types::SwapDirection,
+    timelock: u64,
+) -> Result<String, String> {
+    // Use the existing atomic swap order creation (which works for both directions)
+    create_atomic_swap_order(
+        maker,
+        taker,
+        source_token,
+        destination_token,
+        source_amount,
+        destination_amount,
+        timelock,
+    ).await
+}
+
+/// Execute a unified cross-chain swap that handles both directions
+#[update]
+#[candid_method]
+pub async fn execute_unified_cross_chain_swap(
+    order_id: String,
+    direction: crate::types::SwapDirection,
+) -> Result<String, String> {
+    match direction {
+        crate::types::SwapDirection::EVMtoICP => {
+            // For EVM→ICP, return instructions for the user
+            Ok("EVM→ICP swap: Order created successfully. Next steps: 1) Create EVM HTLC, 2) Execute swap".to_string())
+        },
+        crate::types::SwapDirection::ICPtoEVM => {
+            // For ICP→EVM, return instructions for the user
+            Ok("ICP→EVM swap: Order created successfully. Next steps: 1) User calls ICRC-2 approve, 2) Create ICP HTLC, 3) Execute swap".to_string())
+        },
+    }
+}
+
+/// Complete a unified cross-chain swap
+#[update]
+#[candid_method]
+pub async fn complete_unified_cross_chain_swap(
+    order_id: String,
+    secret: String,
+) -> Result<String, String> {
+    // Use the existing completion function
+    complete_cross_chain_swap_public(order_id, secret).await
 }

@@ -71,6 +71,7 @@ pub enum SwapOrderStatus {
     Completed,
     Expired,
     Cancelled,
+    Refunded,
 }
 
 // Cross-chain Swap Order (legacy - keeping for reference)
