@@ -99,6 +99,21 @@ async function main() {
     const signer = new ethers.Wallet(privateKey, provider);
     const userAddress = await signer.getAddress();
     
+    // Initialize nonce from blockchain
+    console.log("\n📋 Step 0: Initializing nonce from blockchain...");
+    try {
+        const nonceResult = await actor.initialize_nonce();
+        if ('Ok' in nonceResult) {
+            console.log("✅ Nonce initialized:", nonceResult.Ok);
+        } else {
+            console.log("❌ Failed to initialize nonce:", nonceResult.Err);
+            return;
+        }
+    } catch (error) {
+        console.log("❌ Error initializing nonce:", error.message);
+        return;
+    }
+    
     try {
         // Test 1: Create atomic swap order
         console.log("\n📋 Test 1: Creating atomic swap order...");

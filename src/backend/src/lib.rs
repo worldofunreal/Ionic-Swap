@@ -1372,6 +1372,51 @@ async fn send_raw_transaction(signed_tx: &str) -> Result<String, String> {
     Ok(tx_hash.to_string())
 }
 
+/// Get HTLC ID from transaction receipt by parsing the HTLCCreated event
+async fn get_htlc_id_from_receipt(tx_hash: &str) -> Result<String, String> {
+    // Wait a bit for transaction to be mined
+    ic_cdk::println!("⏳ Waiting for transaction to be mined...");
+    
+    // Poll for transaction receipt
+    let mut attempts = 0;
+    let max_attempts = 30; // 30 seconds max wait
+    
+    while attempts < max_attempts {
+        let receipt_response = get_transaction_receipt(tx_hash.to_string()).await?;
+        let receipt_json: serde_json::Value = serde_json::from_str(&receipt_response)
+            .map_err(|e| format!("Failed to parse receipt response: {}", e))?;
+        
+        if let Some(result) = receipt_json["result"].as_object() {
+            if result.get("blockNumber").is_some() {
+                // Transaction is mined, extract HTLC ID from logs
+                if let Some(logs) = result["logs"].as_array() {
+                    for log in logs {
+                        if let Some(topics) = log["topics"].as_array() {
+                            if topics.len() > 0 {
+                                // HTLCCreated event signature: keccak256("HTLCCreated(bytes32,address,address,uint256,bytes32,uint256,address,uint8,uint8,bool)")
+                                // The first topic is the event signature, the second topic is the HTLC ID
+                                let event_signature = "0x84531b127d0bd83b1d32956f33727af69ab12eef7ff40a6ee1fdd2b64cb104dd"; // HTLCCreated event signature
+                                if topics[0].as_str() == Some(event_signature) && topics.len() > 1 {
+                                    let htlc_id = topics[1].as_str()
+                                        .ok_or("HTLC ID not found in event")?;
+                                    return Ok(htlc_id.to_string());
+                                }
+                            }
+                        }
+                    }
+                }
+                return Err("HTLCCreated event not found in transaction receipt".to_string());
+            }
+        }
+        
+        // Wait 1 second before next attempt
+        ic_cdk::api::time(); // Small delay
+        attempts += 1;
+    }
+    
+    Err("Transaction not mined within timeout period".to_string())
+}
+
 // Helper function to get the canister's public key
 async fn get_canister_public_key(
     key_id: ic_cdk::api::management_canister::ecdsa::EcdsaKeyId,
@@ -1561,19 +1606,26 @@ pub async fn create_evm_htlc(
     
     let tx_hash = send_raw_transaction(&signed_tx).await?;
     
-    // Update order status
+    // Wait for transaction to be mined and get receipt to extract HTLC ID
+    let htlc_id = get_htlc_id_from_receipt(&tx_hash).await?;
+    
+    ic_cdk::println!("🔍 HTLC Creation Result:");
+    ic_cdk::println!("  Transaction Hash: {}", tx_hash);
+    ic_cdk::println!("  HTLC ID: {}", htlc_id);
+    
+    // Update order status with HTLC ID (not transaction hash)
     let orders = get_atomic_swap_orders();
     if let Some(order) = orders.get_mut(&order_id) {
         if is_source_htlc {
-            order.source_htlc_id = Some(tx_hash.clone());
+            order.source_htlc_id = Some(htlc_id.clone());
             order.status = SwapOrderStatus::SourceHTLCCreated;
         } else {
-            order.destination_htlc_id = Some(tx_hash.clone());
+            order.destination_htlc_id = Some(htlc_id.clone());
             order.status = SwapOrderStatus::DestinationHTLCCreated;
         }
     }
     
-    Ok(tx_hash)
+    Ok(htlc_id)
 }
 
 /// Claim HTLC on EVM chain
