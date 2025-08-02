@@ -20,6 +20,7 @@ export interface AtomicSwapOrder {
   'timelock' : bigint,
 }
 export interface GaslessApprovalRequest {
+  'token_address' : string,
   'user_address' : string,
   'permit_request' : PermitRequest,
   'amount' : string,

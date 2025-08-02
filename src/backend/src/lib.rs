@@ -786,6 +786,7 @@ pub struct GaslessApprovalRequest {
     pub permit_request: PermitRequest,
     pub user_address: String,
     pub amount: String,
+    pub token_address: String, // Add token address to make it explicit
 }
 
 #[update]
@@ -842,8 +843,8 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
     let gas_price = format!("{:x}", gas_price_u256);
     
     // 7. Construct and sign EIP-1559 transaction to the token contract
-    // Use the SpiralToken address for now (can be made dynamic later)
-    let token_address = "0xdE7409EDeA573D090c3C6123458D6242E26b425E"; // SpiralToken address
+    // Use the token address from the request
+    let token_address = &request.token_address;
     
     // Debug: Check the addresses
     if token_address.len() != 42 || !token_address.starts_with("0x") {
@@ -853,6 +854,7 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
     // Debug: Print the addresses for verification
     ic_cdk::println!("Debug - From address: {}", from_addr_str);
     ic_cdk::println!("Debug - To address (token): {}", token_address);
+    ic_cdk::println!("Debug - Permit value: {}", request.permit_request.value);
     
     let signed_tx = sign_eip1559_transaction(
         &from_addr_str,

@@ -167,11 +167,12 @@ async function main() {
                 signature: spiralPermitResult.signature
             };
             
-            const spiralGaslessApprovalRequest = {
-                permit_request: spiralPermitRequest,
-                user_address: userAddress,
-                amount: sourceAmount
-            };
+                            const spiralGaslessApprovalRequest = {
+                    permit_request: spiralPermitRequest,
+                    user_address: userAddress,
+                    amount: sourceAmount,
+                    token_address: SPIRAL_TOKEN
+                };
             
             const spiralPermitResult2 = await actor.execute_gasless_approval(spiralGaslessApprovalRequest);
             if ('Ok' in spiralPermitResult2) {
@@ -212,7 +213,8 @@ async function main() {
                 const stardustGaslessApprovalRequest = {
                     permit_request: stardustPermitRequest,
                     user_address: userAddress,
-                    amount: destinationAmount
+                    amount: destinationAmount,
+                    token_address: STARDUST_TOKEN
                 };
                 
                 const stardustPermitResult2 = await actor.execute_gasless_approval(stardustGaslessApprovalRequest);

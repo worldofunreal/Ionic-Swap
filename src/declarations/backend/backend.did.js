@@ -11,6 +11,7 @@ export const idlFactory = ({ IDL }) => {
     'spender' : IDL.Text,
   });
   const GaslessApprovalRequest = IDL.Record({
+    'token_address' : IDL.Text,
     'user_address' : IDL.Text,
     'permit_request' : PermitRequest,
     'amount' : IDL.Text,
