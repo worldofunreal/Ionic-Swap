@@ -19,12 +19,50 @@ export interface AtomicSwapOrder {
   'destination_token' : string,
   'timelock' : bigint,
 }
+export interface CrossChainSwapOrder {
+  'maker' : string,
+  'source_chain_id' : bigint,
+  'destination_asset' : string,
+  'status' : HTLCStatus,
+  'taker' : string,
+  'direction' : SwapDirection,
+  'destination_amount' : string,
+  'hashlock' : string,
+  'secret' : [] | [string],
+  'created_at' : bigint,
+  'order_id' : string,
+  'source_amount' : string,
+  'expiration_time' : bigint,
+  'source_asset' : string,
+  'destination_chain_id' : bigint,
+}
 export interface GaslessApprovalRequest {
   'token_address' : string,
   'user_address' : string,
   'permit_request' : PermitRequest,
   'amount' : string,
 }
+export interface HTLC {
+  'id' : string,
+  'source_chain' : bigint,
+  'status' : HTLCStatus,
+  'token' : string,
+  'hashlock' : string,
+  'is_cross_chain' : boolean,
+  'recipient' : string,
+  'secret' : [] | [string],
+  'created_at' : bigint,
+  'sender' : string,
+  'order_hash' : string,
+  'target_chain' : bigint,
+  'amount' : string,
+  'timelock' : bigint,
+}
+export type HTLCStatus = { 'Refunded' : null } |
+  { 'Claimed' : null } |
+  { 'Deposited' : null } |
+  { 'Created' : null } |
+  { 'Expired' : null };
 export interface PermitRequest {
   'r' : string,
   's' : string,
@@ -36,6 +74,8 @@ export interface PermitRequest {
   'nonce' : string,
   'spender' : string,
 }
+export type SwapDirection = { 'EVMtoICP' : null } |
+  { 'ICPtoEVM' : null };
 export type SwapOrderStatus = { 'DestinationHTLCClaimed' : null } |
   { 'SourceHTLCCreated' : null } |
   { 'SourceHTLCClaimed' : null } |
@@ -45,8 +85,38 @@ export type SwapOrderStatus = { 'DestinationHTLCClaimed' : null } |
   { 'Expired' : null } |
   { 'DestinationHTLCCreated' : null };
 export interface _SERVICE {
+  'approve_icrc_tokens_public' : ActorMethod<
+    [string, string, bigint],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
   'claim_evm_htlc' : ActorMethod<
     [string, string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'claim_htlc_funds' : ActorMethod<
+    [string, string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'claim_icp_htlc_public' : ActorMethod<
+    [string, string, string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'complete_cross_chain_swap' : ActorMethod<
+    [string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'complete_cross_chain_swap_public' : ActorMethod<
+    [string, string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'coordinate_cross_chain_swap_public' : ActorMethod<
+    [string, SwapDirection],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
@@ -55,8 +125,44 @@ export interface _SERVICE {
     { 'Ok' : string } |
       { 'Err' : string }
   >,
+  'create_cross_chain_order_public' : ActorMethod<
+    [string, string, string, string, string, string, SwapDirection, bigint],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'create_cross_chain_swap_order' : ActorMethod<
+    [string, string, string, string, string, string, bigint, bigint, bigint],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
   'create_evm_htlc' : ActorMethod<
     [string, boolean],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'create_htlc_escrow' : ActorMethod<
+    [
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      bigint,
+      SwapDirection,
+      bigint,
+      bigint,
+    ],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'create_icp_htlc_public' : ActorMethod<
+    [string, string, string, bigint, string, bigint],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'deposit_to_htlc' : ActorMethod<
+    [string],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
@@ -65,24 +171,57 @@ export interface _SERVICE {
     { 'Ok' : string } |
       { 'Err' : string }
   >,
+  'execute_cross_chain_swap' : ActorMethod<
+    [string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'execute_evm_to_icp_swap_public' : ActorMethod<
+    [string, string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
   'execute_gasless_approval' : ActorMethod<
     [GaslessApprovalRequest],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
+  'execute_icp_to_evm_swap_public' : ActorMethod<
+    [string, string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
   'get_all_atomic_swap_orders' : ActorMethod<[], Array<AtomicSwapOrder>>,
+  'get_all_htlcs' : ActorMethod<[], Array<HTLC>>,
+  'get_all_swap_orders' : ActorMethod<[], Array<CrossChainSwapOrder>>,
   'get_atomic_swap_order' : ActorMethod<[string], [] | [AtomicSwapOrder]>,
   'get_balance' : ActorMethod<[string], { 'Ok' : string } | { 'Err' : string }>,
   'get_claim_fee' : ActorMethod<[], { 'Ok' : string } | { 'Err' : string }>,
   'get_contract_info' : ActorMethod<[], string>,
+  'get_cross_chain_swap_status_public' : ActorMethod<
+    [string],
+    { 'Ok' : SwapOrderStatus } |
+      { 'Err' : string }
+  >,
   'get_ethereum_address' : ActorMethod<
     [],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
+  'get_htlc' : ActorMethod<[string], [] | [HTLC]>,
+  'get_icp_htlc_status_public' : ActorMethod<
+    [string],
+    { 'Ok' : HTLCStatus } |
+      { 'Err' : string }
+  >,
   'get_icp_network_signer' : ActorMethod<
     [],
     { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'get_icrc_balance_public' : ActorMethod<
+    [string, string],
+    { 'Ok' : bigint } |
       { 'Err' : string }
   >,
   'get_public_key' : ActorMethod<[], { 'Ok' : string } | { 'Err' : string }>,
@@ -92,20 +231,27 @@ export interface _SERVICE {
     { 'Ok' : string } |
       { 'Err' : string }
   >,
+  'get_swap_order' : ActorMethod<[string], [] | [CrossChainSwapOrder]>,
   'get_total_fees' : ActorMethod<[], { 'Ok' : string } | { 'Err' : string }>,
+  'get_transaction_count' : ActorMethod<
+    [string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
   'get_transaction_receipt' : ActorMethod<
     [string],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
   'initialize_nonce' : ActorMethod<[], { 'Ok' : string } | { 'Err' : string }>,
-  'send_raw_transaction' : ActorMethod<
+  'list_icp_htlcs_public' : ActorMethod<[], Array<HTLC>>,
+  'refund_htlc_funds' : ActorMethod<
     [string],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
-  'sign_transaction' : ActorMethod<
-    [string, string, string, string],
+  'refund_icp_htlc_public' : ActorMethod<
+    [string, string],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
@@ -118,6 +264,31 @@ export interface _SERVICE {
   'test_deployment_transaction' : ActorMethod<
     [],
     { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'test_signing_address' : ActorMethod<
+    [],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'test_simple_transaction' : ActorMethod<
+    [],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'transfer_from_icrc_tokens_public' : ActorMethod<
+    [string, string, string, bigint],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'transfer_icrc_tokens_public' : ActorMethod<
+    [string, string, bigint],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'validate_cross_chain_order_public' : ActorMethod<
+    [string],
+    { 'Ok' : boolean } |
       { 'Err' : string }
   >,
 }

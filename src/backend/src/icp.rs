@@ -1,8 +1,6 @@
 use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::call;
-use serde_json::Value;
-use std::collections::HashMap;
-use sha3::{Keccak256, Digest};
+use sha3::Digest;
 use crate::storage::{get_htlc_store, get_atomic_swap_orders, generate_order_id};
 use crate::types::{HTLC, AtomicSwapOrder, SwapOrderStatus, SwapDirection};
 

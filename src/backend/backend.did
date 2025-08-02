@@ -47,11 +47,62 @@ type AtomicSwapOrder = record {
   expires_at : nat64;
 };
 
+// Cross-Chain Swap Types
+type SwapDirection = variant {
+  EVMtoICP;
+  ICPtoEVM;
+};
+
+type CrossChainSwapOrder = record {
+  order_id : text;
+  maker : text;
+  taker : text;
+  source_asset : text;
+  destination_asset : text;
+  source_amount : text;
+  destination_amount : text;
+  source_chain_id : nat64;
+  destination_chain_id : nat64;
+  hashlock : text;
+  secret : opt text;
+  status : HTLCStatus;
+  created_at : nat64;
+  expiration_time : nat64;
+  direction : SwapDirection;
+};
+
+// HTLC Types
+type HTLCStatus = variant {
+  Created;
+  Deposited;
+  Claimed;
+  Refunded;
+  Expired;
+};
+
+type HTLC = record {
+  id : text;
+  sender : text;
+  recipient : text;
+  amount : text;
+  hashlock : text;
+  secret : opt text;
+  timelock : nat64;
+  status : HTLCStatus;
+  token : text;
+  source_chain : nat64;
+  target_chain : nat64;
+  is_cross_chain : bool;
+  order_hash : text;
+  created_at : nat64;
+};
+
 service : {
   // JSON-RPC Methods
   "get_sepolia_block_number" : () -> (variant { Ok : text; Err : text });
   "get_transaction_receipt" : (text) -> (variant { Ok : text; Err : text });
   "get_balance" : (text) -> (variant { Ok : text; Err : text });
+  "get_transaction_count" : (text) -> (variant { Ok : text; Err : text });
   
   // Contract Interaction Methods
   "get_icp_network_signer" : () -> (variant { Ok : text; Err : text });
@@ -68,14 +119,31 @@ service : {
   "get_contract_info" : () -> (text);
   "initialize_nonce" : () -> (variant { Ok : text; Err : text });
   
-  // EVM Integration Methods (new)
+  // EVM Integration Methods
   "get_public_key" : () -> (variant { Ok : text; Err : text });
   "get_ethereum_address" : () -> (variant { Ok : text; Err : text });
-  "sign_transaction" : (text, text, text, text) -> (variant { Ok : text; Err : text });
-  "send_raw_transaction" : (text) -> (variant { Ok : text; Err : text });
+  "test_signing_address" : () -> (variant { Ok : text; Err : text });
+  "test_simple_transaction" : () -> (variant { Ok : text; Err : text });
   
   // Gasless Approval Method
   "execute_gasless_approval" : (GaslessApprovalRequest) -> (variant { Ok : text; Err : text });
+  
+  // Core HTLC Functions
+  "create_htlc_escrow" : (text, text, text, text, text, text, nat64, SwapDirection, nat64, nat64) -> (variant { Ok : text; Err : text });
+  "deposit_to_htlc" : (text) -> (variant { Ok : text; Err : text });
+  "claim_htlc_funds" : (text, text) -> (variant { Ok : text; Err : text });
+  "refund_htlc_funds" : (text) -> (variant { Ok : text; Err : text });
+  
+  // Cross-Chain Swap Functions
+  "create_cross_chain_swap_order" : (text, text, text, text, text, text, nat64, nat64, nat64) -> (variant { Ok : text; Err : text });
+  "execute_cross_chain_swap" : (text) -> (variant { Ok : text; Err : text });
+  "complete_cross_chain_swap" : (text) -> (variant { Ok : text; Err : text });
+  
+  // Query Functions
+  "get_htlc" : (text) -> (opt HTLC);
+  "get_swap_order" : (text) -> (opt CrossChainSwapOrder);
+  "get_all_htlcs" : () -> (vec HTLC);
+  "get_all_swap_orders" : () -> (vec CrossChainSwapOrder);
   
   // Atomic Swap Methods
   "create_atomic_swap_order" : (text, text, text, text, text, text, nat64) -> (variant { Ok : text; Err : text });
@@ -84,4 +152,26 @@ service : {
   "execute_atomic_swap" : (text) -> (variant { Ok : text; Err : text });
   "get_atomic_swap_order" : (text) -> (opt AtomicSwapOrder);
   "get_all_atomic_swap_orders" : () -> (vec AtomicSwapOrder);
+  
+  // ICRC Public API Endpoints
+  "transfer_icrc_tokens_public" : (text, text, nat) -> (variant { Ok : text; Err : text });
+  "get_icrc_balance_public" : (text, text) -> (variant { Ok : nat; Err : text }) query;
+  "approve_icrc_tokens_public" : (text, text, nat) -> (variant { Ok : text; Err : text });
+  "transfer_from_icrc_tokens_public" : (text, text, text, nat) -> (variant { Ok : text; Err : text });
+  
+  // ICP HTLC Public API Endpoints
+  "create_icp_htlc_public" : (text, text, text, nat, text, nat64) -> (variant { Ok : text; Err : text });
+  "claim_icp_htlc_public" : (text, text, text) -> (variant { Ok : text; Err : text });
+  "refund_icp_htlc_public" : (text, text) -> (variant { Ok : text; Err : text });
+  "get_icp_htlc_status_public" : (text) -> (variant { Ok : HTLCStatus; Err : text }) query;
+  "list_icp_htlcs_public" : () -> (vec HTLC) query;
+  
+  // Cross-Chain Swap Public API Endpoints
+  "create_cross_chain_order_public" : (text, text, text, text, text, text, SwapDirection, nat64) -> (variant { Ok : text; Err : text });
+  "execute_evm_to_icp_swap_public" : (text, text) -> (variant { Ok : text; Err : text });
+  "execute_icp_to_evm_swap_public" : (text, text) -> (variant { Ok : text; Err : text });
+  "coordinate_cross_chain_swap_public" : (text, SwapDirection) -> (variant { Ok : text; Err : text });
+  "validate_cross_chain_order_public" : (text) -> (variant { Ok : bool; Err : text }) query;
+  "get_cross_chain_swap_status_public" : (text) -> (variant { Ok : SwapOrderStatus; Err : text }) query;
+  "complete_cross_chain_swap_public" : (text, text) -> (variant { Ok : text; Err : text });
 }

@@ -6,8 +6,8 @@ use ethers_core::types::U256 as EthU256;
 use primitive_types::U256;
 use std::str::FromStr;
 use sha3::Digest;
-use crate::constants::{HTLC_CONTRACT_ADDRESS, SEPOLIA_CHAIN_ID};
-use crate::http_client::{get_transaction_count, get_gas_price, get_latest_block, make_json_rpc_call, get_transaction_receipt};
+use crate::constants::SEPOLIA_CHAIN_ID;
+use crate::http_client::{get_transaction_count, make_json_rpc_call};
 
 // ============================================================================
 // UTILITY FUNCTIONS

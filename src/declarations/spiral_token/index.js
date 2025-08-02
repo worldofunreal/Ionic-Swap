@@ -1,8 +1,8 @@
 import { Actor, HttpAgent } from "@dfinity/agent";
 
 // Imports and re-exports candid interface
-import { idlFactory } from "./cross_chain_orderbook.did.js";
-export { idlFactory } from "./cross_chain_orderbook.did.js";
+import { idlFactory } from "./spiral_token.did.js";
+export { idlFactory } from "./spiral_token.did.js";
 
 /* CANISTER_ID is replaced by webpack based on node environment
  * Note: canister environment variable will be standardized as
@@ -10,7 +10,7 @@ export { idlFactory } from "./cross_chain_orderbook.did.js";
  * beginning in dfx 0.15.0
  */
 export const canisterId =
-  process.env.CANISTER_ID_CROSS_CHAIN_ORDERBOOK;
+  process.env.CANISTER_ID_SPIRAL_TOKEN;
 
 export const createActor = (canisterId, options = {}) => {
   const agent = options.agent || new HttpAgent({ ...options.agentOptions });
@@ -39,4 +39,4 @@ export const createActor = (canisterId, options = {}) => {
   });
 };
 
-export const cross_chain_orderbook = canisterId ? createActor(canisterId) : undefined;
+export const spiral_token = canisterId ? createActor(canisterId) : undefined;
