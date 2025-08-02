@@ -17,32 +17,14 @@ mod types;
 mod storage;
 mod http_client;
 mod evm;
+mod icp;
 
 use constants::*;
 use types::*;
 use storage::*;
 use http_client::*;
 use evm::*;
-
-
-// Custom random number generator for IC
-use getrandom::register_custom_getrandom;
-
-fn custom_getrandom(buf: &mut [u8]) -> Result<(), getrandom::Error> {
-    // Use IC's time and caller as entropy source
-    let time = ic_cdk::api::time();
-    let caller = ic_cdk::api::caller();
-    
-    for (i, byte) in buf.iter_mut().enumerate() {
-        let time_byte = ((time >> (i % 8 * 8)) & 0xFF) as u8;
-        let caller_byte = caller.as_slice()[i % caller.as_slice().len()];
-        *byte = time_byte ^ caller_byte;
-    }
-    Ok(())
-}
-
-register_custom_getrandom!(custom_getrandom);
-
+use icp::*;
 
 // ============================================================================
 // JSON-RPC ENDPOINTS (Public canister interface)
@@ -327,70 +309,6 @@ async fn complete_cross_chain_swap(order_id: String) -> Result<String, String> {
 }
 
 // ============================================================================
-// TESTING METHODS
-// ============================================================================
-
-#[update]
-async fn test_all_contract_functions() -> Result<String, String> {
-    let mut result = String::from("=== Sepolia Contract Test Results ===\n");
-    
-    // Test ICP Network Signer
-    match get_icp_network_signer().await {
-        Ok(response) => result.push_str(&format!("✅ ICP Network Signer: {}\n", response)),
-        Err(error) => result.push_str(&format!("❌ ICP Network Signer: {}\n", error)),
-    }
-    
-    // Test Claim Fee
-    match get_claim_fee().await {
-        Ok(response) => result.push_str(&format!("✅ Claim Fee: {}\n", response)),
-        Err(error) => result.push_str(&format!("❌ Claim Fee: {}\n", error)),
-    }
-    
-    // Test Refund Fee
-    match get_refund_fee().await {
-        Ok(response) => result.push_str(&format!("✅ Refund Fee: {}\n", response)),
-        Err(error) => result.push_str(&format!("❌ Refund Fee: {}\n", error)),
-    }
-    
-    // Test Total Fees
-    match get_total_fees().await {
-        Ok(response) => result.push_str(&format!("✅ Total Fees: {}\n", response)),
-        Err(error) => result.push_str(&format!("❌ Total Fees: {}\n", error)),
-    }
-    
-    Ok(result)
-}
-
-#[update]
-async fn test_basic_rpc() -> Result<String, String> {
-    let mut result = String::from("=== Basic RPC Test Results ===\n");
-    
-    // Test block number
-    match get_sepolia_block_number().await {
-        Ok(block_number) => result.push_str(&format!("✅ Latest Block: {}\n", block_number)),
-        Err(error) => result.push_str(&format!("❌ Block Number: {}\n", error)),
-    }
-    
-    // Test balance
-    match get_balance(ICP_SIGNER_ADDRESS.to_string()).await {
-        Ok(balance) => result.push_str(&format!("✅ ICP Signer Balance: {}\n", balance)),
-        Err(error) => result.push_str(&format!("❌ Balance: {}\n", error)),
-    }
-    
-    Ok(result)
-}
-
-#[update]
-async fn test_deployment_transaction() -> Result<String, String> {
-    let deployment_tx = "0x632b719a0b30557774ad8e4a7025ccb75497bf38818cd16c9263c03b641c7338";
-    
-    match get_transaction_receipt(deployment_tx.to_string()).await {
-        Ok(receipt) => Ok(format!("✅ Deployment Transaction Receipt:\n{}", receipt)),
-        Err(error) => Err(format!("❌ Failed to get deployment receipt: {}", error)),
-    }
-}
-
-// ============================================================================
 // QUERY FUNCTIONS
 // ============================================================================
 
@@ -415,18 +333,6 @@ fn get_all_swap_orders() -> Vec<CrossChainSwapOrder> {
 }
 
 // ============================================================================
-// UTILITY METHODS
-// ============================================================================
-
-#[query]
-fn get_contract_info() -> String {
-    format!(
-        "Factory Address: {}\nICP Signer: {}\nChain ID: {}",
-        FACTORY_ADDRESS, ICP_SIGNER_ADDRESS, SEPOLIA_CHAIN_ID
-    )
-}
-
-// ============================================================================
 // EIP-2771 MINIMAL FORWARDER RELAYER
 // ============================================================================
 
@@ -436,32 +342,6 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
     evm::execute_gasless_approval(request).await
 }
 
-
-
-
-
-
-
-// ============================================================================
-// PERMIT SUBMISSION AND EXECUTION (LEGACY - KEEPING FOR REFERENCE)
-// ============================================================================
-
-#[update]
-async fn submit_permit_signature(permit_data: PermitData) -> Result<String, String> {
-    evm::submit_permit_signature(permit_data).await
-}
-
-
-
-
-
-// ============================================================================
-// EVM HTLC CONTRACT INTERACTION METHODS
-// ============================================================================
-
-// Removed old create_evm_htlc_escrow function - now using ic-evm-utils
-
-// Removed old claim_evm_htlc_funds and cancel_evm_htlc_escrow functions - now using ic-evm-utils
 
 // ============================================================================
 // EVM INTEGRATION METHODS (USING IC CDK APIs)
@@ -487,12 +367,7 @@ async fn test_simple_transaction() -> Result<String, String> {
     evm::test_simple_transaction().await
 }
 
-
-
 /// Get HTLC ID from transaction receipt by parsing the HTLCCreated event
-
-
-
 
 // ============================================================================
 // ATOMIC SWAP FUNCTIONS
@@ -597,11 +472,151 @@ pub fn get_all_atomic_swap_orders() -> Vec<AtomicSwapOrder> {
 }
 
 // ============================================================================
+// ICRC PUBLIC API ENDPOINTS
+// ============================================================================
+
+/// Transfer ICRC-1 tokens (public API)
+#[update]
+#[candid_method]
+pub async fn transfer_icrc_tokens_public(
+    canister_id: String,
+    to: String,
+    amount: u128,
+) -> Result<String, String> {
+    transfer_icrc_tokens(&canister_id, &to, amount).await
+}
+
+/// Get ICRC-1 token balance (public API)
+#[query]
+#[candid_method]
+pub async fn get_icrc_balance_public(
+    canister_id: String,
+    account: String,
+) -> Result<u128, String> {
+    get_icrc_balance(&canister_id, &account).await
+}
+
+/// Approve ICRC-1 tokens (public API)
+#[update]
+#[candid_method]
+pub async fn approve_icrc_tokens_public(
+    canister_id: String,
+    spender: String,
+    amount: u128,
+) -> Result<String, String> {
+    approve_icrc_tokens(&canister_id, &spender, amount).await
+}
+
+/// Transfer from ICRC-1 tokens (public API)
+#[update]
+#[candid_method]
+pub async fn transfer_from_icrc_tokens_public(
+    canister_id: String,
+    from: String,
+    to: String,
+    amount: u128,
+) -> Result<String, String> {
+    transfer_from_icrc_tokens(&canister_id, &from, &to, amount).await
+}
+
+
+// ============================================================================
+// UTILITY METHODS
+// ============================================================================
+
+#[query]
+fn get_contract_info() -> String {
+    format!(
+        "Factory Address: {}\nICP Signer: {}\nChain ID: {}",
+        FACTORY_ADDRESS, ICP_SIGNER_ADDRESS, SEPOLIA_CHAIN_ID
+    )
+}
+// ============================================================================
 // HELPER FUNCTIONS FOR HTLC CONTRACT INTERACTION
 // ============================================================================
 
-/// Encode createHTLCERC20 function call
+// Custom random number generator for IC
+use getrandom::register_custom_getrandom;
 
+fn custom_getrandom(buf: &mut [u8]) -> Result<(), getrandom::Error> {
+    // Use IC's time and caller as entropy source
+    let time = ic_cdk::api::time();
+    let caller = ic_cdk::api::caller();
+    
+    for (i, byte) in buf.iter_mut().enumerate() {
+        let time_byte = ((time >> (i % 8 * 8)) & 0xFF) as u8;
+        let caller_byte = caller.as_slice()[i % caller.as_slice().len()];
+        *byte = time_byte ^ caller_byte;
+    }
+    Ok(())
+}
+
+register_custom_getrandom!(custom_getrandom);
+
+
+// ============================================================================
+// TESTING METHODS
+// ============================================================================
+
+#[update]
+async fn test_all_contract_functions() -> Result<String, String> {
+    let mut result = String::from("=== Sepolia Contract Test Results ===\n");
+    
+    // Test ICP Network Signer
+    match get_icp_network_signer().await {
+        Ok(response) => result.push_str(&format!("✅ ICP Network Signer: {}\n", response)),
+        Err(error) => result.push_str(&format!("❌ ICP Network Signer: {}\n", error)),
+    }
+    
+    // Test Claim Fee
+    match get_claim_fee().await {
+        Ok(response) => result.push_str(&format!("✅ Claim Fee: {}\n", response)),
+        Err(error) => result.push_str(&format!("❌ Claim Fee: {}\n", error)),
+    }
+    
+    // Test Refund Fee
+    match get_refund_fee().await {
+        Ok(response) => result.push_str(&format!("✅ Refund Fee: {}\n", response)),
+        Err(error) => result.push_str(&format!("❌ Refund Fee: {}\n", error)),
+    }
+    
+    // Test Total Fees
+    match get_total_fees().await {
+        Ok(response) => result.push_str(&format!("✅ Total Fees: {}\n", response)),
+        Err(error) => result.push_str(&format!("❌ Total Fees: {}\n", error)),
+    }
+    
+    Ok(result)
+}
+
+#[update]
+async fn test_basic_rpc() -> Result<String, String> {
+    let mut result = String::from("=== Basic RPC Test Results ===\n");
+    
+    // Test block number
+    match get_sepolia_block_number().await {
+        Ok(block_number) => result.push_str(&format!("✅ Latest Block: {}\n", block_number)),
+        Err(error) => result.push_str(&format!("❌ Block Number: {}\n", error)),
+    }
+    
+    // Test balance
+    match get_balance(ICP_SIGNER_ADDRESS.to_string()).await {
+        Ok(balance) => result.push_str(&format!("✅ ICP Signer Balance: {}\n", balance)),
+        Err(error) => result.push_str(&format!("❌ Balance: {}\n", error)),
+    }
+    
+    Ok(result)
+}
+
+#[update]
+async fn test_deployment_transaction() -> Result<String, String> {
+    let deployment_tx = "0x632b719a0b30557774ad8e4a7025ccb75497bf38818cd16c9263c03b641c7338";
+    
+    match get_transaction_receipt(deployment_tx.to_string()).await {
+        Ok(receipt) => Ok(format!("✅ Deployment Transaction Receipt:\n{}", receipt)),
+        Err(error) => Err(format!("❌ Failed to get deployment receipt: {}", error)),
+    }
+}
 
 // ============================================================================
 // CANISTER LIFECYCLE
@@ -642,4 +657,14 @@ fn pre_upgrade() {
 fn post_upgrade() {
     // Re-initialize the HTTP certification tree after upgrade
     http_client::get_http_certification_tree();
+}
+
+
+// ============================================================================
+// PERMIT SUBMISSION AND EXECUTION (LEGACY - KEEPING FOR REFERENCE)
+// ============================================================================
+
+#[update]
+async fn submit_permit_signature(permit_data: PermitData) -> Result<String, String> {
+    evm::submit_permit_signature(permit_data).await
 }
