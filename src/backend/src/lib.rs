@@ -1466,10 +1466,18 @@ pub async fn create_evm_htlc(
     let nonce_response = get_transaction_count(canister_address.clone()).await?;
     let nonce_json: serde_json::Value = serde_json::from_str(&nonce_response)
         .map_err(|e| format!("Failed to parse nonce response: {}", e))?;
-    let nonce = nonce_json["result"]
+    let base_nonce = nonce_json["result"]
         .as_str()
         .ok_or("No result in nonce response")?
         .trim_start_matches("0x");
+    
+    // Add salt to nonce to avoid conflicts with permit transaction
+    let base_nonce_u256 = U256::from_str_radix(base_nonce, 16)
+        .map_err(|e| format!("Invalid base nonce: {}", e))?;
+    let salted_nonce = base_nonce_u256 + U256::from(1);
+    let nonce = format!("{:x}", salted_nonce);
+    
+    ic_cdk::println!("Debug - Base nonce: {}, Salted nonce: {}", base_nonce, nonce);
     
     // Get fresh gas price for this transaction
     let gas_price_response = get_gas_price().await?;
@@ -1537,10 +1545,18 @@ pub async fn claim_evm_htlc(
     let nonce_response = get_transaction_count(canister_address.clone()).await?;
     let nonce_json: serde_json::Value = serde_json::from_str(&nonce_response)
         .map_err(|e| format!("Failed to parse nonce response: {}", e))?;
-    let nonce = nonce_json["result"]
+    let base_nonce = nonce_json["result"]
         .as_str()
         .ok_or("No result in nonce response")?
         .trim_start_matches("0x");
+    
+    // Add salt to nonce to avoid conflicts with other transactions
+    let base_nonce_u256 = U256::from_str_radix(base_nonce, 16)
+        .map_err(|e| format!("Invalid base nonce: {}", e))?;
+    let salted_nonce = base_nonce_u256 + U256::from(2);
+    let nonce = format!("{:x}", salted_nonce);
+    
+    ic_cdk::println!("Debug - Claim HTLC Base nonce: {}, Salted nonce: {}", base_nonce, nonce);
     
     // Get fresh gas price for this transaction
     let gas_price_response = get_gas_price().await?;
