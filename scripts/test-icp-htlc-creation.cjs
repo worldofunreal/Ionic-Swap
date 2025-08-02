@@ -58,8 +58,8 @@ const signPermitMessage = async (signer, owner, spender, value, nonce, deadline,
 };
 
 async function main() {
-    console.log("🚀 Testing Single HTLC Creation with Permit");
-    console.log("============================================");
+    console.log("🚀 Testing ICP HTLC Creation with Proper ABI Encoding");
+    console.log("=====================================================");
     
     // Create agent and actor
     const agent = new HttpAgent({ 
@@ -81,7 +81,7 @@ async function main() {
     const userAddress = await signer.getAddress();
     
     try {
-        // Test 1: Create atomic swap order (simplified)
+        // Test 1: Create atomic swap order
         console.log("\n📋 Test 1: Creating atomic swap order...");
         const maker = userAddress;
         const taker = userAddress;
@@ -173,34 +173,53 @@ async function main() {
                     console.log("✅ Permit executed successfully!");
                     console.log("  Transaction Hash:", permitResult2.Ok);
                     
-                    // Test 5: Create HTLC
-                    console.log("\n📋 Test 5: Creating HTLC...");
+                    // Test 5: Create HTLC (this should now work with proper ABI encoding)
+                    console.log("\n📋 Test 5: Creating HTLC with proper ABI encoding...");
+                    
                     const htlcResult = await actor.create_evm_htlc(orderId, true);
                     if ('Ok' in htlcResult) {
-                        const htlcTx = htlcResult.Ok;
                         console.log("✅ HTLC created successfully!");
-                        console.log("  Transaction Hash:", htlcTx);
+                        console.log("  Transaction Hash:", htlcResult.Ok);
                         
-                        // Test 6: Claim HTLC
-                        console.log("\n📋 Test 6: Claiming HTLC...");
-                        const claimResult = await actor.claim_evm_htlc(orderId, htlcTx);
-                        if ('Ok' in claimResult) {
-                            const claimTx = claimResult.Ok;
-                            console.log("✅ HTLC claimed successfully!");
-                            console.log("  Transaction Hash:", claimTx);
-                            console.log("\n🎉 Single HTLC test completed successfully!");
-                        } else {
-                            console.log("❌ Failed to claim HTLC:", claimResult.Err);
+                        // Test 6: Get updated order details
+                        console.log("\n📋 Test 6: Getting updated order details...");
+                        const updatedOrderDetails = await actor.get_atomic_swap_order(orderId);
+                        if (updatedOrderDetails.length > 0) {
+                            const updatedOrder = updatedOrderDetails[0];
+                            console.log("✅ Updated order details:");
+                            console.log("  Status:", updatedOrder.status);
+                            console.log("  Source HTLC ID:", updatedOrder.source_htlc_id);
+                            console.log("  Secret:", updatedOrder.secret);
                         }
+                        
+                        // Test 7: Claim HTLC
+                        console.log("\n📋 Test 7: Claiming HTLC...");
+                        if (updatedOrderDetails.length > 0) {
+                            const updatedOrder = updatedOrderDetails[0];
+                            if (updatedOrder.source_htlc_id && updatedOrder.source_htlc_id.length > 0) {
+                                const htlcId = updatedOrder.source_htlc_id[0]; // Extract string from array
+                                const claimResult = await actor.claim_evm_htlc(orderId, htlcId);
+                                if ('Ok' in claimResult) {
+                                    console.log("✅ HTLC claimed successfully!");
+                                    console.log("  Transaction Hash:", claimResult.Ok);
+                                } else {
+                                    console.log("❌ Failed to claim HTLC:", claimResult.Err);
+                                }
+                            }
+                        }
+                        
                     } else {
                         console.log("❌ Failed to create HTLC:", htlcResult.Err);
                     }
+                    
                 } else {
                     console.log("❌ Failed to execute permit:", permitResult2.Err);
                 }
+                
             } else {
                 console.log("❌ Failed to get order details");
             }
+            
         } else {
             console.log("❌ Failed to create atomic swap order:", orderResult.Err);
         }

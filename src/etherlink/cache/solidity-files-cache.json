@@ -1134,8 +1134,8 @@
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/EtherlinkHTLC.sol": {
-      "lastModificationDate": 1754064602664,
-      "contentHash": "bdb7cabff6d11ad97a677a1888ac7230",
+      "lastModificationDate": 1754096358620,
+      "contentHash": "d13df3074383f220acb29e001895c627",
       "sourceName": "contracts/EtherlinkHTLC.sol",
       "solcConfig": {
         "version": "0.8.23",
@@ -1291,46 +1291,6 @@
       ],
       "artifacts": [
         "Pausable"
-      ]
-    },
-    "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/MinimalForwarder.sol": {
-      "lastModificationDate": 1753999399253,
-      "contentHash": "00b735162bf980cb160bba08a3ff502d",
-      "sourceName": "contracts/MinimalForwarder.sol",
-      "solcConfig": {
-        "version": "0.8.23",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/utils/cryptography/ECDSA.sol",
-        "@openzeppelin/contracts/utils/cryptography/EIP712.sol"
-      ],
-      "versionPragmas": [
-        "0.8.23"
-      ],
-      "artifacts": [
-        "MinimalForwarder"
       ]
     },
     "/home/bizkit/GitHub/Ionic-Swap/src/etherlink/contracts/SpiralToken.sol": {

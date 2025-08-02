@@ -278,6 +278,7 @@ contract EtherlinkHTLC is ReentrancyGuard, Ownable, Pausable {
      * @param targetChain Target chain type
      * @param isCrossChain Whether this is part of a cross-chain swap
      * @param orderHash 1inch Fusion+ order hash (optional)
+     * @param owner Address to transfer tokens from (if address(0), uses msg.sender)
      */
     function createHTLCERC20(
         address recipient,
@@ -288,7 +289,8 @@ contract EtherlinkHTLC is ReentrancyGuard, Ownable, Pausable {
         ChainType sourceChain,
         ChainType targetChain,
         bool isCrossChain,
-        string memory orderHash
+        string memory orderHash,
+        address owner
     ) external nonReentrant whenNotPaused {
         require(recipient != address(0), "Invalid recipient address");
         require(token != address(0), "Invalid token address");
@@ -296,11 +298,12 @@ contract EtherlinkHTLC is ReentrancyGuard, Ownable, Pausable {
         require(timelock > block.timestamp, "Timelock must be in the future");
         require(hashlock != bytes32(0), "Invalid hashlock");
         
-        // Transfer tokens from sender to contract
-        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+        // Transfer tokens from owner (if provided) or msg.sender to contract
+        address tokenOwner = owner != address(0) ? owner : msg.sender;
+        IERC20(token).safeTransferFrom(tokenOwner, address(this), amount);
         
         bytes32 htlcId = keccak256(abi.encodePacked(
-            msg.sender,
+            tokenOwner,
             recipient,
             token,
             amount,
@@ -311,7 +314,7 @@ contract EtherlinkHTLC is ReentrancyGuard, Ownable, Pausable {
         ));
         
         htlcContracts[htlcId] = HTLC({
-            sender: msg.sender,
+            sender: tokenOwner,
             recipient: recipient,
             amount: amount,
             hashlock: hashlock,
@@ -326,7 +329,7 @@ contract EtherlinkHTLC is ReentrancyGuard, Ownable, Pausable {
             createdAt: block.timestamp
         });
         
-        userHTLCs[msg.sender].push(htlcId);
+        userHTLCs[tokenOwner].push(htlcId);
         
         if (bytes(orderHash).length > 0) {
             orderHashToHtlc[orderHash] = htlcId;
@@ -336,7 +339,7 @@ contract EtherlinkHTLC is ReentrancyGuard, Ownable, Pausable {
         
         emit HTLCCreated(
             htlcId,
-            msg.sender,
+            tokenOwner,
             recipient,
             amount,
             hashlock,

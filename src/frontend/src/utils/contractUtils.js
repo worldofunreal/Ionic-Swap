@@ -1,6 +1,6 @@
 // Contract addresses
 export const SPIRAL_TOKEN = "0xdE7409EDeA573D090c3C6123458D6242E26b425E"; // SpiralToken with EIP-2612
-export const HTLC_CONTRACT = "0x288AA4c267408adE0e01463fBD5DECC824e96E8D"; // EtherlinkEscrowFactory
+export const HTLC_CONTRACT = "0x294b513c6b14d9BAA8F03703ADEf50f8dBf93913"; // EtherlinkHTLC
 export const MINIMAL_FORWARDER = "0x7705a3dBd0F1B0c8e1D4a7b24539195aEB42A0AC"; // MinimalForwarder for gasless transactions
 
 // Network configuration

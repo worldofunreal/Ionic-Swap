@@ -120,6 +120,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
         [],
       ),
+    'initialize_nonce' : IDL.Func(
+        [],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        [],
+      ),
     'send_raw_transaction' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],

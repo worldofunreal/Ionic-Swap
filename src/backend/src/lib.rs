@@ -34,6 +34,8 @@ register_custom_getrandom!(custom_getrandom);
 
 use ethers_core::types::Eip1559TransactionRequest;
 use ethers_core::types::transaction::eip2930::AccessList;
+use ethabi::{Function, Token, ParamType, Address};
+use ethers_core::types::U256 as EthU256;
 
 fn keccak256(data: &[u8]) -> [u8; 32] {
     let mut hasher = sha3::Keccak256::new();
@@ -49,11 +51,11 @@ fn keccak256(data: &[u8]) -> [u8; 32] {
 const SEPOLIA_CHAIN_ID: u64 = 11155111;
 const EIP1559_TX_ID: u8 = 2;
 
-// Factory Contract (legacy - keeping for compatibility)
+// Factory Contract (legacy - keeping for compatibility - old deployment)
 const FACTORY_ADDRESS: &str = "0x288AA4c267408adE0e01463fBD5DECC824e96E8D";
 
 // HTLC Contract (newly deployed)
-const HTLC_CONTRACT_ADDRESS: &str = "0x288AA4c267408adE0e01463fBD5DECC824e96E8D";
+const HTLC_CONTRACT_ADDRESS: &str = "0x294b513c6b14d9BAA8F03703ADEf50f8dBf93913";
 const SPIRAL_TOKEN_ADDRESS: &str = "0xdE7409EDeA573D090c3C6123458D6242E26b425E";
 const STARDUST_TOKEN_ADDRESS: &str = "0x6ca99fc9bDed10004FE9CC6ce40914b98490Dc90";
 
@@ -61,7 +63,7 @@ const ICP_SIGNER_ADDRESS: &str = "0x6a3Ff928a09D21d82B27e9B002BBAea7fc123A00";
 const INFURA_URL: &str = "https://sepolia.infura.io/v3/70b7e4d32357459a9af10d6503eae303";
 
 // Function selectors for HTLC contract
-const CREATE_HTLC_ERC20_SELECTOR: &str = "0xe69d84af";
+const CREATE_HTLC_ERC20_SELECTOR: &str = "0x0c89e296";
 const CLAIM_HTLC_SELECTOR: &str = "0xfa971dd7";
 const REFUND_HTLC_SELECTOR: &str = "0x95ccea67";
 const GET_HTLC_SELECTOR: &str = "0x7a22cf61";
@@ -175,6 +177,37 @@ static mut HTLC_STORE: Option<HashMap<String, HTLC>> = None;
 static mut SWAP_ORDERS: Option<HashMap<String, CrossChainSwapOrder>> = None;
 static mut ATOMIC_SWAP_ORDERS: Option<HashMap<String, AtomicSwapOrder>> = None;
 static mut ORDER_COUNTER: u64 = 0;
+
+// ============================================================================
+// NONCE MANAGEMENT FOR EVM TRANSACTIONS
+// ============================================================================
+
+static mut CURRENT_NONCE: u64 = 0;
+static mut NONCE_LOCK: bool = false;
+
+// Thread-safe nonce management to prevent racing conditions
+fn get_next_nonce() -> u64 {
+    unsafe {
+        if NONCE_LOCK {
+            // If locked, wait a bit and try again
+            // In a real implementation, you might want to use a more sophisticated locking mechanism
+            ic_cdk::api::time(); // Small delay
+        }
+        NONCE_LOCK = true;
+        let nonce = CURRENT_NONCE;
+        CURRENT_NONCE += 1;
+        NONCE_LOCK = false;
+        nonce
+    }
+}
+
+fn update_current_nonce(new_nonce: u64) {
+    unsafe {
+        NONCE_LOCK = true;
+        CURRENT_NONCE = new_nonce;
+        NONCE_LOCK = false;
+    }
+}
 
 fn get_htlc_store() -> &'static mut HashMap<String, HTLC> {
     unsafe {
@@ -767,18 +800,13 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
     // 2. Get canister's Ethereum address
     let from_addr_str = get_public_key().await?;
     
-    // 3. Get current nonce for the canister (this is for the transaction, not the permit)
-    let nonce_response = get_transaction_count(from_addr_str.clone()).await?;
-    let nonce_json: serde_json::Value = serde_json::from_str(&nonce_response)
-        .map_err(|e| format!("Failed to parse nonce response: {}", e))?;
-    let canister_nonce = nonce_json["result"]
-        .as_str()
-        .ok_or("No result in nonce response")?
-        .trim_start_matches("0x");
+    // 3. Get current nonce for the canister using thread-safe nonce management
+    let canister_nonce = get_next_nonce();
+    let canister_nonce_hex = format!("{:x}", canister_nonce);
     
     // Debug: Log the nonces
     ic_cdk::println!("Debug - User nonce from permit: {}", request.permit_request.nonce);
-    ic_cdk::println!("Debug - Canister nonce for transaction: {}", canister_nonce);
+    ic_cdk::println!("Debug - Canister nonce: {}", canister_nonce_hex);
     
     // 4. Encode the permit function call on the token contract
     let permit_data = encode_permit_call(&request.permit_request)?;
@@ -793,7 +821,7 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
     let gas_price_response = get_gas_price().await?;
     let gas_price_json: serde_json::Value = serde_json::from_str(&gas_price_response)
         .map_err(|e| format!("Failed to parse gas price response: {}", e))?;
-    let gas_price = gas_price_json["result"]
+    let base_gas_price = gas_price_json["result"]
         .as_str()
         .ok_or("No result in gas price response")?
         .trim_start_matches("0x");
@@ -806,6 +834,12 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
         .as_str()
         .unwrap_or("0x3b9aca00") // 1 gwei default
         .trim_start_matches("0x");
+    
+    // 7. Calculate much higher gas price for replacement transactions
+    let base_gas_price_u256 = U256::from_str_radix(base_gas_price, 16)
+        .map_err(|e| format!("Invalid base gas price: {}", e))?;
+    let gas_price_u256 = base_gas_price_u256 * U256::from(5); // 5x the gas price for replacement
+    let gas_price = format!("{:x}", gas_price_u256);
     
     // 7. Construct and sign EIP-1559 transaction to the token contract
     // Use the SpiralToken address for now (can be made dynamic later)
@@ -823,7 +857,7 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
     let signed_tx = sign_eip1559_transaction(
         &from_addr_str,
         token_address,
-        &canister_nonce,
+        &canister_nonce_hex,
         &gas_price,
         &base_fee_per_gas,
         &permit_data,
@@ -839,10 +873,6 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
 }
 
 async fn verify_permit_signature(permit_request: &PermitRequest) -> Result<bool, String> {
-    // This would implement EIP-2612 signature verification for the permit
-    // For now, we'll return true (simplified)
-    // In production, this should verify the actual signature
-    
     // Debug: Log the permit request details
     ic_cdk::println!("Debug - Permit request owner: {}", permit_request.owner);
     ic_cdk::println!("Debug - Permit request spender: {}", permit_request.spender);
@@ -852,7 +882,37 @@ async fn verify_permit_signature(permit_request: &PermitRequest) -> Result<bool,
     ic_cdk::println!("Debug - Permit request r: {}", permit_request.r);
     ic_cdk::println!("Debug - Permit request s: {}", permit_request.s);
     
-    // The verification should:
+    // For now, we'll implement a simplified verification
+    // In production, this should verify the actual EIP-2612 signature
+    
+    // Check if deadline has passed
+    let current_time = ic_cdk::api::time() / 1_000_000_000; // Convert to seconds
+    let deadline: u64 = permit_request.deadline.parse()
+        .map_err(|e| format!("Invalid deadline: {}", e))?;
+    
+    if current_time > deadline {
+        return Err("Permit deadline has passed".to_string());
+    }
+    
+    // Basic validation of signature components
+    let v: u8 = permit_request.v.parse()
+        .map_err(|e| format!("Invalid v value: {}", e))?;
+    
+    if v != 27 && v != 28 {
+        return Err("Invalid v value (must be 27 or 28)".to_string());
+    }
+    
+    // Validate r and s are valid hex strings
+    if !permit_request.r.starts_with("0x") || permit_request.r.len() != 66 {
+        return Err("Invalid r value".to_string());
+    }
+    
+    if !permit_request.s.starts_with("0x") || permit_request.s.len() != 66 {
+        return Err("Invalid s value".to_string());
+    }
+    
+    // For now, return true (simplified verification)
+    // TODO: Implement full EIP-2612 signature verification
     // 1. Reconstruct the permit message according to EIP-2612
     // 2. Hash it according to EIP-712
     // 3. Recover the signer address from the signature
@@ -1208,7 +1268,7 @@ async fn sign_eip1559_transaction(
     let max_fee_per_gas = base_fee_u256 * U256::from(2u64) + max_priority_fee_per_gas;
     
     // Gas limit for the transaction
-    let gas_limit = U256::from(300000u64); // 300k gas limit
+    let gas_limit = U256::from(5000000u64); // 500k gas limit (increased for HTLC creation)
     
     // Parse addresses
     ic_cdk::println!("Debug - Parsing to address: {}", to);
@@ -1433,6 +1493,13 @@ pub async fn create_evm_htlc(
         (order.taker.clone(), order.maker.clone(), order.destination_token.clone(), order.destination_amount.clone())
     };
     
+    // Determine user address based on HTLC type
+    let user_address = if is_source_htlc {
+        &order.maker // Source HTLC: transfer from maker
+    } else {
+        &order.taker // Destination HTLC: transfer from taker
+    };
+    
     // Encode createHTLCERC20 function call
     let encoded_data = encode_create_htlc_erc20_call(
         &recipient,
@@ -1444,6 +1511,7 @@ pub async fn create_evm_htlc(
         0, // targetChain (ICP)
         true, // isCrossChain
         &order_id, // orderHash
+        user_address, // user address to transfer from
     )?;
     
     // Debug logging
@@ -1462,22 +1530,11 @@ pub async fn create_evm_htlc(
     // Get canister's Ethereum address
     let canister_address = get_ethereum_address().await?;
     
-    // Get fresh nonce for this transaction
-    let nonce_response = get_transaction_count(canister_address.clone()).await?;
-    let nonce_json: serde_json::Value = serde_json::from_str(&nonce_response)
-        .map_err(|e| format!("Failed to parse nonce response: {}", e))?;
-    let base_nonce = nonce_json["result"]
-        .as_str()
-        .ok_or("No result in nonce response")?
-        .trim_start_matches("0x");
+    // Get fresh nonce for this transaction using thread-safe nonce management
+    let nonce = get_next_nonce();
+    let nonce_hex = format!("{:x}", nonce);
     
-    // Add salt to nonce to avoid conflicts with permit transaction
-    let base_nonce_u256 = U256::from_str_radix(base_nonce, 16)
-        .map_err(|e| format!("Invalid base nonce: {}", e))?;
-    let salted_nonce = base_nonce_u256 + U256::from(1);
-    let nonce = format!("{:x}", salted_nonce);
-    
-    ic_cdk::println!("Debug - Base nonce: {}, Salted nonce: {}", base_nonce, nonce);
+    ic_cdk::println!("Debug - HTLC creation nonce: {}", nonce_hex);
     
     // Get fresh gas price for this transaction
     let gas_price_response = get_gas_price().await?;
@@ -1494,7 +1551,7 @@ pub async fn create_evm_htlc(
     let signed_tx = sign_eip1559_transaction(
         &canister_address,
         HTLC_CONTRACT_ADDRESS,
-        &nonce,
+        &nonce_hex,
         &gas_price,
         &base_fee_per_gas.to_string(),
         &encoded_data,
@@ -1541,22 +1598,11 @@ pub async fn claim_evm_htlc(
     // Get canister's Ethereum address
     let canister_address = get_ethereum_address().await?;
     
-    // Get fresh nonce for this transaction
-    let nonce_response = get_transaction_count(canister_address.clone()).await?;
-    let nonce_json: serde_json::Value = serde_json::from_str(&nonce_response)
-        .map_err(|e| format!("Failed to parse nonce response: {}", e))?;
-    let base_nonce = nonce_json["result"]
-        .as_str()
-        .ok_or("No result in nonce response")?
-        .trim_start_matches("0x");
+    // Get fresh nonce for this transaction using thread-safe nonce management
+    let nonce = get_next_nonce();
+    let nonce_hex = format!("{:x}", nonce);
     
-    // Add salt to nonce to avoid conflicts with other transactions
-    let base_nonce_u256 = U256::from_str_radix(base_nonce, 16)
-        .map_err(|e| format!("Invalid base nonce: {}", e))?;
-    let salted_nonce = base_nonce_u256 + U256::from(2);
-    let nonce = format!("{:x}", salted_nonce);
-    
-    ic_cdk::println!("Debug - Claim HTLC Base nonce: {}, Salted nonce: {}", base_nonce, nonce);
+    ic_cdk::println!("Debug - Claim HTLC nonce: {}", nonce_hex);
     
     // Get fresh gas price for this transaction
     let gas_price_response = get_gas_price().await?;
@@ -1573,7 +1619,7 @@ pub async fn claim_evm_htlc(
     let signed_tx = sign_eip1559_transaction(
         &canister_address,
         HTLC_CONTRACT_ADDRESS,
-        &nonce,
+        &nonce_hex,
         &gas_price,
         &base_fee_per_gas.to_string(),
         &encoded_data,
@@ -1652,105 +1698,128 @@ fn encode_create_htlc_erc20_call(
     target_chain: u64,
     is_cross_chain: bool,
     order_hash: &str,
+    user_address: &str, // NEW: user address to transfer from
 ) -> Result<String, String> {
-    // Remove 0x prefix if present
-    let recipient_clean = recipient.trim_start_matches("0x");
-    let token_clean = token.trim_start_matches("0x");
+    // Define the function signature
+    let function = Function {
+        name: "createHTLCERC20".to_string(),
+        inputs: vec![
+            ethabi::Param { name: "recipient".to_string(), kind: ParamType::Address, internal_type: None },
+            ethabi::Param { name: "token".to_string(), kind: ParamType::Address, internal_type: None },
+            ethabi::Param { name: "amount".to_string(), kind: ParamType::Uint(256), internal_type: None },
+            ethabi::Param { name: "hashlock".to_string(), kind: ParamType::FixedBytes(32), internal_type: None },
+            ethabi::Param { name: "timelock".to_string(), kind: ParamType::Uint(256), internal_type: None },
+            ethabi::Param { name: "sourceChain".to_string(), kind: ParamType::Uint(8), internal_type: None },
+            ethabi::Param { name: "targetChain".to_string(), kind: ParamType::Uint(8), internal_type: None },
+            ethabi::Param { name: "isCrossChain".to_string(), kind: ParamType::Bool, internal_type: None },
+            ethabi::Param { name: "orderHash".to_string(), kind: ParamType::String, internal_type: None },
+            ethabi::Param { name: "owner".to_string(), kind: ParamType::Address, internal_type: None },
+        ],
+        outputs: vec![],
+        constant: None,
+        state_mutability: ethabi::StateMutability::NonPayable,
+    };
+    
+    // Parse addresses
+    let recipient_addr = Address::from_str(recipient.trim_start_matches("0x"))
+        .map_err(|e| format!("Invalid recipient address: {}", e))?;
+    let token_addr = Address::from_str(token.trim_start_matches("0x"))
+        .map_err(|e| format!("Invalid token address: {}", e))?;
+    let user_addr = Address::from_str(user_address.trim_start_matches("0x"))
+        .map_err(|e| format!("Invalid user address: {}", e))?;
+    
+    // Parse amount
+    let amount_u256 = EthU256::from_dec_str(amount)
+        .map_err(|e| format!("Invalid amount: {}", e))?;
+    
+    // Parse hashlock (remove 0x prefix and convert to bytes)
     let hashlock_clean = hashlock.trim_start_matches("0x");
+    let hashlock_bytes = hex::decode(hashlock_clean)
+        .map_err(|e| format!("Invalid hashlock: {}", e))?;
+    if hashlock_bytes.len() != 32 {
+        return Err("Hashlock must be 32 bytes".to_string());
+    }
     
-    // Pad addresses to 32 bytes (convert to lowercase for consistency)
-    let recipient_padded = format!("{:0>64}", recipient_clean.to_lowercase());
-    let token_padded = format!("{:0>64}", token_clean.to_lowercase());
-    let hashlock_padded = format!("{:0>64}", hashlock_clean.to_lowercase());
+    // Convert parameters to tokens
+    let tokens = vec![
+        Token::Address(recipient_addr),
+        Token::Address(token_addr),
+        Token::Uint(amount_u256),
+        Token::FixedBytes(hashlock_bytes.clone()),
+        Token::Uint(EthU256::from(timelock)),
+        Token::Uint(EthU256::from(source_chain)),
+        Token::Uint(EthU256::from(target_chain)),
+        Token::Bool(is_cross_chain),
+        Token::String(order_hash.to_string()),
+        Token::Address(user_addr),
+    ];
     
-    // Convert amount to hex and pad (ensure it's treated as decimal string)
-    let amount_u256 = U256::from_dec_str(amount).map_err(|e| format!("Invalid amount: {}", e))?;
-    let amount_padded = format!("{:0>64}", format!("{:x}", amount_u256));
-    ic_cdk::println!("  Amount Debug: input='{}', u256={:?}, hex='{:x}', padded='{}'", amount, amount_u256, amount_u256, amount_padded);
+    // Encode the function call
+    let encoded = function.encode_input(&tokens)
+        .map_err(|e| format!("Failed to encode function call: {}", e))?;
     
-    // Let's also check what we should get for 100000000000
-    let expected_amount = U256::from_dec_str("100000000000").unwrap();
-    ic_cdk::println!("  Expected for 100000000000: u256={:?}, hex='{:x}'", expected_amount, expected_amount);
+    let encoded_hex = format!("0x{}", hex::encode(encoded));
     
-    // Convert timelock to hex and pad
-    let timelock_padded = format!("{:0>64}", format!("{:x}", timelock));
+    // Debug logging
+    ic_cdk::println!("🔧 Proper ABI Encoding Debug:");
+    ic_cdk::println!("  Function: createHTLCERC20");
+    ic_cdk::println!("  Recipient: {}", recipient_addr);
+    ic_cdk::println!("  Token: {}", token_addr);
+    ic_cdk::println!("  Amount: {} (0x{:x})", amount_u256, amount_u256);
+    ic_cdk::println!("  Hashlock: 0x{}", hex::encode(&hashlock_bytes));
+    ic_cdk::println!("  Timelock: {}", timelock);
+    ic_cdk::println!("  Source Chain: {}", source_chain);
+    ic_cdk::println!("  Target Chain: {}", target_chain);
+    ic_cdk::println!("  Is Cross Chain: {}", is_cross_chain);
+    ic_cdk::println!("  Order Hash: '{}'", order_hash);
+    ic_cdk::println!("  Owner: {}", user_addr);
+    ic_cdk::println!("  Encoded Data: {}", encoded_hex);
     
-    // Convert source_chain and target_chain to hex and pad
-    let source_chain_padded = format!("{:0>64}", format!("{:x}", source_chain));
-    let target_chain_padded = format!("{:0>64}", format!("{:x}", target_chain));
-    
-    // Convert is_cross_chain to hex and pad
-    let is_cross_chain_padded = format!("{:0>64}", if is_cross_chain { "1" } else { "0" });
-    
-    // Encode order_hash as dynamic string (empty string)
-    // For empty string: offset (32 bytes) + length (32 bytes) + no data
-    // Offset calculation: 9 parameters * 32 bytes each = 288 = 0x120
-    let order_hash_offset = "0000000000000000000000000000000000000000000000000000000000000120"; // offset to string data (288 = 9 * 32)
-    let order_hash_length = "0000000000000000000000000000000000000000000000000000000000000000"; // length 0 for empty string
-    let order_hash_data = ""; // no data for empty string
-    
-    // Combine all parameters
-    let encoded_data = format!(
-        "{}{}{}{}{}{}{}{}{}{}{}{}",
-        CREATE_HTLC_ERC20_SELECTOR,
-        recipient_padded,
-        token_padded,
-        amount_padded,
-        hashlock_padded,
-        timelock_padded,
-        source_chain_padded,
-        target_chain_padded,
-        is_cross_chain_padded,
-        order_hash_offset,
-        order_hash_length,
-        order_hash_data
-    );
-    
-    // For debugging, let's also log the expected JavaScript encoding
-    ic_cdk::println!("  Expected JavaScript encoding: 0xe69d84af000000000000000000000000f0d056015bdd86c0efd07000f75ea10873a1d0a7000000000000000000000000de7409edea573d090c3c6123458d6242e26b425e000000000000000000000000000000000000000000000000000000174876e800e239c33fbe9c1751eb2d65550e9139b3d9034c598c1cf29fdbeec0b6f93817f500000000000000000000000000000000000000000000000000000000688d0b9f000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000012000000000000000000000000000000000000000000000000000000000000000000");
-    
-    // Debug logging for encoding
-    ic_cdk::println!("🔧 Encoding Debug:");
-    ic_cdk::println!("  Function Selector: {}", CREATE_HTLC_ERC20_SELECTOR);
-    ic_cdk::println!("  Recipient Padded: {}", recipient_padded);
-    ic_cdk::println!("  Token Padded: {}", token_padded);
-    ic_cdk::println!("  Amount Padded: {}", amount_padded);
-    ic_cdk::println!("  Hashlock Padded: {}", hashlock_padded);
-    ic_cdk::println!("  Timelock Padded: {}", timelock_padded);
-    ic_cdk::println!("  Source Chain Padded: {}", source_chain_padded);
-    ic_cdk::println!("  Target Chain Padded: {}", target_chain_padded);
-    ic_cdk::println!("  Is Cross Chain Padded: {}", is_cross_chain_padded);
-    ic_cdk::println!("  Order Hash Offset: {}", order_hash_offset);
-    ic_cdk::println!("  Order Hash Length: {}", order_hash_length);
-    ic_cdk::println!("  Order Hash Data: {}", order_hash_data);
-    ic_cdk::println!("  Final Encoded Data: {}", encoded_data);
-    
-    Ok(encoded_data)
+    Ok(encoded_hex)
 }
 
 /// Encode claimHTLC function call
 fn encode_claim_htlc_call(htlc_id: &str, secret: &str) -> Result<String, String> {
-    // Remove 0x prefix if present
+    // Define the function signature
+    let function = Function {
+        name: "claimHTLC".to_string(),
+        inputs: vec![
+            ethabi::Param { name: "htlcId".to_string(), kind: ParamType::FixedBytes(32), internal_type: None },
+            ethabi::Param { name: "secret".to_string(), kind: ParamType::String, internal_type: None },
+        ],
+        outputs: vec![],
+        constant: None,
+        state_mutability: ethabi::StateMutability::NonPayable,
+    };
+    
+    // Parse HTLC ID (remove 0x prefix and convert to bytes)
     let htlc_id_clean = htlc_id.trim_start_matches("0x");
+    let htlc_id_bytes = hex::decode(htlc_id_clean)
+        .map_err(|e| format!("Invalid HTLC ID: {}", e))?;
+    if htlc_id_bytes.len() != 32 {
+        return Err("HTLC ID must be 32 bytes".to_string());
+    }
     
-    // Pad HTLC ID to 32 bytes
-    let htlc_id_padded = format!("{:0>64}", htlc_id_clean);
+    // Convert parameters to tokens
+    let tokens = vec![
+        Token::FixedBytes(htlc_id_bytes.clone()),
+        Token::String(secret.to_string()),
+    ];
     
-    // Encode secret as dynamic string
-    let secret_bytes = secret.as_bytes();
-    let secret_length = format!("{:0>64}", format!("{:x}", secret_bytes.len()));
-    let secret_data = format!("{:0>64}", hex::encode(secret_bytes));
+    // Encode the function call
+    let encoded = function.encode_input(&tokens)
+        .map_err(|e| format!("Failed to encode function call: {}", e))?;
     
-    // Combine parameters
-    let encoded_data = format!(
-        "0x{}{}{}{}",
-        CLAIM_HTLC_SELECTOR,
-        htlc_id_padded,
-        secret_length,
-        secret_data
-    );
+    let encoded_hex = format!("0x{}", hex::encode(encoded));
     
-    Ok(encoded_data)
+    // Debug logging
+    ic_cdk::println!("🔧 Claim HTLC ABI Encoding Debug:");
+    ic_cdk::println!("  Function: claimHTLC");
+    ic_cdk::println!("  HTLC ID: 0x{}", hex::encode(&htlc_id_bytes));
+    ic_cdk::println!("  Secret: '{}'", secret);
+    ic_cdk::println!("  Encoded Data: {}", encoded_hex);
+    
+    Ok(encoded_hex)
 }
 
 // ============================================================================
@@ -1763,6 +1832,26 @@ fn init() {
     unsafe {
         HTTP_CERTIFICATION_TREE = Some(HttpCertificationTree::default());
     }
+}
+
+// Function to initialize nonce from blockchain (call this after deployment)
+#[update]
+async fn initialize_nonce() -> Result<String, String> {
+    let canister_address = get_ethereum_address().await?;
+    let nonce_response = get_transaction_count(canister_address.clone()).await?;
+    let nonce_json: serde_json::Value = serde_json::from_str(&nonce_response)
+        .map_err(|e| format!("Failed to parse nonce response: {}", e))?;
+    let current_nonce = nonce_json["result"]
+        .as_str()
+        .ok_or("No result in nonce response")?
+        .trim_start_matches("0x");
+    
+    let nonce_u64 = u64::from_str_radix(current_nonce, 16)
+        .map_err(|e| format!("Invalid nonce: {}", e))?;
+    
+    update_current_nonce(nonce_u64);
+    
+    Ok(format!("Nonce initialized to: {}", nonce_u64))
 }
 
 #[pre_upgrade]

@@ -9,16 +9,24 @@ const LOCAL_HOST = 'http://127.0.0.1:4943';
 
 // Contract addresses
 const SPIRAL_TOKEN = '0xdE7409EDeA573D090c3C6123458D6242E26b425E';
-const HTLC_CONTRACT = '0x288AA4c267408adE0e01463fBD5DECC824e96E8D';
+const HTLC_CONTRACT = '0x294b513c6b14d9BAA8F03703ADEf50f8dBf93913';
 const SEPOLIA_CHAIN_ID = 11155111;
 
 // EIP-2612 permit helpers (from gaslessUtils.js)
-const createPermitDomain = () => ({
-  name: 'Spiral',
-  version: '1',
-  chainId: SEPOLIA_CHAIN_ID,
-  verifyingContract: SPIRAL_TOKEN
-});
+const createPermitDomain = (tokenAddress) => {
+  // Determine token name based on address
+  let tokenName = 'Spiral'; // Default
+  if (tokenAddress.toLowerCase() === '0x6ca99fc9bded10004fe9cc6ce40914b98490dc90') {
+    tokenName = 'Stardust';
+  }
+  
+  return {
+    name: tokenName,
+    version: '1',
+    chainId: SEPOLIA_CHAIN_ID,
+    verifyingContract: tokenAddress
+  };
+};
 
 const createPermitTypes = () => ({
   Permit: [
@@ -33,20 +41,30 @@ const createPermitTypes = () => ({
 const createPermitMessage = (owner, spender, value, nonce, deadline) => ({
   owner,
   spender,
-  value: ethers.utils.parseUnits(value, 8), // Spiral has 8 decimals
+  value: ethers.utils.parseUnits(value, 8), // Both tokens have 8 decimals
   nonce,
   deadline
 });
 
-const signPermitMessage = async (signer, owner, spender, value, nonce, deadline) => {
-  const domain = createPermitDomain();
+const signPermitMessage = async (signer, owner, spender, value, nonce, deadline, tokenAddress) => {
+  const domain = createPermitDomain(tokenAddress);
   const types = createPermitTypes();
   const message = createPermitMessage(owner, spender, value, nonce, deadline);
 
-  console.log('Signing permit message:', { domain, types, message });
+  console.log('🔍 Signing permit message:');
+  console.log('  Domain:', JSON.stringify(domain, null, 2));
+  console.log('  Types:', JSON.stringify(types, null, 2));
+  console.log('  Message:', JSON.stringify(message, null, 2));
+  console.log('  Token Address:', tokenAddress);
 
   const signature = await signer._signTypedData(domain, types, message);
   const sig = ethers.utils.splitSignature(signature);
+
+  console.log('✅ Permit signature created:');
+  console.log('  Full signature:', signature);
+  console.log('  v:', sig.v);
+  console.log('  r:', sig.r);
+  console.log('  s:', sig.s);
 
   return {
     signature,
@@ -125,118 +143,181 @@ async function main() {
                 console.log("  Created At:", new Date(Number(order.created_at) * 1000).toISOString());
                 console.log("  Expires At:", new Date(Number(order.expires_at) * 1000).toISOString());
                 
-                // Test 3: Create EIP-2612 permit for HTLC allowance
-                console.log("\n📋 Test 3: Creating EIP-2612 permit for HTLC allowance...");
+                // Test 3: Create EIP-2612 permit for Spiral tokens (source)
+                console.log("\n📋 Test 3: Creating EIP-2612 permit for Spiral tokens (source)...");
                 
-                // Get nonce from token contract
-                const tokenContract = new ethers.Contract(SPIRAL_TOKEN, [
+                // Get nonce from Spiral token contract
+                const spiralTokenContract = new ethers.Contract(SPIRAL_TOKEN, [
                     'function nonces(address owner) view returns (uint256)'
                 ], provider);
                 
-                const nonce = await tokenContract.nonces(userAddress);
+                const spiralNonce = await spiralTokenContract.nonces(userAddress);
                 const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
-                // Convert the raw amount to human-readable format for permit signing
-                const permitAmountHuman = ethers.utils.formatUnits(order.source_amount, 8); // Convert from wei to tokens
-                const permitAmount = order.source_amount; // Keep raw amount for the request
+                const spiralAmountHuman = ethers.utils.formatUnits(order.source_amount, 8);
+                const spiralAmount = order.source_amount;
                 
-                console.log("  Permit details:");
+                console.log("  Spiral Permit details:");
                 console.log("    Owner:", userAddress);
                 console.log("    Spender:", HTLC_CONTRACT);
-                console.log("    Amount (human):", permitAmountHuman);
-                console.log("    Amount (raw):", permitAmount);
-                console.log("    Nonce:", nonce.toString());
+                console.log("    Amount (human):", spiralAmountHuman);
+                console.log("    Amount (raw):", spiralAmount);
+                console.log("    Nonce:", spiralNonce.toString());
                 console.log("    Deadline:", deadline);
                 
-                // Sign the permit using human-readable amount
-                const permitResult = await signPermitMessage(
+                // Sign the Spiral permit
+                const spiralPermitResult = await signPermitMessage(
                     signer,
                     userAddress,
                     HTLC_CONTRACT,
-                    permitAmountHuman,
-                    nonce,
-                    deadline
+                    spiralAmountHuman,
+                    spiralNonce,
+                    deadline,
+                    SPIRAL_TOKEN
                 );
                 
-                console.log("✅ Permit signed successfully!");
-                console.log("  Signature:", permitResult.signature);
-                console.log("  V:", permitResult.sig.v);
-                console.log("  R:", permitResult.sig.r);
-                console.log("  S:", permitResult.sig.s);
+                console.log("✅ Spiral permit signed successfully!");
+                console.log("  Signature:", spiralPermitResult.signature);
                 
-                // Test 4: Execute permit via ICP canister (EIP-2771)
-                console.log("\n📋 Test 4: Executing permit via ICP canister...");
+                // Test 4: Execute Spiral permit via ICP canister
+                console.log("\n📋 Test 4: Executing Spiral permit via ICP canister...");
                 
-                // Create permit data matching the frontend structure
-                const permitRequest = {
+                const spiralPermitRequest = {
                     owner: userAddress,
                     spender: HTLC_CONTRACT,
-                    value: permitAmount,
-                    nonce: nonce.toString(),
+                    value: spiralAmount,
+                    nonce: spiralNonce.toString(),
                     deadline: deadline.toString(),
-                    v: permitResult.sig.v.toString(),
-                    r: permitResult.sig.r,
-                    s: permitResult.sig.s,
-                    signature: permitResult.signature
+                    v: spiralPermitResult.sig.v.toString(),
+                    r: spiralPermitResult.sig.r,
+                    s: spiralPermitResult.sig.s,
+                    signature: spiralPermitResult.signature
                 };
                 
-                const gaslessApprovalRequest = {
-                    permit_request: permitRequest,
+                const spiralGaslessApprovalRequest = {
+                    permit_request: spiralPermitRequest,
                     user_address: userAddress,
-                    amount: permitAmount
+                    amount: spiralAmount
                 };
                 
-                const permitResult2 = await actor.execute_gasless_approval(gaslessApprovalRequest);
-                if ('Ok' in permitResult2) {
-                    console.log("✅ Permit executed successfully!");
-                    console.log("  Transaction Hash:", permitResult2.Ok);
+                const spiralPermitResult2 = await actor.execute_gasless_approval(spiralGaslessApprovalRequest);
+                if ('Ok' in spiralPermitResult2) {
+                    console.log("✅ Spiral permit executed successfully!");
+                    console.log("  Transaction Hash:", spiralPermitResult2.Ok);
                     
-                    // Test 5: Create source HTLC (now with allowance)
-                    console.log("\n📋 Test 5: Creating source HTLC...");
-                    const sourceHtlcResult = await actor.create_evm_htlc(orderId, true);
-                    if ('Ok' in sourceHtlcResult) {
-                        const sourceHtlcTx = sourceHtlcResult.Ok;
-                        console.log("✅ Source HTLC created successfully!");
-                        console.log("  Transaction Hash:", sourceHtlcTx);
+                    // Add delay between transactions to avoid nonce conflicts
+                    console.log("\n⏳ Waiting 5 seconds between transactions...");
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    
+                    // Test 5: Create EIP-2612 permit for Stardust tokens (destination)
+                    console.log("\n📋 Test 5: Creating EIP-2612 permit for Stardust tokens (destination)...");
+                    
+                    // Get nonce from Stardust token contract
+                    const stardustTokenContract = new ethers.Contract(order.destination_token, [
+                        'function nonces(address owner) view returns (uint256)'
+                    ], provider);
+                    
+                    const stardustNonce = await stardustTokenContract.nonces(userAddress);
+                    const stardustAmountHuman = ethers.utils.formatUnits(order.destination_amount, 8);
+                    const stardustAmount = order.destination_amount;
+                    
+                    console.log("  Stardust Permit details:");
+                    console.log("    Owner:", userAddress);
+                    console.log("    Spender:", HTLC_CONTRACT);
+                    console.log("    Amount (human):", stardustAmountHuman);
+                    console.log("    Amount (raw):", stardustAmount);
+                    console.log("    Nonce:", stardustNonce.toString());
+                    console.log("    Deadline:", deadline);
+                    
+                    // Sign the Stardust permit
+                    const stardustPermitResult = await signPermitMessage(
+                        signer,
+                        userAddress,
+                        HTLC_CONTRACT,
+                        stardustAmountHuman,
+                        stardustNonce,
+                        deadline,
+                        order.destination_token
+                    );
+                    
+                    console.log("✅ Stardust permit signed successfully!");
+                    console.log("  Signature:", stardustPermitResult.signature);
+                    
+                    // Test 6: Execute Stardust permit via ICP canister
+                    console.log("\n📋 Test 6: Executing Stardust permit via ICP canister...");
+                    
+                    const stardustPermitRequest = {
+                        owner: userAddress,
+                        spender: HTLC_CONTRACT,
+                        value: stardustAmount,
+                        nonce: stardustNonce.toString(),
+                        deadline: deadline.toString(),
+                        v: stardustPermitResult.sig.v.toString(),
+                        r: stardustPermitResult.sig.r,
+                        s: stardustPermitResult.sig.s,
+                        signature: stardustPermitResult.signature
+                    };
+                    
+                    const stardustGaslessApprovalRequest = {
+                        permit_request: stardustPermitRequest,
+                        user_address: userAddress,
+                        amount: stardustAmount
+                    };
+                    
+                    const stardustPermitResult2 = await actor.execute_gasless_approval(stardustGaslessApprovalRequest);
+                    if ('Ok' in stardustPermitResult2) {
+                        console.log("✅ Stardust permit executed successfully!");
+                        console.log("  Transaction Hash:", stardustPermitResult2.Ok);
                         
-                        // Test 6: Create destination HTLC
-                        console.log("\n📋 Test 6: Creating destination HTLC...");
-                        const destHtlcResult = await actor.create_evm_htlc(orderId, false);
-                        if ('Ok' in destHtlcResult) {
-                            const destHtlcTx = destHtlcResult.Ok;
-                            console.log("✅ Destination HTLC created successfully!");
-                            console.log("  Transaction Hash:", destHtlcTx);
+                        // Test 7: Create source HTLC (now with allowance)
+                        console.log("\n📋 Test 7: Creating source HTLC...");
+                        const sourceHtlcResult = await actor.create_evm_htlc(orderId, true);
+                        if ('Ok' in sourceHtlcResult) {
+                            const sourceHtlcTx = sourceHtlcResult.Ok;
+                            console.log("✅ Source HTLC created successfully!");
+                            console.log("  Transaction Hash:", sourceHtlcTx);
                             
-                            // Test 7: Claim source HTLC
-                            console.log("\n📋 Test 7: Claiming source HTLC...");
-                            const sourceClaimResult = await actor.claim_evm_htlc(orderId, sourceHtlcTx);
-                            if ('Ok' in sourceClaimResult) {
-                                const sourceClaimTx = sourceClaimResult.Ok;
-                                console.log("✅ Source HTLC claimed successfully!");
-                                console.log("  Transaction Hash:", sourceClaimTx);
+                            // Test 8: Create destination HTLC
+                            console.log("\n📋 Test 8: Creating destination HTLC...");
+                            const destHtlcResult = await actor.create_evm_htlc(orderId, false);
+                            if ('Ok' in destHtlcResult) {
+                                const destHtlcTx = destHtlcResult.Ok;
+                                console.log("✅ Destination HTLC created successfully!");
+                                console.log("  Transaction Hash:", destHtlcTx);
                                 
-                                // Test 8: Claim destination HTLC
-                                console.log("\n📋 Test 8: Claiming destination HTLC...");
-                                const destClaimResult = await actor.claim_evm_htlc(orderId, destHtlcTx);
-                                if ('Ok' in destClaimResult) {
-                                    const destClaimTx = destClaimResult.Ok;
-                                    console.log("✅ Destination HTLC claimed successfully!");
-                                    console.log("  Transaction Hash:", destClaimTx);
+                                // Test 9: Claim source HTLC
+                                console.log("\n📋 Test 9: Claiming source HTLC...");
+                                const sourceClaimResult = await actor.claim_evm_htlc(orderId, sourceHtlcTx);
+                                if ('Ok' in sourceClaimResult) {
+                                    const sourceClaimTx = sourceClaimResult.Ok;
+                                    console.log("✅ Source HTLC claimed successfully!");
+                                    console.log("  Transaction Hash:", sourceClaimTx);
                                     
-                                    console.log("\n🎉 Complete atomic swap executed successfully!");
+                                    // Test 10: Claim destination HTLC
+                                    console.log("\n📋 Test 10: Claiming destination HTLC...");
+                                    const destClaimResult = await actor.claim_evm_htlc(orderId, destHtlcTx);
+                                    if ('Ok' in destClaimResult) {
+                                        const destClaimTx = destClaimResult.Ok;
+                                        console.log("✅ Destination HTLC claimed successfully!");
+                                        console.log("  Transaction Hash:", destClaimTx);
+                                        
+                                        console.log("\n🎉 Complete atomic swap executed successfully!");
+                                    } else {
+                                        console.log("❌ Failed to claim destination HTLC:", destClaimResult.Err);
+                                    }
                                 } else {
-                                    console.log("❌ Failed to claim destination HTLC:", destClaimResult.Err);
+                                    console.log("❌ Failed to claim source HTLC:", sourceClaimResult.Err);
                                 }
                             } else {
-                                console.log("❌ Failed to claim source HTLC:", sourceClaimResult.Err);
+                                console.log("❌ Failed to create destination HTLC:", destHtlcResult.Err);
                             }
                         } else {
-                            console.log("❌ Failed to create destination HTLC:", destHtlcResult.Err);
+                            console.log("❌ Failed to create source HTLC:", sourceHtlcResult.Err);
                         }
                     } else {
-                        console.log("❌ Failed to create source HTLC:", sourceHtlcResult.Err);
+                        console.log("❌ Failed to execute Stardust permit:", stardustPermitResult2.Err);
                     }
                 } else {
-                    console.log("❌ Failed to execute permit:", permitResult2.Err);
+                    console.log("❌ Failed to execute Spiral permit:", spiralPermitResult2.Err);
                 }
             } else {
                 console.log("❌ Failed to get order details");
@@ -245,8 +326,8 @@ async function main() {
             console.log("❌ Failed to create atomic swap order:", orderResult.Err);
         }
         
-        // Test 9: Get all atomic swap orders
-        console.log("\n📋 Test 9: Getting all atomic swap orders...");
+        // Test 11: Get all atomic swap orders
+        console.log("\n📋 Test 11: Getting all atomic swap orders...");
         const allOrders = await actor.get_all_atomic_swap_orders();
         console.log("✅ Total orders:", allOrders.length);
         allOrders.forEach((order, index) => {

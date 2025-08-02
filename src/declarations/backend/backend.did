@@ -65,6 +65,7 @@ service : {
   
   // Utility Methods
   "get_contract_info" : () -> (text);
+  "initialize_nonce" : () -> (variant { Ok : text; Err : text });
   
   // EVM Integration Methods (new)
   "get_public_key" : () -> (variant { Ok : text; Err : text });

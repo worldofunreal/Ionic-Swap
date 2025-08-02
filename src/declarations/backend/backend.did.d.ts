@@ -97,6 +97,7 @@ export interface _SERVICE {
     { 'Ok' : string } |
       { 'Err' : string }
   >,
+  'initialize_nonce' : ActorMethod<[], { 'Ok' : string } | { 'Err' : string }>,
   'send_raw_transaction' : ActorMethod<
     [string],
     { 'Ok' : string } |

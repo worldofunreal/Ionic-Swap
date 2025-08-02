@@ -1,9 +1,9 @@
 {
   "sepolia-11155111": {
-    "contractAddress": "0x5e8b5b36F81A723Cdf42771e7aAc943b360c4751",
+    "contractAddress": "0x7159da7AAc8fE699e977A321bdF77aA06C6A760F",
     "deployer": "0xf0d056015Bdd86C0EFD07000F75Ea10873A1d0A7",
-    "deploymentTime": "2025-07-31T19:23:41.610Z",
-    "transactionHash": "0xfc20ae135b385db9793366d79cd0168f36b1e884cc44cb380ccafda05b8c3d48",
-    "icpNetworkSigner": "0x6a3Ff928a09D21D82B27e9B002BBAea7fc123A00"
+    "deploymentTime": "2025-08-02T01:04:28.793Z",
+    "transactionHash": "0xbff21d5180c67d44528ea6e0f0540cc0476b56c8fd3ee9a39abf7d3a0749d628",
+    "icpNetworkSigner": "0xf0d056015Bdd86C0EFD07000F75Ea10873A1d0A7"
   }
 }
