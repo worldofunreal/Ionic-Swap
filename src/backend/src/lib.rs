@@ -342,7 +342,6 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
     evm::execute_gasless_approval(request).await
 }
 
-
 // ============================================================================
 // EVM INTEGRATION METHODS (USING IC CDK APIs)
 // ============================================================================
@@ -519,6 +518,59 @@ pub async fn transfer_from_icrc_tokens_public(
     transfer_from_icrc_tokens(&canister_id, &from, &to, amount).await
 }
 
+// ============================================================================
+// ICP HTLC PUBLIC API ENDPOINTS
+// ============================================================================
+
+/// Create an ICP HTLC (public API)
+#[update]
+#[candid_method]
+pub async fn create_icp_htlc_public(
+    order_id: String,
+    token_canister_id: String,
+    recipient: String,
+    amount: u128,
+    hashlock: String,
+    timelock: u64,
+) -> Result<String, String> {
+    create_icp_htlc(&order_id, &token_canister_id, &recipient, amount, &hashlock, timelock).await
+}
+
+/// Claim an ICP HTLC (public API)
+#[update]
+#[candid_method]
+pub async fn claim_icp_htlc_public(
+    order_id: String,
+    htlc_id: String,
+    secret: String,
+) -> Result<String, String> {
+    claim_icp_htlc(&order_id, &htlc_id, &secret).await
+}
+
+/// Refund an ICP HTLC (public API)
+#[update]
+#[candid_method]
+pub async fn refund_icp_htlc_public(
+    order_id: String,
+    htlc_id: String,
+) -> Result<String, String> {
+    refund_icp_htlc(&order_id, &htlc_id).await
+}
+
+/// Get ICP HTLC status (public API)
+#[query]
+#[candid_method]
+pub fn get_icp_htlc_status_public(htlc_id: String) -> Result<crate::types::HTLCStatus, String> {
+    get_icp_htlc_status(&htlc_id)
+}
+
+/// List all ICP HTLCs (public API)
+#[query]
+#[candid_method]
+pub fn list_icp_htlcs_public() -> Vec<crate::types::HTLC> {
+    list_icp_htlcs()
+}
+
 
 // ============================================================================
 // UTILITY METHODS
@@ -531,6 +583,7 @@ fn get_contract_info() -> String {
         FACTORY_ADDRESS, ICP_SIGNER_ADDRESS, SEPOLIA_CHAIN_ID
     )
 }
+
 // ============================================================================
 // HELPER FUNCTIONS FOR HTLC CONTRACT INTERACTION
 // ============================================================================

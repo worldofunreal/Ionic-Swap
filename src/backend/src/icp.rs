@@ -1,6 +1,10 @@
 use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::call;
 use serde_json::Value;
+use std::collections::HashMap;
+use sha3::{Keccak256, Digest};
+use crate::storage::{get_htlc_store, get_atomic_swap_orders};
+use crate::types::{HTLC, AtomicSwapOrder};
 
 // ============================================================================
 // ICRC-1 TOKEN FUNCTIONS
@@ -151,6 +155,208 @@ pub async fn transfer_from_icrc_tokens(
             Err(format!("Transfer from error: {:?}", error))
         }
     }
+}
+
+// ============================================================================
+// ICP HTLC FUNCTIONS
+// ============================================================================
+
+/// Create an ICP HTLC using ICRC-1 tokens
+pub async fn create_icp_htlc(
+    order_id: &str,
+    token_canister_id: &str,
+    recipient: &str,
+    amount: u128,
+    hashlock: &str,
+    timelock: u64,
+) -> Result<String, String> {
+    // Get the atomic swap order
+    let orders = get_atomic_swap_orders();
+    let order = orders.get(order_id)
+        .ok_or_else(|| format!("Order {} not found", order_id))?;
+    
+    // Validate the order is in the correct state
+    match order.status {
+        crate::types::SwapOrderStatus::Created => {},
+        _ => return Err("Order is not in Created state".to_string()),
+    }
+    
+    // Create the HTLC on ICP side
+    // This involves transferring tokens to the HTLC canister with specific metadata
+    let htlc_metadata = format!("HTLC:{}:{}:{}", hashlock, timelock, recipient);
+    
+    // Transfer tokens to the HTLC canister (this would be a special HTLC canister)
+    // For now, we'll simulate this by transferring to the backend canister
+    let backend_principal = ic_cdk::api::id();
+    let backend_account = backend_principal.to_string();
+    
+    let transfer_result = transfer_icrc_tokens(
+        token_canister_id,
+        &backend_account,
+        amount,
+    ).await?;
+    
+    // Store the HTLC information
+    let htlc = HTLC {
+        id: format!("icp_htlc_{}", order_id),
+        sender: order.maker.clone(), // Original sender (maker)
+        recipient: recipient.to_string(),
+        amount: amount.to_string(),
+        hashlock: hashlock.to_string(),
+        secret: None, // Secret will be revealed during claim
+        timelock,
+        status: crate::types::HTLCStatus::Created,
+        token: token_canister_id.to_string(),
+        source_chain: 0, // ICP chain ID
+        target_chain: 1, // EVM chain ID (Sepolia)
+        is_cross_chain: true,
+        order_hash: order_id.to_string(),
+        created_at: ic_cdk::api::time(),
+    };
+    
+    let htlc_store = get_htlc_store();
+    let htlc_id = htlc.id.clone();
+    htlc_store.insert(htlc_id.clone(), htlc);
+    
+    Ok(format!("ICP HTLC created successfully! HTLC ID: {}", htlc_id))
+}
+
+/// Claim an ICP HTLC using the secret
+pub async fn claim_icp_htlc(
+    order_id: &str,
+    htlc_id: &str,
+    secret: &str,
+) -> Result<String, String> {
+    // Get the HTLC
+    let htlc_store = get_htlc_store();
+    let htlc = htlc_store.get(htlc_id)
+        .ok_or_else(|| format!("HTLC {} not found", htlc_id))?;
+    
+    // Validate the HTLC belongs to the order
+    if htlc.order_hash != order_id {
+        return Err("HTLC does not belong to the specified order".to_string());
+    }
+    
+    // Validate the HTLC is in Created state
+    match htlc.status {
+        crate::types::HTLCStatus::Created => {},
+        _ => return Err("HTLC is not in Created state".to_string()),
+    }
+    
+    // Validate the secret matches the hashlock
+    let secret_hash = format!("0x{}", hex::encode(sha3::Keccak256::digest(secret.as_bytes())));
+    if secret_hash != htlc.hashlock {
+        return Err("Invalid secret for HTLC".to_string());
+    }
+    
+    // Validate the timelock hasn't expired
+    let current_time = ic_cdk::api::time();
+    if current_time > htlc.timelock {
+        return Err("HTLC timelock has expired".to_string());
+    }
+    
+    // Transfer tokens to the recipient
+    // In a real implementation, this would be done by the HTLC canister
+    // For now, we'll simulate this by transferring from the backend to the recipient
+    let backend_principal = ic_cdk::api::id();
+    let backend_account = backend_principal.to_string();
+    
+    // Get the atomic swap order to determine which token to transfer
+    let orders = get_atomic_swap_orders();
+    let order = orders.get(order_id)
+        .ok_or_else(|| format!("Order {} not found", order_id))?;
+    
+    // Determine the token canister ID based on the HTLC
+    let token_canister_id = &htlc.token;
+    
+    let transfer_result = transfer_icrc_tokens(
+        token_canister_id,
+        &htlc.recipient,
+        htlc.amount.parse::<u128>().unwrap(),
+    ).await?;
+    
+    // Update HTLC status
+    let htlc_store = get_htlc_store();
+    if let Some(htlc) = htlc_store.get_mut(htlc_id) {
+        htlc.status = crate::types::HTLCStatus::Claimed;
+    }
+    
+    Ok(format!("ICP HTLC claimed successfully! Transfer: {}", transfer_result))
+}
+
+/// Refund an expired ICP HTLC
+pub async fn refund_icp_htlc(
+    order_id: &str,
+    htlc_id: &str,
+) -> Result<String, String> {
+    // Get the HTLC
+    let htlc_store = get_htlc_store();
+    let htlc = htlc_store.get(htlc_id)
+        .ok_or_else(|| format!("HTLC {} not found", htlc_id))?;
+    
+    // Validate the HTLC belongs to the order
+    if htlc.order_hash != order_id {
+        return Err("HTLC does not belong to the specified order".to_string());
+    }
+    
+    // Validate the HTLC is in Created state
+    match htlc.status {
+        crate::types::HTLCStatus::Created => {},
+        _ => return Err("HTLC is not in Created state".to_string()),
+    }
+    
+    // Validate the timelock has expired
+    let current_time = ic_cdk::api::time();
+    if current_time <= htlc.timelock {
+        return Err("HTLC timelock has not expired yet".to_string());
+    }
+    
+    // Transfer tokens back to the original sender
+    // In a real implementation, this would be done by the HTLC canister
+    // For now, we'll simulate this by transferring from the backend to the original sender
+    let backend_principal = ic_cdk::api::id();
+    let backend_account = backend_principal.to_string();
+    
+    // Get the atomic swap order to determine the original sender
+    let orders = get_atomic_swap_orders();
+    let order = orders.get(order_id)
+        .ok_or_else(|| format!("Order {} not found", order_id))?;
+    
+    // Determine the token canister ID and original sender
+    let token_canister_id = &htlc.token;
+    let original_sender = &htlc.sender;
+    
+    let transfer_result = transfer_icrc_tokens(
+        token_canister_id,
+        original_sender,
+        htlc.amount.parse::<u128>().unwrap(),
+    ).await?;
+    
+    // Update HTLC status
+    let htlc_store = get_htlc_store();
+    if let Some(htlc) = htlc_store.get_mut(htlc_id) {
+        htlc.status = crate::types::HTLCStatus::Refunded;
+    }
+    
+    Ok(format!("ICP HTLC refunded successfully! Transfer: {}", transfer_result))
+}
+
+/// Get the status of an ICP HTLC
+pub fn get_icp_htlc_status(htlc_id: &str) -> Result<crate::types::HTLCStatus, String> {
+    let htlc_store = get_htlc_store();
+    let htlc = htlc_store.get(htlc_id)
+        .ok_or_else(|| format!("HTLC {} not found", htlc_id))?;
+    
+    Ok(htlc.status.clone())
+}
+
+/// List all ICP HTLCs
+pub fn list_icp_htlcs() -> Vec<HTLC> {
+    let htlc_store = get_htlc_store();
+    htlc_store.values()
+        .filter(|htlc| htlc.source_chain == 0) // ICP chain ID
+        .cloned()
+        .collect()
 }
 
 // ============================================================================
