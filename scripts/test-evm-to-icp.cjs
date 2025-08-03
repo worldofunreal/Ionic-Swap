@@ -124,32 +124,83 @@ async function main() {
 
     
     try {
-        // Test 1: Create atomic swap order (EVM→ICP)
-        console.log("\n📋 Test 1: Creating EVM→ICP atomic swap order...");
-        const maker = userAddress; // EVM user
-const taker = '0xeA1e8F475e61Ff78b2986860E86A18F261078725'; // Backend canister's EVM address (the escrow)
+        // Test 1: Create EIP-2612 permit for Spiral tokens (EVM source)
+        console.log("\n📋 Test 1: Creating EIP-2612 permit for Spiral tokens (EVM source)...");
+        
+        // Get nonce from Spiral token contract
+        const spiralTokenContract = new ethers.Contract(SPIRAL_TOKEN, [
+            'function nonces(address owner) view returns (uint256)'
+        ], provider);
+        
+        const spiralNonce = await spiralTokenContract.nonces(userAddress);
+        const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+        const spiralAmount = TEST_AMOUNTS.SPIRAL_10.toString(); // 10 SPIRAL
+        const spiralAmountHuman = ethers.utils.formatUnits(spiralAmount, 8);
+        
+        console.log("  Spiral Permit details:");
+        console.log("    Owner:", userAddress);
+        console.log("    Spender:", HTLC_CONTRACT);
+        console.log("    Amount (human):", spiralAmountHuman);
+        console.log("    Amount (raw):", spiralAmount);
+        console.log("    Nonce:", spiralNonce.toString());
+        console.log("    Deadline:", deadline);
+        
+        // Sign the Spiral permit
+        const spiralPermitResult = await signPermitMessage(
+            signer,
+            userAddress,
+            HTLC_CONTRACT,
+            spiralAmountHuman,
+            spiralNonce,
+            deadline,
+            SPIRAL_TOKEN
+        );
+        
+        console.log("✅ Spiral permit signed successfully!");
+        console.log("  Signature:", spiralPermitResult.signature);
+        
+        // Test 2: Create EVM→ICP order with automatic permit execution
+        console.log("\n📋 Test 2: Creating EVM→ICP order with automatic permit execution...");
         const sourceToken = SPIRAL_TOKEN; // EVM Spiral token
         const destinationToken = STARDUST_TOKEN_CANISTER_ID; // ICP Stardust token
         const sourceAmount = TEST_AMOUNTS.SPIRAL_10.toString(); // 10 SPIRAL
         const destinationAmount = TEST_AMOUNTS.STD_5.toString(); // 5 STD
         const timelockDuration = 3600; // 1 hour
+        const icpDestinationPrincipal = "mxzaz-hqaaa-aaaar-qaada-cai"; // Example ICP principal
         
-        const orderResult = await actor.create_atomic_swap_order(
-            maker,
+        const permitRequest = {
+            owner: userAddress,
+            spender: HTLC_CONTRACT,
+            value: spiralAmount,
+            nonce: spiralNonce.toString(),
+            deadline: deadline.toString(),
+            v: spiralPermitResult.sig.v.toString(),
+            r: spiralPermitResult.sig.r,
+            s: spiralPermitResult.sig.s,
+            signature: spiralPermitResult.signature
+        };
+        
+        const orderResult = await actor.create_evm_to_icp_order(
+            userAddress,
             sourceToken,
             destinationToken,
             sourceAmount,
             destinationAmount,
-            BigInt(timelockDuration)
+            icpDestinationPrincipal,
+            BigInt(timelockDuration),
+            permitRequest
         );
         
         if ('Ok' in orderResult) {
-            const orderId = orderResult.Ok;
-            console.log("✅ EVM→ICP atomic swap order created successfully!");
+            console.log("✅ EVM→ICP order created successfully!");
+            console.log("  Result:", orderResult.Ok);
+            
+            // Extract order ID from the result
+            const orderId = orderResult.Ok.split("Order ID: ")[1].split(",")[0];
             console.log("  Order ID:", orderId);
             
-            // Test 2: Get order details
-            console.log("\n📋 Test 2: Getting order details...");
+            // Test 3: Get order details
+            console.log("\n📋 Test 3: Getting order details...");
             const orderDetails = await actor.get_atomic_swap_order(orderId);
             if (orderDetails.length > 0) {
                 const order = orderDetails[0];
@@ -165,180 +216,43 @@ const taker = '0xeA1e8F475e61Ff78b2986860E86A18F261078725'; // Backend canister'
                 console.log("  Status:", order.status);
                 console.log("  Created At:", new Date(Number(order.created_at) * 1000).toISOString());
                 console.log("  Expires At:", new Date(Number(order.expires_at) * 1000).toISOString());
+                console.log("  ICP Destination Principal:", order.icp_destination_principal);
                 
-                // Test 3: Create EIP-2612 permit for Spiral tokens (EVM source)
-                console.log("\n📋 Test 3: Creating EIP-2612 permit for Spiral tokens (EVM source)...");
-                
-                // Get nonce from Spiral token contract
-                const spiralTokenContract = new ethers.Contract(SPIRAL_TOKEN, [
-                    'function nonces(address owner) view returns (uint256)'
-                ], provider);
-                
-                const spiralNonce = await spiralTokenContract.nonces(userAddress);
-                const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
-                const spiralAmountHuman = ethers.utils.formatUnits(order.source_amount, 8);
-                const spiralAmount = order.source_amount;
-                
-                console.log("  Spiral Permit details:");
-                console.log("    Owner:", userAddress);
-                console.log("    Spender:", HTLC_CONTRACT);
-                console.log("    Amount (human):", spiralAmountHuman);
-                console.log("    Amount (raw):", spiralAmount);
-                console.log("    Nonce:", spiralNonce.toString());
-                console.log("    Deadline:", deadline);
-                
-                // Sign the Spiral permit
-                const spiralPermitResult = await signPermitMessage(
-                    signer,
-                    userAddress,
-                    HTLC_CONTRACT,
-                    spiralAmountHuman,
-                    spiralNonce,
-                    deadline,
-                    SPIRAL_TOKEN
+                // Test 4: Complete the swap using the secret
+                console.log("\n📋 Test 4: Completing the swap using the secret...");
+                const completeResult = await actor.complete_cross_chain_swap_public(
+                    orderId,
+                    order.secret
                 );
                 
-                console.log("✅ Spiral permit signed successfully!");
-                console.log("  Signature:", spiralPermitResult.signature);
-                
-                // Test 4: Execute Spiral permit via ICP canister
-                console.log("\n📋 Test 4: Executing Spiral permit via ICP canister...");
-                
-                const spiralPermitRequest = {
-                    owner: userAddress,
-                    spender: HTLC_CONTRACT,
-                    value: spiralAmount,
-                    nonce: spiralNonce.toString(),
-                    deadline: deadline.toString(),
-                    v: spiralPermitResult.sig.v.toString(),
-                    r: spiralPermitResult.sig.r,
-                    s: spiralPermitResult.sig.s,
-                    signature: spiralPermitResult.signature
-                };
-                
-                const spiralGaslessApprovalRequest = {
-                    permit_request: spiralPermitRequest,
-                    user_address: userAddress,
-                    amount: spiralAmount,
-                    token_address: SPIRAL_TOKEN
-                };
-                
-                const spiralPermitResult2 = await actor.execute_gasless_approval(spiralGaslessApprovalRequest);
-                if ('Ok' in spiralPermitResult2) {
-                    console.log("✅ Spiral permit executed successfully!");
-                    console.log("  Transaction Hash:", spiralPermitResult2.Ok);
+                if ('Ok' in completeResult) {
+                    console.log("✅ Swap completed successfully!");
+                    console.log("  Result:", completeResult.Ok);
                     
-                    // Test 5: Create EVM HTLC (source)
-                    console.log("\n📋 Test 5: Creating EVM HTLC (source)...");
-                    const sourceHtlcResult = await actor.create_evm_htlc(orderId, true);
-                    if ('Ok' in sourceHtlcResult) {
-                        const sourceHtlcTx = sourceHtlcResult.Ok;
-                        console.log("✅ EVM HTLC created successfully!");
-                        console.log("  Transaction Hash:", sourceHtlcTx);
-                        
-                        // Test 6: Approve backend canister to spend ICP tokens (ICRC-2)
-                        console.log("\n📋 Test 6: Approving backend canister to spend ICP tokens (ICRC-2)...");
-                        
-                        // Call ICRC-2 approval directly using dfx
-                        const approvalCommand = `dfx canister call ${STARDUST_TOKEN_CANISTER_ID} icrc2_approve '(record {
-  amount = ${order.destination_amount} : nat;
-  spender = record {
-    owner = principal "${CANISTER_ID}";
-    subaccount = null;
-  };
-  fee = null;
-  memo = null;
-  from_subaccount = null;
-  created_at_time = null;
-  expected_allowance = null;
-  expires_at = null;
-})'`;
-                        
-                        console.log("🔍 Executing ICRC-2 approval command:");
-                        console.log(approvalCommand);
-                        
-                        const { execSync } = require('child_process');
-                        try {
-                            const approvalResult = execSync(approvalCommand, { encoding: 'utf8' });
-                            console.log("✅ ICP tokens approved successfully!");
-                            console.log("  Result:", approvalResult.trim());
-                            
-                            // Test 7: Execute EVM→ICP swap coordination
-                            console.log("\n📋 Test 7: Executing EVM→ICP swap coordination...");
-                            const swapResult = await actor.execute_evm_to_icp_swap_public(
-                                orderId,
-                                sourceHtlcTx
-                            );
-                        
-                        if ('Ok' in swapResult) {
-                            console.log("✅ EVM→ICP swap executed successfully!");
-                            console.log("  Result:", swapResult.Ok);
-                            
-                            // Extract ICP HTLC ID from the result
-                            const icpHtlcId = swapResult.Ok.split("ICP HTLC: ").pop();
-                            console.log("🔍 Extracted ICP HTLC ID:", icpHtlcId);
-                            
-                            // Test 8: Check final order status
-                            console.log("\n📋 Test 8: Checking final order status...");
-                            const finalStatus = await actor.get_cross_chain_swap_status_public(orderId);
-                            console.log("✅ Final order status:", JSON.stringify(finalStatus));
-                            
-                            // Test 9: Claim EVM HTLC using the secret
-                            console.log("\n📋 Test 9: Claiming EVM HTLC using the secret...");
-                            const evmClaimResult = await actor.claim_evm_htlc(orderId, sourceHtlcTx);
-                            if ('Ok' in evmClaimResult) {
-                                console.log("✅ EVM HTLC claimed successfully!");
-                                console.log("  Transaction Hash:", evmClaimResult.Ok);
-                                
-                                // Test 10: Claim ICP HTLC using the secret
-                                console.log("\n📋 Test 10: Claiming ICP HTLC using the secret...");
-                                const icpClaimResult = await actor.claim_icp_htlc_public(
-                                    orderId,
-                                    icpHtlcId, // Use the correct HTLC ID from swap result
-                                    order.secret
-                                );
-                                if ('Ok' in icpClaimResult) {
-                                    console.log("✅ ICP HTLC claimed successfully!");
-                                    console.log("  Result:", icpClaimResult.Ok);
-                                    
-                                    // Test 11: Check final completed status
-                                    console.log("\n📋 Test 11: Checking final completed status...");
-                                    const finalStatus = await actor.get_cross_chain_swap_status_public(orderId);
-                                    console.log("✅ Final completed status:", JSON.stringify(finalStatus));
-                                    
-                                    console.log("\n🎉 Complete EVM→ICP Cross-Chain Swap Executed Successfully!");
-                                    console.log('\n📋 Complete Transaction Summary:');
-                                    console.log(`  ✅ Order Creation: ${orderId}`);
-                                    console.log(`  ✅ Permit Approval: ${spiralPermitResult2.Ok}`);
-                                    console.log(`  ✅ EVM HTLC Creation: ${sourceHtlcTx}`);
-                                    console.log(`  ✅ EVM→ICP Swap Execution: ${swapResult.Ok}`);
-                                    console.log(`  ✅ EVM HTLC Claim: ${evmClaimResult.Ok}`);
-                                    console.log(`  ✅ ICP HTLC Claim: ${icpClaimResult.Ok}`);
-                                    
-                                } else {
-                                    console.log("❌ Failed to claim ICP HTLC:", icpClaimResult.Err);
-                                }
-                            } else {
-                                console.log("❌ Failed to claim EVM HTLC:", evmClaimResult.Err);
-                            }
-                            
-                        } else {
-                            console.log("❌ Failed to execute EVM→ICP swap:", swapResult.Err);
-                        }
-                        } catch (error) {
-                            console.log("❌ Failed to approve ICP tokens:", error.message);
-                        }
-                    } else {
-                        console.log("❌ Failed to create EVM HTLC:", sourceHtlcResult.Err);
+                    // Test 5: Check final order status
+                    console.log("\n📋 Test 5: Checking final order status...");
+                    const finalOrderDetails = await actor.get_atomic_swap_order(orderId);
+                    if (finalOrderDetails.length > 0) {
+                        const finalOrder = finalOrderDetails[0];
+                        console.log("✅ Final order status:", finalOrder.status);
                     }
+                    
+                    console.log("\n🎉 Complete EVM→ICP Cross-Chain Swap Executed Successfully!");
+                    console.log('\n📋 Complete Transaction Summary:');
+                    console.log(`  ✅ Permit Creation: Signed by user`);
+                    console.log(`  ✅ Order Creation: ${orderId}`);
+                    console.log(`  ✅ Automatic Permit Execution: Included in order creation`);
+                    console.log(`  ✅ Automatic EVM HTLC Creation: Included in order creation`);
+                    console.log(`  ✅ Swap Completion: ${completeResult.Ok}`);
+                    
                 } else {
-                    console.log("❌ Failed to execute Spiral permit:", spiralPermitResult2.Err);
+                    console.log("❌ Failed to complete swap:", completeResult.Err);
                 }
             } else {
                 console.log("❌ Failed to get order details");
             }
         } else {
-            console.log("❌ Failed to create atomic swap order:", orderResult.Err);
+            console.log("❌ Failed to create EVM→ICP order:", orderResult.Err);
         }
         
     } catch (error) {

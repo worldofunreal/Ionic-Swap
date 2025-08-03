@@ -778,12 +778,18 @@ pub async fn create_evm_htlc(
         return Err("Invalid order status for HTLC creation".to_string());
     }
     
+    // Get canister's Ethereum address for HTLC recipient
+    let canister_eth_address = get_ethereum_address().await?;
+    
     // Determine HTLC parameters based on whether it's source or destination
-    let (_sender, recipient, token, amount) = if is_source_htlc {
-        (order.maker.clone(), order.taker.clone(), order.source_token.clone(), order.source_amount.clone())
+    let (_sender, token, amount) = if is_source_htlc {
+        (order.maker.clone(), order.source_token.clone(), order.source_amount.clone())
     } else {
-        (order.taker.clone(), order.maker.clone(), order.destination_token.clone(), order.destination_amount.clone())
+        (order.taker.clone(), order.destination_token.clone(), order.destination_amount.clone())
     };
+    
+    // For EVM HTLCs, the recipient is always the canister's Ethereum address
+    let recipient = canister_eth_address;
     
     // Determine user address based on HTLC type
     let user_address = if is_source_htlc {

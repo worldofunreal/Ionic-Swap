@@ -1042,11 +1042,14 @@ pub async fn create_evm_to_icp_order(
     // Create order ID
     let order_id = generate_order_id();
     
+    // Get canister's Ethereum address for the taker
+    let canister_eth_address = evm::get_ethereum_address().await?;
+    
     // Create the order
     let order = AtomicSwapOrder {
         order_id: order_id.clone(),
         maker: user_address.clone(), // EVM user
-        taker: ic_cdk::api::id().to_string(), // Backend canister as taker
+        taker: canister_eth_address, // Backend canister's EVM address as taker
         source_token: source_token_address.clone(),
         destination_token: destination_token_canister.clone(),
         source_amount: source_amount.clone(),
