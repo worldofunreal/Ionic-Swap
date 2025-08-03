@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import SwapForm from '../components/swap/SwapForm';
-import SwapSummary from '../components/swap/SwapSummary';
 
 const SwapPage = ({ actor, user }) => {
   const [swapDirection, setSwapDirection] = useState('evm-to-icp');
@@ -47,43 +46,22 @@ const SwapPage = ({ actor, user }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gradient-from to-gradient-to py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="card p-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Cross-Chain Swap</h2>
-            <p className="text-gray-600">Swap tokens between EVM and ICP networks</p>
-          </div>
-
-          <div className="grid lg:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <SwapForm
-                direction={swapDirection}
-                onDirectionChange={handleDirectionChange}
-                sourceToken={sourceToken}
-                destinationToken={destinationToken}
-                onSourceTokenChange={setSourceToken}
-                onDestinationTokenChange={setDestinationToken}
-                amount={amount}
-                onAmountChange={setAmount}
-                destinationAddress={destinationAddress}
-                onDestinationAddressChange={setDestinationAddress}
-                user={user}
-              />
-            </div>
-
-            <div className="space-y-6">
-              <SwapSummary
-                direction={swapDirection}
-                sourceToken={sourceToken}
-                destinationToken={destinationToken}
-                amount={amount}
-                destinationAddress={destinationAddress}
-                onSwap={handleSwap}
-                isLoading={isLoading}
-              />
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-gradient-from to-gradient-to py-4">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="card p-6">
+          <SwapForm
+            direction={swapDirection}
+            onDirectionChange={handleDirectionChange}
+            sourceToken={sourceToken}
+            destinationToken={destinationToken}
+            onSourceTokenChange={setSourceToken}
+            onDestinationTokenChange={setDestinationToken}
+            amount={amount}
+            onAmountChange={setAmount}
+            destinationAddress={destinationAddress}
+            onDestinationAddressChange={setDestinationAddress}
+            user={user}
+          />
         </div>
       </div>
     </div>

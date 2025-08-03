@@ -4,6 +4,7 @@ import { fetchICRCBalance } from '../../utils/icrc';
 import { useAuth } from '../../contexts/AuthContext';
 import TokenSelector from './TokenSelector';
 import AmountInput from './AmountInput';
+import SwapSummary from './SwapSummary';
 
 const SwapForm = ({
   sourceToken,
@@ -105,41 +106,54 @@ const SwapForm = ({
     }
   };
 
-  const getDestinationPlaceholder = () => {
-    return destinationToken?.type === 'icrc'
-      ? 'Enter ICP Principal ID'
-      : 'Enter EVM Address (0x...)';
+  const getSwapDirection = () => {
+    if (sourceToken?.type === 'evm' && destinationToken?.type === 'icrc') {
+      return 'evm-to-icp';
+    } else if (sourceToken?.type === 'icrc' && destinationToken?.type === 'evm') {
+      return 'icp-to-evm';
+    }
+    return null;
+  };
+
+  const handleSwap = () => {
+    // TODO: Implement swap logic
+    console.log('Swap initiated:', {
+      sourceToken,
+      destinationToken,
+      sourceAmount,
+      destinationAmount,
+      direction: getSwapDirection()
+    });
   };
 
   return (
     <div className="space-y-6">
-
-
       {/* Main Swap Card */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
+      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-0">
         {/* You Send Section */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-end space-x-2">
-            <div className="text-sm text-gray-600">
-              Balance: <span className="font-medium">{loading ? 'Loading...' : `${sourceBalance} ${sourceToken?.symbol || 'SPIRAL'}`}</span>
+        <div className="space-y-2 mb-0">
+          <div className="flex items-center bg-gray-50 rounded-lg p-4 pt-6 border border-gray-200 relative">
+            {/* Balance on top right */}
+            <div className="absolute top-1 right-2 flex items-center space-x-2">
+              <div className="text-xs text-gray-600">
+                Balance: <span className="font-medium">{loading ? 'Loading...' : `${sourceBalance} ${sourceToken?.symbol || 'SPIRAL'}`}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSourceAmount(sourceBalance)}
+                disabled={loading}
+                className={`text-xs px-2 py-1 rounded transition-colors ${
+                  loading 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                    : 'bg-primary-100 hover:bg-primary-200 text-primary-700'
+                }`}
+              >
+                Max
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setSourceAmount(sourceBalance)}
-              disabled={loading}
-              className={`text-xs px-2 py-1 rounded transition-colors ${
-                loading 
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                  : 'bg-primary-100 hover:bg-primary-200 text-primary-700'
-              }`}
-            >
-              Max
-            </button>
-          </div>
-          
-          <div className="flex items-center bg-gray-50 rounded-lg p-4 border border-gray-200">
-            {/* Token Selection */}
-            <div className="flex-1">
+            
+            {/* Token Selection - 50% width */}
+            <div className="w-1/2 pr-2">
               <TokenSelector
                 value={sourceToken}
                 onChange={onSourceTokenChange}
@@ -147,8 +161,8 @@ const SwapForm = ({
               />
             </div>
             
-            {/* Amount Input */}
-            <div className="flex-1">
+            {/* Amount Input - 50% width */}
+            <div className="w-1/2 pl-2">
               <AmountInput
                 value={sourceAmount}
                 onChange={setSourceAmount}
@@ -160,37 +174,38 @@ const SwapForm = ({
         </div>
 
         {/* Swap Direction Indicator */}
-        <div className="flex justify-center -my-2 relative z-10">
-          <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center shadow-lg">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        <div className="justify-center flex space-y-2">
+          <div className="mt-1 mb-1 w-8 h-8 z-20 bg-primary-500 rounded-full flex items-center justify-center shadow-lg">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
           </div>
         </div>
 
-                {/* You Get Section */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-end space-x-2">
-            <div className="text-sm text-gray-600">
-              Balance: <span className="font-medium">{loading ? 'Loading...' : `${destinationBalance} ${destinationToken?.symbol || 'STARDUST'}`}</span>
+        {/* You Get Section */}
+        <div className="">
+          <div className="flex items-center bg-gray-50 rounded-lg p-4 pt-6 border border-gray-200 relative">
+            {/* Balance on top right */}
+            <div className="absolute top-1 right-2 flex items-center space-x-2">
+              <div className="text-xs text-gray-600">
+                Balance: <span className="font-medium">{loading ? 'Loading...' : `${destinationBalance} ${destinationToken?.symbol || 'STARDUST'}`}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDestinationAmount(destinationBalance)}
+                disabled={loading}
+                className={`text-xs px-2 py-1 rounded transition-colors ${
+                  loading 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                    : 'bg-primary-100 hover:bg-primary-200 text-primary-700'
+                }`}
+              >
+                Max
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setDestinationAmount(destinationBalance)}
-              disabled={loading}
-              className={`text-xs px-2 py-1 rounded transition-colors ${
-                loading 
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                  : 'bg-primary-100 hover:bg-primary-200 text-primary-700'
-              }`}
-            >
-              Max
-            </button>
-          </div>
-          
-          <div className="flex items-center bg-gray-50 rounded-lg p-4 border border-gray-200">
-            {/* Token Selection */}
-            <div className="flex-1">
+            
+            {/* Token Selection - 50% width */}
+            <div className="w-1/2 pr-2">
               <TokenSelector
                 value={destinationToken}
                 onChange={onDestinationTokenChange}
@@ -198,8 +213,8 @@ const SwapForm = ({
               />
             </div>
             
-            {/* Amount Input */}
-            <div className="flex-1">
+            {/* Amount Input - 50% width */}
+            <div className="w-1/2 pl-2">
               <AmountInput
                 value={destinationAmount}
                 onChange={setDestinationAmount}
@@ -211,39 +226,17 @@ const SwapForm = ({
         </div>
       </div>
 
-      {/* Destination Address */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Destination Address</label>
-        <input
-          type="text"
-          value={destinationAddress}
-          onChange={(e) => onDestinationAddressChange(e.target.value)}
-          placeholder={getDestinationPlaceholder()}
-          className="input-field"
-        />
-        <div className="text-xs text-gray-500">
-          {destinationToken?.type === 'icrc'
-            ? 'Enter the ICP Principal ID where you want to receive tokens'
-            : 'Enter the EVM address where you want to receive tokens'
-          }
-        </div>
-      </div>
-
-      {/* Network Info */}
-      <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-700">From:</span>
-          <span className="text-sm text-gray-600">
-            {sourceToken?.network || 'Sepolia Testnet'}
-          </span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-700">To:</span>
-          <span className="text-sm text-gray-600">
-            {destinationToken?.network || 'Internet Computer'}
-          </span>
-        </div>
-      </div>
+      {/* Swap Summary */}
+      <SwapSummary
+        direction={getSwapDirection()}
+        sourceToken={sourceToken?.symbol || 'SPIRAL'}
+        destinationToken={destinationToken?.symbol || 'STARDUST'}
+        sourceAmount={sourceAmount}
+        destinationAmount={destinationAmount}
+        destinationAddress={user?.evmAddress || user?.icpPrincipal || ''}
+        onSwap={handleSwap}
+        isLoading={loading}
+      />
     </div>
   );
 };

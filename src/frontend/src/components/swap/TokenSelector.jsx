@@ -47,7 +47,7 @@ const TokenSelector = ({ value, onChange, user }) => {
       <button
         type="button"
         onClick={() => setIsModalOpen(true)}
-        className="w-full flex items-center justify-between p-3 bg-transparent border-none hover:bg-gray-100 focus:outline-none focus:ring-0 rounded-lg transition-all duration-200 hover:scale-[1.02]"
+        className="w-full flex items-center justify-between p-3 bg-transparent border-none hover:bg-gray-100 focus:outline-none focus:ring-0 focus:border-none focus:shadow-none rounded-lg transition-all duration-200 hover:scale-[1.02]"
       >
         <div className="flex items-center space-x-3">
           <span className="text-2xl">{selectedToken.icon}</span>
