@@ -46,6 +46,7 @@ export const idlFactory = ({ IDL }) => {
     'source_amount' : IDL.Text,
     'source_token' : IDL.Text,
     'expires_at' : IDL.Nat64,
+    'counter_order_id' : IDL.Opt(IDL.Text),
     'destination_token' : IDL.Text,
     'timelock' : IDL.Nat64,
   });

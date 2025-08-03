@@ -27,6 +27,71 @@ const SwapForm = ({
   const [swapStatus, setSwapStatus] = useState('idle'); // idle, processing, success, error
   const [swapProgress, setSwapProgress] = useState('');
   const [orderId, setOrderId] = useState(null);
+  const [pollingInterval, setPollingInterval] = useState(null);
+
+  // Cleanup polling interval on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
+
+  // Stop polling when starting a new swap
+  const stopPolling = () => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+    }
+  };
+
+  // Poll order status until resolved
+  const startOrderPolling = (orderId) => {
+    console.log('Starting order polling for:', orderId);
+    
+    const interval = setInterval(async () => {
+      try {
+        const orderDetails = await actor.get_atomic_swap_order(orderId);
+        if (orderDetails.length > 0) {
+          const order = orderDetails[0];
+          console.log('Polling - Order counter_order_id:', order.counter_order_id);
+          
+          // Check if order has been paired (counter_order_id is not null)
+          if (order.counter_order_id !== null) {
+            console.log('Order paired! Stopping polling.');
+            clearInterval(interval);
+            setPollingInterval(null);
+            setSwapStatus('success');
+            setSwapProgress('Swap completed successfully!');
+            await fetchBalances();
+          }
+        }
+      } catch (error) {
+        console.error('Error polling order status:', error);
+      }
+    }, 1000); // Check every second
+    
+    setPollingInterval(interval);
+    setSwapProgress('Order created successfully! Waiting for counter-order... (Polling for updates)');
+  };
+
+  // Get nonce from ERC20 token contract
+  const getNonce = async (tokenAddress, userAddress) => {
+    try {
+      if (!window.ethereum) {
+        throw new Error('MetaMask not connected');
+      }
+      
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, provider);
+      const nonce = await tokenContract.nonces(userAddress);
+      return nonce;
+    } catch (error) {
+      console.error('Error getting nonce:', error);
+      throw error;
+    }
+  };
 
   // Token addresses (from our test script)
   const SPIRAL_TOKEN = '0xdE7409EDeA573D090c3C6123458D6242E26b425E';
@@ -399,6 +464,8 @@ const SwapForm = ({
 
   const handleEvmToIcpSwap = async () => {
     try {
+      // Stop any existing polling
+      stopPolling();
       // Step 2: Create EIP-2612 permit for EVM tokens
       setSwapProgress('Creating permit for EVM tokens...');
       
@@ -524,40 +591,36 @@ const SwapForm = ({
       // For now, we'll continue without this step as it requires the ICP user's action
       console.log('ICRC-2 allowance step (requires ICP user action)');
 
-      // Step 5: Check for compatible orders and complete swap
-      setSwapProgress('Checking for compatible orders...');
+      // Step 5: Check order status after creation
+      setSwapProgress('Checking order status...');
       
-      const compatibleOrders = await actor.get_compatible_orders(orderId);
-      console.log('Compatible orders found:', compatibleOrders.length);
-
-      if (compatibleOrders.length > 0) {
-        setSwapProgress('Completing swap...');
+      // Get order details to check status
+      const orderDetails = await actor.get_atomic_swap_order(orderId);
+      if (orderDetails.length > 0) {
+        const order = orderDetails[0];
+        console.log('Order counter_order_id:', order.counter_order_id);
         
-        // Get order details to extract secret
-        const orderDetails = await actor.get_atomic_swap_order(orderId);
-        if (orderDetails.length > 0) {
-          const order = orderDetails[0];
-          
-          const completeResult = await actor.complete_cross_chain_swap_public(
-            orderId,
-            order.secret
-          );
-
-          if ('Err' in completeResult) {
-            throw new Error(`Failed to complete swap: ${completeResult.Err}`);
-          }
-
+        // Check if order has been paired (counter_order_id is not null)
+        if (order.counter_order_id !== null) {
           setSwapStatus('success');
           setSwapProgress('Swap completed successfully!');
-          console.log('Swap completed:', completeResult.Ok);
+          console.log('Swap completed automatically!');
           
           // Refresh balances
           await fetchBalances();
+        } else {
+          setSwapStatus('success');
+          setSwapProgress('Order created successfully! Waiting for counter-order...');
+          console.log('Order created, waiting for counter-order');
+          // Start polling for order completion
+          startOrderPolling(orderId);
         }
       } else {
         setSwapStatus('success');
         setSwapProgress('Order created successfully! Waiting for counter-order...');
         console.log('Order created, waiting for counter-order');
+        // Start polling for order completion
+        startOrderPolling(orderId);
       }
 
     } catch (error) {
@@ -567,6 +630,8 @@ const SwapForm = ({
 
   const handleIcpToEvmSwap = async () => {
     try {
+      // Stop any existing polling
+      stopPolling();
       // Step 1: Create ICRC-2 allowance for ICP tokens
       setSwapProgress('Creating ICRC-2 allowance...');
       
@@ -599,7 +664,7 @@ const SwapForm = ({
         destinationToken.address,
         ethers.utils.parseUnits(sourceAmount, 8).toString(),
         ethers.utils.parseUnits(destinationAmount, 8).toString(),
-        user.evmAddress,
+        destinationAddress, // Use the destination address entered by user
         BigInt(3600) // 1 hour timelock
       );
 
@@ -611,40 +676,36 @@ const SwapForm = ({
       setOrderId(orderId);
       console.log('Order created:', orderId);
 
-      // Step 3: Check for compatible orders and complete swap
-      setSwapProgress('Checking for compatible orders...');
+      // Step 3: Check order status after creation
+      setSwapProgress('Checking order status...');
       
-      const compatibleOrders = await actor.get_compatible_orders(orderId);
-      console.log('Compatible orders found:', compatibleOrders.length);
-
-      if (compatibleOrders.length > 0) {
-        setSwapProgress('Completing swap...');
+      // Get order details to check status
+      const orderDetails = await actor.get_atomic_swap_order(orderId);
+      if (orderDetails.length > 0) {
+        const order = orderDetails[0];
+        console.log('Order counter_order_id:', order.counter_order_id);
         
-        // Get order details to extract secret
-        const orderDetails = await actor.get_atomic_swap_order(orderId);
-        if (orderDetails.length > 0) {
-          const order = orderDetails[0];
-          
-          const completeResult = await actor.complete_cross_chain_swap_public(
-            orderId,
-            order.secret
-          );
-
-          if ('Err' in completeResult) {
-            throw new Error(`Failed to complete swap: ${completeResult.Err}`);
-          }
-
+        // Check if order has been paired (counter_order_id is not null)
+        if (order.counter_order_id !== null) {
           setSwapStatus('success');
           setSwapProgress('Swap completed successfully!');
-          console.log('Swap completed:', completeResult.Ok);
+          console.log('Swap completed automatically!');
           
           // Refresh balances
           await fetchBalances();
+        } else {
+          setSwapStatus('success');
+          setSwapProgress('Order created successfully! Waiting for counter-order...');
+          console.log('Order created, waiting for counter-order');
+          // Start polling for order completion
+          startOrderPolling(orderId);
         }
       } else {
         setSwapStatus('success');
         setSwapProgress('Order created successfully! Waiting for counter-order...');
         console.log('Order created, waiting for counter-order');
+        // Start polling for order completion
+        startOrderPolling(orderId);
       }
 
     } catch (error) {

@@ -6,6 +6,7 @@ use ethers_core::types::U256 as EthU256;
 use primitive_types::U256;
 use std::str::FromStr;
 use sha3::Digest;
+use serde_json;
 use crate::constants::SEPOLIA_CHAIN_ID;
 use crate::http_client::{get_transaction_count, make_json_rpc_call};
 
@@ -908,28 +909,55 @@ pub async fn claim_evm_htlc(
         return Err("Order not ready for claiming".to_string());
     }
     
-    // Determine the recipient based on HTLC type and destination addresses
+    // Determine the recipient based on HTLC type and counter order
     let recipient = if order.source_htlc_id.as_ref() == Some(&htlc_id) {
-        // Source HTLC: use destination address if specified, otherwise fallback to taker
-        if order.maker.starts_with("0x") {
-            // EVM→ICP swap: ICP user specified their destination
-            order.icp_destination_principal.as_ref().unwrap_or(&order.taker)
+        // Source HTLC: check if we have a counter order to forward tokens to
+        if let Some(counter_order_id) = &order.counter_order_id {
+            let orders = crate::storage::get_atomic_swap_orders();
+            if let Some(counter_order) = orders.get(counter_order_id) {
+                // Forward tokens to the counter order's destination address
+                if order.maker.starts_with("0x") {
+                    // EVM→ICP swap: forward to counter order's EVM destination
+                    counter_order.evm_destination_address.as_ref().unwrap_or(&counter_order.maker)
+                } else {
+                    // ICP→EVM swap: forward to counter order's EVM destination
+                    counter_order.evm_destination_address.as_ref().unwrap_or(&counter_order.maker)
+                }
+            } else {
+                // Fallback to original logic if counter order not found
+                if order.maker.starts_with("0x") {
+                    order.icp_destination_principal.as_ref().unwrap_or(&order.taker)
+                } else {
+                    order.evm_destination_address.as_ref().unwrap_or(&order.taker)
+                }
+            }
         } else {
-            // ICP→EVM swap: EVM user specified their destination
-            order.evm_destination_address.as_ref().unwrap_or(&order.taker)
+            // No counter order, use original logic
+            if order.maker.starts_with("0x") {
+                order.icp_destination_principal.as_ref().unwrap_or(&order.taker)
+            } else {
+                order.evm_destination_address.as_ref().unwrap_or(&order.taker)
+            }
         }
     } else if order.destination_htlc_id.as_ref() == Some(&htlc_id) {
         // Destination HTLC: use destination address if specified, otherwise fallback to maker
         if order.maker.starts_with("0x") {
-            // EVM→ICP swap: EVM user specified their destination
             order.evm_destination_address.as_ref().unwrap_or(&order.maker)
         } else {
-            // ICP→EVM swap: ICP user specified their destination
             order.icp_destination_principal.as_ref().unwrap_or(&order.maker)
         }
     } else {
         return Err("HTLC ID not found in order".to_string());
     };
+    
+    // Log the token forwarding details
+    ic_cdk::println!("🔍 Token forwarding for HTLC claim:");
+    ic_cdk::println!("  HTLC ID: {}", htlc_id);
+    ic_cdk::println!("  Order ID: {}", order_id);
+    ic_cdk::println!("  Recipient: {}", recipient);
+    if let Some(counter_order_id) = &order.counter_order_id {
+        ic_cdk::println!("  Counter Order ID: {}", counter_order_id);
+    }
     
     // Encode claimHTLCByICP function call
     let encoded_data = encode_claim_htlc_by_icp_call(&htlc_id, &order.secret, recipient)?;
@@ -1004,4 +1032,66 @@ pub async fn execute_atomic_swap(order_id: String) -> Result<String, String> {
     
     Ok(format!("Atomic swap completed! Source HTLC: {}, Dest HTLC: {}, Source Claim: {}, Dest Claim: {}", 
                source_htlc_tx, dest_htlc_tx, source_claim_tx, dest_claim_tx))
+} 
+
+/// Transfer ERC20 tokens from backend canister to recipient
+pub async fn transfer_erc20_tokens(
+    token_address: &str,
+    recipient: &str,
+    amount: &str,
+) -> Result<String, String> {
+    // Encode ERC20 transfer function call
+    let transfer_signature = "transfer(address,uint256)";
+    let transfer_selector = keccak256(transfer_signature.as_bytes());
+    let transfer_selector_hex = format!("0x{}", hex::encode(&transfer_selector[..4]));
+    
+    // Encode recipient address (padded to 32 bytes)
+    let recipient_clean = recipient.trim_start_matches("0x");
+    let recipient_padded = format!("{:0>64}", recipient_clean);
+    
+    // Encode amount (padded to 32 bytes)
+    let amount_u256 = primitive_types::U256::from_dec_str(amount)
+        .map_err(|e| format!("Invalid amount: {}", e))?;
+    let amount_hex = format!("{:0>64}", format!("{:x}", amount_u256));
+    
+    let encoded_data = format!("{}{}{}", transfer_selector_hex, recipient_padded, amount_hex);
+    
+    // Get canister's Ethereum address
+    let canister_address = get_ethereum_address().await?;
+    
+    // Get fresh nonce for this transaction
+    let nonce = crate::storage::get_next_nonce();
+    let nonce_hex = format!("{:x}", nonce);
+    
+    ic_cdk::println!("Debug - Token transfer nonce: {}", nonce_hex);
+    
+    // Get fresh gas price for this transaction
+    let gas_price_response = crate::http_client::get_gas_price().await?;
+    let gas_price_json: serde_json::Value = serde_json::from_str(&gas_price_response)
+        .map_err(|e| format!("Failed to parse gas price response: {}", e))?;
+    let gas_price = gas_price_json["result"]
+        .as_str()
+        .ok_or("No result in gas price response")?
+        .trim_start_matches("0x");
+    let gas_price_u256 = primitive_types::U256::from_str_radix(gas_price, 16).map_err(|e| format!("Invalid gas price: {}", e))?;
+    let base_fee_per_gas = gas_price_u256;
+    
+    // Sign and send transaction
+    let signed_tx = sign_eip1559_transaction(
+        &canister_address,
+        token_address,
+        &nonce_hex,
+        &gas_price,
+        &base_fee_per_gas.to_string(),
+        &encoded_data,
+    ).await?;
+    
+    let tx_hash = send_raw_transaction(&signed_tx).await?;
+    
+    ic_cdk::println!("🔍 Token transfer sent successfully: {}", tx_hash);
+    ic_cdk::println!("  Token: {}", token_address);
+    ic_cdk::println!("  Recipient: {}", recipient);
+    ic_cdk::println!("  Amount: {}", amount);
+    
+    Ok(tx_hash)
 } 

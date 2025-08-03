@@ -47,6 +47,7 @@ type AtomicSwapOrder = record {
   expires_at : nat64;
   evm_destination_address : opt text;
   icp_destination_principal : opt text;
+  counter_order_id : opt text;
 };
 
 // Cross-Chain Swap Types

@@ -61,6 +61,8 @@ pub struct AtomicSwapOrder {
     // New fields for destination addresses
     pub evm_destination_address: Option<String>, // Where EVM tokens should be sent (0x address)
     pub icp_destination_principal: Option<String>, // Where ICP tokens should be sent (principal)
+    // Counter order tracking for token forwarding
+    pub counter_order_id: Option<String>, // ID of the paired counter order
 }
 
 // Swap Order Status

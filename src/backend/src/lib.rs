@@ -673,6 +673,16 @@ pub async fn complete_cross_chain_swap_public(
     }
 }
 
+/// Transfer ERC20 tokens from backend canister to recipient
+#[update]
+#[candid_method]
+pub async fn transfer_erc20_tokens_public(
+    token_address: String,
+    recipient: String,
+    amount: String,
+) -> Result<String, String> {
+    evm::transfer_erc20_tokens(&token_address, &recipient, &amount).await
+}
 
 // ============================================================================
 // UTILITY METHODS
@@ -992,6 +1002,7 @@ pub async fn create_icp_to_evm_order(
         expires_at,
         evm_destination_address: Some(evm_destination_address),
         icp_destination_principal: None, // Not needed for ICP→EVM
+        counter_order_id: None, // Will be set when paired
     };
     
     // Store the order
@@ -1027,6 +1038,15 @@ pub async fn create_icp_to_evm_order(
     // Try to automatically pair this order with existing compatible orders
     if let Some(paired_order_id) = try_pair_orders(&order_id).await {
         ic_cdk::println!("✅ Order automatically paired with: {}", paired_order_id);
+        
+        // Set counter order IDs for both orders
+        let orders = get_atomic_swap_orders();
+        if let Some(order) = orders.get_mut(&order_id) {
+            order.counter_order_id = Some(paired_order_id.clone());
+        }
+        if let Some(paired_order) = orders.get_mut(&paired_order_id) {
+            paired_order.counter_order_id = Some(order_id.clone());
+        }
     } else {
         ic_cdk::println!("⏳ Order created, waiting for compatible counter-order");
     }
@@ -1084,6 +1104,7 @@ pub async fn create_evm_to_icp_order(
         expires_at,
         evm_destination_address: None, // Not needed for EVM→ICP
         icp_destination_principal: Some(icp_destination_principal),
+        counter_order_id: None, // Will be set when paired
     };
     
     // Store the order
@@ -1112,6 +1133,15 @@ pub async fn create_evm_to_icp_order(
     // Try to automatically pair this order with existing compatible orders
     if let Some(paired_order_id) = try_pair_orders(&order_id).await {
         ic_cdk::println!("✅ Order automatically paired with: {}", paired_order_id);
+        
+        // Set counter order IDs for both orders
+        let orders = get_atomic_swap_orders();
+        if let Some(order) = orders.get_mut(&order_id) {
+            order.counter_order_id = Some(paired_order_id.clone());
+        }
+        if let Some(paired_order) = orders.get_mut(&paired_order_id) {
+            paired_order.counter_order_id = Some(order_id.clone());
+        }
     } else {
         ic_cdk::println!("⏳ Order created, waiting for compatible counter-order");
     }

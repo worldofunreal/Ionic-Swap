@@ -18,6 +18,7 @@ export interface AtomicSwapOrder {
   'source_amount' : string,
   'source_token' : string,
   'expires_at' : bigint,
+  'counter_order_id' : [] | [string],
   'destination_token' : string,
   'timelock' : bigint,
 }
