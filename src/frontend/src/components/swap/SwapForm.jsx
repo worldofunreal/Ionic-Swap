@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { fetchICRCBalance } from '../../utils/icrc';
+import { fetchICRCBalance, approveICRCToken } from '../../utils/icrc';
 import { useAuth } from '../../contexts/AuthContext';
 import TokenSelector from './TokenSelector';
 import AmountInput from './AmountInput';
@@ -15,7 +15,8 @@ const SwapForm = ({
   onAmountChange,
   destinationAddress,
   onDestinationAddressChange,
-  user
+  user,
+  actor
 }) => {
   const { getIdentity } = useAuth();
   const [sourceBalance, setSourceBalance] = useState('0');
@@ -23,14 +24,142 @@ const SwapForm = ({
   const [loading, setLoading] = useState(true);
   const [sourceAmount, setSourceAmount] = useState('');
   const [destinationAmount, setDestinationAmount] = useState('');
+  const [swapStatus, setSwapStatus] = useState('idle'); // idle, processing, success, error
+  const [swapProgress, setSwapProgress] = useState('');
+  const [orderId, setOrderId] = useState(null);
 
   // Token addresses (from our test script)
   const SPIRAL_TOKEN = '0xdE7409EDeA573D090c3C6123458D6242E26b425E';
   const STARDUST_TOKEN = '0x6ca99fc9bDed10004FE9CC6ce40914b98490Dc90';
+  const HTLC_CONTRACT = '0x7cFC05b92549ae96D758516B9A2b50D114d6ad0d';
+  
+  // Debug function to check contract deployment
+  const checkContractDeployment = async (contractAddress) => {
+    try {
+      if (window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const code = await provider.getCode(contractAddress);
+        return code !== '0x';
+      }
+      return false;
+    } catch (error) {
+      console.error('Error checking contract deployment:', error);
+      return false;
+    }
+  };
+
+  // Debug function to get contract info
+  const getContractInfo = async () => {
+    try {
+      if (window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const network = await provider.getNetwork();
+        
+        return {
+          chainId: network.chainId,
+          chainName: network.name,
+          htlcDeployed: await checkContractDeployment(HTLC_CONTRACT),
+          spiralDeployed: await checkContractDeployment(SPIRAL_TOKEN),
+          stardustDeployed: await checkContractDeployment(STARDUST_TOKEN),
+          userAddress: user?.evmAddress,
+          userBalance: user?.evmAddress ? await provider.getBalance(user.evmAddress) : null
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting contract info:', error);
+      return null;
+    }
+  };
+
+  // Debug function to calculate event signature
+  const calculateEventSignature = () => {
+    try {
+      const eventSignature = "HTLCCreated(bytes32,address,address,uint256,bytes32,uint256,address,uint8,uint8,bool)";
+      const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(eventSignature));
+      console.log('Calculated HTLCCreated event signature:', hash);
+      console.log('Backend expects:', '0x84531b127d0bd83b1d32956f33727af69ab12eef7ff40a6ee1fdd2b64cb104dd');
+      console.log('Match:', hash === '0x84531b127d0bd83b1d32956f33727af69ab12eef7ff40a6ee1fdd2b64cb104dd');
+      return hash;
+    } catch (error) {
+      console.error('Error calculating event signature:', error);
+      return null;
+    }
+  };
+
+  // Debug function to check transaction receipt
+  const checkTransactionReceipt = async (txHash) => {
+    try {
+      if (window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const receipt = await provider.getTransactionReceipt(txHash);
+        console.log('Transaction Receipt:', receipt);
+        
+        if (receipt && receipt.logs) {
+          console.log('Transaction Logs:');
+          receipt.logs.forEach((log, index) => {
+            console.log(`Log ${index}:`, {
+              address: log.address,
+              topics: log.topics,
+              data: log.data
+            });
+          });
+        }
+        
+        return receipt;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error checking transaction receipt:', error);
+      return null;
+    }
+  };
+
+  // Debug function to test HTLC contract
+  const testHTLCContract = async () => {
+    try {
+      if (window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        
+        // Simple ABI for basic HTLC functions
+        const htlcAbi = [
+          'function htlcCounter() view returns (uint256)',
+          'function icpNetworkSigner() view returns (address)',
+          'function claimFee() view returns (uint256)',
+          'function refundFee() view returns (uint256)'
+        ];
+        
+        const htlcContract = new ethers.Contract(HTLC_CONTRACT, htlcAbi, provider);
+        
+        const counter = await htlcContract.htlcCounter();
+        const signer = await htlcContract.icpNetworkSigner();
+        const claimFee = await htlcContract.claimFee();
+        const refundFee = await htlcContract.refundFee();
+        
+        console.log('HTLC Contract Test Results:');
+        console.log('  HTLC Counter:', counter.toString());
+        console.log('  ICP Network Signer:', signer);
+        console.log('  Claim Fee:', ethers.utils.formatEther(claimFee));
+        console.log('  Refund Fee:', ethers.utils.formatEther(refundFee));
+        
+        return {
+          counter: counter.toString(),
+          signer,
+          claimFee: ethers.utils.formatEther(claimFee),
+          refundFee: ethers.utils.formatEther(refundFee)
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error testing HTLC contract:', error);
+      return null;
+    }
+  };
 
   // ICRC Canister IDs - Local development
   const SPIRAL_ICRC_CANISTER_ID = 'umunu-kh777-77774-qaaca-cai';
   const STARDUST_ICRC_CANISTER_ID = 'ulvla-h7777-77774-qaacq-cai';
+  const BACKEND_CANISTER_ID = 'uxrrr-q7777-77774-qaaaq-cai';
 
   // Default tokens
   const defaultSourceToken = {
@@ -53,11 +182,12 @@ const SwapForm = ({
     canisterId: STARDUST_ICRC_CANISTER_ID
   };
 
-  // ERC20 ABI for balanceOf
+  // ERC20 ABI for balanceOf and nonces
   const erc20Abi = [
     'function balanceOf(address owner) view returns (uint256)',
     'function decimals() view returns (uint8)',
-    'function symbol() view returns (string)'
+    'function symbol() view returns (string)',
+    'function nonces(address owner) view returns (uint256)'
   ];
 
   // Set default tokens if none provided
@@ -146,15 +276,361 @@ const SwapForm = ({
     return null;
   };
 
-  const handleSwap = () => {
-    // TODO: Implement swap logic
-    console.log('Swap initiated:', {
-      sourceToken,
-      destinationToken,
+  // EIP-2612 permit helpers (from test script)
+  const createPermitDomain = (tokenAddress) => {
+    // Determine token name based on address
+    let tokenName = 'Spiral'; // Default
+    if (tokenAddress.toLowerCase() === STARDUST_TOKEN.toLowerCase()) {
+      tokenName = 'Stardust';
+    }
+    
+    return {
+      name: tokenName,
+      version: '1',
+      chainId: 11155111, // Sepolia
+      verifyingContract: tokenAddress
+    };
+  };
+
+  const createPermitTypes = () => ({
+    Permit: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+      { name: 'value', type: 'uint256' },
+      { name: 'nonce', type: 'uint256' },
+      { name: 'deadline', type: 'uint256' }
+    ]
+  });
+
+  const createPermitMessage = (owner, spender, value, nonce, deadline) => ({
+    owner,
+    spender,
+    value: ethers.utils.parseUnits(value, 8), // Both tokens have 8 decimals
+    nonce,
+    deadline
+  });
+
+  const signPermitMessage = async (signer, owner, spender, value, nonce, deadline, tokenAddress) => {
+    const domain = createPermitDomain(tokenAddress);
+    const types = createPermitTypes();
+    const message = createPermitMessage(owner, spender, value, nonce, deadline);
+
+    console.log('🔍 Signing permit message:', { domain, types, message, tokenAddress });
+
+    const signature = await signer._signTypedData(domain, types, message);
+    const sig = ethers.utils.splitSignature(signature);
+
+    return {
+      signature,
+      sig,
+      domain,
+      types,
+      message
+    };
+  };
+
+  const handleSwap = async () => {
+    if (!actor || !user) {
+      alert('Please connect your wallet first');
+      return;
+    }
+
+    if (!sourceAmount || !destinationAmount) {
+      alert('Please enter amounts for both sides of the swap');
+      return;
+    }
+
+    // Validate amounts
+    const sourceAmountNum = parseFloat(sourceAmount);
+    const destinationAmountNum = parseFloat(destinationAmount);
+    
+    if (sourceAmountNum <= 0 || destinationAmountNum <= 0) {
+      alert('Please enter valid amounts greater than 0');
+      return;
+    }
+
+    // Check if user has sufficient balance
+    const sourceBalanceNum = parseFloat(sourceBalance);
+    if (sourceAmountNum > sourceBalanceNum) {
+      alert(`Insufficient balance. You have ${sourceBalance} ${sourceToken?.symbol}, but trying to swap ${sourceAmount} ${sourceToken?.symbol}`);
+      return;
+    }
+
+    setSwapStatus('processing');
+    setSwapProgress('Initializing swap...');
+
+    try {
+      const direction = getSwapDirection();
+      console.log('Starting swap:', { direction, sourceAmount, destinationAmount });
+
+      // Check if contracts are deployed
+      if (direction === 'evm-to-icp') {
+        setSwapProgress('Checking contract deployments...');
+        const htlcDeployed = await checkContractDeployment(HTLC_CONTRACT);
+        const tokenDeployed = await checkContractDeployment(sourceToken.address);
+        
+        if (!htlcDeployed) {
+          throw new Error('HTLC contract is not deployed at the expected address. Please check deployment.');
+        }
+        if (!tokenDeployed) {
+          throw new Error('Token contract is not deployed at the expected address. Please check deployment.');
+        }
+        console.log('All contracts are deployed');
+      }
+
+      // Note: Nonce is already initialized by the backend
+      console.log('Proceeding with swap - nonce should already be initialized');
+
+      if (direction === 'evm-to-icp') {
+        await handleEvmToIcpSwap();
+      } else if (direction === 'icp-to-evm') {
+        await handleIcpToEvmSwap();
+      } else {
+        throw new Error('Invalid swap direction');
+      }
+
+    } catch (error) {
+      console.error('Swap failed:', error);
+      setSwapStatus('error');
+      setSwapProgress(`Swap failed: ${error.message}`);
+      alert(`Swap failed: ${error.message}`);
+    }
+  };
+
+  const handleEvmToIcpSwap = async () => {
+    try {
+      // Step 2: Create EIP-2612 permit for EVM tokens
+      setSwapProgress('Creating permit for EVM tokens...');
+      
+      if (!window.ethereum) {
+        throw new Error('MetaMask not connected');
+      }
+
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      
+      // Get nonce from token contract
+      const tokenContract = new ethers.Contract(sourceToken.address, erc20Abi, provider);
+      const nonce = await tokenContract.nonces(user.evmAddress);
+      const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+      
+      // Sign the permit
+      const permitResult = await signPermitMessage(
+        signer,
+        user.evmAddress,
+        HTLC_CONTRACT,
       sourceAmount,
-      destinationAmount,
-      direction: getSwapDirection()
-    });
+        nonce,
+        deadline,
+        sourceToken.address
+      );
+
+      console.log('Permit signed successfully');
+
+      // Step 3: Create EVM→ICP order
+      setSwapProgress('Creating EVM→ICP order...');
+      
+      const permitRequest = {
+        owner: user.evmAddress,
+        spender: HTLC_CONTRACT,
+        value: ethers.utils.parseUnits(sourceAmount, 8).toString(),
+        nonce: nonce.toString(),
+        deadline: deadline.toString(),
+        v: permitResult.sig.v.toString(),
+        r: permitResult.sig.r,
+        s: permitResult.sig.s,
+        signature: permitResult.signature
+      };
+
+      const orderResult = await actor.create_evm_to_icp_order(
+        user.evmAddress,
+        sourceToken.address,
+        destinationToken.canisterId,
+        ethers.utils.parseUnits(sourceAmount, 8).toString(),
+        ethers.utils.parseUnits(destinationAmount, 8).toString(),
+        user.icpPrincipal,
+        BigInt(3600), // 1 hour timelock
+        permitRequest
+      );
+
+      if ('Err' in orderResult) {
+        const errorMsg = orderResult.Err;
+        console.error('Order creation failed:', errorMsg);
+        
+        // Provide more specific error messages
+        if (errorMsg.includes('HTLCCreated event not found')) {
+          // Try to extract transaction hash from the error message
+          const txHashMatch = errorMsg.match(/0x[a-fA-F0-9]{64}/);
+          const txHash = txHashMatch ? txHashMatch[0] : null;
+          
+          let debugInfo = 'HTLC creation failed: Transaction may have failed or event not emitted.\n\n';
+          debugInfo += 'Possible causes:\n';
+          debugInfo += '1. HTLC contract not deployed at expected address\n';
+          debugInfo += '2. Insufficient token balance\n';
+          debugInfo += '3. Network connectivity issues\n';
+          debugInfo += '4. Contract interaction failed\n';
+          debugInfo += '5. Event signature mismatch\n\n';
+          debugInfo += 'Please check:\n';
+          debugInfo += '- Token balance is sufficient\n';
+          debugInfo += '- You are connected to Sepolia testnet\n';
+          debugInfo += '- Try the debug button to check contract deployment\n';
+          
+          if (txHash) {
+            debugInfo += `- Transaction hash: ${txHash}\n`;
+            debugInfo += '- Check transaction receipt for actual events emitted';
+            
+            // Automatically check the transaction receipt
+            setTimeout(() => {
+              checkTransactionReceipt(txHash);
+            }, 1000);
+          }
+          
+          throw new Error(debugInfo);
+        } else if (errorMsg.includes('permit')) {
+          throw new Error('Permit execution failed: Please ensure you have sufficient tokens and try again.');
+        } else {
+          throw new Error(`Failed to create order: ${errorMsg}`);
+        }
+      }
+
+      const orderId = orderResult.Ok.split("Order ID: ")[1].split(",")[0];
+      setOrderId(orderId);
+      console.log('Order created:', orderId);
+
+      // Step 4: Note about ICRC-2 allowance for ICP user
+      setSwapProgress('Note: ICP user needs to approve tokens...');
+      
+      // For EVM→ICP swaps, the ICP user (destination) needs to approve tokens
+      // This would normally be done by the ICP user's wallet
+      // For now, we'll continue without this step as it requires the ICP user's action
+      console.log('ICRC-2 allowance step (requires ICP user action)');
+
+      // Step 5: Check for compatible orders and complete swap
+      setSwapProgress('Checking for compatible orders...');
+      
+      const compatibleOrders = await actor.get_compatible_orders(orderId);
+      console.log('Compatible orders found:', compatibleOrders.length);
+
+      if (compatibleOrders.length > 0) {
+        setSwapProgress('Completing swap...');
+        
+        // Get order details to extract secret
+        const orderDetails = await actor.get_atomic_swap_order(orderId);
+        if (orderDetails.length > 0) {
+          const order = orderDetails[0];
+          
+          const completeResult = await actor.complete_cross_chain_swap_public(
+            orderId,
+            order.secret
+          );
+
+          if ('Err' in completeResult) {
+            throw new Error(`Failed to complete swap: ${completeResult.Err}`);
+          }
+
+          setSwapStatus('success');
+          setSwapProgress('Swap completed successfully!');
+          console.log('Swap completed:', completeResult.Ok);
+          
+          // Refresh balances
+          await fetchBalances();
+        }
+      } else {
+        setSwapStatus('success');
+        setSwapProgress('Order created successfully! Waiting for counter-order...');
+        console.log('Order created, waiting for counter-order');
+      }
+
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleIcpToEvmSwap = async () => {
+    try {
+      // Step 1: Create ICRC-2 allowance for ICP tokens
+      setSwapProgress('Creating ICRC-2 allowance...');
+      
+      const identity = getIdentity();
+      if (!identity) {
+        throw new Error('ICP identity not available');
+      }
+
+      // Approve the backend canister to spend ICP tokens
+      const approvalAmount = ethers.utils.parseUnits(sourceAmount, 8).toString();
+      const approvalResult = await approveICRCToken(
+        sourceToken.canisterId,
+        BACKEND_CANISTER_ID,
+        approvalAmount,
+        identity
+      );
+
+      if ('Err' in approvalResult) {
+        throw new Error(`Failed to approve ICP tokens: ${approvalResult.Err}`);
+      }
+
+      console.log('ICRC-2 allowance created successfully');
+
+      // Step 2: Create ICP→EVM order
+      setSwapProgress('Creating ICP→EVM order...');
+      
+      const orderResult = await actor.create_icp_to_evm_order(
+        user.icpPrincipal,
+        sourceToken.canisterId,
+        destinationToken.address,
+        ethers.utils.parseUnits(sourceAmount, 8).toString(),
+        ethers.utils.parseUnits(destinationAmount, 8).toString(),
+        user.evmAddress,
+        BigInt(3600) // 1 hour timelock
+      );
+
+      if ('Err' in orderResult) {
+        throw new Error(`Failed to create order: ${orderResult.Err}`);
+      }
+
+      const orderId = orderResult.Ok.split("Order ID: ")[1].split(",")[0];
+      setOrderId(orderId);
+      console.log('Order created:', orderId);
+
+      // Step 3: Check for compatible orders and complete swap
+      setSwapProgress('Checking for compatible orders...');
+      
+      const compatibleOrders = await actor.get_compatible_orders(orderId);
+      console.log('Compatible orders found:', compatibleOrders.length);
+
+      if (compatibleOrders.length > 0) {
+        setSwapProgress('Completing swap...');
+        
+        // Get order details to extract secret
+        const orderDetails = await actor.get_atomic_swap_order(orderId);
+        if (orderDetails.length > 0) {
+          const order = orderDetails[0];
+          
+          const completeResult = await actor.complete_cross_chain_swap_public(
+            orderId,
+            order.secret
+          );
+
+          if ('Err' in completeResult) {
+            throw new Error(`Failed to complete swap: ${completeResult.Err}`);
+          }
+
+          setSwapStatus('success');
+          setSwapProgress('Swap completed successfully!');
+          console.log('Swap completed:', completeResult.Ok);
+          
+          // Refresh balances
+          await fetchBalances();
+        }
+      } else {
+        setSwapStatus('success');
+        setSwapProgress('Order created successfully! Waiting for counter-order...');
+        console.log('Order created, waiting for counter-order');
+      }
+
+    } catch (error) {
+      throw error;
+    }
   };
 
   return (
@@ -257,6 +733,41 @@ const SwapForm = ({
         </div>
       </div>
 
+      {/* Swap Status Display */}
+      {swapStatus !== 'idle' && (
+        <div className={`bg-neutral-800/10 rounded-xl border p-4 ${
+          swapStatus === 'success' ? 'border-green-500' : 
+          swapStatus === 'error' ? 'border-red-500' : 
+          'border-blue-500'
+        }`}>
+          <div className="flex items-center space-x-2">
+            {swapStatus === 'processing' && (
+              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            )}
+            {swapStatus === 'success' && (
+              <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+            )}
+            {swapStatus === 'error' && (
+              <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </div>
+            )}
+            <span className="text-sm text-white">{swapProgress}</span>
+          </div>
+          {orderId && (
+            <div className="mt-2 text-xs text-neutral-400">
+              Order ID: {orderId}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Swap Summary */}
       <SwapSummary
         direction={getSwapDirection()}
@@ -266,7 +777,8 @@ const SwapForm = ({
         destinationAmount={destinationAmount}
         destinationAddress={user?.evmAddress || user?.icpPrincipal || ''}
         onSwap={handleSwap}
-        isLoading={loading}
+        isLoading={loading || swapStatus === 'processing'}
+        swapStatus={swapStatus}
       />
     </div>
   );

@@ -1,64 +1,118 @@
-# EVM HTLC Frontend
+# Ionic Swap Frontend
 
-This is the frontend application for the EVM HTLC (Hash Time Locked Contract) system.
+A cross-chain atomic swap interface for swapping tokens between EVM (Sepolia) and ICP networks.
+
+## Features
+
+- **Cross-Chain Swaps**: Swap tokens between EVM (Sepolia) and ICP networks
+- **Gasless Approvals**: EIP-2612 permit support for EVM tokens
+- **Atomic Swaps**: Secure HTLC-based atomic swaps
+- **Real-time Status**: Live swap progress tracking
+- **Balance Checking**: Automatic balance validation
+
+## Supported Tokens
+
+### EVM (Sepolia)
+- **SPIRAL Token**: `0xdE7409EDeA573D090c3C6123458D6242E26b425E`
+- **STARDUST Token**: `0x6ca99fc9bDed10004FE9CC6ce40914b98490Dc90`
+
+### ICP
+- **SPIRAL Token**: `umunu-kh777-77774-qaaca-cai`
+- **STARDUST Token**: `ulvla-h7777-77774-qaacq-cai`
+
+## Swap Flow
+
+### EVM → ICP Swap
+1. **Connect Wallets**: Connect both MetaMask (EVM) and Internet Identity (ICP)
+2. **Select Tokens**: Choose source EVM token and destination ICP token
+3. **Enter Amounts**: Specify amounts for both sides of the swap
+4. **Sign Permit**: Sign EIP-2612 permit for EVM token approval
+5. **Create Order**: Backend creates EVM→ICP swap order
+6. **Wait for Counter-Order**: System waits for matching ICP→EVM order
+7. **Complete Swap**: Atomic swap executes automatically when compatible order found
+
+### ICP → EVM Swap
+1. **Connect Wallets**: Connect both Internet Identity (ICP) and MetaMask (EVM)
+2. **Select Tokens**: Choose source ICP token and destination EVM token
+3. **Enter Amounts**: Specify amounts for both sides of the swap
+4. **Approve Tokens**: Approve ICRC-2 allowance for ICP tokens
+5. **Create Order**: Backend creates ICP→EVM swap order
+6. **Wait for Counter-Order**: System waits for matching EVM→ICP order
+7. **Complete Swap**: Atomic swap executes automatically when compatible order found
 
 ## Prerequisites
 
-- Node.js (v16 or higher)
-- dfx (Internet Computer SDK)
-- npm or yarn
+- **MetaMask**: Connected to Sepolia testnet
+- **Internet Identity**: Authenticated with ICP identity
+- **Test Tokens**: SPIRAL and STARDUST tokens on both networks
+- **Backend Canister**: Running backend canister with HTLC contracts deployed
 
-## Setup
+## Development Setup
 
-1. **Install dependencies:**
+1. **Install Dependencies**:
    ```bash
    npm install
    ```
 
-2. **Deploy the canisters:**
+2. **Start Development Server**:
    ```bash
-   # From the project root
-   dfx start --background --clean
-   dfx deploy
-   dfx generate
+   npm run dev
    ```
 
-3. **Copy environment variables:**
-   ```bash
-   # From the project root
-   cp .env src/frontend/.env
-   ```
+3. **Connect Wallets**:
+   - Connect MetaMask to Sepolia testnet
+   - Authenticate with Internet Identity
 
-## Development
+4. **Test Swap**:
+   - Select tokens and amounts
+   - Click "Create Swap Order"
+   - Follow the prompts to sign permits/approvals
 
-Start the development server:
+## Architecture
 
-```bash
-npm run dev
-```
+### Components
+- **SwapForm**: Main swap interface with token selection and amount input
+- **SwapSummary**: Order summary and swap execution button
+- **TokenSelector**: Token selection dropdown
+- **AmountInput**: Amount input with balance display
 
-The application will be available at `http://localhost:3000`.
+### Key Functions
+- **EIP-2612 Permit**: Gasless token approval for EVM tokens
+- **ICRC-2 Approval**: Token approval for ICP tokens
+- **Order Creation**: Backend canister integration for swap orders
+- **Order Pairing**: Automatic detection of compatible orders
+- **Swap Completion**: Atomic swap execution
 
-## Available Scripts
+### Error Handling
+- Balance validation
+- Network connectivity checks
+- Transaction failure recovery
+- User-friendly error messages
 
-- `npm run dev` - Start development server
-- `npm run start` - Start production server
-- `npm run build` - Build for production
-- `npm run format` - Format code with Prettier
+## Security Features
+
+- **HTLC Contracts**: Secure hash time-locked contracts
+- **Atomic Execution**: All-or-nothing swap execution
+- **Timelock Protection**: Automatic refund after expiration
+- **Signature Verification**: EIP-2612 permit validation
 
 ## Troubleshooting
 
-If you see the browser warning message, it means the canister is not properly deployed or the environment variables are not set correctly.
+### Common Issues
+1. **"MetaMask not connected"**: Ensure MetaMask is connected to Sepolia
+2. **"Insufficient balance"**: Check token balances on both networks
+3. **"Permit signing failed"**: Ensure you're signing with the correct account
+4. **"Order creation failed"**: Check backend canister status
 
-1. Make sure dfx is running: `dfx start --background`
-2. Deploy the canisters: `dfx deploy`
-3. Generate declarations: `dfx generate`
-4. Copy the .env file to the frontend directory
-5. Restart the development server
+### Debug Information
+- Check browser console for detailed error messages
+- Verify canister IDs and contract addresses
+- Ensure all dependencies are properly installed
 
-## Environment Variables
+## Future Enhancements
 
-The following environment variables are required:
-
-- `CANISTER_ID_FUSION_HTLC_CANISTER` - The canister ID for the HTLC canister
-- `DFX_NETWORK` - The network to use (ic for mainnet, local for development) 
+- **Order Book**: Display available swap orders
+- **Price Oracle**: Real-time exchange rates
+- **Multi-Token Support**: Additional token pairs
+- **Mobile Support**: Responsive design for mobile devices
+- **Advanced Features**: Partial fills, order cancellation 

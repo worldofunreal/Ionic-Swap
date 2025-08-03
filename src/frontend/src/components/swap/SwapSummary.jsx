@@ -8,7 +8,8 @@ const SwapSummary = ({
   destinationAmount,
   destinationAddress,
   onSwap,
-  isLoading
+  isLoading,
+  swapStatus = 'idle'
 }) => {
   const isValid = sourceAmount && parseFloat(sourceAmount) > 0;
 
@@ -30,6 +31,51 @@ const SwapSummary = ({
   if (!details) {
     return null;
   }
+
+  const getButtonText = () => {
+    if (swapStatus === 'success') {
+      return 'Swap Completed!';
+    } else if (swapStatus === 'error') {
+      return 'Retry Swap';
+    } else if (isLoading) {
+      return 'Creating Swap Order...';
+    } else {
+      return 'Create Swap Order';
+    }
+  };
+
+  const getButtonState = () => {
+    if (swapStatus === 'success') {
+      return 'success';
+    } else if (swapStatus === 'error') {
+      return 'error';
+    } else if (isLoading) {
+      return 'loading';
+    } else if (isValid) {
+      return 'enabled';
+    } else {
+      return 'disabled';
+    }
+  };
+
+  const buttonState = getButtonState();
+
+  const getButtonClasses = () => {
+    switch (buttonState) {
+      case 'success':
+        return 'bg-green-600 hover:bg-green-500 text-white cursor-default';
+      case 'error':
+        return 'bg-red-600 hover:bg-red-500 text-white';
+      case 'loading':
+        return 'bg-neutral-700 text-neutral-500 cursor-not-allowed';
+      case 'enabled':
+        return 'bg-neutral-600 hover:bg-neutral-500 text-white';
+      case 'disabled':
+        return 'bg-neutral-700 text-neutral-500 cursor-not-allowed';
+      default:
+        return 'bg-neutral-700 text-neutral-500 cursor-not-allowed';
+    }
+  };
 
   return (
     <div className="bg-neutral-800/10 rounded-lg border border-neutral-700 p-4">
@@ -55,20 +101,23 @@ const SwapSummary = ({
 
         <button
           onClick={onSwap}
-          disabled={!isValid || isLoading}
-          className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 ${
-            isValid && !isLoading
-              ? 'bg-neutral-600 hover:bg-neutral-500 text-white'
-              : 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
-          }`}
+          disabled={buttonState === 'loading' || buttonState === 'disabled' || buttonState === 'success'}
+          className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 ${getButtonClasses()}`}
         >
-          {isLoading ? (
+          {buttonState === 'loading' ? (
             <div className="flex items-center justify-center space-x-2">
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               <span>Creating Swap Order...</span>
             </div>
+          ) : buttonState === 'success' ? (
+            <div className="flex items-center justify-center space-x-2">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              <span>{getButtonText()}</span>
+            </div>
           ) : (
-            'Create Swap Order'
+            getButtonText()
           )}
         </button>
       </div>

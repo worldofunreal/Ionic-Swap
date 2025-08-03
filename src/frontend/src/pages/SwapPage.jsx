@@ -60,6 +60,7 @@ const SwapPage = ({ actor, user }) => {
           destinationAddress={destinationAddress}
           onDestinationAddressChange={setDestinationAddress}
           user={user}
+          actor={actor}
         />
       </div>
     </div>

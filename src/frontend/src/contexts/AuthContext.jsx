@@ -142,23 +142,23 @@ export const AuthProvider = ({ children }) => {
         params: [message, evmAddress]
       });
 
-      // Derive ICP principal from signature
-      const icpIdentity = await deriveICPPrincipalFromEVM(signature);
-      const icpPrincipal = icpIdentity.getPrincipal();
-
       // Generate seed phrase from signature
       const generatedSeedPhrase = await generateSeedPhrase(signature);
+
+      // Create identity from seed phrase
+      const keyPair = deriveKeysFromSeedPhrase(generatedSeedPhrase);
+      const seedBasedIdentity = createIdentityFromKeyPair(keyPair);
 
       // Set up the user object
       const userData = {
         evmAddress,
-        icpPrincipal: icpPrincipal.toText(),
+        icpPrincipal: seedBasedIdentity.getPrincipal().toText(),
         loginMethod: 'metamask',
         seedPhrase: generatedSeedPhrase
       };
 
-      // Store identity and user data
-      identity = icpIdentity;
+      // Store seed-based identity and user data
+      identity = seedBasedIdentity;
       setUser(userData);
       setAuthenticated(true);
       setLoginMethod('metamask');
@@ -169,7 +169,7 @@ export const AuthProvider = ({ children }) => {
 
       console.log('MetaMask login successful:', {
         evmAddress,
-        icpPrincipal: icpPrincipal.toText()
+        icpPrincipal: seedBasedIdentity.getPrincipal().toText()
       });
 
       return userData;
@@ -207,16 +207,20 @@ export const AuthProvider = ({ children }) => {
               const buffer = Buffer.from(entropy);
               const generatedSeedPhrase = bip39.entropyToMnemonic(buffer);
 
+              // Create identity from seed phrase instead of using AuthClient identity
+              const keyPair = deriveKeysFromSeedPhrase(generatedSeedPhrase);
+              const seedBasedIdentity = createIdentityFromKeyPair(keyPair);
+
               // Set up the user object
               const userData = {
                 evmAddress,
-                icpPrincipal: icpPrincipal.toText(),
+                icpPrincipal: seedBasedIdentity.getPrincipal().toText(),
                 loginMethod: 'internet-identity',
                 seedPhrase: generatedSeedPhrase
               };
 
-              // Store identity and user data
-              identity = icpIdentity;
+              // Store seed-based identity and user data
+              identity = seedBasedIdentity;
               setUser(userData);
               setAuthenticated(true);
               setLoginMethod('internet-identity');
@@ -227,7 +231,7 @@ export const AuthProvider = ({ children }) => {
 
               console.log('Internet Identity login successful:', {
                 evmAddress,
-                icpPrincipal: icpPrincipal.toText()
+                icpPrincipal: seedBasedIdentity.getPrincipal().toText()
               });
 
               resolve(userData);
