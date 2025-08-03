@@ -47,23 +47,15 @@ const UserDropdown = ({ user, onLogout }) => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* User Avatar Button */}
+      {/* Simple User Avatar Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
       >
         <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
           <span className="text-white text-sm font-semibold">
             {user?.evmAddress?.slice(2, 4).toUpperCase() || 'U'}
           </span>
-        </div>
-        <div className="hidden md:block text-left">
-          <div className="text-sm font-medium text-gray-900">
-            {addresses.primary.short}
-          </div>
-          <div className="text-xs text-gray-500">
-            {user?.loginMethod === 'metamask' ? 'MetaMask' : 'Internet Identity'}
-          </div>
         </div>
         <svg
           className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -77,7 +69,7 @@ const UserDropdown = ({ user, onLogout }) => {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+        <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-100">
             <div className="flex items-center space-x-3">
@@ -97,62 +89,64 @@ const UserDropdown = ({ user, onLogout }) => {
             </div>
           </div>
 
-          {/* Primary Address */}
+          {/* Primary Address - Clickable */}
           <div className="px-4 py-3 border-b border-gray-100">
             <div className="text-xs font-medium text-gray-500 mb-2">
               {user?.loginMethod === 'metamask' ? 'EVM Address' : 'ICP Principal'}
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="text-sm font-mono text-gray-900">
-                  {addresses.primary.short}
+            <button
+              onClick={() => copyToClipboard(
+                addresses.primary.full, 
+                user?.loginMethod === 'metamask' ? 'EVM Address' : 'ICP Principal'
+              )}
+              className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-colors group"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="text-sm font-mono text-gray-900 group-hover:text-blue-600 transition-colors">
+                    {addresses.primary.short}
+                  </div>
                 </div>
-                <div className="text-xs text-gray-500 truncate">
-                  {addresses.primary.full}
+                <div className="ml-2 p-2 text-gray-400 group-hover:text-blue-600 transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
                 </div>
               </div>
-              <button
-                onClick={() => copyToClipboard(
-                  addresses.primary.full, 
-                  user?.loginMethod === 'metamask' ? 'EVM Address' : 'ICP Principal'
-                )}
-                className="ml-2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Copy to clipboard"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-              </button>
-            </div>
+              <div className="text-xs text-gray-400 mt-1 group-hover:text-blue-500 transition-colors">
+                Click to copy
+              </div>
+            </button>
           </div>
 
-          {/* Secondary Address */}
+          {/* Secondary Address - Clickable */}
           <div className="px-4 py-3 border-b border-gray-100">
             <div className="text-xs font-medium text-gray-500 mb-2">
               {user?.loginMethod === 'metamask' ? 'ICP Principal' : 'EVM Address'}
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="text-sm font-mono text-gray-900">
-                  {addresses.secondary.short}
+            <button
+              onClick={() => copyToClipboard(
+                addresses.secondary.full, 
+                user?.loginMethod === 'metamask' ? 'ICP Principal' : 'EVM Address'
+              )}
+              className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-colors group"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="text-sm font-mono text-gray-900 group-hover:text-blue-600 transition-colors">
+                    {addresses.secondary.short}
+                  </div>
                 </div>
-                <div className="text-xs text-gray-500 truncate">
-                  {addresses.secondary.full}
+                <div className="ml-2 p-2 text-gray-400 group-hover:text-blue-600 transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
                 </div>
               </div>
-              <button
-                onClick={() => copyToClipboard(
-                  addresses.secondary.full, 
-                  user?.loginMethod === 'metamask' ? 'ICP Principal' : 'EVM Address'
-                )}
-                className="ml-2 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Copy to clipboard"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-              </button>
-            </div>
+              <div className="text-xs text-gray-400 mt-1 group-hover:text-blue-500 transition-colors">
+                Click to copy
+              </div>
+            </button>
           </div>
 
           {/* Logout Button */}

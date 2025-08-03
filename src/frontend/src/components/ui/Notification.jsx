@@ -36,7 +36,7 @@ const Notification = ({ message, type = 'success', onClose, duration = 3000 }) =
   };
 
   return (
-    <div className={`fixed top-4 right-4 z-50 animate-in slide-in-from-right-2 duration-300`}>
+    <div className={`fixed bottom-4 right-4 z-50 animate-in slide-in-from-right-2 duration-300`}>
       <div className={`flex items-center space-x-3 px-4 py-3 rounded-lg border shadow-lg ${getStyles()}`}>
         <div className="flex-shrink-0">
           <span className="text-lg font-semibold">{getIcon()}</span>
