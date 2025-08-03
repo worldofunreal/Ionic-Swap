@@ -27,7 +27,7 @@ function App() {
 
   if (actorLoading) {
     return (
-      <div className="h-screen bg-neutral-900 flex items-center justify-center">
+      <div className="h-screen bg-gradient-to-br from-[#1A1A33] to-[#2A2A4A] flex items-center justify-center">
         <div className="text-center text-white">
           <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-xl">Initializing Ionic Swap...</p>
@@ -37,7 +37,7 @@ function App() {
   }
 
   return (
-    <div className="h-screen bg-neutral-900 flex flex-col relative">
+    <div className="h-screen bg-gradient-to-br from-[#1A1A33] via-[#1E1E3F] to-[#2A2A4A] flex flex-col relative">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Large centered logo */}
@@ -49,11 +49,11 @@ function App() {
           />
         </div>
         
-        {/* Blurred cycles on left and right */}
-        <div className="absolute left-0 top-1/4 w-64 h-64 bg-neutral-700 rounded-full blur-3xl opacity-20"></div>
-        <div className="absolute left-0 bottom-1/4 w-48 h-48 bg-neutral-600 rounded-full blur-3xl opacity-15"></div>
-        <div className="absolute right-0 top-1/3 w-56 h-56 bg-neutral-700 rounded-full blur-3xl opacity-20"></div>
-        <div className="absolute right-0 bottom-1/3 w-40 h-40 bg-neutral-600 rounded-full blur-3xl opacity-15"></div>
+        {/* Blurred cycles with new color palette */}
+        <div className="absolute left-0 top-1/4 w-64 h-64 bg-gradient-to-br from-[#80B3FF] to-[#C080FF] rounded-full blur-3xl opacity-10"></div>
+        <div className="absolute left-0 bottom-1/4 w-48 h-48 bg-gradient-to-br from-[#C080FF] to-[#D090FF] rounded-full blur-3xl opacity-8"></div>
+        <div className="absolute right-0 top-1/3 w-56 h-56 bg-gradient-to-br from-[#70A0FF] to-[#B070FF] rounded-full blur-3xl opacity-10"></div>
+        <div className="absolute right-0 bottom-1/3 w-40 h-40 bg-gradient-to-br from-[#90C0FF] to-[#E0A0FF] rounded-full blur-3xl opacity-8"></div>
       </div>
 
       <Header 

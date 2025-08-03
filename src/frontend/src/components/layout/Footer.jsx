@@ -39,7 +39,7 @@ const Footer = () => {
             href="https://worldofunreal.com/" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-sm text-neutral-400 hover:text-white transition-colors"
+            className="text-xs text-neutral-600 hover:text-white transition-colors"
           >
             &copy; 2025 World of Unreal.
           </a>
@@ -47,14 +47,24 @@ const Footer = () => {
           {/* Right side - Networks, GitHub, and version */}
           <div className="flex items-center space-x-8">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
+              <a 
+                href="https://sepolia.etherscan.io/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 text-neutral-400 hover:text-white transition-colors"
+              >
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-neutral-400">Sepolia</span>
-              </div>
-              <div className="flex items-center space-x-2">
+                <span className="text-sm">Sepolia</span>
+              </a>
+              <a 
+                href="https://dashboard.internetcomputer.org/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 text-neutral-400 hover:text-white transition-colors"
+              >
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-neutral-400">ICP</span>
-              </div>
+                <span className="text-sm">ICP</span>
+              </a>
             </div>
             <a 
               href="https://github.com/worldofunreal/Ionic-Swap" 
