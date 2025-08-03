@@ -42,7 +42,25 @@ function App() {
   }
 
   return (
-    <div className="h-screen bg-neutral-900 flex flex-col">
+    <div className="h-screen bg-neutral-900 flex flex-col relative">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Large centered logo */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <img 
+            src="/logo.svg" 
+            alt="Background Logo" 
+            className="w-[500px] h-[500px] opacity-5"
+          />
+        </div>
+        
+        {/* Blurred cycles on left and right */}
+        <div className="absolute left-0 top-1/4 w-64 h-64 bg-neutral-700 rounded-full blur-3xl opacity-20"></div>
+        <div className="absolute left-0 bottom-1/4 w-48 h-48 bg-neutral-600 rounded-full blur-3xl opacity-15"></div>
+        <div className="absolute right-0 top-1/3 w-56 h-56 bg-neutral-700 rounded-full blur-3xl opacity-20"></div>
+        <div className="absolute right-0 bottom-1/3 w-40 h-40 bg-neutral-600 rounded-full blur-3xl opacity-15"></div>
+      </div>
+
       {!authenticated ? (
         <LoginForm onLoginSuccess={handleLoginSuccess} />
       ) : (
@@ -54,7 +72,7 @@ function App() {
             onLogout={logout}
           />
           
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto relative z-10">
             {renderPage()}
           </main>
           

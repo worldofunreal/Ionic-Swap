@@ -46,23 +46,21 @@ const SwapPage = ({ actor, user }) => {
   };
 
   return (
-    <div className="py-4">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-neutral-800 rounded-xl p-6 border border-neutral-700">
-          <SwapForm
-            direction={swapDirection}
-            onDirectionChange={handleDirectionChange}
-            sourceToken={sourceToken}
-            destinationToken={destinationToken}
-            onSourceTokenChange={setSourceToken}
-            onDestinationTokenChange={setDestinationToken}
-            amount={amount}
-            onAmountChange={setAmount}
-            destinationAddress={destinationAddress}
-            onDestinationAddressChange={setDestinationAddress}
-            user={user}
-          />
-        </div>
+    <div className="py-24">
+      <div className="max-w-2xl mx-auto">
+        <SwapForm
+          direction={swapDirection}
+          onDirectionChange={handleDirectionChange}
+          sourceToken={sourceToken}
+          destinationToken={destinationToken}
+          onSourceTokenChange={setSourceToken}
+          onDestinationTokenChange={setDestinationToken}
+          amount={amount}
+          onAmountChange={setAmount}
+          destinationAddress={destinationAddress}
+          onDestinationAddressChange={setDestinationAddress}
+          user={user}
+        />
       </div>
     </div>
   );

@@ -32,12 +32,43 @@ const SwapForm = ({
   const SPIRAL_ICRC_CANISTER_ID = 'umunu-kh777-77774-qaaca-cai';
   const STARDUST_ICRC_CANISTER_ID = 'ulvla-h7777-77774-qaacq-cai';
 
+  // Default tokens
+  const defaultSourceToken = {
+    id: 'spiral-sepolia',
+    symbol: 'SPIRAL',
+    name: 'Spiral Token',
+    icon: '🌀',
+    network: 'Sepolia',
+    type: 'evm',
+    address: SPIRAL_TOKEN
+  };
+
+  const defaultDestinationToken = {
+    id: 'stardust-icp',
+    symbol: 'STARDUST',
+    name: 'Stardust Token',
+    icon: '⭐',
+    network: 'ICP',
+    type: 'icrc',
+    canisterId: STARDUST_ICRC_CANISTER_ID
+  };
+
   // ERC20 ABI for balanceOf
   const erc20Abi = [
     'function balanceOf(address owner) view returns (uint256)',
     'function decimals() view returns (uint8)',
     'function symbol() view returns (string)'
   ];
+
+  // Set default tokens if none provided
+  useEffect(() => {
+    if (!sourceToken) {
+      onSourceTokenChange(defaultSourceToken);
+    }
+    if (!destinationToken) {
+      onDestinationTokenChange(defaultDestinationToken);
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -127,16 +158,16 @@ const SwapForm = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 max-w-md mx-auto">
       {/* Main Swap Card */}
-      <div className="bg-neutral-800 rounded-xl border border-neutral-700 p-6 space-y-0">
+      <div className="bg-neutral-800/10 rounded-xl border border-neutral-700 p-4 space-y-0">
         {/* You Send Section */}
-        <div className="space-y-2 mb-0">
-          <div className="flex items-center bg-neutral-700 rounded-lg p-4 pt-6 border border-neutral-600 relative">
+        <div className="space-y-1 mb-0">
+          <div className="flex items-center bg-neutral-700/10 rounded-lg p-3 pt-4 border border-neutral-600 relative">
             {/* Balance on top right */}
             <div className="absolute top-1 right-2 flex items-center space-x-2">
               <div className="text-xs text-neutral-400">
-                Balance: <span className="font-medium text-white">{loading ? 'Loading...' : `${sourceBalance} ${sourceToken?.symbol || 'SPIRAL'}`}</span>
+                <span className="font-medium text-white">{loading ? 'Loading...' : `${sourceBalance} ${sourceToken?.symbol || 'SPIRAL'}`}</span>
               </div>
               <button
                 type="button"
@@ -161,8 +192,8 @@ const SwapForm = ({
               />
             </div>
             
-            {/* Amount Input - 50% width */}
-            <div className="w-1/2 pl-2">
+            {/* Amount Input - 50% width, positioned at bottom */}
+            <div className="w-1/2 pl-2 absolute bottom-2 right-2">
               <AmountInput
                 value={sourceAmount}
                 onChange={setSourceAmount}
@@ -174,9 +205,9 @@ const SwapForm = ({
         </div>
 
         {/* Swap Direction Indicator */}
-        <div className="justify-center flex space-y-2">
-          <div className="mt-1 mb-1 w-8 h-8 z-20 bg-neutral-600 rounded-full flex items-center justify-center shadow-lg">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="justify-center flex space-y-1">
+          <div className="mt-1 mb-1 w-6 h-6 z-20 bg-neutral-600 rounded-full flex items-center justify-center shadow-lg">
+            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
           </div>
@@ -184,11 +215,11 @@ const SwapForm = ({
 
         {/* You Get Section */}
         <div className="">
-          <div className="flex items-center bg-neutral-700 rounded-lg p-4 pt-6 border border-neutral-600 relative">
+          <div className="flex items-center bg-neutral-700/10 rounded-lg p-3 pt-4 border border-neutral-600 relative">
             {/* Balance on top right */}
             <div className="absolute top-1 right-2 flex items-center space-x-2">
               <div className="text-xs text-neutral-400">
-                Balance: <span className="font-medium text-white">{loading ? 'Loading...' : `${destinationBalance} ${destinationToken?.symbol || 'STARDUST'}`}</span>
+                <span className="font-medium text-white">{loading ? 'Loading...' : `${destinationBalance} ${destinationToken?.symbol || 'STARDUST'}`}</span>
               </div>
               <button
                 type="button"
@@ -213,8 +244,8 @@ const SwapForm = ({
               />
             </div>
             
-            {/* Amount Input - 50% width */}
-            <div className="w-1/2 pl-2">
+            {/* Amount Input - 50% width, positioned at bottom */}
+            <div className="w-1/2 pl-2 absolute bottom-2 right-2">
               <AmountInput
                 value={destinationAmount}
                 onChange={setDestinationAmount}

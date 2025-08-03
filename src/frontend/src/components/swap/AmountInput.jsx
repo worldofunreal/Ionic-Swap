@@ -68,7 +68,7 @@ const AmountInput = ({ value, onChange, token, user }) => {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="0.00"
-        className="w-full bg-transparent border-none text-right text-2xl font-semibold text-white placeholder-neutral-500 focus:outline-none focus:ring-0 focus:border-none focus:shadow-none hover:bg-neutral-600 focus:bg-neutral-600 rounded-lg p-2 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        className="w-full bg-transparent border-none text-right text-2xl font-semibold text-white placeholder-neutral-500 focus:outline-none focus:ring-0 focus:border-none focus:shadow-none rounded-lg p-2 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         min="0"
         step="0.01"
       />
