@@ -49,7 +49,7 @@ const Header = ({
             {authenticated && user ? (
               <>
                 {/* Token Panel */}
-                <div className="hidden xl:block">
+                <div className="hidden sm:block">
                   <TokenPanel user={user} />
                 </div>
 

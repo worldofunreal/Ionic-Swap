@@ -131,6 +131,7 @@ pub async fn create_icp_htlc(
     hashlock: &str,
     timelock: u64,
     user_principal: &str, // User principal for token withdrawal
+    is_source_htlc: bool, // true for source HTLC, false for destination HTLC
 ) -> Result<String, String> {
     // Get the atomic swap order
     let orders = get_atomic_swap_orders();
@@ -148,29 +149,36 @@ pub async fn create_icp_htlc(
     let recipient = ic_cdk::api::id().to_string();
     let backend_account = recipient.clone();
     
-    // Always pull tokens from user to canister escrow (regardless of swap direction)
-    // Use the provided user_principal for token withdrawal
-    let user_account = user_principal.to_string();
-    ic_cdk::println!("🔍 Pulling tokens from user principal {} to escrow", user_account);
+    // Check if tokens are already in the canister's escrow
+    let canister_balance = get_icrc_balance(token_canister_id, &backend_account).await?;
+    ic_cdk::println!("🔍 Canister balance for token {}: {}", token_canister_id, canister_balance);
     
-    let transfer_result = match transfer_from_icrc_tokens(
-        token_canister_id,
-        &user_account, // from: ICP user
-        &backend_account, // to: backend canister (escrow)
-        amount,
-    ).await {
-        Ok(result) => {
-            ic_cdk::println!("✅ Successfully withdrew {} tokens from user {} to canister escrow", amount, user_account);
-            Ok(result)
-        },
-        Err(e) if e.contains("InsufficientAllowance") => {
-            Err("User must approve canister to spend tokens. Call ICRC-2 approval first.".to_string())
-        },
-        Err(e) => {
-            ic_cdk::println!("❌ Failed to withdraw tokens: {}", e);
-            Err(e)
-        },
-    }?;
+    if canister_balance >= amount {
+        ic_cdk::println!("✅ Tokens already in canister escrow, skipping transfer");
+    } else {
+        // Pull tokens from user to canister escrow
+        let user_account = user_principal.to_string();
+        ic_cdk::println!("🔍 Pulling tokens from user principal {} to escrow", user_account);
+        
+        let transfer_result = match transfer_from_icrc_tokens(
+            token_canister_id,
+            &user_account, // from: ICP user
+            &backend_account, // to: backend canister (escrow)
+            amount,
+        ).await {
+            Ok(result) => {
+                ic_cdk::println!("✅ Successfully withdrew {} tokens from user {} to canister escrow", amount, user_account);
+                Ok(result)
+            },
+            Err(e) if e.contains("InsufficientAllowance") => {
+                Err("User must approve canister to spend tokens. Call ICRC-2 approval first.".to_string())
+            },
+            Err(e) => {
+                ic_cdk::println!("❌ Failed to withdraw tokens: {}", e);
+                Err(e)
+            },
+        }?;
+    }
     
     // Determine the correct sender for the HTLC record
     let htlc_sender = if order.maker.starts_with("0x") {
@@ -206,6 +214,18 @@ pub async fn create_icp_htlc(
     let htlc_store = get_htlc_store();
     let htlc_id = htlc.id.clone();
     htlc_store.insert(htlc_id.clone(), htlc);
+    
+    // Update the order with the HTLC ID
+    let orders = get_atomic_swap_orders();
+    if let Some(order) = orders.get_mut(order_id) {
+        if is_source_htlc {
+            order.source_htlc_id = Some(htlc_id.clone());
+            order.status = crate::types::SwapOrderStatus::SourceHTLCCreated;
+        } else {
+            order.destination_htlc_id = Some(htlc_id.clone());
+            order.status = crate::types::SwapOrderStatus::DestinationHTLCCreated;
+        }
+    }
     
     Ok(format!("ICP HTLC created successfully! HTLC ID: {}", htlc_id))
 }
@@ -433,6 +453,7 @@ pub async fn execute_evm_to_icp_swap(
         &hashlock,
         timelock,
         &maker, // Use cloned maker as user principal
+        true, // This is a source HTLC
     ).await?;
     
     // Extract HTLC ID from result
@@ -516,6 +537,7 @@ pub async fn coordinate_cross_chain_swap(
                 &order.hashlock,
                 order.timelock,
                 &order.maker, // Use order.maker as user principal
+                true, // This is a source HTLC
             ).await?;
             
             if let Some(order) = orders.get_mut(order_id) {

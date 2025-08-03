@@ -31,7 +31,7 @@ const SwapForm = ({
   // Token addresses (from our test script)
   const SPIRAL_TOKEN = '0xdE7409EDeA573D090c3C6123458D6242E26b425E';
   const STARDUST_TOKEN = '0x6ca99fc9bDed10004FE9CC6ce40914b98490Dc90';
-  const HTLC_CONTRACT = '0x7cFC05b92549ae96D758516B9A2b50D114d6ad0d';
+  const HTLC_CONTRACT = '0x7cFC05b92549ae96D758516B9A2b50D114d6ad0d'; // Updated to match test script
   
   // Debug function to check contract deployment
   const checkContractDeployment = async (contractAddress) => {
@@ -414,18 +414,23 @@ const SwapForm = ({
       const nonce = await tokenContract.nonces(user.evmAddress);
       const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
       
-      // Sign the permit
+      // Sign the permit - use human-readable amount like in test script
       const permitResult = await signPermitMessage(
         signer,
         user.evmAddress,
         HTLC_CONTRACT,
-      sourceAmount,
+        sourceAmount, // Human-readable amount (e.g., "10")
         nonce,
         deadline,
         sourceToken.address
       );
 
       console.log('Permit signed successfully');
+      console.log('🔍 Amounts being used:');
+      console.log('  Source amount (human):', sourceAmount);
+      console.log('  Source amount (raw):', ethers.utils.parseUnits(sourceAmount, 8).toString());
+      console.log('  Destination amount (human):', destinationAmount);
+      console.log('  Destination amount (raw):', ethers.utils.parseUnits(destinationAmount, 8).toString());
 
       // Step 3: Create EVM→ICP order
       setSwapProgress('Creating EVM→ICP order...');
@@ -457,11 +462,17 @@ const SwapForm = ({
         const errorMsg = orderResult.Err;
         console.error('Order creation failed:', errorMsg);
         
+        // Try to extract transaction hash from any response
+        const txHashMatch = errorMsg.match(/0x[a-fA-F0-9]{64}/);
+        const txHash = txHashMatch ? txHashMatch[0] : null;
+        
+        if (txHash) {
+          console.log('🔍 Transaction hash found:', txHash);
+          console.log('🔍 Check transaction at: https://sepolia.etherscan.io/tx/' + txHash);
+        }
+        
         // Provide more specific error messages
         if (errorMsg.includes('HTLCCreated event not found')) {
-          // Try to extract transaction hash from the error message
-          const txHashMatch = errorMsg.match(/0x[a-fA-F0-9]{64}/);
-          const txHash = txHashMatch ? txHashMatch[0] : null;
           
           let debugInfo = 'HTLC creation failed: Transaction may have failed or event not emitted.\n\n';
           debugInfo += 'Possible causes:\n';
@@ -496,6 +507,14 @@ const SwapForm = ({
       const orderId = orderResult.Ok.split("Order ID: ")[1].split(",")[0];
       setOrderId(orderId);
       console.log('Order created:', orderId);
+      
+      // Extract and log transaction hash from successful response
+      const txHashMatch = orderResult.Ok.match(/0x[a-fA-F0-9]{64}/);
+      if (txHashMatch) {
+        const txHash = txHashMatch[0];
+        console.log('🔍 Transaction hash:', txHash);
+        console.log('🔍 Check transaction at: https://sepolia.etherscan.io/tx/' + txHash);
+      }
 
       // Step 4: Note about ICRC-2 allowance for ICP user
       setSwapProgress('Note: ICP user needs to approve tokens...');

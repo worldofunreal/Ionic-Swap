@@ -551,32 +551,6 @@ pub async fn transfer_from_icrc_tokens_public(
 // ============================================================================
 
 
-
-/// Create an ICP HTLC (public API)
-#[update]
-#[candid_method]
-pub async fn create_icp_htlc_public(
-    order_id: String,
-    token_canister_id: String,
-    amount: u128,
-    hashlock: String,
-    timelock: u64,
-    user_principal: String,
-) -> Result<String, String> {
-    create_icp_htlc(&order_id, &token_canister_id, amount, &hashlock, timelock, &user_principal).await
-}
-
-/// Claim an ICP HTLC (public API)
-#[update]
-#[candid_method]
-pub async fn claim_icp_htlc_public(
-    order_id: String,
-    htlc_id: String,
-    secret: String,
-) -> Result<String, String> {
-    claim_icp_htlc(&order_id, &htlc_id, &secret).await
-}
-
 /// Refund an ICP HTLC (public API)
 #[update]
 #[candid_method]
@@ -721,33 +695,54 @@ async fn try_pair_orders(new_order_id: &str) -> Option<String> {
     let orders = get_atomic_swap_orders();
     let new_order = orders.get(new_order_id)?;
     
+    ic_cdk::println!("🔍 Checking for compatible orders for order: {}", new_order_id);
+    ic_cdk::println!("  New order status: {:?}", new_order.status);
+    ic_cdk::println!("  New order source token: {}", new_order.source_token);
+    ic_cdk::println!("  New order destination token: {}", new_order.destination_token);
+    
     // Find compatible orders (opposite direction, same tokens, similar amounts)
     for (existing_order_id, existing_order) in orders.iter() {
         if existing_order_id == new_order_id {
             continue; // Skip self
         }
         
-        if existing_order.status != SwapOrderStatus::Created {
-            continue; // Only pair with created orders
+        ic_cdk::println!("  Checking existing order: {} (status: {:?})", existing_order_id, existing_order.status);
+        
+        if existing_order.status != SwapOrderStatus::Created && existing_order.status != SwapOrderStatus::SourceHTLCCreated {
+            ic_cdk::println!("    Skipping - status not compatible");
+            continue; // Only pair with created or source HTLC created orders
         }
         
         // Check if orders are compatible (opposite direction)
         if is_compatible_orders(new_order, existing_order) {
+            ic_cdk::println!("    ✅ Orders are compatible! Creating HTLCs...");
             // Automatically create HTLCs for both orders
             if let Ok(_) = create_htlcs_for_paired_orders(new_order_id, existing_order_id).await {
+                ic_cdk::println!("    ✅ HTLCs created successfully");
                 return Some(existing_order_id.clone());
+            } else {
+                ic_cdk::println!("    ❌ Failed to create HTLCs");
             }
+        } else {
+            ic_cdk::println!("    ❌ Orders are not compatible");
         }
     }
     
+    ic_cdk::println!("  No compatible orders found");
     None
 }
 
 /// Check if two orders are compatible for pairing
 fn is_compatible_orders(order1: &AtomicSwapOrder, order2: &AtomicSwapOrder) -> bool {
+    ic_cdk::println!("    🔍 Checking compatibility:");
+    ic_cdk::println!("      Order1 source: {} -> destination: {}", order1.source_token, order1.destination_token);
+    ic_cdk::println!("      Order2 source: {} -> destination: {}", order2.source_token, order2.destination_token);
+    
     // Check if tokens match (order1 source = order2 destination, order1 destination = order2 source)
     let tokens_match = (order1.source_token == order2.destination_token) && 
                       (order1.destination_token == order2.source_token);
+    
+    ic_cdk::println!("      Tokens match: {}", tokens_match);
     
     // Check if amounts are similar (within 10% tolerance)
     let amount1: u128 = order1.source_amount.parse().unwrap_or(0);
@@ -757,7 +752,13 @@ fn is_compatible_orders(order1: &AtomicSwapOrder, order2: &AtomicSwapOrder) -> b
     let amounts_compatible = amount1 >= (amount2 - amount_tolerance) && 
                            amount1 <= (amount2 + amount_tolerance);
     
-    tokens_match && amounts_compatible
+    ic_cdk::println!("      Amount1: {}, Amount2: {}, Tolerance: {}", amount1, amount2, amount_tolerance);
+    ic_cdk::println!("      Amounts compatible: {}", amounts_compatible);
+    
+    let result = tokens_match && amounts_compatible;
+    ic_cdk::println!("      Final result: {}", result);
+    
+    result
 }
 
 /// Create HTLCs for paired orders
@@ -766,39 +767,41 @@ async fn create_htlcs_for_paired_orders(order1_id: &str, order2_id: &str) -> Res
     let order1 = orders.get(order1_id).ok_or("Order 1 not found")?;
     let order2 = orders.get(order2_id).ok_or("Order 2 not found")?;
     
-            // Create HTLCs for order1
-        if order1.source_token.contains("0x") {
-            // EVM token - create EVM HTLC
-            evm::create_evm_htlc(order1_id.to_string(), true).await?;
-        } else {
-            // ICP token - create ICP HTLC
-            create_icp_htlc(
-                order1_id,
-                &order1.source_token,
-                order1.source_amount.parse().unwrap_or(0),
-                &order1.hashlock,
-                order1.timelock,
-                &order1.maker, // Use order.maker as user principal
-            ).await?;
-        }
-        
-        // Create HTLCs for order2
-        if order2.source_token.contains("0x") {
-            // EVM token - create EVM HTLC
-            evm::create_evm_htlc(order2_id.to_string(), true).await?;
-        } else {
-            // ICP token - create ICP HTLC
-            create_icp_htlc(
-                order2_id,
-                &order2.source_token,
-                order2.source_amount.parse().unwrap_or(0),
-                &order2.hashlock,
-                order2.timelock,
-                &order2.maker, // Use order.maker as user principal
-            ).await?;
-        }
+    ic_cdk::println!("🔍 Completing swap for paired orders:");
+    ic_cdk::println!("  Order 1: {} (source: {}, destination: {})", order1_id, order1.source_token, order1.destination_token);
+    ic_cdk::println!("  Order 2: {} (source: {}, destination: {})", order2_id, order2.source_token, order2.destination_token);
     
-    Ok("HTLCs created for paired orders".to_string())
+    // Determine which order is EVM→ICP and which is ICP→EVM
+    let (evm_to_icp_order, icp_to_evm_order) = if order1.source_token.contains("0x") {
+        (order1, order2)
+    } else {
+        (order2, order1)
+    };
+    
+    let evm_to_icp_order_id = if order1.source_token.contains("0x") { order1_id } else { order2_id };
+    let icp_to_evm_order_id = if order1.source_token.contains("0x") { order2_id } else { order1_id };
+    
+    ic_cdk::println!("  EVM→ICP Order: {} (EVM HTLC: {:?})", evm_to_icp_order_id, evm_to_icp_order.source_htlc_id);
+    ic_cdk::println!("  ICP→EVM Order: {} (ICP tokens in escrow)", icp_to_evm_order_id);
+    
+    // Complete the EVM→ICP swap (this will transfer ICP tokens to the EVM user)
+    if let Some(evm_htlc_id) = &evm_to_icp_order.source_htlc_id {
+        ic_cdk::println!("  Completing EVM→ICP swap...");
+        match complete_cross_chain_swap_public(evm_to_icp_order_id.to_string(), evm_to_icp_order.secret.clone()).await {
+            Ok(result) => {
+                ic_cdk::println!("  ✅ EVM→ICP swap completed: {}", result);
+            },
+            Err(e) => {
+                ic_cdk::println!("  ❌ Failed to complete EVM→ICP swap: {}", e);
+                return Err(format!("Failed to complete EVM→ICP swap: {}", e));
+            }
+        }
+    } else {
+        return Err("EVM HTLC not found for EVM→ICP order".to_string());
+    }
+    
+    ic_cdk::println!("✅ Swap completed successfully for paired orders");
+    Ok("Swap completed for paired orders".to_string())
 }
 
 // ============================================================================
@@ -1021,6 +1024,13 @@ pub async fn create_icp_to_evm_order(
         order.status = SwapOrderStatus::SourceHTLCCreated;
     }
     
+    // Try to automatically pair this order with existing compatible orders
+    if let Some(paired_order_id) = try_pair_orders(&order_id).await {
+        ic_cdk::println!("✅ Order automatically paired with: {}", paired_order_id);
+    } else {
+        ic_cdk::println!("⏳ Order created, waiting for compatible counter-order");
+    }
+    
     Ok(format!("ICP→EVM order created successfully! Order ID: {}, ICRC tokens escrowed: {}", order_id, transfer_result))
 }
 
@@ -1097,6 +1107,13 @@ pub async fn create_evm_to_icp_order(
     if let Some(order) = orders.get_mut(&order_id) {
         order.source_htlc_id = Some(evm_htlc_id.clone());
         order.status = SwapOrderStatus::SourceHTLCCreated;
+    }
+    
+    // Try to automatically pair this order with existing compatible orders
+    if let Some(paired_order_id) = try_pair_orders(&order_id).await {
+        ic_cdk::println!("✅ Order automatically paired with: {}", paired_order_id);
+    } else {
+        ic_cdk::println!("⏳ Order created, waiting for compatible counter-order");
     }
     
     Ok(format!("EVM→ICP order created successfully! Order ID: {}, EVM HTLC: {}, Permit executed: {}", order_id, evm_htlc_id, permit_result))

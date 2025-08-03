@@ -789,13 +789,15 @@ pub async fn create_evm_htlc(
     };
     
     // For EVM HTLCs, the recipient is always the canister's Ethereum address
-    let recipient = canister_eth_address;
+    let recipient = canister_eth_address.clone();
     
     // Determine user address based on HTLC type
     let user_address = if is_source_htlc {
         &order.maker // Source HTLC: transfer from maker
     } else {
-        &order.taker // Destination HTLC: transfer from taker
+        // Destination HTLC: for now, use canister address since we don't have tokens yet
+        // The destination HTLC will be funded later when source HTLC is claimed
+        &canister_eth_address
     };
     
     // Encode createHTLCERC20 function call
@@ -857,8 +859,19 @@ pub async fn create_evm_htlc(
     
     let tx_hash = send_raw_transaction(&signed_tx).await?;
     
+    ic_cdk::println!("🔍 Transaction sent successfully: {}", tx_hash);
+    
     // Wait for transaction to be mined and get receipt to extract HTLC ID
-    let htlc_id = get_htlc_id_from_receipt(&tx_hash).await?;
+    let htlc_id = match get_htlc_id_from_receipt(&tx_hash).await {
+        Ok(id) => {
+            ic_cdk::println!("✅ HTLC ID extracted successfully: {}", id);
+            id
+        },
+        Err(e) => {
+            ic_cdk::println!("❌ Failed to extract HTLC ID: {}", e);
+            return Err(format!("Failed to extract HTLC ID: {}", e));
+        }
+    };
     
     ic_cdk::println!("🔍 HTLC Creation Result:");
     ic_cdk::println!("  Transaction Hash: {}", tx_hash);
