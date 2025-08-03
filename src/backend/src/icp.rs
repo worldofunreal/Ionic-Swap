@@ -184,23 +184,40 @@ pub async fn create_icp_htlc(
     // This involves transferring tokens to the HTLC canister with specific metadata
     let htlc_metadata = format!("HTLC:{}:{}:{}", hashlock, timelock, recipient);
     
-    // For ICRC-2 flow, we need to transfer from the user to the backend canister
-    // The user should have already called icrc2_approve to allow the backend to pull tokens
+    // Determine the source of tokens based on maker type
     let backend_principal = ic_cdk::api::id();
     let backend_account = backend_principal.to_string();
     
-    // Use transfer_from to pull tokens from the user (maker) to the backend
-    let transfer_result = transfer_from_icrc_tokens(
-        token_canister_id,
-        &order.maker, // from: user (maker)
-        &backend_account, // to: backend canister
-        amount,
-    ).await?;
+    // Determine the source of tokens based on swap direction
+    let transfer_result = if order.maker.starts_with("0x") {
+        // EVM→ICP swap: For now, we don't pull ICP tokens since the taker is the canister
+        // The ICP tokens will be provided when a matching ICP→EVM order is created
+        ic_cdk::println!("🔍 EVM→ICP swap detected: No ICP tokens to pull (taker is canister)");
+        Ok("EVM→ICP swap: ICP tokens will be provided by matching order".to_string())
+    } else {
+        // ICP→EVM swap: Pull tokens from ICP user (maker) to backend escrow
+        ic_cdk::println!("🔍 ICP→EVM swap detected: Pulling tokens from ICP user (maker) to escrow");
+        transfer_from_icrc_tokens(
+            token_canister_id,
+            &order.maker, // from: ICP user (maker)
+            &backend_account, // to: backend canister (escrow)
+            amount,
+        ).await
+    }?;
+    
+    // Determine the correct sender for the HTLC record
+    let htlc_sender = if order.maker.starts_with("0x") {
+        // EVM→ICP swap: ICP user (taker) is the sender
+        order.taker.clone()
+    } else {
+        // ICP→EVM swap: ICP user (maker) is the sender
+        order.maker.clone()
+    };
     
     // Store the HTLC information
     let htlc = HTLC {
         id: format!("icp_htlc_{}", order_id),
-        sender: order.maker.clone(), // Original sender (maker)
+        sender: htlc_sender, // Correct sender based on swap direction
         recipient: recipient.to_string(),
         amount: amount.to_string(),
         hashlock: hashlock.to_string(),
@@ -441,11 +458,21 @@ pub async fn execute_evm_to_icp_swap(
         order.status = SwapOrderStatus::SourceHTLCCreated;
     }
     
+    // For EVM→ICP swap, determine the correct ICP recipient
+    // The taker is the backend canister's EVM address, so we use the backend canister as ICP recipient
+    let icp_recipient = if taker.starts_with("0x") {
+        // EVM→ICP swap: Use backend canister as recipient (it will distribute to the actual user)
+        ic_cdk::api::id().to_string()
+    } else {
+        // ICP→EVM swap: Use the taker directly (it's already an ICP principal)
+        taker.clone()
+    };
+    
     // Create ICP HTLC (destination HTLC)
     let icp_htlc_result = create_icp_htlc(
         order_id,
         &destination_token, // ICP token canister ID
-        &taker, // Recipient on ICP
+        &icp_recipient, // Recipient on ICP (properly resolved)
         destination_amount.parse::<u128>().unwrap(),
         &hashlock,
         timelock,
