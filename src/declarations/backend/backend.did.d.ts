@@ -5,10 +5,12 @@ import type { IDL } from '@dfinity/candid';
 export interface AtomicSwapOrder {
   'maker' : string,
   'status' : SwapOrderStatus,
+  'icp_destination_principal' : [] | [string],
   'taker' : string,
   'destination_htlc_id' : [] | [string],
   'destination_amount' : string,
   'hashlock' : string,
+  'evm_destination_address' : [] | [string],
   'secret' : string,
   'created_at' : bigint,
   'source_htlc_id' : [] | [string],
@@ -85,16 +87,6 @@ export type SwapOrderStatus = { 'DestinationHTLCClaimed' : null } |
   { 'Expired' : null } |
   { 'DestinationHTLCCreated' : null };
 export interface _SERVICE {
-  'approve_backend_for_icrc_tokens_public' : ActorMethod<
-    [string, string, bigint],
-    { 'Ok' : string } |
-      { 'Err' : string }
-  >,
-  'approve_icrc_tokens_public' : ActorMethod<
-    [string, string, bigint],
-    { 'Ok' : string } |
-      { 'Err' : string }
-  >,
   'check_expired_orders' : ActorMethod<
     [],
     { 'Ok' : string } |
@@ -125,23 +117,8 @@ export interface _SERVICE {
     { 'Ok' : string } |
       { 'Err' : string }
   >,
-  'complete_unified_cross_chain_swap' : ActorMethod<
-    [string, string],
-    { 'Ok' : string } |
-      { 'Err' : string }
-  >,
   'coordinate_cross_chain_swap_public' : ActorMethod<
     [string, SwapDirection],
-    { 'Ok' : string } |
-      { 'Err' : string }
-  >,
-  'create_atomic_swap_order' : ActorMethod<
-    [string, string, string, string, string, string, bigint],
-    { 'Ok' : string } |
-      { 'Err' : string }
-  >,
-  'create_cross_chain_order_public' : ActorMethod<
-    [string, string, string, string, string, string, SwapDirection, bigint],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
@@ -152,6 +129,11 @@ export interface _SERVICE {
   >,
   'create_evm_htlc' : ActorMethod<
     [string, boolean],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'create_evm_to_icp_order' : ActorMethod<
+    [string, string, string, string, string, string, bigint, PermitRequest],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
@@ -172,12 +154,12 @@ export interface _SERVICE {
       { 'Err' : string }
   >,
   'create_icp_htlc_public' : ActorMethod<
-    [string, string, string, bigint, string, bigint],
+    [string, string, bigint, string, bigint, string],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
-  'create_unified_cross_chain_order' : ActorMethod<
-    [string, string, string, string, string, string, SwapDirection, bigint],
+  'create_icp_to_evm_order' : ActorMethod<
+    [string, string, string, string, string, string, bigint],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
@@ -196,23 +178,8 @@ export interface _SERVICE {
     { 'Ok' : string } |
       { 'Err' : string }
   >,
-  'execute_evm_to_icp_swap_public' : ActorMethod<
-    [string, string],
-    { 'Ok' : string } |
-      { 'Err' : string }
-  >,
   'execute_gasless_approval' : ActorMethod<
     [GaslessApprovalRequest],
-    { 'Ok' : string } |
-      { 'Err' : string }
-  >,
-  'execute_icp_to_evm_swap_public' : ActorMethod<
-    [string, string],
-    { 'Ok' : string } |
-      { 'Err' : string }
-  >,
-  'execute_unified_cross_chain_swap' : ActorMethod<
-    [string, SwapDirection],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
@@ -222,6 +189,7 @@ export interface _SERVICE {
   'get_atomic_swap_order' : ActorMethod<[string], [] | [AtomicSwapOrder]>,
   'get_balance' : ActorMethod<[string], { 'Ok' : string } | { 'Err' : string }>,
   'get_claim_fee' : ActorMethod<[], { 'Ok' : string } | { 'Err' : string }>,
+  'get_compatible_orders' : ActorMethod<[string], Array<AtomicSwapOrder>>,
   'get_contract_info' : ActorMethod<[], string>,
   'get_cross_chain_swap_status_public' : ActorMethod<
     [string],
@@ -248,6 +216,10 @@ export interface _SERVICE {
     [string, string],
     { 'Ok' : bigint } |
       { 'Err' : string }
+  >,
+  'get_orders_by_status' : ActorMethod<
+    [SwapOrderStatus],
+    Array<AtomicSwapOrder>
   >,
   'get_public_key' : ActorMethod<[], { 'Ok' : string } | { 'Err' : string }>,
   'get_refund_fee' : ActorMethod<[], { 'Ok' : string } | { 'Err' : string }>,

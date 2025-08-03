@@ -136,7 +136,6 @@ const taker = '0xeA1e8F475e61Ff78b2986860E86A18F261078725'; // Backend canister'
         
         const orderResult = await actor.create_atomic_swap_order(
             maker,
-            taker,
             sourceToken,
             destinationToken,
             sourceAmount,
@@ -237,42 +236,73 @@ const taker = '0xeA1e8F475e61Ff78b2986860E86A18F261078725'; // Backend canister'
                         console.log("✅ EVM HTLC created successfully!");
                         console.log("  Transaction Hash:", sourceHtlcTx);
                         
-                        // Test 6: Execute EVM→ICP swap coordination
-                        console.log("\n📋 Test 6: Executing EVM→ICP swap coordination...");
-                        const swapResult = await actor.execute_evm_to_icp_swap_public(
-                            orderId,
-                            sourceHtlcTx
-                        );
+                        // Test 6: Approve backend canister to spend ICP tokens (ICRC-2)
+                        console.log("\n📋 Test 6: Approving backend canister to spend ICP tokens (ICRC-2)...");
+                        
+                        // Call ICRC-2 approval directly using dfx
+                        const approvalCommand = `dfx canister call ${STARDUST_TOKEN_CANISTER_ID} icrc2_approve '(record {
+  amount = ${order.destination_amount} : nat;
+  spender = record {
+    owner = principal "${CANISTER_ID}";
+    subaccount = null;
+  };
+  fee = null;
+  memo = null;
+  from_subaccount = null;
+  created_at_time = null;
+  expected_allowance = null;
+  expires_at = null;
+})'`;
+                        
+                        console.log("🔍 Executing ICRC-2 approval command:");
+                        console.log(approvalCommand);
+                        
+                        const { execSync } = require('child_process');
+                        try {
+                            const approvalResult = execSync(approvalCommand, { encoding: 'utf8' });
+                            console.log("✅ ICP tokens approved successfully!");
+                            console.log("  Result:", approvalResult.trim());
+                            
+                            // Test 7: Execute EVM→ICP swap coordination
+                            console.log("\n📋 Test 7: Executing EVM→ICP swap coordination...");
+                            const swapResult = await actor.execute_evm_to_icp_swap_public(
+                                orderId,
+                                sourceHtlcTx
+                            );
                         
                         if ('Ok' in swapResult) {
                             console.log("✅ EVM→ICP swap executed successfully!");
                             console.log("  Result:", swapResult.Ok);
                             
-                            // Test 7: Check final order status
-                            console.log("\n📋 Test 7: Checking final order status...");
+                            // Extract ICP HTLC ID from the result
+                            const icpHtlcId = swapResult.Ok.split("ICP HTLC: ").pop();
+                            console.log("🔍 Extracted ICP HTLC ID:", icpHtlcId);
+                            
+                            // Test 8: Check final order status
+                            console.log("\n📋 Test 8: Checking final order status...");
                             const finalStatus = await actor.get_cross_chain_swap_status_public(orderId);
                             console.log("✅ Final order status:", JSON.stringify(finalStatus));
                             
-                            // Test 8: Claim EVM HTLC using the secret
-                            console.log("\n📋 Test 8: Claiming EVM HTLC using the secret...");
+                            // Test 9: Claim EVM HTLC using the secret
+                            console.log("\n📋 Test 9: Claiming EVM HTLC using the secret...");
                             const evmClaimResult = await actor.claim_evm_htlc(orderId, sourceHtlcTx);
                             if ('Ok' in evmClaimResult) {
                                 console.log("✅ EVM HTLC claimed successfully!");
                                 console.log("  Transaction Hash:", evmClaimResult.Ok);
                                 
-                                // Test 9: Claim ICP HTLC using the secret
-                                console.log("\n📋 Test 9: Claiming ICP HTLC using the secret...");
+                                // Test 10: Claim ICP HTLC using the secret
+                                console.log("\n📋 Test 10: Claiming ICP HTLC using the secret...");
                                 const icpClaimResult = await actor.claim_icp_htlc_public(
                                     orderId,
-                                    "icp_htlc_order_1", // ICP HTLC ID from the swap result
+                                    icpHtlcId, // Use the correct HTLC ID from swap result
                                     order.secret
                                 );
                                 if ('Ok' in icpClaimResult) {
                                     console.log("✅ ICP HTLC claimed successfully!");
                                     console.log("  Result:", icpClaimResult.Ok);
                                     
-                                    // Test 10: Check final completed status
-                                    console.log("\n📋 Test 10: Checking final completed status...");
+                                    // Test 11: Check final completed status
+                                    console.log("\n📋 Test 11: Checking final completed status...");
                                     const finalStatus = await actor.get_cross_chain_swap_status_public(orderId);
                                     console.log("✅ Final completed status:", JSON.stringify(finalStatus));
                                     
@@ -294,6 +324,9 @@ const taker = '0xeA1e8F475e61Ff78b2986860E86A18F261078725'; // Backend canister'
                             
                         } else {
                             console.log("❌ Failed to execute EVM→ICP swap:", swapResult.Err);
+                        }
+                        } catch (error) {
+                            console.log("❌ Failed to approve ICP tokens:", error.message);
                         }
                     } else {
                         console.log("❌ Failed to create EVM HTLC:", sourceHtlcResult.Err);

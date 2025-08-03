@@ -889,11 +889,25 @@ pub async fn claim_evm_htlc(
         return Err("Order not ready for claiming".to_string());
     }
     
-    // Determine the recipient based on HTLC type
+    // Determine the recipient based on HTLC type and destination addresses
     let recipient = if order.source_htlc_id.as_ref() == Some(&htlc_id) {
-        &order.taker // Source HTLC: taker claims maker's tokens
+        // Source HTLC: use destination address if specified, otherwise fallback to taker
+        if order.maker.starts_with("0x") {
+            // EVM→ICP swap: ICP user specified their destination
+            order.icp_destination_principal.as_ref().unwrap_or(&order.taker)
+        } else {
+            // ICP→EVM swap: EVM user specified their destination
+            order.evm_destination_address.as_ref().unwrap_or(&order.taker)
+        }
     } else if order.destination_htlc_id.as_ref() == Some(&htlc_id) {
-        &order.maker // Destination HTLC: maker claims taker's tokens
+        // Destination HTLC: use destination address if specified, otherwise fallback to maker
+        if order.maker.starts_with("0x") {
+            // EVM→ICP swap: EVM user specified their destination
+            order.evm_destination_address.as_ref().unwrap_or(&order.maker)
+        } else {
+            // ICP→EVM swap: ICP user specified their destination
+            order.icp_destination_principal.as_ref().unwrap_or(&order.maker)
+        }
     } else {
         return Err("HTLC ID not found in order".to_string());
     };

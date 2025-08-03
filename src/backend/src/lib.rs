@@ -371,59 +371,7 @@ fn generate_htlc_secret() -> String {
     format!("htlc_secret_{}", hex::encode(random_bytes))
 }
 
-/// Create a new atomic swap order with automatic pairing
-#[update]
-#[candid_method]
-pub async fn create_atomic_swap_order(
-    maker: String,
-    taker: String,
-    source_token: String,
-    destination_token: String,
-    source_amount: String,
-    destination_amount: String,
-    timelock_duration: u64, // Duration in seconds
-) -> Result<String, String> {
-    // Generate secret and hashlock
-    let secret = generate_htlc_secret();
-    let secret_bytes = secret.as_bytes();
-    let hashlock_bytes = evm::keccak256(secret_bytes);
-    let hashlock = format!("0x{}", hex::encode(hashlock_bytes));
-    
-    // Calculate timestamps
-    let current_time = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
-    let timelock = current_time + timelock_duration;
-    let expires_at = timelock + 3600; // Add 1 hour buffer
-    
-    // Create atomic swap order
-    let order_id = generate_order_id();
-    let atomic_order = AtomicSwapOrder {
-        order_id: order_id.clone(),
-        maker,
-        taker,
-        source_token,
-        destination_token,
-        source_amount,
-        destination_amount,
-        secret,
-        hashlock,
-        timelock,
-        source_htlc_id: None,
-        destination_htlc_id: None,
-        status: SwapOrderStatus::Created,
-        created_at: current_time,
-        expires_at,
-    };
-    
-    // Store the order
-    get_atomic_swap_orders().insert(order_id.clone(), atomic_order);
-    
-    // Try to automatically pair with existing orders
-    if let Some(paired_order_id) = try_pair_orders(&order_id).await {
-        return Ok(format!("Order {} created and paired with {}", order_id, paired_order_id));
-    }
-    
-    Ok(order_id)
-}
+
 
 /// Create HTLC on EVM chain for atomic swap
 #[update]
@@ -464,6 +412,37 @@ pub fn get_atomic_swap_order(order_id: String) -> Option<AtomicSwapOrder> {
 #[candid_method]
 pub fn get_all_atomic_swap_orders() -> Vec<AtomicSwapOrder> {
     get_atomic_swap_orders().values().cloned().collect()
+}
+
+/// Get orders by status for manual pairing
+#[query]
+#[candid_method]
+pub fn get_orders_by_status(status: SwapOrderStatus) -> Vec<AtomicSwapOrder> {
+    get_atomic_swap_orders().values()
+        .filter(|order| order.status == status)
+        .cloned()
+        .collect()
+}
+
+/// Get compatible orders for pairing (opposite direction, same tokens, similar amounts)
+#[query]
+#[candid_method]
+pub fn get_compatible_orders(order_id: String) -> Vec<AtomicSwapOrder> {
+    let orders = get_atomic_swap_orders();
+    let target_order = orders.get(&order_id);
+    
+    if let Some(target_order) = target_order {
+        orders.values()
+            .filter(|order| {
+                order.order_id != order_id && 
+                order.status == SwapOrderStatus::SourceHTLCCreated &&
+                is_compatible_orders(target_order, order)
+            })
+            .cloned()
+            .collect()
+    } else {
+        Vec::new()
+    }
 }
 
 /// Check and process expired orders (automatic refund)
@@ -553,16 +532,7 @@ pub fn get_icrc_balance_public(
     Ok(100000000000u128) // Return 1000 tokens as mock balance
 }
 
-/// Approve ICRC-1 tokens (public API)
-#[update]
-#[candid_method]
-pub async fn approve_icrc_tokens_public(
-    canister_id: String,
-    spender: String,
-    amount: u128,
-) -> Result<String, String> {
-    approve_icrc_tokens(&canister_id, &spender, amount).await
-}
+
 
 /// Transfer from ICRC-1 tokens (public API)
 #[update]
@@ -580,26 +550,7 @@ pub async fn transfer_from_icrc_tokens_public(
 // ICP HTLC PUBLIC API ENDPOINTS
 // ============================================================================
 
-/// Approve backend canister to spend user's ICRC tokens (ICRC-2) - Public API
-#[update]
-#[candid_method]
-pub async fn approve_backend_for_icrc_tokens_public(
-    token_canister_id: String,
-    user_principal: String,
-    amount: u128,
-) -> Result<String, String> {
-    // The user calls this function to approve the backend canister to spend their tokens
-    let backend_principal = ic_cdk::api::id();
-    let backend_account = backend_principal.to_string();
-    
-    let approve_result = icp::approve_icrc_tokens(
-        &token_canister_id,
-        &backend_account, // spender: backend canister
-        amount,
-    ).await?;
-    
-    Ok(format!("Backend approved to spend {} tokens from user {}", amount, user_principal))
-}
+
 
 /// Create an ICP HTLC (public API)
 #[update]
@@ -607,12 +558,12 @@ pub async fn approve_backend_for_icrc_tokens_public(
 pub async fn create_icp_htlc_public(
     order_id: String,
     token_canister_id: String,
-    recipient: String,
     amount: u128,
     hashlock: String,
     timelock: u64,
+    user_principal: String,
 ) -> Result<String, String> {
-    create_icp_htlc(&order_id, &token_canister_id, &recipient, amount, &hashlock, timelock).await
+    create_icp_htlc(&order_id, &token_canister_id, amount, &hashlock, timelock, &user_principal).await
 }
 
 /// Claim an ICP HTLC (public API)
@@ -654,41 +605,9 @@ pub fn list_icp_htlcs_public() -> Vec<crate::types::HTLC> {
 // CROSS-CHAIN SWAP PUBLIC API ENDPOINTS
 // ============================================================================
 
-/// Create a cross-chain swap order (public API)
-#[update]
-#[candid_method]
-pub fn create_cross_chain_order_public(
-    maker: String,
-    taker: String,
-    source_token: String,
-    destination_token: String,
-    source_amount: String,
-    destination_amount: String,
-    direction: crate::types::SwapDirection,
-    timelock: u64,
-) -> Result<String, String> {
-    create_cross_chain_order(&maker, &taker, &source_token, &destination_token, &source_amount, &destination_amount, direction, timelock)
-}
 
-/// Execute EVM→ICP swap (public API)
-#[update]
-#[candid_method]
-pub async fn execute_evm_to_icp_swap_public(
-    order_id: String,
-    evm_htlc_id: String,
-) -> Result<String, String> {
-    execute_evm_to_icp_swap(&order_id, &evm_htlc_id).await
-}
 
-/// Execute ICP→EVM swap (public API)
-#[update]
-#[candid_method]
-pub async fn execute_icp_to_evm_swap_public(
-    order_id: String,
-    icp_htlc_id: String,
-) -> Result<String, String> {
-    execute_icp_to_evm_swap(&order_id, &icp_htlc_id).await
-}
+
 
 /// Coordinate cross-chain swap (public API)
 #[update]
@@ -714,14 +633,70 @@ pub fn get_cross_chain_swap_status_public(order_id: String) -> Result<crate::typ
     get_cross_chain_swap_status(&order_id)
 }
 
-/// Complete cross-chain swap (public API)
+/// Complete a cross-chain swap by claiming tokens with the secret
+/// This is the manual withdrawal step after orders are paired
 #[update]
 #[candid_method]
 pub async fn complete_cross_chain_swap_public(
     order_id: String,
     secret: String,
 ) -> Result<String, String> {
-    icp::complete_cross_chain_swap(&order_id, &secret).await
+    // Get the order
+    let orders = get_atomic_swap_orders();
+    let order = orders.get(&order_id)
+        .ok_or_else(|| format!("Order {} not found", order_id))?;
+    
+    // Validate the secret matches the hashlock
+    let secret_hash = format!("0x{}", hex::encode(evm::keccak256(secret.as_bytes())));
+    if secret_hash != order.hashlock {
+        return Err("Invalid secret for swap".to_string());
+    }
+    
+    // Handle different swap directions
+    if order.maker.starts_with("0x") {
+        // EVM→ICP swap: Claim ICP HTLC and send to user's specified principal
+        if let Some(icp_destination) = &order.icp_destination_principal {
+            // Transfer ICRC tokens from canister to user's destination
+            let amount_u128 = order.destination_amount.parse::<u128>()
+                .map_err(|e| format!("Invalid destination amount: {}", e))?;
+            
+            let transfer_result = transfer_icrc_tokens(
+                &order.destination_token,
+                icp_destination,
+                amount_u128,
+            ).await?;
+            
+            // Update order status
+            let orders = get_atomic_swap_orders();
+            if let Some(order) = orders.get_mut(&order_id) {
+                order.status = SwapOrderStatus::Completed;
+            }
+            
+            Ok(format!("EVM→ICP swap completed! ICRC tokens sent to {}: {}", icp_destination, transfer_result))
+        } else {
+            Err("No ICP destination principal specified for EVM→ICP swap".to_string())
+        }
+    } else {
+        // ICP→EVM swap: Claim EVM HTLC and send to user's specified address
+        if let Some(evm_destination) = &order.evm_destination_address {
+            // Claim EVM HTLC and send to user's destination
+            if let Some(htlc_id) = &order.source_htlc_id {
+                let claim_result = evm::claim_evm_htlc(order_id.clone(), htlc_id.clone()).await?;
+                
+                // Update order status
+                let orders = get_atomic_swap_orders();
+                if let Some(order) = orders.get_mut(&order_id) {
+                    order.status = SwapOrderStatus::Completed;
+                }
+                
+                Ok(format!("ICP→EVM swap completed! EVM tokens sent to {}: {}", evm_destination, claim_result))
+            } else {
+                Err("No EVM HTLC found for ICP→EVM swap".to_string())
+            }
+        } else {
+            Err("No EVM destination address specified for ICP→EVM swap".to_string())
+        }
+    }
 }
 
 
@@ -791,37 +766,37 @@ async fn create_htlcs_for_paired_orders(order1_id: &str, order2_id: &str) -> Res
     let order1 = orders.get(order1_id).ok_or("Order 1 not found")?;
     let order2 = orders.get(order2_id).ok_or("Order 2 not found")?;
     
-    // Create HTLCs for order1
-    if order1.source_token.contains("0x") {
-        // EVM token - create EVM HTLC
-        evm::create_evm_htlc(order1_id.to_string(), true).await?;
-    } else {
-        // ICP token - create ICP HTLC
-        create_icp_htlc(
-            order1_id,
-            &order1.source_token,
-            &order1.taker,
-            order1.source_amount.parse().unwrap_or(0),
-            &order1.hashlock,
-            order1.timelock,
-        ).await?;
-    }
-    
-    // Create HTLCs for order2
-    if order2.source_token.contains("0x") {
-        // EVM token - create EVM HTLC
-        evm::create_evm_htlc(order2_id.to_string(), true).await?;
-    } else {
-        // ICP token - create ICP HTLC
-        create_icp_htlc(
-            order2_id,
-            &order2.source_token,
-            &order2.taker,
-            order2.source_amount.parse().unwrap_or(0),
-            &order2.hashlock,
-            order2.timelock,
-        ).await?;
-    }
+            // Create HTLCs for order1
+        if order1.source_token.contains("0x") {
+            // EVM token - create EVM HTLC
+            evm::create_evm_htlc(order1_id.to_string(), true).await?;
+        } else {
+            // ICP token - create ICP HTLC
+            create_icp_htlc(
+                order1_id,
+                &order1.source_token,
+                order1.source_amount.parse().unwrap_or(0),
+                &order1.hashlock,
+                order1.timelock,
+                &order1.maker, // Use order.maker as user principal
+            ).await?;
+        }
+        
+        // Create HTLCs for order2
+        if order2.source_token.contains("0x") {
+            // EVM token - create EVM HTLC
+            evm::create_evm_htlc(order2_id.to_string(), true).await?;
+        } else {
+            // ICP token - create ICP HTLC
+            create_icp_htlc(
+                order2_id,
+                &order2.source_token,
+                order2.source_amount.parse().unwrap_or(0),
+                &order2.hashlock,
+                order2.timelock,
+                &order2.maker, // Use order.maker as user principal
+            ).await?;
+        }
     
     Ok("HTLCs created for paired orders".to_string())
 }
@@ -965,60 +940,156 @@ async fn submit_permit_signature(permit_data: PermitData) -> Result<String, Stri
 }
 
 // ============================================================================
-// UNIFIED CROSS-CHAIN SWAP FUNCTIONS
+// UNIFIED CROSS-CHAIN ORDERBOOK FUNCTIONS
 // ============================================================================
 
-/// Create a unified cross-chain swap order that handles both EVM→ICP and ICP→EVM
+/// Create an ICP→EVM order with automatic token escrow
+/// User must have previously approved the canister to spend their ICRC tokens
 #[update]
 #[candid_method]
-pub async fn create_unified_cross_chain_order(
-    maker: String,
-    taker: String,
-    source_token: String,
-    destination_token: String,
-    source_amount: String,
-    destination_amount: String,
-    direction: crate::types::SwapDirection,
-    timelock: u64,
+pub async fn create_icp_to_evm_order(
+    user_principal: String,           // ICP user's principal ID
+    source_token_canister: String,    // ICRC token canister ID
+    destination_token_address: String, // EVM token address (0x...)
+    source_amount: String,            // ICRC amount
+    destination_amount: String,       // EVM amount
+    evm_destination_address: String,  // Where EVM tokens should be sent (0x...)
+    timelock_duration: u64,           // Duration in seconds
 ) -> Result<String, String> {
-    // Use the existing atomic swap order creation (which works for both directions)
-    create_atomic_swap_order(
-        maker,
-        taker,
-        source_token,
-        destination_token,
-        source_amount,
-        destination_amount,
+    // Generate secret and hashlock
+    let secret = generate_htlc_secret();
+    let secret_bytes = secret.as_bytes();
+    let hashlock_bytes = evm::keccak256(secret_bytes);
+    let hashlock = format!("0x{}", hex::encode(hashlock_bytes));
+    
+    // Calculate timestamps
+    let current_time = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
+    let timelock = current_time + timelock_duration;
+    let expires_at = timelock + 3600; // Add 1 hour buffer
+    
+    // Create order ID
+    let order_id = generate_order_id();
+    
+    // Create the order
+    let order = AtomicSwapOrder {
+        order_id: order_id.clone(),
+        maker: user_principal.clone(), // ICP user
+        taker: ic_cdk::api::id().to_string(), // Backend canister as taker
+        source_token: source_token_canister.clone(),
+        destination_token: destination_token_address.clone(),
+        source_amount: source_amount.clone(),
+        destination_amount: destination_amount.clone(),
+        secret,
+        hashlock,
         timelock,
-    ).await
-}
-
-/// Execute a unified cross-chain swap that handles both directions
-#[update]
-#[candid_method]
-pub async fn execute_unified_cross_chain_swap(
-    order_id: String,
-    direction: crate::types::SwapDirection,
-) -> Result<String, String> {
-    match direction {
-        crate::types::SwapDirection::EVMtoICP => {
-            // For EVM→ICP, return instructions for the user
-            Ok("EVM→ICP swap: Order created successfully. Next steps: 1) Create EVM HTLC, 2) Execute swap".to_string())
-        },
-        crate::types::SwapDirection::ICPtoEVM => {
-            // For ICP→EVM, return instructions for the user
-            Ok("ICP→EVM swap: Order created successfully. Next steps: 1) User calls ICRC-2 approve, 2) Create ICP HTLC, 3) Execute swap".to_string())
-        },
+        source_htlc_id: None,
+        destination_htlc_id: None,
+        status: SwapOrderStatus::Created,
+        created_at: current_time,
+        expires_at,
+        evm_destination_address: Some(evm_destination_address),
+        icp_destination_principal: None, // Not needed for ICP→EVM
+    };
+    
+    // Store the order
+    get_atomic_swap_orders().insert(order_id.clone(), order);
+    
+    // Automatically pull ICRC tokens into escrow
+    let amount_u128 = source_amount.parse::<u128>()
+        .map_err(|e| format!("Invalid source amount: {}", e))?;
+    
+    let transfer_result = transfer_from_icrc_tokens(
+        &source_token_canister,
+        &user_principal, // from: ICP user
+        &ic_cdk::api::id().to_string(), // to: backend canister (escrow)
+        amount_u128,
+    ).await?;
+    
+    // Update order status to indicate tokens are in escrow
+    let orders = get_atomic_swap_orders();
+    if let Some(order) = orders.get_mut(&order_id) {
+        order.status = SwapOrderStatus::SourceHTLCCreated;
     }
+    
+    Ok(format!("ICP→EVM order created successfully! Order ID: {}, ICRC tokens escrowed: {}", order_id, transfer_result))
 }
 
-/// Complete a unified cross-chain swap
+/// Create an EVM→ICP order with automatic permit execution
+/// User must have previously signed the permit for the canister to spend their ERC20 tokens
 #[update]
 #[candid_method]
-pub async fn complete_unified_cross_chain_swap(
-    order_id: String,
-    secret: String,
+pub async fn create_evm_to_icp_order(
+    user_address: String,             // EVM user's address (0x...)
+    source_token_address: String,     // EVM token address (0x...)
+    destination_token_canister: String, // ICRC token canister ID
+    source_amount: String,            // EVM amount
+    destination_amount: String,       // ICRC amount
+    icp_destination_principal: String, // Where ICRC tokens should be sent
+    timelock_duration: u64,           // Duration in seconds
+    permit_request: crate::types::PermitRequest, // User's signed permit
 ) -> Result<String, String> {
-    // Use the existing completion function
-    complete_cross_chain_swap_public(order_id, secret).await
+    // Generate secret and hashlock
+    let secret = generate_htlc_secret();
+    let secret_bytes = secret.as_bytes();
+    let hashlock_bytes = evm::keccak256(secret_bytes);
+    let hashlock = format!("0x{}", hex::encode(hashlock_bytes));
+    
+    // Calculate timestamps
+    let current_time = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
+    let timelock = current_time + timelock_duration;
+    let expires_at = timelock + 3600; // Add 1 hour buffer
+    
+    // Create order ID
+    let order_id = generate_order_id();
+    
+    // Create the order
+    let order = AtomicSwapOrder {
+        order_id: order_id.clone(),
+        maker: user_address.clone(), // EVM user
+        taker: ic_cdk::api::id().to_string(), // Backend canister as taker
+        source_token: source_token_address.clone(),
+        destination_token: destination_token_canister.clone(),
+        source_amount: source_amount.clone(),
+        destination_amount: destination_amount.clone(),
+        secret,
+        hashlock,
+        timelock,
+        source_htlc_id: None,
+        destination_htlc_id: None,
+        status: SwapOrderStatus::Created,
+        created_at: current_time,
+        expires_at,
+        evm_destination_address: None, // Not needed for EVM→ICP
+        icp_destination_principal: Some(icp_destination_principal),
+    };
+    
+    // Store the order
+    get_atomic_swap_orders().insert(order_id.clone(), order);
+    
+    // Automatically execute the permit to pull ERC20 tokens into escrow
+    let gasless_request = crate::types::GaslessApprovalRequest {
+        permit_request,
+        user_address: user_address.clone(),
+        amount: source_amount.clone(),
+        token_address: source_token_address.clone(),
+    };
+    
+    let permit_result = evm::execute_gasless_approval(gasless_request).await?;
+    
+    // Create EVM HTLC to hold the tokens
+    let evm_htlc_id = evm::create_evm_htlc(order_id.clone(), true).await?;
+    
+    // Update order status to indicate EVM HTLC is created
+    let orders = get_atomic_swap_orders();
+    if let Some(order) = orders.get_mut(&order_id) {
+        order.source_htlc_id = Some(evm_htlc_id.clone());
+        order.status = SwapOrderStatus::SourceHTLCCreated;
+    }
+    
+    Ok(format!("EVM→ICP order created successfully! Order ID: {}, EVM HTLC: {}, Permit executed: {}", order_id, evm_htlc_id, permit_result))
 }
+
+
+
+
+

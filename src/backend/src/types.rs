@@ -58,6 +58,9 @@ pub struct AtomicSwapOrder {
     pub status: SwapOrderStatus,
     pub created_at: u64,
     pub expires_at: u64,
+    // New fields for destination addresses
+    pub evm_destination_address: Option<String>, // Where EVM tokens should be sent (0x address)
+    pub icp_destination_principal: Option<String>, // Where ICP tokens should be sent (principal)
 }
 
 // Swap Order Status
