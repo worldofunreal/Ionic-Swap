@@ -131,10 +131,10 @@ const TokenModal = ({ isOpen, onClose, onTokenSelect, user }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
       onClick={handleBackdropClick}
     >
-      <div className="bg-neutral-800 rounded-xl p-6 w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto border border-neutral-700">
+      <div className="bg-neutral-900/90 backdrop-blur-md rounded-xl p-6 w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto border border-neutral-700/50 shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-white">Select Token</h2>
@@ -154,7 +154,7 @@ const TokenModal = ({ isOpen, onClose, onTokenSelect, user }) => {
             <button
               key={token.id}
               onClick={() => handleTokenSelect(token)}
-              className="w-full flex items-center justify-between p-4 rounded-lg border border-neutral-700 hover:border-neutral-600 hover:bg-neutral-700 transition-all duration-200"
+              className="w-full flex items-center justify-between p-4 rounded-lg border border-neutral-700/50 hover:border-neutral-500/50 hover:bg-neutral-800/50 transition-all duration-200 backdrop-blur-sm"
             >
               <div className="flex items-center space-x-3">
                 <span className="text-2xl">{token.icon}</span>

@@ -615,13 +615,30 @@ pub async fn complete_cross_chain_swap_public(
     order_id: String,
     secret: String,
 ) -> Result<String, String> {
+    ic_cdk::println!("🔍 complete_cross_chain_swap_public called for order: {}", order_id);
+    
     // Get the order
     let orders = get_atomic_swap_orders();
     let order = orders.get(&order_id)
         .ok_or_else(|| format!("Order {} not found", order_id))?;
     
+    ic_cdk::println!("🔍 Order details:");
+    ic_cdk::println!("  Maker: {}", order.maker);
+    ic_cdk::println!("  Status: {:?}", order.status);
+    ic_cdk::println!("  Source token: {}", order.source_token);
+    ic_cdk::println!("  Destination token: {}", order.destination_token);
+    ic_cdk::println!("  Source HTLC ID: {:?}", order.source_htlc_id);
+    ic_cdk::println!("  Destination HTLC ID: {:?}", order.destination_htlc_id);
+    ic_cdk::println!("  EVM destination address: {:?}", order.evm_destination_address);
+    ic_cdk::println!("  ICP destination principal: {:?}", order.icp_destination_principal);
+    
     // Validate the secret matches the hashlock
     let secret_hash = format!("0x{}", hex::encode(evm::keccak256(secret.as_bytes())));
+    ic_cdk::println!("🔍 Secret validation:");
+    ic_cdk::println!("  Provided secret: {}", secret);
+    ic_cdk::println!("  Secret hash: {}", secret_hash);
+    ic_cdk::println!("  Expected hashlock: {}", order.hashlock);
+    
     if secret_hash != order.hashlock {
         return Err("Invalid secret for swap".to_string());
     }
@@ -651,23 +668,38 @@ pub async fn complete_cross_chain_swap_public(
             Err("No ICP destination principal specified for EVM→ICP swap".to_string())
         }
     } else {
-        // ICP→EVM swap: Claim EVM HTLC and send to user's specified address
+        ic_cdk::println!("🔍 Processing ICP→EVM swap...");
+        
+        // ICP→EVM swap: Transfer ERC20 tokens directly to user's address
         if let Some(evm_destination) = &order.evm_destination_address {
-            // Claim EVM HTLC and send to user's destination
-            if let Some(htlc_id) = &order.source_htlc_id {
-                let claim_result = evm::claim_evm_htlc(order_id.clone(), htlc_id.clone()).await?;
-                
-                // Update order status
-                let orders = get_atomic_swap_orders();
-                if let Some(order) = orders.get_mut(&order_id) {
-                    order.status = SwapOrderStatus::Completed;
-                }
-                
-                Ok(format!("ICP→EVM swap completed! EVM tokens sent to {}: {}", evm_destination, claim_result))
-            } else {
-                Err("No EVM HTLC found for ICP→EVM swap".to_string())
+            ic_cdk::println!("  ✅ EVM destination address found: {}", evm_destination);
+            
+            ic_cdk::println!("  🔍 Transferring ERC20 tokens to user...");
+            ic_cdk::println!("    Token: {}", order.destination_token);
+            ic_cdk::println!("    Recipient: {}", evm_destination);
+            ic_cdk::println!("    Amount: {}", order.destination_amount);
+            
+            // Transfer ERC20 tokens from canister to user's destination address
+            let transfer_result = evm::transfer_erc20_tokens(
+                &order.destination_token,
+                evm_destination,
+                &order.destination_amount,
+            ).await?;
+            
+            ic_cdk::println!("  ✅ ERC20 transfer completed: {}", transfer_result);
+            
+            // Update order status
+            let orders = get_atomic_swap_orders();
+            if let Some(order) = orders.get_mut(&order_id) {
+                order.status = SwapOrderStatus::Completed;
+                ic_cdk::println!("  ✅ Order status updated to Completed");
             }
+            
+            Ok(format!("ICP→EVM swap completed! EVM tokens sent to {}: Transfer: {}", 
+                      evm_destination, transfer_result))
         } else {
+            ic_cdk::println!("  ❌ No EVM destination address found for ICP→EVM swap");
+            ic_cdk::println!("    Order evm_destination_address: {:?}", order.evm_destination_address);
             Err("No EVM destination address specified for ICP→EVM swap".to_string())
         }
     }
@@ -808,6 +840,18 @@ async fn create_htlcs_for_paired_orders(order1_id: &str, order2_id: &str) -> Res
         }
     } else {
         return Err("EVM HTLC not found for EVM→ICP order".to_string());
+    }
+    
+    // Complete the ICP→EVM swap (this will transfer ERC20 tokens to the ICP user)
+    ic_cdk::println!("  Completing ICP→EVM swap...");
+    match complete_cross_chain_swap_public(icp_to_evm_order_id.to_string(), icp_to_evm_order.secret.clone()).await {
+        Ok(result) => {
+            ic_cdk::println!("  ✅ ICP→EVM swap completed: {}", result);
+        },
+        Err(e) => {
+            ic_cdk::println!("  ❌ Failed to complete ICP→EVM swap: {}", e);
+            return Err(format!("Failed to complete ICP→EVM swap: {}", e));
+        }
     }
     
     ic_cdk::println!("✅ Swap completed successfully for paired orders");

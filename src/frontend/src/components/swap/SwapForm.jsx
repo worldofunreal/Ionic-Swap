@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import TokenSelector from './TokenSelector';
 import AmountInput from './AmountInput';
 import SwapSummary from './SwapSummary';
+import NotificationManager from '../ui/NotificationManager';
 
 const SwapForm = ({
   sourceToken,
@@ -28,6 +29,7 @@ const SwapForm = ({
   const [swapProgress, setSwapProgress] = useState('');
   const [orderId, setOrderId] = useState(null);
   const [pollingInterval, setPollingInterval] = useState(null);
+  const [notifications, setNotifications] = useState([]);
 
   // Cleanup polling interval on unmount
   useEffect(() => {
@@ -47,23 +49,45 @@ const SwapForm = ({
   };
 
   // Poll order status until resolved
-  const startOrderPolling = (orderId) => {
-    console.log('Starting order polling for:', orderId);
+  const startOrderPolling = (orderId, sourceToken, destinationToken, sourceAmount, destinationAmount, direction) => {
+    // Start polling for order status
+    
+    // Add notification for this order
+    const notificationId = `order-${orderId}`;
+    setNotifications(prev => [...prev, {
+      id: notificationId,
+      orderId,
+      sourceToken: sourceToken?.symbol || 'SPIRAL',
+      destinationToken: destinationToken?.symbol || 'STARDUST',
+      sourceAmount,
+      destinationAmount,
+      direction,
+      status: 'waiting',
+      duration: null // No auto-close
+    }]);
     
     const interval = setInterval(async () => {
       try {
         const orderDetails = await actor.get_atomic_swap_order(orderId);
-        if (orderDetails.length > 0) {
+        if (orderDetails && orderDetails.length > 0 && orderDetails[0]) {
           const order = orderDetails[0];
-          console.log('Polling - Order counter_order_id:', order.counter_order_id);
+          // Check order pairing status
           
-          // Check if order has been paired (counter_order_id is not null)
-          if (order.counter_order_id !== null) {
-            console.log('Order paired! Stopping polling.');
+          // Check if order has been paired (counter_order_id is not null and not empty array)
+          if (order.counter_order_id && order.counter_order_id.length > 0) {
+            // Order paired, stopping polling
             clearInterval(interval);
             setPollingInterval(null);
             setSwapStatus('success');
             setSwapProgress('Swap completed successfully!');
+            
+            // Update notification to success
+            setNotifications(prev => prev.map(notif => 
+              notif.orderId === orderId 
+                ? { ...notif, status: 'completed' }
+                : notif
+            ));
+            
             await fetchBalances();
           }
         }
@@ -74,6 +98,11 @@ const SwapForm = ({
     
     setPollingInterval(interval);
     setSwapProgress('Order created successfully! Waiting for counter-order... (Polling for updates)');
+  };
+
+  // Close notification handler
+  const handleCloseNotification = (notificationId) => {
+    setNotifications(prev => prev.filter(notif => notif.id !== notificationId));
   };
 
   // Get nonce from ERC20 token contract
@@ -502,6 +531,14 @@ const SwapForm = ({
       // Step 3: Create EVM→ICP order
       setSwapProgress('Creating EVM→ICP order...');
       
+      console.log('🔍 EVM→ICP Order Creation Debug:');
+      console.log('  User EVM Address:', user.evmAddress);
+      console.log('  Source Token Address:', sourceToken.address);
+      console.log('  Destination Token Canister:', destinationToken.canisterId);
+      console.log('  Source Amount:', ethers.utils.parseUnits(sourceAmount, 8).toString());
+      console.log('  Destination Amount:', ethers.utils.parseUnits(destinationAmount, 8).toString());
+      console.log('  ICP Destination Principal:', user.icpPrincipal);
+      
       const permitRequest = {
         owner: user.evmAddress,
         spender: HTLC_CONTRACT,
@@ -596,31 +633,42 @@ const SwapForm = ({
       
       // Get order details to check status
       const orderDetails = await actor.get_atomic_swap_order(orderId);
-      if (orderDetails.length > 0) {
+      console.log('Raw order details:', orderDetails);
+      
+      if (orderDetails && orderDetails.length > 0 && orderDetails[0]) {
         const order = orderDetails[0];
         console.log('Order counter_order_id:', order.counter_order_id);
+        console.log('Order counter_order_id type:', typeof order.counter_order_id);
+        console.log('Order counter_order_id length:', order.counter_order_id?.length);
         
-        // Check if order has been paired (counter_order_id is not null)
-        if (order.counter_order_id !== null) {
+        // Check if order has been paired (counter_order_id is not null and not empty array)
+        if (order.counter_order_id && order.counter_order_id.length > 0) {
           setSwapStatus('success');
           setSwapProgress('Swap completed successfully!');
           console.log('Swap completed automatically!');
           
+          // Update notification to success
+          setNotifications(prev => prev.map(notif => 
+            notif.orderId === orderId 
+              ? { ...notif, status: 'completed' }
+              : notif
+          ));
+          
           // Refresh balances
           await fetchBalances();
         } else {
-          setSwapStatus('success');
-          setSwapProgress('Order created successfully! Waiting for counter-order...');
+          setSwapStatus('idle'); // Reset to idle so user can continue swapping
+          setSwapProgress('');
           console.log('Order created, waiting for counter-order');
           // Start polling for order completion
-          startOrderPolling(orderId);
+          startOrderPolling(orderId, sourceToken, destinationToken, sourceAmount, destinationAmount, getSwapDirection());
         }
       } else {
-        setSwapStatus('success');
-        setSwapProgress('Order created successfully! Waiting for counter-order...');
+        setSwapStatus('idle'); // Reset to idle so user can continue swapping
+        setSwapProgress('');
         console.log('Order created, waiting for counter-order');
         // Start polling for order completion
-        startOrderPolling(orderId);
+        startOrderPolling(orderId, sourceToken, destinationToken, sourceAmount, destinationAmount, getSwapDirection());
       }
 
     } catch (error) {
@@ -658,13 +706,21 @@ const SwapForm = ({
       // Step 2: Create ICP→EVM order
       setSwapProgress('Creating ICP→EVM order...');
       
+      console.log('🔍 ICP→EVM Order Creation Debug:');
+      console.log('  User Principal:', user.icpPrincipal);
+      console.log('  Source Token Canister:', sourceToken.canisterId);
+      console.log('  Destination Token Address:', destinationToken.address);
+      console.log('  Source Amount:', ethers.utils.parseUnits(sourceAmount, 8).toString());
+      console.log('  Destination Amount:', ethers.utils.parseUnits(destinationAmount, 8).toString());
+      console.log('  EVM Destination Address:', user.evmAddress);
+      
       const orderResult = await actor.create_icp_to_evm_order(
         user.icpPrincipal,
         sourceToken.canisterId,
         destinationToken.address,
         ethers.utils.parseUnits(sourceAmount, 8).toString(),
         ethers.utils.parseUnits(destinationAmount, 8).toString(),
-        destinationAddress, // Use the destination address entered by user
+        user.evmAddress, // Use the user's EVM address from AuthContext
         BigInt(3600) // 1 hour timelock
       );
 
@@ -681,31 +737,42 @@ const SwapForm = ({
       
       // Get order details to check status
       const orderDetails = await actor.get_atomic_swap_order(orderId);
-      if (orderDetails.length > 0) {
+      console.log('Raw order details:', orderDetails);
+      
+      if (orderDetails && orderDetails.length > 0 && orderDetails[0]) {
         const order = orderDetails[0];
         console.log('Order counter_order_id:', order.counter_order_id);
+        console.log('Order counter_order_id type:', typeof order.counter_order_id);
+        console.log('Order counter_order_id length:', order.counter_order_id?.length);
         
-        // Check if order has been paired (counter_order_id is not null)
-        if (order.counter_order_id !== null) {
+        // Check if order has been paired (counter_order_id is not null and not empty array)
+        if (order.counter_order_id && order.counter_order_id.length > 0) {
           setSwapStatus('success');
           setSwapProgress('Swap completed successfully!');
           console.log('Swap completed automatically!');
           
+          // Update notification to success
+          setNotifications(prev => prev.map(notif => 
+            notif.orderId === orderId 
+              ? { ...notif, status: 'completed' }
+              : notif
+          ));
+          
           // Refresh balances
           await fetchBalances();
         } else {
-          setSwapStatus('success');
-          setSwapProgress('Order created successfully! Waiting for counter-order...');
+          setSwapStatus('idle'); // Reset to idle so user can continue swapping
+          setSwapProgress('');
           console.log('Order created, waiting for counter-order');
           // Start polling for order completion
-          startOrderPolling(orderId);
+          startOrderPolling(orderId, sourceToken, destinationToken, sourceAmount, destinationAmount, getSwapDirection());
         }
       } else {
-        setSwapStatus('success');
-        setSwapProgress('Order created successfully! Waiting for counter-order...');
+        setSwapStatus('idle'); // Reset to idle so user can continue swapping
+        setSwapProgress('');
         console.log('Order created, waiting for counter-order');
         // Start polling for order completion
-        startOrderPolling(orderId);
+        startOrderPolling(orderId, sourceToken, destinationToken, sourceAmount, destinationAmount, getSwapDirection());
       }
 
     } catch (error) {
@@ -715,6 +782,14 @@ const SwapForm = ({
 
   return (
     <div className="space-y-4 max-w-md mx-auto">
+      {/* Notification Manager */}
+      {notifications.length > 0 && (
+        <NotificationManager
+          notifications={notifications}
+          onCloseNotification={handleCloseNotification}
+        />
+      )}
+      
       {/* Main Swap Card */}
       <div className="bg-neutral-800/10 rounded-xl border border-neutral-700 p-4 space-y-0">
         {/* You Send Section */}

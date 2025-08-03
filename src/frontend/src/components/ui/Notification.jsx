@@ -2,11 +2,14 @@ import React, { useEffect } from 'react';
 
 const Notification = ({ message, type = 'success', onClose, duration = 3000 }) => {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose();
-    }, duration);
+    // Only set timer if duration is not null
+    if (duration !== null) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, duration);
 
-    return () => clearTimeout(timer);
+      return () => clearTimeout(timer);
+    }
   }, [duration, onClose]);
 
   const getIcon = () => {
@@ -25,13 +28,13 @@ const Notification = ({ message, type = 'success', onClose, duration = 3000 }) =
   const getStyles = () => {
     switch (type) {
       case 'success':
-        return 'bg-green-50 border-green-200 text-green-800';
+        return 'bg-green-500/20 border-green-400/30 text-green-200 backdrop-blur-sm';
       case 'error':
-        return 'bg-red-50 border-red-200 text-red-800';
+        return 'bg-red-500/20 border-red-400/30 text-red-200 backdrop-blur-sm';
       case 'info':
-        return 'bg-blue-50 border-blue-200 text-blue-800';
+        return 'bg-blue-500/20 border-blue-400/30 text-blue-200 backdrop-blur-sm';
       default:
-        return 'bg-green-50 border-green-200 text-green-800';
+        return 'bg-green-500/20 border-green-400/30 text-green-200 backdrop-blur-sm';
     }
   };
 
@@ -46,7 +49,7 @@ const Notification = ({ message, type = 'success', onClose, duration = 3000 }) =
         </div>
         <button
           onClick={onClose}
-          className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+          className="flex-shrink-0 text-gray-300 hover:text-white transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
