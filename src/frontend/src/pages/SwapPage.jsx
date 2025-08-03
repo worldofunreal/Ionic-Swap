@@ -46,9 +46,9 @@ const SwapPage = ({ actor, user }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gradient-from to-gradient-to py-4">
+    <div className="py-4">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="card p-6">
+        <div className="bg-neutral-800 rounded-xl p-6 border border-neutral-700">
           <SwapForm
             direction={swapDirection}
             onDirectionChange={handleDirectionChange}

@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ethers } from 'ethers';
 import { fetchICRCBalance } from '../../utils/icrc';
 import { useAuth } from '../../contexts/AuthContext';
 
-const TokenModal = ({ isOpen, onClose, onTokenSelect, user }) => {
+const TokenPanel = ({ user }) => {
   const { getIdentity } = useAuth();
   const [balances, setBalances] = useState({});
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+  const panelRef = useRef(null);
 
   // Token addresses (from our test script)
   const SPIRAL_TOKEN = '0xdE7409EDeA573D090c3C6123458D6242E26b425E';
@@ -63,10 +65,21 @@ const TokenModal = ({ isOpen, onClose, onTokenSelect, user }) => {
   ];
 
   useEffect(() => {
-    if (isOpen && user) {
+    const handleClickOutside = (event) => {
+      if (panelRef.current && !panelRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (user) {
       fetchAllBalances();
     }
-  }, [isOpen, user]);
+  }, [user]);
 
   const fetchAllBalances = async () => {
     if (!user) return;
@@ -116,67 +129,68 @@ const TokenModal = ({ isOpen, onClose, onTokenSelect, user }) => {
     }
   };
 
-  const handleTokenSelect = (token) => {
-    onTokenSelect(token);
-    onClose();
-  };
-
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
-  if (!isOpen) return null;
-
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      onClick={handleBackdropClick}
-    >
-      <div className="bg-neutral-800 rounded-xl p-6 w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto border border-neutral-700">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-white">Select Token</h2>
-          <button
-            onClick={onClose}
-            className="text-neutral-400 hover:text-white transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+    <div className="relative" ref={panelRef}>
+      {/* Token Panel Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center space-x-2 p-2 rounded-lg hover:bg-neutral-800 transition-colors"
+      >
+        <div className="w-6 h-6 bg-neutral-600 rounded-full flex items-center justify-center">
+          <span className="text-white text-xs">💰</span>
         </div>
+        <svg
+          className={`w-4 h-4 text-neutral-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
 
-        {/* Token List */}
-        <div className="space-y-2">
-          {tokens.map(token => (
-            <button
-              key={token.id}
-              onClick={() => handleTokenSelect(token)}
-              className="w-full flex items-center justify-between p-4 rounded-lg border border-neutral-700 hover:border-neutral-600 hover:bg-neutral-700 transition-all duration-200"
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-2xl">{token.icon}</span>
-                <div className="text-left">
-                  <div className="font-semibold text-white">{token.symbol}</div>
-                  <div className="text-xs text-neutral-400">on {token.network}</div>
-                </div>
+      {/* Token Panel Dropdown */}
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-80 bg-neutral-800 rounded-xl shadow-lg border border-neutral-700 py-2 z-50">
+          <div className="px-4 py-3 border-b border-neutral-700">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">Tokens</h3>
+              <div className="text-xs text-neutral-400">
+                {loading ? 'Loading...' : 'Updated'}
               </div>
-              <div className="text-right">
-                <div className="text-sm font-medium text-white">
-                  {loading ? '...' : `${balances[token.id] || '0'} ${token.symbol}`}
+            </div>
+          </div>
+
+          <div className="px-4 py-2">
+            <div className="space-y-2">
+              {tokens.map(token => (
+                <div
+                  key={token.id}
+                  className="flex items-center justify-between p-3 rounded-lg border border-neutral-700 hover:border-neutral-600 transition-all duration-200"
+                >
+                  <div className="flex items-center space-x-3">
+                    <span className="text-xl">{token.icon}</span>
+                    <div className="text-left">
+                      <div className="font-semibold text-white">{token.symbol}</div>
+                      <div className="text-xs text-neutral-400">on {token.network}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-white">
+                      {loading ? '...' : `${balances[token.id] || '0'} ${token.symbol}`}
+                    </div>
+                    <div className="text-xs text-neutral-400">
+                      {token.network}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-xs text-neutral-400">
-                  {token.network}
-                </div>
-              </div>
-            </button>
-          ))}
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
 
-export default TokenModal; 
+export default TokenPanel; 

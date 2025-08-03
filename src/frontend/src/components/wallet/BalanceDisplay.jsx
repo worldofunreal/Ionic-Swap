@@ -96,44 +96,44 @@ const BalanceDisplay = ({ user }) => {
   };
 
   return (
-    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+    <div className="p-4">
       <div className="flex items-center space-x-6">
         {/* EVM Balances */}
         <div className="flex items-center space-x-4">
           <div className="text-center">
-            <div className="text-xs text-gray-500 font-medium mb-1">ETH</div>
-            <div className="text-sm font-mono font-semibold text-gray-900">
+            <div className="text-xs text-neutral-400 font-medium mb-1">ETH</div>
+            <div className="text-sm font-mono font-semibold text-white">
               {formatBalance(balances.evm.ETH, '')}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-xs text-gray-500 font-medium mb-1">SPIRAL</div>
-            <div className="text-sm font-mono font-semibold text-gray-900">
+            <div className="text-xs text-neutral-400 font-medium mb-1">SPIRAL</div>
+            <div className="text-sm font-mono font-semibold text-white">
               {formatBalance(balances.evm.SPIRAL, '')}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-xs text-gray-500 font-medium mb-1">STD</div>
-            <div className="text-sm font-mono font-semibold text-gray-900">
+            <div className="text-xs text-neutral-400 font-medium mb-1">STD</div>
+            <div className="text-sm font-mono font-semibold text-white">
               {formatBalance(balances.evm.STARDUST, '')}
             </div>
           </div>
         </div>
 
         {/* Divider */}
-        <div className="w-px h-8 bg-gray-300"></div>
+        <div className="w-px h-8 bg-neutral-600"></div>
 
         {/* ICP Balances */}
         <div className="flex items-center space-x-4">
           <div className="text-center">
-            <div className="text-xs text-gray-500 font-medium mb-1">ICP SPIRAL</div>
-            <div className="text-sm font-mono font-semibold text-gray-900">
+            <div className="text-xs text-neutral-400 font-medium mb-1">ICP SPIRAL</div>
+            <div className="text-sm font-mono font-semibold text-white">
               {formatBalance(balances.icp.SPIRAL, '')}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-xs text-gray-500 font-medium mb-1">ICP STD</div>
-            <div className="text-sm font-mono font-semibold text-gray-900">
+            <div className="text-xs text-neutral-400 font-medium mb-1">ICP STD</div>
+            <div className="text-sm font-mono font-semibold text-white">
               {formatBalance(balances.icp.STARDUST, '')}
             </div>
           </div>

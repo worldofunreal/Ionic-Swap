@@ -129,14 +129,14 @@ const SwapForm = ({
   return (
     <div className="space-y-6">
       {/* Main Swap Card */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-0">
+      <div className="bg-neutral-800 rounded-xl border border-neutral-700 p-6 space-y-0">
         {/* You Send Section */}
         <div className="space-y-2 mb-0">
-          <div className="flex items-center bg-gray-50 rounded-lg p-4 pt-6 border border-gray-200 relative">
+          <div className="flex items-center bg-neutral-700 rounded-lg p-4 pt-6 border border-neutral-600 relative">
             {/* Balance on top right */}
             <div className="absolute top-1 right-2 flex items-center space-x-2">
-              <div className="text-xs text-gray-600">
-                Balance: <span className="font-medium">{loading ? 'Loading...' : `${sourceBalance} ${sourceToken?.symbol || 'SPIRAL'}`}</span>
+              <div className="text-xs text-neutral-400">
+                Balance: <span className="font-medium text-white">{loading ? 'Loading...' : `${sourceBalance} ${sourceToken?.symbol || 'SPIRAL'}`}</span>
               </div>
               <button
                 type="button"
@@ -144,8 +144,8 @@ const SwapForm = ({
                 disabled={loading}
                 className={`text-xs px-2 py-1 rounded transition-colors ${
                   loading 
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                    : 'bg-primary-100 hover:bg-primary-200 text-primary-700'
+                    ? 'bg-neutral-600 text-neutral-500 cursor-not-allowed' 
+                    : 'bg-neutral-600 hover:bg-neutral-500 text-white'
                 }`}
               >
                 Max
@@ -175,7 +175,7 @@ const SwapForm = ({
 
         {/* Swap Direction Indicator */}
         <div className="justify-center flex space-y-2">
-          <div className="mt-1 mb-1 w-8 h-8 z-20 bg-primary-500 rounded-full flex items-center justify-center shadow-lg">
+          <div className="mt-1 mb-1 w-8 h-8 z-20 bg-neutral-600 rounded-full flex items-center justify-center shadow-lg">
             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
@@ -184,11 +184,11 @@ const SwapForm = ({
 
         {/* You Get Section */}
         <div className="">
-          <div className="flex items-center bg-gray-50 rounded-lg p-4 pt-6 border border-gray-200 relative">
+          <div className="flex items-center bg-neutral-700 rounded-lg p-4 pt-6 border border-neutral-600 relative">
             {/* Balance on top right */}
             <div className="absolute top-1 right-2 flex items-center space-x-2">
-              <div className="text-xs text-gray-600">
-                Balance: <span className="font-medium">{loading ? 'Loading...' : `${destinationBalance} ${destinationToken?.symbol || 'STARDUST'}`}</span>
+              <div className="text-xs text-neutral-400">
+                Balance: <span className="font-medium text-white">{loading ? 'Loading...' : `${destinationBalance} ${destinationToken?.symbol || 'STARDUST'}`}</span>
               </div>
               <button
                 type="button"
@@ -196,8 +196,8 @@ const SwapForm = ({
                 disabled={loading}
                 className={`text-xs px-2 py-1 rounded transition-colors ${
                   loading 
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                    : 'bg-primary-100 hover:bg-primary-200 text-primary-700'
+                    ? 'bg-neutral-600 text-neutral-500 cursor-not-allowed' 
+                    : 'bg-neutral-600 hover:bg-neutral-500 text-white'
                 }`}
               >
                 Max

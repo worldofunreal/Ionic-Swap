@@ -32,7 +32,7 @@ function App() {
 
   if (actorLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gradient-from to-gradient-to flex items-center justify-center">
+      <div className="h-screen bg-neutral-900 flex items-center justify-center">
         <div className="text-center text-white">
           <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-xl">Initializing Ionic Swap...</p>
@@ -42,7 +42,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gradient-from to-gradient-to">
+    <div className="h-screen bg-neutral-900 flex flex-col">
       {!authenticated ? (
         <LoginForm onLoginSuccess={handleLoginSuccess} />
       ) : (
@@ -54,7 +54,7 @@ function App() {
             onLogout={logout}
           />
           
-          <main className="flex-1">
+          <main className="flex-1 overflow-auto">
             {renderPage()}
           </main>
           
