@@ -134,13 +134,19 @@ const TokenPanel = ({ user }) => {
       {/* Token Panel Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 p-2 rounded-lg hover:bg-neutral-800 transition-colors"
+        className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-neutral-800/50 hover:bg-neutral-700/50 border border-neutral-700/50 hover:border-neutral-600/50 transition-all duration-200"
       >
-        <div className="w-6 h-6 bg-neutral-600 rounded-full flex items-center justify-center">
-          <span className="text-white text-xs">💰</span>
-        </div>
         <svg
-          className={`w-4 h-4 text-neutral-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className="w-4 h-4 text-neutral-300"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+        </svg>
+        <span className="text-sm font-medium text-neutral-300">Tokens</span>
+        <svg
+          className={`w-3 h-3 text-neutral-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -151,10 +157,10 @@ const TokenPanel = ({ user }) => {
 
       {/* Token Panel Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-neutral-800 rounded-xl shadow-lg border border-neutral-700 py-2 z-50">
-          <div className="px-4 py-3 border-b border-neutral-700">
+        <div className="absolute right-0 mt-2 w-80 bg-neutral-900/95 backdrop-blur-sm rounded-xl shadow-xl border border-neutral-700/50 py-2 z-50">
+          <div className="px-4 py-3 border-b border-neutral-700/50">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Tokens</h3>
+              <h3 className="text-lg font-semibold text-white">Token Balances</h3>
               <div className="text-xs text-neutral-400">
                 {loading ? 'Loading...' : 'Updated'}
               </div>
@@ -166,10 +172,12 @@ const TokenPanel = ({ user }) => {
               {tokens.map(token => (
                 <div
                   key={token.id}
-                  className="flex items-center justify-between p-3 rounded-lg border border-neutral-700 hover:border-neutral-600 transition-all duration-200"
+                  className="flex items-center justify-between p-3 rounded-lg bg-neutral-800/30 border border-neutral-700/30 hover:bg-neutral-800/50 hover:border-neutral-600/50 transition-all duration-200"
                 >
                   <div className="flex items-center space-x-3">
-                    <span className="text-xl">{token.icon}</span>
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center border border-neutral-600/30">
+                      <span className="text-sm">{token.icon}</span>
+                    </div>
                     <div className="text-left">
                       <div className="font-semibold text-white">{token.symbol}</div>
                       <div className="text-xs text-neutral-400">on {token.network}</div>

@@ -48,21 +48,20 @@ const LoginForm = ({ onLoginSuccess }) => {
 
         <div className="space-y-4">
           <button
-            className="w-full flex items-center justify-center space-x-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center space-x-3 bg-white hover:bg-gray-50 text-gray-900 font-semibold py-4 px-6 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed border border-gray-200"
             onClick={handleMetaMaskLogin}
             disabled={loading}
           >
-            <div className="w-6 h-6">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M21.49 4L13.5 12.99L21.49 20.98L19.5 22.98L9.5 12.99L19.5 2.98L21.49 4Z"/>
-              </svg>
-            </div>
+            <img 
+              src="/metamask.svg" 
+              alt="MetaMask" 
+              className="w-6 h-6"
+            />
             <div className="text-left">
               <h3 className="font-semibold">MetaMask</h3>
-              <p className="text-sm opacity-90">Connect with your Ethereum wallet</p>
             </div>
             {loading && (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
             )}
           </button>
 
@@ -76,21 +75,20 @@ const LoginForm = ({ onLoginSuccess }) => {
           </div>
 
           <button
-            className="w-full flex items-center justify-center space-x-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center space-x-3 bg-white hover:bg-gray-50 text-gray-900 font-semibold py-4 px-6 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed border border-gray-200"
             onClick={handleInternetIdentityLogin}
             disabled={loading}
           >
-            <div className="w-6 h-6">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </svg>
-            </div>
+            <img 
+              src="/icp.svg" 
+              alt="Internet Computer" 
+              className="w-6 h-6"
+            />
             <div className="text-left">
               <h3 className="font-semibold">Internet Identity</h3>
-              <p className="text-sm opacity-90">Connect with your ICP identity</p>
             </div>
             {loading && (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
             )}
           </button>
         </div>

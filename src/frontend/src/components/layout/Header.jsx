@@ -1,12 +1,14 @@
 import React from 'react';
 import TokenPanel from '../wallet/TokenPanel';
 import UserDropdown from '../user/UserDropdown';
+import ConnectWallet from '../auth/ConnectWallet';
 
 const Header = ({ 
   currentPage, 
   onPageChange, 
   user, 
-  onLogout 
+  onLogout,
+  authenticated 
 }) => {
   const navItems = [
     { id: 'swap', label: 'Swap' },
@@ -44,7 +46,7 @@ const Header = ({
 
           {/* Right Section */}
           <div className="flex items-center space-x-6">
-            {user && (
+            {authenticated && user ? (
               <>
                 {/* Token Panel */}
                 <div className="hidden xl:block">
@@ -54,6 +56,9 @@ const Header = ({
                 {/* User Dropdown */}
                 <UserDropdown user={user} onLogout={onLogout} />
               </>
+            ) : (
+              /* Connect Wallet Button */
+              <ConnectWallet />
             )}
           </div>
         </div>

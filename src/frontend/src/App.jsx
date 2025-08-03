@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useActor } from './useActor';
 import { useAuth } from './contexts/AuthContext';
-import LoginForm from './components/auth/LoginForm';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import SwapPage from './pages/SwapPage';
@@ -12,10 +11,6 @@ function App() {
   const [currentPage, setCurrentPage] = useState('swap');
   const { actor, loading: actorLoading } = useActor();
   const { authenticated, user, logout } = useAuth();
-
-  const handleLoginSuccess = () => {
-    console.log('Login successful, user authenticated');
-  };
 
   const renderPage = () => {
     switch (currentPage) {
@@ -61,24 +56,19 @@ function App() {
         <div className="absolute right-0 bottom-1/3 w-40 h-40 bg-neutral-600 rounded-full blur-3xl opacity-15"></div>
       </div>
 
-      {!authenticated ? (
-        <LoginForm onLoginSuccess={handleLoginSuccess} />
-      ) : (
-        <>
-          <Header 
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-            user={user}
-            onLogout={logout}
-          />
-          
-          <main className="flex-1 overflow-auto relative z-10">
-            {renderPage()}
-          </main>
-          
-          <Footer />
-        </>
-      )}
+      <Header 
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        user={user}
+        onLogout={logout}
+        authenticated={authenticated}
+      />
+      
+      <main className="flex-1 overflow-auto relative z-10">
+        {renderPage()}
+      </main>
+      
+      <Footer />
     </div>
   );
 }

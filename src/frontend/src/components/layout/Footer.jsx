@@ -2,7 +2,30 @@ import React from 'react';
 
 const Footer = () => {
   return (
-    <footer className="border-t border-neutral-800 mt-auto py-4">
+    <>
+      {/* Powered By 1inch Section */}
+      <div className="py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-center">
+            <a 
+              href="https://1inch.io/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center space-x-1 text-neutral-400 hover:text-white transition-colors"
+            >
+              <span className="text-xs font-medium">Powered By:</span>
+              <img 
+                src="/1inch.svg" 
+                alt="1inch" 
+                className="h-12 w-auto"
+              />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Footer */}
+      <footer className="border-t border-neutral-800 py-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           {/* Left side - Brand */}
@@ -48,6 +71,7 @@ const Footer = () => {
         </div>
       </div>
     </footer>
+    </>
   );
 };
 
