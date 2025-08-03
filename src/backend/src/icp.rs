@@ -1,4 +1,4 @@
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize, Principal, Decode};
 use ic_cdk::call;
 use sha3::Digest;
 use crate::storage::{get_htlc_store, get_atomic_swap_orders, generate_order_id};
@@ -104,6 +104,7 @@ pub async fn transfer_from_icrc_tokens(
         created_at_time: None,
     };
     
+    // Call ICRC-2 transfer_from directly with proper type
     let result: (TransferFromResult,) = call(canister_principal, "icrc2_transfer_from", (transfer_from_args,))
         .await
         .map_err(|e| format!("Transfer from failed: {:?}", e))?;
@@ -633,7 +634,7 @@ pub struct TransferArgs {
 
 #[derive(CandidType, Deserialize)]
 pub enum TransferResult {
-    Ok(u64),
+    Ok(u128), // BlockIndex is nat in Candid, which is u128 in Rust
     Err(TransferError),
 }
 
@@ -667,7 +668,7 @@ pub struct ApproveArgs {
 
 #[derive(CandidType, Deserialize)]
 pub enum ApproveResult {
-    Ok(u64),
+    Ok(u128), // BlockIndex is nat in Candid, which is u128 in Rust
     Err(ApproveError),
 }
 
@@ -696,7 +697,7 @@ pub struct TransferFromArgs {
 
 #[derive(CandidType, Deserialize)]
 pub enum TransferFromResult {
-    Ok(u64),
+    Ok(u128), // BlockIndex is nat in Candid, which is u128 in Rust
     Err(TransferFromError),
 }
 

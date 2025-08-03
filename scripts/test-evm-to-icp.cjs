@@ -17,6 +17,8 @@ const SEPOLIA_CHAIN_ID = 11155111;
 const TEST_AMOUNTS = {
     SPIRAL_10: 1000000000n,      // 10 SPIRAL (8 decimals)
     STD_5: 500000000n,           // 5 STD (8 decimals)
+    STD_1: 100000000n,           // 1 STD (8 decimals) - smaller amount for testing
+    STD_01: 10000000n,           // 0.1 STD (8 decimals) - very small amount for testing
 };
 
 // EIP-2612 permit helpers (from gaslessUtils.js)
@@ -126,60 +128,63 @@ async function main() {
     try {
         // Test 1: Create EIP-2612 permit for Spiral tokens (EVM source)
         console.log("\n📋 Test 1: Creating EIP-2612 permit for Spiral tokens (EVM source)...");
-        
-        // Get nonce from Spiral token contract
-        const spiralTokenContract = new ethers.Contract(SPIRAL_TOKEN, [
-            'function nonces(address owner) view returns (uint256)'
-        ], provider);
-        
-        const spiralNonce = await spiralTokenContract.nonces(userAddress);
-        const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+                
+                // Get nonce from Spiral token contract
+                const spiralTokenContract = new ethers.Contract(SPIRAL_TOKEN, [
+                    'function nonces(address owner) view returns (uint256)'
+                ], provider);
+                
+                const spiralNonce = await spiralTokenContract.nonces(userAddress);
+                const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
         const spiralAmount = TEST_AMOUNTS.SPIRAL_10.toString(); // 10 SPIRAL
         const spiralAmountHuman = ethers.utils.formatUnits(spiralAmount, 8);
-        
-        console.log("  Spiral Permit details:");
-        console.log("    Owner:", userAddress);
-        console.log("    Spender:", HTLC_CONTRACT);
-        console.log("    Amount (human):", spiralAmountHuman);
-        console.log("    Amount (raw):", spiralAmount);
-        console.log("    Nonce:", spiralNonce.toString());
-        console.log("    Deadline:", deadline);
-        
-        // Sign the Spiral permit
-        const spiralPermitResult = await signPermitMessage(
-            signer,
-            userAddress,
-            HTLC_CONTRACT,
-            spiralAmountHuman,
-            spiralNonce,
-            deadline,
-            SPIRAL_TOKEN
-        );
-        
-        console.log("✅ Spiral permit signed successfully!");
-        console.log("  Signature:", spiralPermitResult.signature);
-        
+                
+                console.log("  Spiral Permit details:");
+                console.log("    Owner:", userAddress);
+                console.log("    Spender:", HTLC_CONTRACT);
+                console.log("    Amount (human):", spiralAmountHuman);
+                console.log("    Amount (raw):", spiralAmount);
+                console.log("    Nonce:", spiralNonce.toString());
+                console.log("    Deadline:", deadline);
+                
+                // Sign the Spiral permit
+                const spiralPermitResult = await signPermitMessage(
+                    signer,
+                    userAddress,
+                    HTLC_CONTRACT,
+                    spiralAmountHuman,
+                    spiralNonce,
+                    deadline,
+                    SPIRAL_TOKEN
+                );
+                
+                console.log("✅ Spiral permit signed successfully!");
+                console.log("  Signature:", spiralPermitResult.signature);
+                
         // Test 2: Create EVM→ICP order with automatic permit execution
         console.log("\n📋 Test 2: Creating EVM→ICP order with automatic permit execution...");
         const sourceToken = SPIRAL_TOKEN; // EVM Spiral token
         const destinationToken = STARDUST_TOKEN_CANISTER_ID; // ICP Stardust token
         const sourceAmount = TEST_AMOUNTS.SPIRAL_10.toString(); // 10 SPIRAL
-        const destinationAmount = TEST_AMOUNTS.STD_5.toString(); // 5 STD
+        const destinationAmount = TEST_AMOUNTS.STD_1.toString();
         const timelockDuration = 3600; // 1 hour
-        const icpDestinationPrincipal = "mxzaz-hqaaa-aaaar-qaada-cai"; // Example ICP principal
+        // Get the current dfx identity's principal for the ICP user
+        const { execSync } = require('child_process');
+        const currentPrincipal = execSync('dfx identity get-principal', { encoding: 'utf8' }).trim();
+        const icpDestinationPrincipal = currentPrincipal; // Use current dfx identity
         
         const permitRequest = {
-            owner: userAddress,
-            spender: HTLC_CONTRACT,
-            value: spiralAmount,
-            nonce: spiralNonce.toString(),
-            deadline: deadline.toString(),
-            v: spiralPermitResult.sig.v.toString(),
-            r: spiralPermitResult.sig.r,
-            s: spiralPermitResult.sig.s,
-            signature: spiralPermitResult.signature
-        };
-        
+                    owner: userAddress,
+                    spender: HTLC_CONTRACT,
+                    value: spiralAmount,
+                    nonce: spiralNonce.toString(),
+                    deadline: deadline.toString(),
+                    v: spiralPermitResult.sig.v.toString(),
+                    r: spiralPermitResult.sig.r,
+                    s: spiralPermitResult.sig.s,
+                    signature: spiralPermitResult.signature
+                };
+                
         const orderResult = await actor.create_evm_to_icp_order(
             userAddress,
             sourceToken,
@@ -218,35 +223,122 @@ async function main() {
                 console.log("  Expires At:", new Date(Number(order.expires_at) * 1000).toISOString());
                 console.log("  ICP Destination Principal:", order.icp_destination_principal);
                 
-                // Test 4: Complete the swap using the secret
-                console.log("\n📋 Test 4: Completing the swap using the secret...");
-                const completeResult = await actor.complete_cross_chain_swap_public(
-                    orderId,
-                    order.secret
-                );
+                // Test 4: Create ICRC-2 allowance for ICP user (ICP equivalent of EIP-2612 permit)
+                console.log("\n📋 Test 4: Creating ICRC-2 allowance for ICP user...");
                 
-                if ('Ok' in completeResult) {
-                    console.log("✅ Swap completed successfully!");
-                    console.log("  Result:", completeResult.Ok);
+                // For testing, we need to call the ICRC-2 approve function on the token canister
+                // This would normally be done by the ICP user's wallet
+                console.log("  Creating ICRC-2 allowance...");
+                console.log("  Token Canister:", destinationToken);
+                console.log("  ICP User Principal:", icpDestinationPrincipal);
+                console.log("  Amount:", destinationAmount);
+                
+                // Create a call to the ICRC-2 approve function
+                const { execSync } = require('child_process');
+                const backendCanisterId = 'uxrrr-q7777-77774-qaaaq-cai'; // Backend canister ID
+                
+                // Debug: Check current dfx identity and principal
+                console.log("  🔍 Debugging dfx identity:");
+                try {
+                    const whoamiResult = execSync('dfx identity whoami', { encoding: 'utf8' });
+                    console.log("    Current dfx identity:", whoamiResult.trim());
                     
-                    // Test 5: Check final order status
-                    console.log("\n📋 Test 5: Checking final order status...");
-                    const finalOrderDetails = await actor.get_atomic_swap_order(orderId);
-                    if (finalOrderDetails.length > 0) {
-                        const finalOrder = finalOrderDetails[0];
-                        console.log("✅ Final order status:", finalOrder.status);
+                    const principalResult = execSync('dfx identity get-principal', { encoding: 'utf8' });
+                    console.log("    Current principal:", principalResult.trim());
+                    console.log("    Expected ICP user principal:", icpDestinationPrincipal);
+                    
+                    if (principalResult.trim() !== icpDestinationPrincipal) {
+                        console.log("    ⚠️  WARNING: Principal mismatch! Current identity is not the ICP user");
+                        console.log("    The ICRC-2 allowance will be set for the wrong principal");
+                    } else {
+                        console.log("    ✅ Principal matches - correct identity for ICRC-2 approval");
                     }
                     
-                    console.log("\n🎉 Complete EVM→ICP Cross-Chain Swap Executed Successfully!");
-                    console.log('\n📋 Complete Transaction Summary:');
-                    console.log(`  ✅ Permit Creation: Signed by user`);
-                    console.log(`  ✅ Order Creation: ${orderId}`);
-                    console.log(`  ✅ Automatic Permit Execution: Included in order creation`);
-                    console.log(`  ✅ Automatic EVM HTLC Creation: Included in order creation`);
-                    console.log(`  ✅ Swap Completion: ${completeResult.Ok}`);
+                } catch (error) {
+                    console.log("    ❌ Failed to get dfx identity info:", error.message);
+                }
+                
+                try {
+                    // Increase allowance to account for transfer fees (typically 10,000 tokens)
+                    const allowanceWithFees = parseInt(destinationAmount) + 10000;
+                    const approveCommand = `dfx canister call ${destinationToken} icrc2_approve '(record {amount=${allowanceWithFees};spender=record{owner=principal"${backendCanisterId}";subaccount=null};fee=null;memo=null;from_subaccount=null;created_at_time=null;expected_allowance=null;expires_at=null})'`;
+                    console.log("  Executing:", approveCommand);
+                    console.log("  Allowance amount (including fees):", allowanceWithFees);
+                    
+                    const approveResult = execSync(approveCommand, { encoding: 'utf8' });
+                    console.log("✅ ICRC-2 allowance created successfully!");
+                    console.log("  Result:", approveResult.trim());
+                    
+                } catch (error) {
+                    console.log("❌ Failed to create ICRC-2 allowance:", error.message);
+                    console.log("  This might be expected if allowance already exists");
+                }
+                
+                // Test 5: Create ICP→EVM counter-order
+                console.log("\n📋 Test 5: Creating ICP→EVM counter-order...");
+                const icpUserPrincipal = icpDestinationPrincipal; // ICP user who wants EVM tokens
+                const icpSourceToken = destinationToken; // Stardust token (ICRC)
+                const icpDestinationToken = sourceToken; // Spiral token (EVM)
+                const icpSourceAmount = destinationAmount; // 5 STD
+                const icpDestinationAmount = sourceAmount; // 10 SPIRAL
+                const evmDestinationAddress = userAddress; // Where EVM tokens should be sent
+                
+                const icpOrderResult = await actor.create_icp_to_evm_order(
+                    icpUserPrincipal,
+                    icpSourceToken,
+                    icpDestinationToken,
+                    icpSourceAmount,
+                    icpDestinationAmount,
+                    evmDestinationAddress,
+                    BigInt(timelockDuration)
+                );
+                
+                if ('Ok' in icpOrderResult) {
+                    console.log("✅ ICP→EVM counter-order created successfully!");
+                    console.log("  Result:", icpOrderResult.Ok);
+                    
+                    // Extract counter-order ID
+                    const counterOrderId = icpOrderResult.Ok.split("Order ID: ")[1].split(",")[0];
+                    console.log("  Counter Order ID:", counterOrderId);
+                    
+                    // Test 6: Check if orders are paired automatically
+                    console.log("\n📋 Test 6: Checking order pairing...");
+                    const compatibleOrders = await actor.get_compatible_orders(orderId);
+                    console.log("  Compatible orders found:", compatibleOrders.length);
+                    
+                    if (compatibleOrders.length > 0) {
+                        console.log("✅ Orders should be automatically paired!");
+                        
+                        // Test 7: Complete the swap using the secret
+                        console.log("\n📋 Test 7: Completing the paired swap...");
+                        const completeResult = await actor.complete_cross_chain_swap_public(
+                                orderId,
+                            order.secret
+                        );
+                        
+                        if ('Ok' in completeResult) {
+                            console.log("✅ Swap completed successfully!");
+                            console.log("  Result:", completeResult.Ok);
+                            
+                            console.log("\n🎉 Complete Cross-Chain Swap Executed Successfully!");
+                                    console.log('\n📋 Complete Transaction Summary:');
+                            console.log(`  ✅ EVM Permit Creation: Signed by user`);
+                            console.log(`  ✅ EVM→ICP Order Creation: ${orderId}`);
+                            console.log(`  ✅ ICRC-2 Allowance: Approved by ICP user`);
+                            console.log(`  ✅ ICP→EVM Counter-Order Creation: ${counterOrderId}`);
+                            console.log(`  ✅ Order Pairing: Automatic`);
+                            console.log(`  ✅ Swap Completion: ${completeResult.Ok}`);
+                            
+                        } else {
+                            console.log("❌ Failed to complete swap:", completeResult.Err);
+                        }
+                    } else {
+                        console.log("⚠️  No compatible orders found for pairing");
+                        console.log("  Orders may need manual pairing or timing adjustment");
+                    }
                     
                 } else {
-                    console.log("❌ Failed to complete swap:", completeResult.Err);
+                    console.log("❌ Failed to create ICP→EVM counter-order:", icpOrderResult.Err);
                 }
             } else {
                 console.log("❌ Failed to get order details");

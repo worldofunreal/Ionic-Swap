@@ -994,9 +994,19 @@ pub async fn create_icp_to_evm_order(
     // Store the order
     get_atomic_swap_orders().insert(order_id.clone(), order);
     
+    // Add detailed logging for quantity debugging
+    ic_cdk::println!("🔍 ICP→EVM Order Creation Debug:");
+    ic_cdk::println!("  User Principal: {}", user_principal);
+    ic_cdk::println!("  Source Token Canister: {}", source_token_canister);
+    ic_cdk::println!("  Source Amount (string): {}", source_amount);
+    ic_cdk::println!("  Destination Amount (string): {}", destination_amount);
+    
     // Automatically pull ICRC tokens into escrow
     let amount_u128 = source_amount.parse::<u128>()
         .map_err(|e| format!("Invalid source amount: {}", e))?;
+    
+    ic_cdk::println!("  Amount to transfer (u128): {}", amount_u128);
+    ic_cdk::println!("  Backend Canister ID: {}", ic_cdk::api::id().to_string());
     
     let transfer_result = transfer_from_icrc_tokens(
         &source_token_canister,
