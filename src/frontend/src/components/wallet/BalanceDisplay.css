@@ -1,0 +1,64 @@
+.balance-display {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+}
+
+.balance-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.balance-section h4 {
+  font-size: 10px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.balance-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.token-symbol {
+  font-weight: 500;
+  color: #333;
+  font-size: 11px;
+}
+
+.balance-amount {
+  color: #666;
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 10px;
+}
+
+@media (max-width: 768px) {
+  .balance-display {
+    gap: 8px;
+  }
+  
+  .balance-section h4 {
+    font-size: 9px;
+  }
+  
+  .token-symbol {
+    font-size: 10px;
+  }
+  
+  .balance-amount {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .balance-display {
+    flex-direction: column;
+    gap: 4px;
+  }
+} 

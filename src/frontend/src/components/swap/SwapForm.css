@@ -1,0 +1,149 @@
+.swap-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Direction Toggle */
+.direction-toggle {
+  display: flex;
+  background: #f5f5f5;
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.direction-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  color: #666;
+}
+
+.direction-btn:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
+.direction-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.direction-icon {
+  font-size: 16px;
+}
+
+/* Form Sections */
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+/* Destination Input */
+.destination-input {
+  padding: 12px 16px;
+  border: 2px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.destination-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.destination-input::placeholder {
+  color: #999;
+}
+
+.input-help {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* Network Info */
+.network-info {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e9ecef;
+}
+
+.network-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.network-label {
+  font-weight: 500;
+  color: #666;
+  font-size: 13px;
+}
+
+.network-value {
+  font-weight: 600;
+  color: #333;
+  font-size: 13px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .swap-form {
+    gap: 20px;
+  }
+  
+  .direction-btn {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  
+  .direction-icon {
+    font-size: 14px;
+  }
+  
+  .form-label {
+    font-size: 13px;
+  }
+  
+  .destination-input {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  
+  .input-help {
+    font-size: 11px;
+  }
+  
+  .network-info {
+    padding: 12px;
+  }
+  
+  .network-label,
+  .network-value {
+    font-size: 12px;
+  }
+} 
