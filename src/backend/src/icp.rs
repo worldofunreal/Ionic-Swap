@@ -1,8 +1,8 @@
-use candid::{CandidType, Deserialize, Principal, Decode};
+use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::call;
 use sha3::Digest;
-use crate::storage::{get_htlc_store, get_atomic_swap_orders, generate_order_id};
-use crate::types::{HTLC, AtomicSwapOrder, SwapOrderStatus, SwapDirection};
+use crate::storage::{get_htlc_store, get_atomic_swap_orders};
+use crate::types::{HTLC, SwapOrderStatus, SwapDirection};
 
 // ============================================================================
 // ICRC-1 TOKEN FUNCTIONS
@@ -129,7 +129,7 @@ pub async fn create_icp_htlc(
     token_canister_id: &str,
     amount: u128,
     hashlock: &str,
-    timelock: u64,
+    _timelock: u64,
     user_principal: &str, // User principal for token withdrawal
     is_source_htlc: bool, // true for source HTLC, false for destination HTLC
 ) -> Result<String, String> {
@@ -160,7 +160,7 @@ pub async fn create_icp_htlc(
         let user_account = user_principal.to_string();
         ic_cdk::println!("🔍 Pulling tokens from user principal {} to escrow", user_account);
         
-        let transfer_result = match transfer_from_icrc_tokens(
+        let _transfer_result = match transfer_from_icrc_tokens(
             token_canister_id,
             &user_account, // from: ICP user
             &backend_account, // to: backend canister (escrow)
@@ -231,6 +231,7 @@ pub async fn create_icp_htlc(
 }
 
 /// Claim an ICP HTLC using the secret
+#[allow(dead_code)]
 pub async fn claim_icp_htlc(
     order_id: &str,
     htlc_id: &str,
@@ -354,11 +355,11 @@ pub async fn refund_icp_htlc(
     // In a real implementation, this would be done by the HTLC canister
     // For now, we'll simulate this by transferring from the backend to the original sender
     let backend_principal = ic_cdk::api::id();
-    let backend_account = backend_principal.to_string();
+    let _backend_account = backend_principal.to_string();
     
     // Get the atomic swap order to determine the original sender
     let orders = get_atomic_swap_orders();
-    let order = orders.get(order_id)
+    let _order = orders.get(order_id)
         .ok_or_else(|| format!("Order {} not found", order_id))?;
     
     // Determine the token canister ID and original sender
@@ -405,6 +406,7 @@ pub fn list_icp_htlcs() -> Vec<HTLC> {
 
 
 /// Execute a complete EVM→ICP swap flow
+#[allow(dead_code)]
 pub async fn execute_evm_to_icp_swap(
     order_id: &str,
     evm_htlc_id: &str,
@@ -437,7 +439,7 @@ pub async fn execute_evm_to_icp_swap(
     
     // For EVM→ICP swap, determine the correct ICP recipient
     // The taker is the backend canister's EVM address, so we use the backend canister as ICP recipient
-    let icp_recipient = if taker.starts_with("0x") {
+    let _icp_recipient = if taker.starts_with("0x") {
         // EVM→ICP swap: Use backend canister as recipient (it will distribute to the actual user)
         ic_cdk::api::id().to_string()
     } else {
@@ -470,6 +472,7 @@ pub async fn execute_evm_to_icp_swap(
 }
 
 /// Execute a complete ICP→EVM swap flow
+#[allow(dead_code)]
 pub async fn execute_icp_to_evm_swap(
     order_id: &str,
     icp_htlc_id: &str,
@@ -530,7 +533,7 @@ pub async fn coordinate_cross_chain_swap(
         },
         SwapDirection::ICPtoEVM => {
             // For ICP→EVM, we create the ICP HTLC first
-            let icp_htlc_result = create_icp_htlc(
+            let _icp_htlc_result = create_icp_htlc(
                 order_id,
                 &order.source_token, // ICP token canister ID
                 order.source_amount.parse::<u128>().unwrap(),
@@ -588,6 +591,7 @@ pub fn get_cross_chain_swap_status(order_id: &str) -> Result<SwapOrderStatus, St
 }
 
 /// Complete a cross-chain swap by claiming both HTLCs
+#[allow(dead_code)]
 pub async fn complete_cross_chain_swap(
     order_id: &str,
     secret: &str,

@@ -45,6 +45,7 @@ pub fn update_current_nonce(new_nonce: u64) {
 // STORAGE HELPER FUNCTIONS
 // ============================================================================
 
+#[allow(static_mut_refs)]
 pub fn get_htlc_store() -> &'static mut HashMap<String, HTLC> {
     unsafe {
         if let Some(store) = &mut HTLC_STORE {
@@ -56,6 +57,7 @@ pub fn get_htlc_store() -> &'static mut HashMap<String, HTLC> {
     }
 }
 
+#[allow(static_mut_refs)]
 pub fn get_swap_orders() -> &'static mut HashMap<String, CrossChainSwapOrder> {
     unsafe {
         if let Some(orders) = &mut SWAP_ORDERS {
@@ -67,6 +69,7 @@ pub fn get_swap_orders() -> &'static mut HashMap<String, CrossChainSwapOrder> {
     }
 }
 
+#[allow(static_mut_refs)]
 pub fn get_atomic_swap_orders() -> &'static mut HashMap<String, AtomicSwapOrder> {
     unsafe {
         if let Some(orders) = &mut ATOMIC_SWAP_ORDERS {
@@ -78,6 +81,7 @@ pub fn get_atomic_swap_orders() -> &'static mut HashMap<String, AtomicSwapOrder>
     }
 }
 
+#[allow(static_mut_refs)]
 pub fn generate_order_id() -> String {
     unsafe {
         ORDER_COUNTER += 1;

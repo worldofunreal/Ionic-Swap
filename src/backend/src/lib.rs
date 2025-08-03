@@ -72,9 +72,9 @@ async fn create_htlc_escrow(
     taker: String,
     amount: String,
     token: String,
-    safety_deposit: String,
+    _safety_deposit: String,
     expiration_time: u64,
-    direction: SwapDirection,
+    _direction: SwapDirection,
     source_chain_id: u64,
     destination_chain_id: u64,
 ) -> Result<String, String> {
@@ -524,8 +524,8 @@ pub async fn transfer_icrc_tokens_public(
 #[query]
 #[candid_method]
 pub fn get_icrc_balance_public(
-    canister_id: String,
-    account: String,
+    _canister_id: String,
+    _account: String,
 ) -> Result<u128, String> {
     // For now, return a mock balance since we can't make inter-canister calls in queries
     // In a real implementation, you'd need to store balances locally or use a different approach
@@ -827,7 +827,7 @@ async fn create_htlcs_for_paired_orders(order1_id: &str, order2_id: &str) -> Res
     ic_cdk::println!("  ICP→EVM Order: {} (ICP tokens in escrow)", icp_to_evm_order_id);
     
     // Complete the EVM→ICP swap (this will transfer ICP tokens to the EVM user)
-    if let Some(evm_htlc_id) = &evm_to_icp_order.source_htlc_id {
+    if let Some(_evm_htlc_id) = &evm_to_icp_order.source_htlc_id {
         ic_cdk::println!("  Completing EVM→ICP swap...");
         match complete_cross_chain_swap_public(evm_to_icp_order_id.to_string(), evm_to_icp_order.secret.clone()).await {
             Ok(result) => {
