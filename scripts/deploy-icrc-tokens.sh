@@ -43,14 +43,14 @@ export DEPLOY_ID=$(dfx identity get-principal)
 # Spiral Token configuration (matching SpiralToken.sol)
 export TOKEN_NAME="Spiral"
 export TOKEN_SYMBOL="SPIRAL"
-export PRE_MINTED_TOKENS=100000000000000  # 1 million tokens with 8 decimals
+export PRE_MINTED_TOKENS=100000000000000000  # 100 million tokens with 8 decimals
 export TRANSFER_FEE=10000  # 0.0001 tokens with 8 decimals
 
 echo "📊 Spiral Token Configuration:"
 echo "   Name: $TOKEN_NAME"
 echo "   Symbol: $TOKEN_SYMBOL"
 echo "   Decimals: 8"
-echo "   Initial Supply: $PRE_MINTED_TOKENS (1,000,000 tokens)"
+echo "   Initial Supply: $PRE_MINTED_TOKENS (100,000,000 tokens)"
 echo "   Transfer Fee: $TRANSFER_FEE"
 echo "   ICRC-2 Support: Enabled"
 
@@ -80,14 +80,14 @@ echo "🪙 Deploying Stardust Token (STD)..."
 # Stardust Token configuration (matching StardustToken.sol)
 export TOKEN_NAME="Stardust"
 export TOKEN_SYMBOL="STD"
-export PRE_MINTED_TOKENS=100000000000000  # 1 million tokens with 8 decimals
+export PRE_MINTED_TOKENS=100000000000000000  # 100 million tokens with 8 decimals
 export TRANSFER_FEE=10000  # 0.0001 tokens with 8 decimals
 
 echo "📊 Stardust Token Configuration:"
 echo "   Name: $TOKEN_NAME"
 echo "   Symbol: $TOKEN_SYMBOL"
 echo "   Decimals: 8"
-echo "   Initial Supply: $PRE_MINTED_TOKENS (1,000,000 tokens)"
+echo "   Initial Supply: $PRE_MINTED_TOKENS (100,000,000 tokens)"
 echo "   Transfer Fee: $TRANSFER_FEE"
 echo "   ICRC-2 Support: Enabled"
 
@@ -123,13 +123,13 @@ echo "   Deployer Principal: $DEPLOY_ID"
 echo ""
 echo "🪙 Spiral Token (SPIRAL):"
 echo "   Canister ID: $(dfx canister id spiral_token)"
-echo "   Initial Supply: 1,000,000 SPIRAL"
+echo "   Initial Supply: 100,000,000 SPIRAL"
 echo "   Decimals: 8"
 echo "   ICRC-2: Enabled"
 echo ""
 echo "🪙 Stardust Token (STD):"
 echo "   Canister ID: $(dfx canister id stardust_token)"
-echo "   Initial Supply: 1,000,000 STD"
+echo "   Initial Supply: 100,000,000 STD"
 echo "   Decimals: 8"
 echo "   ICRC-2: Enabled"
 echo ""

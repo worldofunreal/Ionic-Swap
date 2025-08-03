@@ -9,6 +9,7 @@ const LOCAL_HOST = 'http://127.0.0.1:4943';
 
 // Contract addresses
 const SPIRAL_TOKEN = '0xdE7409EDeA573D090c3C6123458D6242E26b425E';
+const STARDUST_TOKEN = '0x6ca99fc9bDed10004FE9CC6ce40914b98490Dc90';
 const STARDUST_TOKEN_CANISTER_ID = 'umunu-kh777-77774-qaaca-cai';
 const HTLC_CONTRACT = '0x7cFC05b92549ae96D758516B9A2b50D114d6ad0d';
 const SEPOLIA_CHAIN_ID = 11155111;
@@ -108,8 +109,87 @@ async function main() {
     const signer = new ethers.Wallet(privateKey, provider);
     const userAddress = await signer.getAddress();
     
+    // Get Alice's principal
+    const { execSync } = require('child_process');
+    const alicePrincipal = execSync('dfx identity get-principal --identity alice', { encoding: 'utf8' }).trim();
+    
+    // Step 0: Pre-Swap Balance Check
+    console.log("\n📋 Step 0: Pre-Swap Balance Check...");
+    
+    // Check Alice's ICRC balances
+    console.log("🔍 Checking Alice's ICRC balances...");
+    try {
+        const aliceSpiralBalance = execSync(`dfx canister call spiral_token icrc1_balance_of "(record {owner = principal \\"${alicePrincipal}\\"})"`, { encoding: 'utf8' });
+        const aliceStardustBalance = execSync(`dfx canister call stardust_token icrc1_balance_of "(record {owner = principal \\"${alicePrincipal}\\"})"`, { encoding: 'utf8' });
+        console.log("  Alice SPIRAL balance:", aliceSpiralBalance.trim());
+        console.log("  Alice STD balance:", aliceStardustBalance.trim());
+    } catch (error) {
+        console.log("❌ Failed to get Alice's ICRC balances:", error.message);
+    }
+    
+    // Check EVM balances via backend canister
+    console.log("🔍 Checking EVM balances...");
+    try {
+        // Get ETH balances
+        const evmAccountBalance = await actor.get_balance(userAddress);
+        const accountBalanceJson = JSON.parse(evmAccountBalance.Ok);
+        const accountBalanceWei = parseInt(accountBalanceJson.result, 16);
+        console.log("  EVM account ETH balance:", accountBalanceJson.result, `(${accountBalanceWei / 1e18} ETH)`);
+        
+        // Get backend canister's EVM address
+        const backendEthAddress = await actor.get_ethereum_address();
+        console.log("  Backend canister EVM address:", backendEthAddress.Ok);
+        
+        // Get backend canister's ETH balance
+        const backendEthBalance = await actor.get_balance(backendEthAddress.Ok);
+        const backendEthBalanceJson = JSON.parse(backendEthBalance.Ok);
+        const backendEthBalanceWei = parseInt(backendEthBalanceJson.result, 16);
+        console.log("  Backend canister ETH balance:", backendEthBalanceJson.result, `(${backendEthBalanceWei / 1e18} ETH)`);
+        
+        // Get ERC20 token balances using ethers.js
+        console.log("🔍 Checking ERC20 token balances...");
+        
+        // ERC20 ABI for balanceOf function
+        const erc20Abi = [
+            'function balanceOf(address owner) view returns (uint256)',
+            'function decimals() view returns (uint8)',
+            'function symbol() view returns (string)'
+        ];
+        
+        // Create contract instances with proper checksum addresses
+        const spiralContract = new ethers.Contract(ethers.utils.getAddress(SPIRAL_TOKEN), erc20Abi, provider);
+        const stardustContract = new ethers.Contract(ethers.utils.getAddress(STARDUST_TOKEN), erc20Abi, provider);
+        
+        // Get user's token balances
+        const userSpiralBalance = await spiralContract.balanceOf(userAddress);
+        const userStardustBalance = await stardustContract.balanceOf(userAddress);
+        console.log("  User SPIRAL token balance:", userSpiralBalance.toString(), `(${ethers.utils.formatUnits(userSpiralBalance, 8)} SPIRAL)`);
+        console.log("  User STD token balance:", userStardustBalance.toString(), `(${ethers.utils.formatUnits(userStardustBalance, 8)} STD)`);
+        
+        // Get backend canister's token balances
+        const backendSpiralBalance = await spiralContract.balanceOf(backendEthAddress.Ok);
+        const backendStardustBalance = await stardustContract.balanceOf(backendEthAddress.Ok);
+        console.log("  Backend canister SPIRAL balance:", backendSpiralBalance.toString(), `(${ethers.utils.formatUnits(backendSpiralBalance, 8)} SPIRAL)`);
+        console.log("  Backend canister STD balance:", backendStardustBalance.toString(), `(${ethers.utils.formatUnits(backendStardustBalance, 8)} STD)`);
+        
+    } catch (error) {
+        console.log("❌ Failed to get EVM balances:", error.message);
+    }
+    
+    // Check backend canister's ICRC balances
+    console.log("🔍 Checking backend canister's ICRC balances...");
+    try {
+        const backendCanisterId = CANISTER_ID;
+        const backendSpiralBalance = execSync(`dfx canister call spiral_token icrc1_balance_of "(record {owner = principal \\"${backendCanisterId}\\"})"`, { encoding: 'utf8' });
+        const backendStardustBalance = execSync(`dfx canister call stardust_token icrc1_balance_of "(record {owner = principal \\"${backendCanisterId}\\"})"`, { encoding: 'utf8' });
+        console.log("  Backend canister SPIRAL balance:", backendSpiralBalance.trim());
+        console.log("  Backend canister STD balance:", backendStardustBalance.trim());
+    } catch (error) {
+        console.log("❌ Failed to get backend canister's ICRC balances:", error.message);
+    }
+    
     // Initialize nonce from blockchain
-    console.log("\n📋 Step 0: Initializing nonce from blockchain...");
+    console.log("\n📋 Step 1: Initializing nonce from blockchain...");
     try {
         const nonceResult = await actor.initialize_nonce();
         if ('Ok' in nonceResult) {
@@ -127,7 +207,7 @@ async function main() {
     
     try {
         // Test 1: Create EIP-2612 permit for Spiral tokens (EVM source)
-        console.log("\n📋 Test 1: Creating EIP-2612 permit for Spiral tokens (EVM source)...");
+        console.log("\n📋 Test 2: Creating EIP-2612 permit for Spiral tokens (EVM source)...");
                 
                 // Get nonce from Spiral token contract
                 const spiralTokenContract = new ethers.Contract(SPIRAL_TOKEN, [
@@ -162,7 +242,7 @@ async function main() {
                 console.log("  Signature:", spiralPermitResult.signature);
                 
         // Test 2: Create EVM→ICP order with automatic permit execution
-        console.log("\n📋 Test 2: Creating EVM→ICP order with automatic permit execution...");
+        console.log("\n📋 Test 3: Creating EVM→ICP order with automatic permit execution...");
         const sourceToken = SPIRAL_TOKEN; // EVM Spiral token
         const destinationToken = STARDUST_TOKEN_CANISTER_ID; // ICP Stardust token
         const sourceAmount = TEST_AMOUNTS.SPIRAL_10.toString(); // 10 SPIRAL
@@ -205,7 +285,7 @@ async function main() {
             console.log("  Order ID:", orderId);
             
             // Test 3: Get order details
-            console.log("\n📋 Test 3: Getting order details...");
+            console.log("\n📋 Test 4: Getting order details...");
             const orderDetails = await actor.get_atomic_swap_order(orderId);
             if (orderDetails.length > 0) {
                 const order = orderDetails[0];
@@ -224,7 +304,7 @@ async function main() {
                 console.log("  ICP Destination Principal:", order.icp_destination_principal);
                 
                 // Test 4: Create ICRC-2 allowance for ICP user (ICP equivalent of EIP-2612 permit)
-                console.log("\n📋 Test 4: Creating ICRC-2 allowance for ICP user...");
+                console.log("\n📋 Test 5: Creating ICRC-2 allowance for ICP user...");
                 
                 // For testing, we need to call the ICRC-2 approve function on the token canister
                 // This would normally be done by the ICP user's wallet
@@ -275,7 +355,7 @@ async function main() {
                 }
                 
                 // Test 5: Create ICP→EVM counter-order
-                console.log("\n📋 Test 5: Creating ICP→EVM counter-order...");
+                console.log("\n📋 Test 6: Creating ICP→EVM counter-order...");
                 const icpUserPrincipal = icpDestinationPrincipal; // ICP user who wants EVM tokens
                 const icpSourceToken = destinationToken; // Stardust token (ICRC)
                 const icpDestinationToken = sourceToken; // Spiral token (EVM)
@@ -302,7 +382,7 @@ async function main() {
                     console.log("  Counter Order ID:", counterOrderId);
                     
                     // Test 6: Check if orders are paired automatically
-                    console.log("\n📋 Test 6: Checking order pairing...");
+                    console.log("\n📋 Test 7: Checking order pairing...");
                     const compatibleOrders = await actor.get_compatible_orders(orderId);
                     console.log("  Compatible orders found:", compatibleOrders.length);
                     
@@ -310,7 +390,7 @@ async function main() {
                         console.log("✅ Orders should be automatically paired!");
                         
                         // Test 7: Complete the swap using the secret
-                        console.log("\n📋 Test 7: Completing the paired swap...");
+                        console.log("\n📋 Test 8: Completing the paired swap...");
                         const completeResult = await actor.complete_cross_chain_swap_public(
                                 orderId,
                             order.secret
@@ -321,13 +401,85 @@ async function main() {
                             console.log("  Result:", completeResult.Ok);
                             
                             console.log("\n🎉 Complete Cross-Chain Swap Executed Successfully!");
-                                    console.log('\n📋 Complete Transaction Summary:');
+                            console.log('\n📋 Complete Transaction Summary:');
                             console.log(`  ✅ EVM Permit Creation: Signed by user`);
                             console.log(`  ✅ EVM→ICP Order Creation: ${orderId}`);
                             console.log(`  ✅ ICRC-2 Allowance: Approved by ICP user`);
                             console.log(`  ✅ ICP→EVM Counter-Order Creation: ${counterOrderId}`);
                             console.log(`  ✅ Order Pairing: Automatic`);
                             console.log(`  ✅ Swap Completion: ${completeResult.Ok}`);
+                            
+                            // Post-Swap Balance Check
+                            console.log("\n📋 Post-Swap Balance Check...");
+                            
+                            // Check Alice's ICRC balances after swap
+                            console.log("🔍 Checking Alice's ICRC balances after swap...");
+                            try {
+                                const aliceSpiralBalanceAfter = execSync(`dfx canister call spiral_token icrc1_balance_of "(record {owner = principal \\"${alicePrincipal}\\"})"`, { encoding: 'utf8' });
+                                const aliceStardustBalanceAfter = execSync(`dfx canister call stardust_token icrc1_balance_of "(record {owner = principal \\"${alicePrincipal}\\"})"`, { encoding: 'utf8' });
+                                console.log("  Alice SPIRAL balance after swap:", aliceSpiralBalanceAfter.trim());
+                                console.log("  Alice STD balance after swap:", aliceStardustBalanceAfter.trim());
+                            } catch (error) {
+                                console.log("❌ Failed to get Alice's ICRC balances after swap:", error.message);
+                            }
+                            
+                            // Check EVM balances after swap
+                            console.log("🔍 Checking EVM balances after swap...");
+                            try {
+                                // Get ETH balances after swap
+                                const evmAccountBalanceAfter = await actor.get_balance(userAddress);
+                                const accountBalanceAfterJson = JSON.parse(evmAccountBalanceAfter.Ok);
+                                const accountBalanceAfterWei = parseInt(accountBalanceAfterJson.result, 16);
+                                console.log("  EVM account ETH balance after swap:", accountBalanceAfterJson.result, `(${accountBalanceAfterWei / 1e18} ETH)`);
+                                
+                                const backendEthAddressAfter = await actor.get_ethereum_address();
+                                
+                                // Get backend canister's ETH balance after swap
+                                const backendEthBalanceAfter = await actor.get_balance(backendEthAddressAfter.Ok);
+                                const backendEthBalanceAfterJson = JSON.parse(backendEthBalanceAfter.Ok);
+                                const backendEthBalanceAfterWei = parseInt(backendEthBalanceAfterJson.result, 16);
+                                console.log("  Backend canister ETH balance after swap:", backendEthBalanceAfterJson.result, `(${backendEthBalanceAfterWei / 1e18} ETH)`);
+                                
+                                // Get ERC20 token balances after swap using ethers.js
+                                console.log("🔍 Checking ERC20 token balances after swap...");
+                                
+                                // ERC20 ABI for balanceOf function
+                                const erc20Abi = [
+                                    'function balanceOf(address owner) view returns (uint256)',
+                                    'function decimals() view returns (uint8)',
+                                    'function symbol() view returns (string)'
+                                ];
+                                
+                                // Create contract instances with proper checksum addresses
+                                const spiralContract = new ethers.Contract(ethers.utils.getAddress(SPIRAL_TOKEN), erc20Abi, provider);
+                                const stardustContract = new ethers.Contract(ethers.utils.getAddress(STARDUST_TOKEN), erc20Abi, provider);
+                                
+                                // Get user's token balances after swap
+                                const userSpiralBalanceAfter = await spiralContract.balanceOf(userAddress);
+                                const userStardustBalanceAfter = await stardustContract.balanceOf(userAddress);
+                                console.log("  User SPIRAL token balance after swap:", userSpiralBalanceAfter.toString(), `(${ethers.utils.formatUnits(userSpiralBalanceAfter, 8)} SPIRAL)`);
+                                console.log("  User STD token balance after swap:", userStardustBalanceAfter.toString(), `(${ethers.utils.formatUnits(userStardustBalanceAfter, 8)} STD)`);
+                                
+                                // Get backend canister's token balances after swap
+                                const backendSpiralBalanceAfter = await spiralContract.balanceOf(backendEthAddressAfter.Ok);
+                                const backendStardustBalanceAfter = await stardustContract.balanceOf(backendEthAddressAfter.Ok);
+                                console.log("  Backend canister SPIRAL balance after swap:", backendSpiralBalanceAfter.toString(), `(${ethers.utils.formatUnits(backendSpiralBalanceAfter, 8)} SPIRAL)`);
+                                console.log("  Backend canister STD balance after swap:", backendStardustBalanceAfter.toString(), `(${ethers.utils.formatUnits(backendStardustBalanceAfter, 8)} STD)`);
+                            } catch (error) {
+                                console.log("❌ Failed to get EVM balances after swap:", error.message);
+                            }
+                            
+                            // Check backend canister's ICRC balances after swap
+                            console.log("🔍 Checking backend canister's ICRC balances after swap...");
+                            try {
+                                const backendCanisterId = CANISTER_ID;
+                                const backendSpiralBalanceAfter = execSync(`dfx canister call spiral_token icrc1_balance_of "(record {owner = principal \\"${backendCanisterId}\\"})"`, { encoding: 'utf8' });
+                                const backendStardustBalanceAfter = execSync(`dfx canister call stardust_token icrc1_balance_of "(record {owner = principal \\"${backendCanisterId}\\"})"`, { encoding: 'utf8' });
+                                console.log("  Backend canister SPIRAL balance after swap:", backendSpiralBalanceAfter.trim());
+                                console.log("  Backend canister STD balance after swap:", backendStardustBalanceAfter.trim());
+                            } catch (error) {
+                                console.log("❌ Failed to get backend canister's ICRC balances after swap:", error.message);
+                            }
                             
                         } else {
                             console.log("❌ Failed to complete swap:", completeResult.Err);
