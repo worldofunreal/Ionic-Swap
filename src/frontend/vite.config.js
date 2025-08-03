@@ -18,6 +18,7 @@ export default defineConfig({
         global: "globalThis",
       },
     },
+    include: ['buffer', 'process', 'util'],
   },
   server: {
     proxy: {
@@ -40,14 +41,14 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: [
-      {
-        find: "declarations",
-        replacement: fileURLToPath(
-          new URL("../declarations", import.meta.url)
-        ),
-      },
-    ],
+    alias: {
+      "declarations": fileURLToPath(
+        new URL("../declarations", import.meta.url)
+      ),
+      "buffer": "buffer",
+      "process": "process/browser",
+      "util": "util",
+    },
     dedupe: ['@dfinity/agent'],
   },
   define: {
@@ -56,5 +57,6 @@ export default defineConfig({
       process.env.CANISTER_ID_FUSION_HTLC_CANISTER || 'local'
     ),
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    global: 'globalThis',
   },
 });

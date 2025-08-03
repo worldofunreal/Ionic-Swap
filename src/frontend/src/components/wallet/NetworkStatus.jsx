@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import './NetworkStatus.css';
 
 const NetworkStatus = () => {
   const [currentNetwork, setCurrentNetwork] = useState('Unknown');
@@ -20,7 +19,7 @@ const NetworkStatus = () => {
 
   useEffect(() => {
     checkNetwork();
-    
+
     if (window.ethereum) {
       window.ethereum.on('chainChanged', handleChainChanged);
       return () => {
@@ -38,7 +37,7 @@ const NetworkStatus = () => {
 
     try {
       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      
+
       if (chainId === SEPOLIA_CHAIN_ID) {
         setCurrentNetwork('Sepolia');
         setIsCorrectNetwork(true);
@@ -76,14 +75,23 @@ const NetworkStatus = () => {
   };
 
   return (
-    <div className="network-status">
-      <div className={`network-indicator ${isCorrectNetwork ? 'connected' : 'disconnected'}`}>
-        <div className="network-dot"></div>
-        <span className="network-name">{currentNetwork}</span>
+    <div className="flex items-center space-x-2">
+      <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium ${
+        isCorrectNetwork
+          ? 'bg-green-100 text-green-800'
+          : 'bg-red-100 text-red-800'
+      }`}>
+        <div className={`w-2 h-2 rounded-full ${
+          isCorrectNetwork ? 'bg-green-500' : 'bg-red-500'
+        }`}></div>
+        <span>{currentNetwork}</span>
       </div>
-      
+
       {!isCorrectNetwork && (
-        <button onClick={switchToSepolia} className="switch-network-btn">
+        <button
+          onClick={switchToSepolia}
+          className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded transition-colors"
+        >
           Switch to Sepolia
         </button>
       )}

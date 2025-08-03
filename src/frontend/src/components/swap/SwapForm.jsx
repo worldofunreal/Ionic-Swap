@@ -1,7 +1,6 @@
 import React from 'react';
 import TokenSelector from './TokenSelector';
 import AmountInput from './AmountInput';
-import './SwapForm.css';
 
 const SwapForm = ({
   direction,
@@ -14,46 +13,49 @@ const SwapForm = ({
   onAmountChange,
   destinationAddress,
   onDestinationAddressChange,
-  userAddress
+  user
 }) => {
-  const handleDirectionToggle = () => {
-    const newDirection = direction === 'evm-to-icp' ? 'icp-to-evm' : 'evm-to-icp';
-    onDirectionChange(newDirection);
-  };
-
   const getDirectionLabel = () => {
     return direction === 'evm-to-icp' ? 'EVM → ICP' : 'ICP → EVM';
   };
 
   const getDestinationPlaceholder = () => {
-    return direction === 'evm-to-icp' 
-      ? 'Enter ICP Principal ID' 
+    return direction === 'evm-to-icp'
+      ? 'Enter ICP Principal ID'
       : 'Enter EVM Address (0x...)';
   };
 
   return (
-    <div className="swap-form">
+    <div className="space-y-6">
       {/* Direction Toggle */}
-      <div className="direction-toggle">
+      <div className="flex space-x-2 p-1 bg-gray-100 rounded-lg">
         <button
-          className={`direction-btn ${direction === 'evm-to-icp' ? 'active' : ''}`}
+          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-md font-medium transition-all duration-200 ${
+            direction === 'evm-to-icp'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
           onClick={() => onDirectionChange('evm-to-icp')}
         >
-          <span className="direction-icon">🔗</span>
-          EVM → ICP
+          <span className="text-lg">🔗</span>
+          <span>EVM → ICP</span>
         </button>
         <button
-          className={`direction-btn ${direction === 'icp-to-evm' ? 'active' : ''}`}
+          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-md font-medium transition-all duration-200 ${
+            direction === 'icp-to-evm'
+              ? 'bg-white text-gray-900 shadow-sm'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
           onClick={() => onDirectionChange('icp-to-evm')}
         >
-          <span className="direction-icon">🔗</span>
-          ICP → EVM
+          <span className="text-lg">🔗</span>
+          <span>ICP → EVM</span>
         </button>
       </div>
 
       {/* Source Token Selection */}
-      <div className="form-section">
-        <label className="form-label">Source Token</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Source Token</label>
         <TokenSelector
           value={sourceToken}
           onChange={onSourceTokenChange}
@@ -63,19 +65,19 @@ const SwapForm = ({
       </div>
 
       {/* Amount Input */}
-      <div className="form-section">
-        <label className="form-label">Amount</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Amount</label>
         <AmountInput
           value={amount}
           onChange={onAmountChange}
           token={sourceToken}
-          userAddress={userAddress}
+          user={user}
         />
       </div>
 
       {/* Destination Token Selection */}
-      <div className="form-section">
-        <label className="form-label">Destination Token</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Destination Token</label>
         <TokenSelector
           value={destinationToken}
           onChange={onDestinationTokenChange}
@@ -85,17 +87,17 @@ const SwapForm = ({
       </div>
 
       {/* Destination Address */}
-      <div className="form-section">
-        <label className="form-label">Destination Address</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">Destination Address</label>
         <input
           type="text"
           value={destinationAddress}
           onChange={(e) => onDestinationAddressChange(e.target.value)}
           placeholder={getDestinationPlaceholder()}
-          className="destination-input"
+          className="input-field"
         />
-        <div className="input-help">
-          {direction === 'evm-to-icp' 
+        <div className="text-xs text-gray-500">
+          {direction === 'evm-to-icp'
             ? 'Enter the ICP Principal ID where you want to receive tokens'
             : 'Enter the EVM address where you want to receive tokens'
           }
@@ -103,16 +105,16 @@ const SwapForm = ({
       </div>
 
       {/* Network Info */}
-      <div className="network-info">
-        <div className="network-item">
-          <span className="network-label">From:</span>
-          <span className="network-value">
+      <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium text-gray-700">From:</span>
+          <span className="text-sm text-gray-600">
             {direction === 'evm-to-icp' ? 'Sepolia Testnet' : 'Internet Computer'}
           </span>
         </div>
-        <div className="network-item">
-          <span className="network-label">To:</span>
-          <span className="network-value">
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium text-gray-700">To:</span>
+          <span className="text-sm text-gray-600">
             {direction === 'evm-to-icp' ? 'Internet Computer' : 'Sepolia Testnet'}
           </span>
         </div>

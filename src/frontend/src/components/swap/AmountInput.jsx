@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import './AmountInput.css';
 
-const AmountInput = ({ value, onChange, token, userAddress }) => {
+const AmountInput = ({ value, onChange, token, user }) => {
   const [balance, setBalance] = useState('0');
   const [loading, setLoading] = useState(true);
 
@@ -18,18 +17,18 @@ const AmountInput = ({ value, onChange, token, userAddress }) => {
   ];
 
   useEffect(() => {
-    if (userAddress && token) {
+    if (user && token) {
       fetchBalance();
     }
-  }, [userAddress, token]);
+  }, [user, token]);
 
   const fetchBalance = async () => {
-    if (!window.ethereum || !userAddress) return;
+    if (!window.ethereum || !user?.evmAddress) return;
 
     try {
       setLoading(true);
       const provider = new ethers.providers.Web3Provider(window.ethereum);
-      
+
       let tokenAddress;
       if (token === 'SPIRAL') {
         tokenAddress = SPIRAL_TOKEN;
@@ -37,7 +36,7 @@ const AmountInput = ({ value, onChange, token, userAddress }) => {
         tokenAddress = STARDUST_TOKEN;
       } else {
         // ETH balance
-        const ethBalance = await provider.getBalance(userAddress);
+        const ethBalance = await provider.getBalance(user.evmAddress);
         const ethBalanceFormatted = ethers.utils.formatEther(ethBalance);
         setBalance(parseFloat(ethBalanceFormatted).toFixed(4));
         setLoading(false);
@@ -45,8 +44,8 @@ const AmountInput = ({ value, onChange, token, userAddress }) => {
       }
 
       const contract = new ethers.Contract(tokenAddress, erc20Abi, provider);
-      const tokenBalance = await contract.balanceOf(userAddress);
-      
+      const tokenBalance = await contract.balanceOf(user.evmAddress);
+
       // Format with 8 decimals (as per our tokens)
       const formattedBalance = ethers.utils.formatUnits(tokenBalance, 8);
       setBalance(parseFloat(formattedBalance).toFixed(2));
@@ -68,56 +67,53 @@ const AmountInput = ({ value, onChange, token, userAddress }) => {
   };
 
   return (
-    <div className="amount-input">
-      <div className="input-container">
+    <div className="space-y-3">
+      <div className="relative">
         <input
           type="number"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="0.00"
-          className="amount-field"
+          className="input-field pr-16"
           min="0"
           step="0.01"
         />
-        <div className="token-display">
-          <span className="token-symbol">{token}</span>
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+          <span className="text-gray-500 font-medium">{token}</span>
         </div>
       </div>
-      
-      <div className="balance-section">
-        <div className="balance-info">
-          <span className="balance-label">Balance:</span>
-          <span className="balance-amount">
-            {loading ? '...' : `${balance} ${token}`}
-          </span>
+
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-gray-600">
+          Balance: {loading ? '...' : `${balance} ${token}`}
         </div>
-        
-        <div className="percentage-buttons">
+
+        <div className="flex space-x-1">
           <button
             type="button"
             onClick={() => setPercentage(0.25)}
-            className="percentage-btn"
+            className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors"
           >
             25%
           </button>
           <button
             type="button"
             onClick={() => setPercentage(0.5)}
-            className="percentage-btn"
+            className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors"
           >
             50%
           </button>
           <button
             type="button"
             onClick={() => setPercentage(0.75)}
-            className="percentage-btn"
+            className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors"
           >
             75%
           </button>
           <button
             type="button"
             onClick={setMaxAmount}
-            className="percentage-btn max-btn"
+            className="px-2 py-1 text-xs bg-primary-100 hover:bg-primary-200 text-primary-700 rounded transition-colors font-medium"
           >
             Max
           </button>
