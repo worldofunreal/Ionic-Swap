@@ -66,7 +66,7 @@ Ionic Swap is a gasless cross-chain atomic swap platform, inspired in 1inch Fusi
 
 2. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/worldofunreal/Ionic-Swap.git
    cd Ionic-Swap
    ```
 
