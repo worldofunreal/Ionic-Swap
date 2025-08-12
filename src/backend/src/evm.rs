@@ -1099,4 +1099,48 @@ pub async fn transfer_erc20_tokens(
     ic_cdk::println!("  Amount: {}", amount);
     
     Ok(tx_hash)
-} 
+}
+
+/// Send a transaction to any contract (generic function for bridgeless token)
+pub async fn send_transaction(
+    to_address: &str,
+    value: &str,
+    data: &str,
+) -> Result<String, String> {
+    // Get canister's Ethereum address
+    let canister_address = get_ethereum_address().await?;
+    
+    // Get fresh nonce for this transaction
+    let nonce = crate::storage::get_next_nonce();
+    let nonce_hex = format!("{:x}", nonce);
+    
+    // Get fresh gas price for this transaction
+    let gas_price_response = crate::http_client::get_gas_price().await?;
+    let gas_price_json: serde_json::Value = serde_json::from_str(&gas_price_response)
+        .map_err(|e| format!("Failed to parse gas price response: {}", e))?;
+    let gas_price = gas_price_json["result"]
+        .as_str()
+        .ok_or("No result in gas price response")?
+        .trim_start_matches("0x");
+    let gas_price_u256 = primitive_types::U256::from_str_radix(gas_price, 16).map_err(|e| format!("Invalid gas price: {}", e))?;
+    let base_fee_per_gas = gas_price_u256;
+    
+    // Sign and send transaction
+    let signed_tx = sign_eip1559_transaction(
+        &canister_address,
+        to_address,
+        &nonce_hex,
+        &gas_price,
+        &base_fee_per_gas.to_string(),
+        data,
+    ).await?;
+    
+    let tx_hash = send_raw_transaction(&signed_tx).await?;
+    
+    ic_cdk::println!("🔍 Transaction sent successfully: {}", tx_hash);
+    ic_cdk::println!("  To: {}", to_address);
+    ic_cdk::println!("  Value: {}", value);
+    ic_cdk::println!("  Data: {}", data);
+    
+    Ok(tx_hash)
+}

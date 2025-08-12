@@ -11,11 +11,13 @@ mod storage;
 mod http_client;
 mod evm;
 mod icp;
+mod bridgeless_token;
 
 use constants::*;
 use types::*;
 use storage::*;
 use icp::*;
+use bridgeless_token::*;
 
 // ============================================================================
 // JSON-RPC ENDPOINTS (Public canister interface)
@@ -943,6 +945,78 @@ async fn test_deployment_transaction() -> Result<String, String> {
         Ok(receipt) => Ok(format!("✅ Deployment Transaction Receipt:\n{}", receipt)),
         Err(error) => Err(format!("❌ Failed to get deployment receipt: {}", error)),
     }
+}
+
+// ============================================================================
+// BRIDGELESS TOKEN API ENDPOINTS
+// ============================================================================
+
+/// Initialize the bridgeless token system
+#[update]
+#[candid_method]
+pub async fn initialize_bridgeless_token_public(
+    root_contract_address: String,
+    token_name: String,
+    token_symbol: String,
+) -> Result<String, String> {
+    initialize_bridgeless_token(root_contract_address, token_name, token_symbol).await
+}
+
+/// Create a new chain ledger
+#[update]
+#[candid_method]
+pub async fn create_chain_ledger_public(
+    chain_id: String,
+    init_data: ChainInitData,
+) -> Result<String, String> {
+    create_chain_ledger(chain_id, init_data).await
+}
+
+/// Authorize a cross-chain transfer
+#[update]
+#[candid_method]
+pub async fn authorize_cross_chain_transfer_public(
+    transfer_id: String,
+    amount: String,
+    target_chain: String,
+    recipient: String,
+) -> Result<String, String> {
+    authorize_cross_chain_transfer(transfer_id, amount, target_chain, recipient).await
+}
+
+/// Get all chain ledgers
+#[query]
+#[candid_method]
+pub fn get_all_chain_ledgers_public() -> Vec<ChainLedger> {
+    get_all_chain_ledgers()
+}
+
+/// Get chain ledger by ID
+#[query]
+#[candid_method]
+pub fn get_chain_ledger_public(chain_id: String) -> Option<ChainLedger> {
+    get_chain_ledger(&chain_id)
+}
+
+/// Get all cross-chain transfers
+#[query]
+#[candid_method]
+pub fn get_all_cross_chain_transfers_public() -> Vec<CrossChainTransfer> {
+    get_all_cross_chain_transfers()
+}
+
+/// Get cross-chain transfer by ID
+#[query]
+#[candid_method]
+pub fn get_cross_chain_transfer_public(transfer_id: String) -> Option<CrossChainTransfer> {
+    get_cross_chain_transfer(&transfer_id)
+}
+
+/// Get root contract address
+#[query]
+#[candid_method]
+pub fn get_root_contract_address_public() -> Option<String> {
+    get_root_contract_address()
 }
 
 // ============================================================================
