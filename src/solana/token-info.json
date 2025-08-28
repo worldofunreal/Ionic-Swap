@@ -1,0 +1,12 @@
+{
+  "network": "devnet",
+  "mintAddress": "44gK4ThtmXhxoWgwxapPiYVF6frDwdnhVdweHLVLvjQk",
+  "associatedTokenAccount": "79qSHiqo68Wa5m5niASnUEHzRxCaSZisSffv3AiNGWCH",
+  "creator": "3oCHqy78hb8PX1aiCzYGJUq4dcHm8LCgufF2swtWRrD3",
+  "name": "Ionic Token",
+  "symbol": "IONIC",
+  "decimals": 8,
+  "initialSupply": "100000000000000000",
+  "metadataUri": "https://ionic-swap.io/metadata/ionic.json",
+  "timestamp": "2025-08-28T18:37:44.743Z"
+}

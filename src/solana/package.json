@@ -1,0 +1,38 @@
+{
+  "name": "ionic-solana-token",
+  "version": "1.0.0",
+  "description": "Ionic Swap Solana Token - SPL Token implementation",
+  "main": "index.js",
+  "scripts": {
+    "build": "cargo build-sbf",
+    "build:release": "cargo build-sbf --release",
+    "test": "cargo test",
+    "test:setup": "node scripts/test-setup.js",
+    "deploy:devnet": "node scripts/deploy.js --network devnet",
+    "deploy:testnet": "node scripts/deploy.js --network testnet",
+    "create-token": "node scripts/create-token.js",
+    "create-simple-token": "node scripts/create-simple-token.js",
+    "mint-tokens": "node scripts/mint-tokens.js",
+    "transfer-tokens": "node scripts/transfer-tokens.js"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.87.0",
+    "@solana/spl-token": "^0.3.9",
+    "bs58": "^5.0.0",
+    "commander": "^11.1.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "typescript": "^5.2.0"
+  },
+  "keywords": [
+    "solana",
+    "spl-token",
+    "blockchain",
+    "defi",
+    "ionic-swap"
+  ],
+  "author": "Ionic Swap Team",
+  "license": "MIT"
+}
