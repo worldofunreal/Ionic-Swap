@@ -1,4 +1,4 @@
-use candid::candid_method;
+use candid::{candid_method, Principal};
 use ic_cdk_macros::*;
 
 // ============================================================================
@@ -11,12 +11,14 @@ mod storage;
 mod http_client;
 mod evm;
 mod icp;
+mod solana;
 mod bridgeless_token;
 
 use constants::*;
 use types::*;
 use storage::*;
 use icp::*;
+use solana::*;
 use bridgeless_token::*;
 
 // ============================================================================
@@ -716,6 +718,124 @@ pub async fn transfer_erc20_tokens_public(
     amount: String,
 ) -> Result<String, String> {
     evm::transfer_erc20_tokens(&token_address, &recipient, &amount).await
+}
+
+// ============================================================================
+// SOLANA PUBLIC API ENDPOINTS
+// ============================================================================
+
+/// Get Solana account balance (public API)
+#[update]
+#[candid_method]
+pub async fn get_solana_balance_public(account: String) -> Result<u64, String> {
+    get_solana_balance(account).await
+}
+
+/// Get Solana slot (block number) (public API)
+#[update]
+#[candid_method]
+pub async fn get_solana_slot_public() -> Result<u64, String> {
+    get_solana_slot().await
+}
+
+/// Get Solana account info (public API)
+#[update]
+#[candid_method]
+pub async fn get_solana_account_info_public(account: String) -> Result<String, String> {
+    get_solana_account_info(account).await
+}
+
+/// Get SPL token account balance (public API)
+#[update]
+#[candid_method]
+pub async fn get_spl_token_balance_public(token_account: String) -> Result<String, String> {
+    let balance = get_spl_token_balance(token_account).await?;
+    Ok(serde_json::to_string(&balance).unwrap())
+}
+
+/// Get associated token account address (public API)
+#[query]
+#[candid_method]
+pub fn get_associated_token_address_public(
+    wallet_address: String,
+    mint_address: String,
+) -> Result<String, String> {
+    get_associated_token_address(&wallet_address, &mint_address)
+}
+
+/// Create associated token account instruction (public API)
+#[query]
+#[candid_method]
+pub fn create_associated_token_account_instruction_public(
+    funding_address: String,
+    wallet_address: String,
+    mint_address: String,
+) -> Result<String, String> {
+    let (account_address, instruction_data) = create_associated_token_account_instruction(
+        &funding_address,
+        &wallet_address,
+        &mint_address,
+    )?;
+    
+    let response = serde_json::json!({
+        "associated_token_account": account_address,
+        "instruction_data": hex::encode(instruction_data)
+    });
+    
+    Ok(serde_json::to_string(&response).unwrap())
+}
+
+/// Transfer SPL tokens instruction (public API)
+#[query]
+#[candid_method]
+pub fn transfer_spl_tokens_instruction_public(
+    source_address: String,
+    destination_address: String,
+    authority_address: String,
+    amount: u64,
+) -> Result<String, String> {
+    let instruction_data = transfer_spl_tokens_instruction(
+        &source_address,
+        &destination_address,
+        &authority_address,
+        amount,
+    )?;
+    
+    Ok(hex::encode(instruction_data))
+}
+
+/// Send SOL transaction (public API)
+#[update]
+#[candid_method]
+pub async fn send_sol_transaction_public(
+    from_address: String,
+    to_address: String,
+    amount: u64,
+) -> Result<String, String> {
+    send_sol_transaction(&from_address, &to_address, amount).await
+}
+
+/// Send SPL token transaction (public API)
+#[update]
+#[candid_method]
+pub async fn send_spl_token_transaction_public(
+    from_token_account: String,
+    to_token_account: String,
+    authority: String,
+    amount: u64,
+) -> Result<String, String> {
+    send_spl_token_transaction(&from_token_account, &to_token_account, &authority, amount).await
+}
+
+/// Get Solana wallet for ICP principal (public API)
+#[query]
+#[candid_method]
+pub fn get_solana_wallet_public(principal: String) -> Result<String, String> {
+    let principal = Principal::from_text(principal)
+        .map_err(|e| format!("Invalid principal: {}", e))?;
+    
+    let wallet = SolanaWallet::new(principal);
+    Ok(wallet.get_solana_address())
 }
 
 // ============================================================================

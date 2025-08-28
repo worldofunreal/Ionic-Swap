@@ -22,6 +22,22 @@ export interface AtomicSwapOrder {
   'destination_token' : string,
   'timelock' : bigint,
 }
+export interface ChainInitData {
+  'token_symbol' : string,
+  'chain_id' : string,
+  'chain_name' : string,
+  'token_name' : string,
+  'total_supply' : bigint,
+}
+export interface ChainLedger {
+  'token_symbol' : string,
+  'created_at' : bigint,
+  'circulating_supply' : bigint,
+  'chain_id' : string,
+  'chain_name' : string,
+  'token_name' : string,
+  'total_supply' : bigint,
+}
 export interface CrossChainSwapOrder {
   'maker' : string,
   'source_chain_id' : bigint,
@@ -38,6 +54,15 @@ export interface CrossChainSwapOrder {
   'expiration_time' : bigint,
   'source_asset' : string,
   'destination_chain_id' : bigint,
+}
+export interface CrossChainTransfer {
+  'source_chain' : string,
+  'status' : string,
+  'recipient' : string,
+  'created_at' : bigint,
+  'transfer_id' : string,
+  'target_chain' : string,
+  'amount' : string,
 }
 export interface GaslessApprovalRequest {
   'token_address' : string,
@@ -88,6 +113,11 @@ export type SwapOrderStatus = { 'DestinationHTLCClaimed' : null } |
   { 'Expired' : null } |
   { 'DestinationHTLCCreated' : null };
 export interface _SERVICE {
+  'authorize_cross_chain_transfer_public' : ActorMethod<
+    [string, string, string, string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
   'check_expired_orders' : ActorMethod<
     [],
     { 'Ok' : string } |
@@ -120,6 +150,16 @@ export interface _SERVICE {
   >,
   'coordinate_cross_chain_swap_public' : ActorMethod<
     [string, SwapDirection],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'create_associated_token_account_instruction_public' : ActorMethod<
+    [string, string, string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'create_chain_ledger_public' : ActorMethod<
+    [string, ChainInitData],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
@@ -185,10 +225,21 @@ export interface _SERVICE {
       { 'Err' : string }
   >,
   'get_all_atomic_swap_orders' : ActorMethod<[], Array<AtomicSwapOrder>>,
+  'get_all_chain_ledgers_public' : ActorMethod<[], Array<ChainLedger>>,
+  'get_all_cross_chain_transfers_public' : ActorMethod<
+    [],
+    Array<CrossChainTransfer>
+  >,
   'get_all_htlcs' : ActorMethod<[], Array<HTLC>>,
   'get_all_swap_orders' : ActorMethod<[], Array<CrossChainSwapOrder>>,
+  'get_associated_token_address_public' : ActorMethod<
+    [string, string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
   'get_atomic_swap_order' : ActorMethod<[string], [] | [AtomicSwapOrder]>,
   'get_balance' : ActorMethod<[string], { 'Ok' : string } | { 'Err' : string }>,
+  'get_chain_ledger_public' : ActorMethod<[string], [] | [ChainLedger]>,
   'get_claim_fee' : ActorMethod<[], { 'Ok' : string } | { 'Err' : string }>,
   'get_compatible_orders' : ActorMethod<[string], Array<AtomicSwapOrder>>,
   'get_contract_info' : ActorMethod<[], string>,
@@ -196,6 +247,10 @@ export interface _SERVICE {
     [string],
     { 'Ok' : SwapOrderStatus } |
       { 'Err' : string }
+  >,
+  'get_cross_chain_transfer_public' : ActorMethod<
+    [string],
+    [] | [CrossChainTransfer]
   >,
   'get_ethereum_address' : ActorMethod<
     [],
@@ -224,8 +279,34 @@ export interface _SERVICE {
   >,
   'get_public_key' : ActorMethod<[], { 'Ok' : string } | { 'Err' : string }>,
   'get_refund_fee' : ActorMethod<[], { 'Ok' : string } | { 'Err' : string }>,
+  'get_root_contract_address_public' : ActorMethod<[], [] | [string]>,
   'get_sepolia_block_number' : ActorMethod<
     [],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'get_solana_account_info_public' : ActorMethod<
+    [string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'get_solana_balance_public' : ActorMethod<
+    [string],
+    { 'Ok' : bigint } |
+      { 'Err' : string }
+  >,
+  'get_solana_slot_public' : ActorMethod<
+    [],
+    { 'Ok' : bigint } |
+      { 'Err' : string }
+  >,
+  'get_solana_wallet_public' : ActorMethod<
+    [string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'get_spl_token_balance_public' : ActorMethod<
+    [string],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
@@ -241,6 +322,11 @@ export interface _SERVICE {
     { 'Ok' : string } |
       { 'Err' : string }
   >,
+  'initialize_bridgeless_token_public' : ActorMethod<
+    [string, string, string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
   'initialize_nonce' : ActorMethod<[], { 'Ok' : string } | { 'Err' : string }>,
   'list_icp_htlcs_public' : ActorMethod<[], Array<HTLC>>,
   'refund_htlc_funds' : ActorMethod<
@@ -250,6 +336,21 @@ export interface _SERVICE {
   >,
   'refund_icp_htlc_public' : ActorMethod<
     [string, string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'send_sol_transaction_public' : ActorMethod<
+    [string, string, bigint],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'send_spl_token_transaction_public' : ActorMethod<
+    [string, string, string, bigint],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'submit_permit_signature' : ActorMethod<
+    [PermitRequest],
     { 'Ok' : string } |
       { 'Err' : string }
   >,
@@ -274,6 +375,11 @@ export interface _SERVICE {
     { 'Ok' : string } |
       { 'Err' : string }
   >,
+  'transfer_erc20_tokens_public' : ActorMethod<
+    [string, string, string],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
   'transfer_from_icrc_tokens_public' : ActorMethod<
     [string, string, string, bigint],
     { 'Ok' : string } |
@@ -281,6 +387,11 @@ export interface _SERVICE {
   >,
   'transfer_icrc_tokens_public' : ActorMethod<
     [string, string, bigint],
+    { 'Ok' : string } |
+      { 'Err' : string }
+  >,
+  'transfer_spl_tokens_instruction_public' : ActorMethod<
+    [string, string, string, bigint],
     { 'Ok' : string } |
       { 'Err' : string }
   >,

@@ -100,6 +100,35 @@ type HTLC = record {
   created_at : nat64;
 };
 
+// Bridgeless Token Types
+type ChainInitData = record {
+  chain_name : text;
+  chain_id : text;
+  token_symbol : text;
+  token_name : text;
+  total_supply : nat;
+};
+
+type ChainLedger = record {
+  chain_id : text;
+  chain_name : text;
+  token_symbol : text;
+  token_name : text;
+  total_supply : nat;
+  circulating_supply : nat;
+  created_at : nat64;
+};
+
+type CrossChainTransfer = record {
+  transfer_id : text;
+  amount : text;
+  source_chain : text;
+  target_chain : text;
+  recipient : text;
+  status : text;
+  created_at : nat64;
+};
+
 service : {
   // JSON-RPC Methods
   "get_sepolia_block_number" : () -> (variant { Ok : text; Err : text });
@@ -163,11 +192,9 @@ service : {
   // ICRC Public API Endpoints
   "transfer_icrc_tokens_public" : (text, text, nat) -> (variant { Ok : text; Err : text });
   "get_icrc_balance_public" : (text, text) -> (variant { Ok : nat; Err : text }) query;
-
   "transfer_from_icrc_tokens_public" : (text, text, text, nat) -> (variant { Ok : text; Err : text });
   
   // ICP HTLC Public API Endpoints
-
   "create_icp_htlc_public" : (text, text, nat, text, nat64, text) -> (variant { Ok : text; Err : text });
   "claim_icp_htlc_public" : (text, text, text) -> (variant { Ok : text; Err : text });
   "refund_icp_htlc_public" : (text, text) -> (variant { Ok : text; Err : text });
@@ -175,16 +202,50 @@ service : {
   "list_icp_htlcs_public" : () -> (vec HTLC) query;
   
   // Cross-Chain Swap Public API Endpoints
-
-
   "coordinate_cross_chain_swap_public" : (text, SwapDirection) -> (variant { Ok : text; Err : text });
   "validate_cross_chain_order_public" : (text) -> (variant { Ok : bool; Err : text }) query;
   "get_cross_chain_swap_status_public" : (text) -> (variant { Ok : SwapOrderStatus; Err : text }) query;
   "complete_cross_chain_swap_public" : (text, text) -> (variant { Ok : text; Err : text });
   
+  // Bridgeless Token API Endpoints
+  "initialize_bridgeless_token_public" : (text, text, text) -> (variant { Ok : text; Err : text });
+  "create_chain_ledger_public" : (text, ChainInitData) -> (variant { Ok : text; Err : text });
+  "authorize_cross_chain_transfer_public" : (text, text, text, text) -> (variant { Ok : text; Err : text });
+  "get_all_chain_ledgers_public" : () -> (vec ChainLedger) query;
+  "get_chain_ledger_public" : (text) -> (opt ChainLedger) query;
+  "get_all_cross_chain_transfers_public" : () -> (vec CrossChainTransfer) query;
+  "get_cross_chain_transfer_public" : (text) -> (opt CrossChainTransfer) query;
+  "get_root_contract_address_public" : () -> (opt text) query;
+  
+  // ============================================================================
+  // SOLANA PUBLIC API ENDPOINTS
+  // ============================================================================
+  
+  // Basic Solana Operations
+  "get_solana_balance_public" : (text) -> (variant { Ok : nat64; Err : text });
+  "get_solana_slot_public" : () -> (variant { Ok : nat64; Err : text });
+  "get_solana_account_info_public" : (text) -> (variant { Ok : text; Err : text });
+  
+  // SPL Token Operations
+  "get_spl_token_balance_public" : (text) -> (variant { Ok : text; Err : text });
+  "get_associated_token_address_public" : (text, text) -> (variant { Ok : text; Err : text }) query;
+  "create_associated_token_account_instruction_public" : (text, text, text) -> (variant { Ok : text; Err : text }) query;
+  "transfer_spl_tokens_instruction_public" : (text, text, text, nat64) -> (variant { Ok : text; Err : text }) query;
+  
+  // Transaction Operations
+  "send_sol_transaction_public" : (text, text, nat64) -> (variant { Ok : text; Err : text });
+  "send_spl_token_transaction_public" : (text, text, text, nat64) -> (variant { Ok : text; Err : text });
+  
+  // Wallet Management
+  "get_solana_wallet_public" : (text) -> (variant { Ok : text; Err : text }) query;
+  
   // ============================================================================
   // UNIFIED CROSS-CHAIN SWAP FUNCTIONS
   // ============================================================================
   
-
+  // Legacy permit submission
+  "submit_permit_signature" : (PermitRequest) -> (variant { Ok : text; Err : text });
+  
+  // ERC20 transfer
+  "transfer_erc20_tokens_public" : (text, text, text) -> (variant { Ok : text; Err : text });
 }

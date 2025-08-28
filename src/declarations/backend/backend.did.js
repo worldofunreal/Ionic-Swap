@@ -3,6 +3,13 @@ export const idlFactory = ({ IDL }) => {
     'EVMtoICP' : IDL.Null,
     'ICPtoEVM' : IDL.Null,
   });
+  const ChainInitData = IDL.Record({
+    'token_symbol' : IDL.Text,
+    'chain_id' : IDL.Text,
+    'chain_name' : IDL.Text,
+    'token_name' : IDL.Text,
+    'total_supply' : IDL.Nat,
+  });
   const PermitRequest = IDL.Record({
     'r' : IDL.Text,
     's' : IDL.Text,
@@ -50,6 +57,24 @@ export const idlFactory = ({ IDL }) => {
     'destination_token' : IDL.Text,
     'timelock' : IDL.Nat64,
   });
+  const ChainLedger = IDL.Record({
+    'token_symbol' : IDL.Text,
+    'created_at' : IDL.Nat64,
+    'circulating_supply' : IDL.Nat,
+    'chain_id' : IDL.Text,
+    'chain_name' : IDL.Text,
+    'token_name' : IDL.Text,
+    'total_supply' : IDL.Nat,
+  });
+  const CrossChainTransfer = IDL.Record({
+    'source_chain' : IDL.Text,
+    'status' : IDL.Text,
+    'recipient' : IDL.Text,
+    'created_at' : IDL.Nat64,
+    'transfer_id' : IDL.Text,
+    'target_chain' : IDL.Text,
+    'amount' : IDL.Text,
+  });
   const HTLCStatus = IDL.Variant({
     'Refunded' : IDL.Null,
     'Claimed' : IDL.Null,
@@ -91,6 +116,11 @@ export const idlFactory = ({ IDL }) => {
     'destination_chain_id' : IDL.Nat64,
   });
   return IDL.Service({
+    'authorize_cross_chain_transfer_public' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        [],
+      ),
     'check_expired_orders' : IDL.Func(
         [],
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
@@ -123,6 +153,16 @@ export const idlFactory = ({ IDL }) => {
       ),
     'coordinate_cross_chain_swap_public' : IDL.Func(
         [IDL.Text, SwapDirection],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        [],
+      ),
+    'create_associated_token_account_instruction_public' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        ['query'],
+      ),
+    'create_chain_ledger_public' : IDL.Func(
+        [IDL.Text, ChainInitData],
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
         [],
       ),
@@ -211,8 +251,23 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(AtomicSwapOrder)],
         ['query'],
       ),
+    'get_all_chain_ledgers_public' : IDL.Func(
+        [],
+        [IDL.Vec(ChainLedger)],
+        ['query'],
+      ),
+    'get_all_cross_chain_transfers_public' : IDL.Func(
+        [],
+        [IDL.Vec(CrossChainTransfer)],
+        ['query'],
+      ),
     'get_all_htlcs' : IDL.Func([], [IDL.Vec(HTLC)], []),
     'get_all_swap_orders' : IDL.Func([], [IDL.Vec(CrossChainSwapOrder)], []),
+    'get_associated_token_address_public' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        ['query'],
+      ),
     'get_atomic_swap_order' : IDL.Func(
         [IDL.Text],
         [IDL.Opt(AtomicSwapOrder)],
@@ -222,6 +277,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Text],
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
         [],
+      ),
+    'get_chain_ledger_public' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(ChainLedger)],
+        ['query'],
       ),
     'get_claim_fee' : IDL.Func(
         [],
@@ -237,6 +297,11 @@ export const idlFactory = ({ IDL }) => {
     'get_cross_chain_swap_status_public' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'Ok' : SwapOrderStatus, 'Err' : IDL.Text })],
+        ['query'],
+      ),
+    'get_cross_chain_transfer_public' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(CrossChainTransfer)],
         ['query'],
       ),
     'get_ethereum_address' : IDL.Func(
@@ -275,8 +340,38 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
         [],
       ),
+    'get_root_contract_address_public' : IDL.Func(
+        [],
+        [IDL.Opt(IDL.Text)],
+        ['query'],
+      ),
     'get_sepolia_block_number' : IDL.Func(
         [],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        [],
+      ),
+    'get_solana_account_info_public' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        [],
+      ),
+    'get_solana_balance_public' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'Ok' : IDL.Nat64, 'Err' : IDL.Text })],
+        [],
+      ),
+    'get_solana_slot_public' : IDL.Func(
+        [],
+        [IDL.Variant({ 'Ok' : IDL.Nat64, 'Err' : IDL.Text })],
+        [],
+      ),
+    'get_solana_wallet_public' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        ['query'],
+      ),
+    'get_spl_token_balance_public' : IDL.Func(
+        [IDL.Text],
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
         [],
       ),
@@ -296,6 +391,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
         [],
       ),
+    'initialize_bridgeless_token_public' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        [],
+      ),
     'initialize_nonce' : IDL.Func(
         [],
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
@@ -309,6 +409,21 @@ export const idlFactory = ({ IDL }) => {
       ),
     'refund_icp_htlc_public' : IDL.Func(
         [IDL.Text, IDL.Text],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        [],
+      ),
+    'send_sol_transaction_public' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Nat64],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        [],
+      ),
+    'send_spl_token_transaction_public' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Nat64],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        [],
+      ),
+    'submit_permit_signature' : IDL.Func(
+        [PermitRequest],
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
         [],
       ),
@@ -337,6 +452,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
         [],
       ),
+    'transfer_erc20_tokens_public' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        [],
+      ),
     'transfer_from_icrc_tokens_public' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
@@ -346,6 +466,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Text, IDL.Text, IDL.Nat],
         [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
         [],
+      ),
+    'transfer_spl_tokens_instruction_public' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Nat64],
+        [IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text })],
+        ['query'],
       ),
     'validate_cross_chain_order_public' : IDL.Func(
         [IDL.Text],

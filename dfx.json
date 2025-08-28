@@ -14,6 +14,16 @@
       "type": "custom",
       "candid": "https://raw.githubusercontent.com/dfinity/ic/615045e039c57ed842c689e49a07ab3de3a8a781/rs/ledger_suite/icrc1/ledger/ledger.did",
       "wasm": "https://download.dfinity.systems/ic/615045e039c57ed842c689e49a07ab3de3a8a781/canisters/ic-icrc1-ledger.wasm.gz"
+    },
+    "sol_rpc": {
+      "type": "custom",
+      "candid": "https://github.com/dfinity/sol-rpc-canister/releases/latest/download/sol_rpc_canister.did",
+      "wasm": "https://github.com/dfinity/sol-rpc-canister/releases/latest/download/sol_rpc_canister.wasm.gz",
+      "remote": {
+        "id": {
+          "ic": "tghme-zyaaa-aaaar-qarca-cai"
+        }
+      }
     }
   },
   "defaults": {
@@ -21,8 +31,7 @@
       "args": "",
       "replica": {
         "subnet_type": "system"
-      },
-      "packtool": "mops sources"
+      }
     }
   },
   "output_env_file": ".env",
