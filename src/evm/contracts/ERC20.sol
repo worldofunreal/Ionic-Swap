@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 /**
  * @title MockERC20
- * @dev Mock ERC20 token for testing Etherlink HTLC functionality
+ * @dev Mock ERC20 token for testing HTLC functionality
  */
 contract MockERC20 {
     string public name;

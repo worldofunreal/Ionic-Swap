@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 async function main() {
-    console.log("🚀 Starting EtherlinkHTLC Contract Deployment");
+    console.log("🚀 Starting HTLC Contract Deployment");
     console.log("=============================================");
 
     // Get the network information
@@ -22,22 +22,22 @@ async function main() {
     const icpNetworkSigner = process.env.ICP_NETWORK_SIGNER_ADDRESS || deployer.address;
     console.log(`🔐 ICP Network Signer: ${icpNetworkSigner}`);
 
-    // Deploy the EtherlinkHTLC contract
-    console.log("\n📦 Deploying EtherlinkHTLC contract...");
+    // Deploy the HTLC contract
+    console.log("\n📦 Deploying HTLC contract...");
     
-    const EtherlinkHTLC = await ethers.getContractFactory("EtherlinkHTLC");
-    const etherlinkHTLC = await EtherlinkHTLC.deploy(icpNetworkSigner);
+    const HTLC = await ethers.getContractFactory("HTLC");
+    const HTLC = await HTLC.deploy(icpNetworkSigner);
     
     console.log(`⏳ Waiting for deployment confirmation...`);
-    await etherlinkHTLC.deployed();
+    await HTLC.deployed();
     
-    console.log(`✅ EtherlinkHTLC deployed to: ${etherlinkHTLC.address}`);
-    console.log(`📋 Transaction hash: ${etherlinkHTLC.deployTransaction.hash}`);
+    console.log(`✅ HTLC deployed to: ${HTLC.address}`);
+    console.log(`📋 Transaction hash: ${HTLC.deployTransaction.hash}`);
 
     // Verify deployment
     console.log("\n🔍 Verifying deployment...");
     
-    const deployedCode = await ethers.provider.getCode(etherlinkHTLC.address);
+    const deployedCode = await ethers.provider.getCode(HTLC.address);
     if (deployedCode === "0x") {
         throw new Error("Contract deployment failed - no code at address");
     }
@@ -46,27 +46,27 @@ async function main() {
 
     // Get initial contract state
     console.log("\n📊 Initial Contract State:");
-    console.log(`   - ICP Network Signer: ${await etherlinkHTLC.icpNetworkSigner()}`);
-    console.log(`   - Claim Fee: ${ethers.utils.formatEther(await etherlinkHTLC.claimFee())} ETH`);
-    console.log(`   - Refund Fee: ${ethers.utils.formatEther(await etherlinkHTLC.refundFee())} ETH`);
-    console.log(`   - Total Fees Collected: ${ethers.utils.formatEther(await etherlinkHTLC.totalFeesCollected())} ETH`);
+    console.log(`   - ICP Network Signer: ${await HTLC.icpNetworkSigner()}`);
+    console.log(`   - Claim Fee: ${ethers.utils.formatEther(await HTLC.claimFee())} ETH`);
+    console.log(`   - Refund Fee: ${ethers.utils.formatEther(await HTLC.refundFee())} ETH`);
+    console.log(`   - Total Fees Collected: ${ethers.utils.formatEther(await HTLC.totalFeesCollected())} ETH`);
 
     // Save deployment information
     const deploymentInfo = {
         network: networkName,
         chainId: chainId,
-        contractAddress: etherlinkHTLC.address,
+        contractAddress: HTLC.address,
         deployer: deployer.address,
         icpNetworkSigner: icpNetworkSigner,
         deploymentTime: new Date().toISOString(),
-        transactionHash: etherlinkHTLC.deployTransaction.hash,
-        blockNumber: etherlinkHTLC.deployTransaction.blockNumber,
-        gasUsed: etherlinkHTLC.deployTransaction.gasLimit?.toString(),
+        transactionHash: HTLC.deployTransaction.hash,
+        blockNumber: HTLC.deployTransaction.blockNumber,
+        gasUsed: HTLC.deployTransaction.gasLimit?.toString(),
         initialState: {
-            icpNetworkSigner: await etherlinkHTLC.icpNetworkSigner(),
-            claimFee: ethers.utils.formatEther(await etherlinkHTLC.claimFee()),
-            refundFee: ethers.utils.formatEther(await etherlinkHTLC.refundFee()),
-            totalFeesCollected: ethers.utils.formatEther(await etherlinkHTLC.totalFeesCollected())
+            icpNetworkSigner: await HTLC.icpNetworkSigner(),
+            claimFee: ethers.utils.formatEther(await HTLC.claimFee()),
+            refundFee: ethers.utils.formatEther(await HTLC.refundFee()),
+            totalFeesCollected: ethers.utils.formatEther(await HTLC.totalFeesCollected())
         }
     };
 
@@ -98,17 +98,17 @@ async function main() {
 
     console.log("\n🔗 Network-specific actions:");
     console.log(`📝 To verify on ${networkName === 'sepolia' ? 'Sepolia' : networkName} Etherscan:`);
-    console.log(`   npx hardhat verify --network ${networkName} ${etherlinkHTLC.address} "${icpNetworkSigner}"`);
+    console.log(`   npx hardhat verify --network ${networkName} ${HTLC.address} "${icpNetworkSigner}"`);
 
     console.log("\n🧪 Running basic contract test...");
-    console.log(`   ✅ ICP Network Signer: ${await etherlinkHTLC.icpNetworkSigner()}`);
-    console.log(`   ✅ Claim Fee: ${ethers.utils.formatEther(await etherlinkHTLC.claimFee())} ETH`);
-    console.log(`   ✅ Refund Fee: ${ethers.utils.formatEther(await etherlinkHTLC.refundFee())} ETH`);
+    console.log(`   ✅ ICP Network Signer: ${await HTLC.icpNetworkSigner()}`);
+    console.log(`   ✅ Claim Fee: ${ethers.utils.formatEther(await HTLC.claimFee())} ETH`);
+    console.log(`   ✅ Refund Fee: ${ethers.utils.formatEther(await HTLC.refundFee())} ETH`);
     console.log("✅ Contract is ready for use!");
 
     console.log("\n🎉 Deployment completed successfully!");
     console.log("=============================================");
-    console.log(`📋 Contract Address: ${etherlinkHTLC.address}`);
+    console.log(`📋 Contract Address: ${HTLC.address}`);
     console.log(`🌐 Network: ${networkName} (Chain ID: ${chainId})`);
     console.log(`👤 Deployer: ${deployer.address}`);
     console.log(`🔐 ICP Signer: ${icpNetworkSigner}`);

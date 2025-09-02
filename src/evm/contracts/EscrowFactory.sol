@@ -12,16 +12,16 @@ import { TimelocksLib } from "./libraries/TimelocksLib.sol";
 
 import { IEscrowFactory } from "./interfaces/IEscrowFactory.sol";
 import { IBaseEscrow } from "./interfaces/IBaseEscrow.sol";
-import { EtherlinkEscrowSrc } from "./EtherlinkEscrowSrc.sol";
-import { EtherlinkEscrowDst } from "./EtherlinkEscrowDst.sol";
+import { EscrowSrc } from "./EscrowSrc.sol";
+import { EscrowDst } from "./EscrowDst.sol";
 import { ProxyHashLib } from "./libraries/ProxyHashLib.sol";
 
 /**
- * @title Etherlink Escrow Factory contract
- * @notice Contract to create escrow contracts for cross-chain atomic swap between Etherlink and ICP
+ * @title Escrow Factory contract
+ * @notice Contract to create escrow contracts for cross-chain atomic swap between EVM chains and ICP
  * @custom:security-contact security@ionic-swap.io
  */
-contract EtherlinkEscrowFactory is IEscrowFactory {
+contract EscrowFactory is IEscrowFactory {
     using AddressLib for Address;
     using Clones for address;
     using ImmutablesLib for IBaseEscrow.Immutables;
@@ -49,16 +49,16 @@ contract EtherlinkEscrowFactory is IEscrowFactory {
         require(_icpNetworkSigner != address(0), "Invalid ICP network signer");
         icpNetworkSigner = _icpNetworkSigner;
         
-        ESCROW_SRC_IMPLEMENTATION = address(new EtherlinkEscrowSrc(rescueDelaySrc, IERC20(address(0)))); // No access token for Etherlink
-        ESCROW_DST_IMPLEMENTATION = address(new EtherlinkEscrowDst(rescueDelayDst, IERC20(address(0)))); // No access token for Etherlink
+        ESCROW_SRC_IMPLEMENTATION = address(new EscrowSrc(rescueDelaySrc, IERC20(address(0)))); // No access token needed
+        ESCROW_DST_IMPLEMENTATION = address(new EscrowDst(rescueDelayDst, IERC20(address(0)))); // No access token needed
         
         _PROXY_SRC_BYTECODE_HASH = ProxyHashLib.computeProxyBytecodeHash(ESCROW_SRC_IMPLEMENTATION);
         _PROXY_DST_BYTECODE_HASH = ProxyHashLib.computeProxyBytecodeHash(ESCROW_DST_IMPLEMENTATION);
     }
 
     /**
-     * @notice Creates a new escrow contract for maker on the source chain (Etherlink)
-     * @dev This function is called by the ICP canister to create escrows on Etherlink
+     * @notice Creates a new escrow contract for maker on the source chain (EVM)
+     * @dev This function is called by the ICP canister to create escrows on EVM chains
      * @param immutables The immutable values for the escrow
      * @param dstImmutablesComplement Additional immutable values for destination
      */
@@ -130,6 +130,12 @@ contract EtherlinkEscrowFactory is IEscrowFactory {
      */
     function _deployEscrow(bytes32 salt, uint256 value, address implementation) internal returns (address escrow) {
         escrow = implementation.cloneDeterministic(salt);
+        
+        // Send the value to the deployed escrow contract
+        if (value > 0) {
+            (bool success, ) = escrow.call{value: value}("");
+            require(success, "Failed to send value to escrow");
+        }
     }
 
     /**

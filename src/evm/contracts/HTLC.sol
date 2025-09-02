@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
-contract EtherlinkHTLC is ReentrancyGuard, Ownable, Pausable {
+contract HTLCContract is ReentrancyGuard, Ownable, Pausable {
     using SafeERC20 for IERC20;
     using ECDSA for bytes32;
 
@@ -25,7 +25,7 @@ contract EtherlinkHTLC is ReentrancyGuard, Ownable, Pausable {
     }
     
     enum ChainType { 
-        Etherlink, 
+        EVM, 
         ICP, 
         Ethereum, 
         Polygon, 
@@ -509,7 +509,7 @@ contract EtherlinkHTLC is ReentrancyGuard, Ownable, Pausable {
             timelock: timelock,
             claimed: false,
             refunded: false,
-            sourceChain: ChainType.Etherlink,
+            sourceChain: ChainType.EVM,
             targetChain: targetChain,
             orderHash: orderHash,
             createdAt: block.timestamp
@@ -526,7 +526,7 @@ contract EtherlinkHTLC is ReentrancyGuard, Ownable, Pausable {
             msg.sender,
             taker,
             amount,
-            ChainType.Etherlink,
+            ChainType.EVM,
             targetChain,
             orderHash
         );

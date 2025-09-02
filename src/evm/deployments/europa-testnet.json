@@ -1,0 +1,12 @@
+{
+  "network": "Europa Testnet",
+  "chainId": 1444673419,
+  "deployer": "0xf0d056015Bdd86C0EFD07000F75Ea10873A1d0A7",
+  "contracts": {
+    "htlc": "0x6fFfB1Ca5249C76671F4b5426e7f316Ae4B94f8D",
+    "spiralToken": "0xcF0ad4183EB419ced2F709C75E4c937b8d7708d8",
+    "stardustToken": "0x9229D364070b6B8bEe81F75D076Dc67AEded3365"
+  },
+  "deploymentTime": "2025-09-02T02:39:51.385Z",
+  "explorer": "https://juicy-low-small-testnet.explorer.testnet.skalenodes.com"
+}
