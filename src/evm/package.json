@@ -20,6 +20,7 @@
     "verify:europa:testnet": "hardhat verify --network europaTestnet",
     "verify:europa:mainnet": "hardhat verify --network europaMainnet",
     "test:europa": "hardhat run scripts/test-europa.js --network europaTestnet",
+    "benchmark:europa": "hardhat run scripts/benchmark-europa-speed.js --network europaTestnet",
     "node": "hardhat node",
     "clean": "hardhat clean",
     "integration-test": "hardhat run scripts/integration-test.js",
