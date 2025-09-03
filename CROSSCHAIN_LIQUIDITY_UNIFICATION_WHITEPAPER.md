@@ -307,7 +307,7 @@ This protocol will serve as the foundation for the next generation of DeFi appli
 ---
 
 **Contact Information**  
-Website: [ionic-swap.com](https://ionic-swap.com)  
-Email: info@ionic-swap.com  
-GitHub: [github.com/worldofunreal/Ionic-Swap](https://github.com/worldofunreal/Ionic-Swap)  
+Website: [ionicswap.com](https://ionicswap.com)  
+Email: info@ionicswap.com  
+GitHub: [github.com/worldofunreal/Ionic-Swap](https://github.com/worldofunreal/IonicSwap)  
 Twitter: [@ionic_swap](https://twitter.com/ionicswap)

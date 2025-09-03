@@ -1,8 +1,7 @@
-use candid::{CandidType, Deserialize, Principal};
-use ethers_core::types::{Address, U256};
+use candid::{CandidType, Deserialize};
+use ethers_core::types::U256;
 use sha3::{Digest, Keccak256};
 use std::collections::HashMap;
-use std::str::FromStr;
 
 // ============================================================================
 // TYPES
@@ -117,7 +116,7 @@ pub async fn create_chain_ledger(
     })?;
 
     // Get the root contract address
-    let root_contract = ROOT_CONTRACT_ADDRESS.with(|addr| {
+    let _root_contract = ROOT_CONTRACT_ADDRESS.with(|addr| {
         addr.borrow().clone().ok_or("Root contract not initialized".to_string())
     })?;
 

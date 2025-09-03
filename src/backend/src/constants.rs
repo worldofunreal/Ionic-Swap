@@ -4,9 +4,9 @@
 
 pub const SEPOLIA_CHAIN_ID: u64 = 11155111;
 
-// SKALE Europa Hub Chain IDs
-pub const EUROPA_TESTNET_CHAIN_ID: u64 = 1444673419;
-pub const EUROPA_MAINNET_CHAIN_ID: u64 = 2046399126;
+// SKALE Europa Hub Chain IDs (unused - keeping for future reference)
+// pub const EUROPA_TESTNET_CHAIN_ID: u64 = 1444673419;
+// pub const EUROPA_MAINNET_CHAIN_ID: u64 = 2046399126;
 
 
 pub const EIP1559_TX_ID: u8 = 2;
@@ -18,9 +18,9 @@ pub const EIP1559_TX_ID: u8 = 2;
 // HTLC Contract (newly deployed)
 pub const HTLC_CONTRACT_ADDRESS: &str = "0x7cFC05b92549ae96D758516B9A2b50D114d6ad0d";
 
-pub const SPIRAL_TOKEN_ADDRESS: &str = "0xdE7409EDeA573D090c3C6123458D6242E26b425E";
+// pub const SPIRAL_TOKEN_ADDRESS: &str = "0xdE7409EDeA573D090c3C6123458D6242E26b425E";
 
-pub const STARDUST_TOKEN_ADDRESS: &str = "0x6ca99fc9bDed10004FE9CC6ce40914b98490Dc90";
+// pub const STARDUST_TOKEN_ADDRESS: &str = "0x6ca99fc9bDed10004FE9CC6ce40914b98490Dc90";
 
 // ============================================================================
 // EUROPA CONTRACTS (Newly Deployed)
@@ -29,9 +29,9 @@ pub const STARDUST_TOKEN_ADDRESS: &str = "0x6ca99fc9bDed10004FE9CC6ce40914b98490
 
 pub const EUROPA_HTLC_CONTRACT_ADDRESS: &str = "0x6fFfB1Ca5249C76671F4b5426e7f316Ae4B94f8D";
 
-pub const EUROPA_SPIRAL_TOKEN_ADDRESS: &str = "0xcF0ad4183EB419ced2F709C75E4c937b8d7708d8";
+// pub const EUROPA_SPIRAL_TOKEN_ADDRESS: &str = "0xcF0ad4183EB419ced2F709C75E4c937b8d7708d8";
 
-pub const EUROPA_STARDUST_TOKEN_ADDRESS: &str = "0x9229D364070b6B8bEe81F75D076Dc67AEded3365";
+// pub const EUROPA_STARDUST_TOKEN_ADDRESS: &str = "0x9229D364070b6B8bEe81F75D076Dc67AEded3365";
 
 // ICRC-1 Token Canister IDs
 

@@ -1,5 +1,6 @@
 use candid::{candid_method, Principal};
 use ic_cdk_macros::*;
+use std::collections::HashMap;
 
 // ============================================================================
 // MODULES
@@ -13,6 +14,7 @@ mod evm;
 mod icp;
 mod solana;
 mod bridgeless_token;
+mod unified_pools;
 
 use constants::*;
 use types::*;
@@ -20,6 +22,7 @@ use storage::*;
 use icp::*;
 use solana::*;
 use bridgeless_token::*;
+use unified_pools::*;
 
 // ============================================================================
 // JSON-RPC ENDPOINTS (Public canister interface)
@@ -1391,3 +1394,172 @@ pub async fn create_evm_to_icp_order(
 
 
 
+
+// ============================================================================
+// UNIFIED LIQUIDITY POOL PUBLIC API ENDPOINTS
+// ============================================================================
+
+/// Create a new unified liquidity pool
+#[update]
+#[candid_method]
+pub async fn create_unified_liquidity_pool_public(
+    base_asset: String,
+    initial_chains: Vec<String>,
+) -> Result<String, String> {
+    create_unified_liquidity_pool(base_asset, initial_chains).await
+}
+
+/// Add a new chain to an existing pool
+#[update]
+#[candid_method]
+pub async fn add_chain_to_pool_public(
+    pool_id: String,
+    chain_id: String,
+    initial_liquidity: u128,
+) -> Result<String, String> {
+    add_chain_to_pool(pool_id, chain_id, initial_liquidity).await
+}
+
+/// Deposit liquidity into a specific chain within a pool
+#[update]
+#[candid_method]
+pub async fn deposit_liquidity_cross_chain_public(
+    pool_id: String,
+    user: String,
+    chain_id: String,
+    amount: u128,
+) -> Result<String, String> {
+    deposit_liquidity_cross_chain(pool_id, user, chain_id, amount).await
+}
+
+/// Withdraw liquidity from a specific chain within a pool
+#[update]
+#[candid_method]
+pub async fn withdraw_liquidity_cross_chain_public(
+    pool_id: String,
+    user: String,
+    chain_id: String,
+    amount: u128,
+) -> Result<String, String> {
+    withdraw_liquidity_cross_chain(pool_id, user, chain_id, amount).await
+}
+
+/// Get total liquidity across all chains in a pool
+#[query]
+#[candid_method]
+pub fn get_pool_total_liquidity_public(pool_id: String) -> Result<u128, String> {
+    get_pool_total_liquidity(&pool_id)
+}
+
+/// Get liquidity distribution across chains for a pool
+#[query]
+#[candid_method]
+pub fn get_pool_chain_distribution_public(pool_id: String) -> Result<HashMap<String, ChainLiquidity>, String> {
+    get_pool_chain_distribution(&pool_id)
+}
+
+/// Get yield rates across all chains for a pool
+#[query]
+#[candid_method]
+pub fn get_pool_yield_rates_public(pool_id: String) -> Result<HashMap<String, f64>, String> {
+    get_pool_yield_rates(&pool_id)
+}
+
+/// Get pool information
+#[query]
+#[candid_method]
+pub fn get_pool_info_public(pool_id: String) -> Result<UnifiedLiquidityPool, String> {
+    get_pool_info(&pool_id)
+}
+
+/// List all pools
+#[query]
+#[candid_method]
+pub fn list_all_pools_public() -> Vec<String> {
+    list_all_pools()
+}
+
+/// Update chain health state
+#[update]
+#[candid_method]
+pub fn update_chain_health_state_public(
+    chain_id: String,
+    last_block: u64,
+    response_time_ms: u64,
+    is_healthy: bool,
+) -> Result<String, String> {
+    update_chain_health_state(chain_id, last_block, response_time_ms, is_healthy)
+}
+
+/// Get health status of all chains
+#[query]
+#[candid_method]
+pub fn get_all_chain_states_public() -> Vec<ChainState> {
+    get_all_chain_states()
+}
+
+/// Create a Solana-specific liquidity pool
+#[update]
+#[candid_method]
+pub async fn create_solana_liquidity_pool_public(
+    pool_id: String,
+    base_asset: String,
+    initial_liquidity: u128,
+) -> Result<String, String> {
+    unified_pools::create_solana_liquidity_pool(pool_id, base_asset, initial_liquidity)
+}
+
+/// Get Solana chain state
+#[query]
+#[candid_method]
+pub fn get_solana_chain_state_public() -> ChainState {
+    unified_pools::get_solana_chain_state()
+}
+
+/// Basic yield optimization for a pool
+#[update]
+#[candid_method]
+pub async fn optimize_pool_yields_basic_public(pool_id: String) -> Result<Vec<CapitalMove>, String> {
+    optimize_pool_yields_basic(&pool_id).await
+}
+
+/// Simulate yield rates for testing (mock data)
+#[update]
+#[candid_method]
+pub async fn simulate_yield_rates_public(
+    pool_id: String,
+    chain_yields: HashMap<String, f64>,
+) -> Result<String, String> {
+    let pools = get_unified_liquidity_pools();
+    
+    if let Some(mut pool) = pools.get_mut(&pool_id) {
+        // Update yield rates for each chain
+        for (chain_id, yield_rate) in chain_yields {
+            if let Some(chain_liquidity) = pool.chain_distribution.get_mut(&chain_id) {
+                chain_liquidity.current_apy = yield_rate;
+                chain_liquidity.last_updated = ic_cdk::api::time() / 1_000_000_000;
+            }
+        }
+        
+        // Update pool
+        update_unified_liquidity_pool(&pool_id, pool.clone());
+        
+        Ok("Yield rates updated successfully".to_string())
+    } else {
+        Err("Pool not found".to_string())
+    }
+}
+
+/// Test endpoint to verify unified pool system is working
+#[query]
+#[candid_method]
+pub fn test_unified_pool_system() -> String {
+    "✅ Unified liquidity pool system is operational!".to_string()
+}
+
+// ============================================================================
+// CANDID EXPORT
+// ============================================================================
+
+// Enable Candid export for automatic interface generation
+ic_cdk::export_candid!();

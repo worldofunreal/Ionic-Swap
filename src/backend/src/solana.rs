@@ -18,6 +18,11 @@ fn get_solana_rpc_endpoint() -> &'static str {
     SOLANA_DEVNET_RPC
 }
 
+/// Get Solana testnet RPC endpoint
+pub fn get_solana_testnet_rpc_endpoint() -> &'static str {
+    SOLANA_TESTNET_RPC
+}
+
 // ============================================================================
 // SOLANA WALLET MANAGEMENT
 // ============================================================================

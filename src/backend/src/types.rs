@@ -1,4 +1,5 @@
 use candid::{CandidType, Deserialize};
+use std::collections::HashMap;
 
 // ============================================================================
 // HTLC AND CROSS-CHAIN SWAP TYPES
@@ -140,3 +141,135 @@ pub struct PermitData {
     pub s: String,
     pub signature: String,
 } 
+
+// ============================================================================
+// UNIFIED LIQUIDITY POOL TYPES
+// ============================================================================
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct UnifiedLiquidityPool {
+    pub pool_id: String,
+    pub base_asset: String,
+    pub chain_distribution: HashMap<String, ChainLiquidity>,
+    pub total_unified_liquidity: u128,
+    pub yield_optimization: YieldStrategy,
+    pub risk_parameters: RiskConfig,
+    pub created_at: u64,
+    pub last_optimized: u64,
+    pub is_active: bool,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct ChainLiquidity {
+    pub chain_id: String,
+    pub available_liquidity: u128,
+    pub borrowed_amount: u128,
+    pub current_apy: f64,
+    pub utilization_rate: f64,
+    pub last_updated: u64,
+    pub risk_score: u8,
+    pub is_active: bool,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct YieldStrategy {
+    pub optimization_interval: u64,        // seconds
+    pub min_yield_improvement: f64,       // percentage
+    pub max_capital_movement: u128,       // amount
+    pub target_utilization: f64,          // percentage
+    pub risk_tolerance: u8,               // 1-10 scale
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct RiskConfig {
+    pub max_chain_exposure: f64,          // percentage
+    pub min_collateral_ratio: f64,        // ratio
+    pub liquidation_threshold: f64,       // percentage
+    pub emergency_pause_threshold: f64,   // percentage
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct CrossChainLendingPosition {
+    pub position_id: String,
+    pub user: String,
+    pub borrowed_asset: String,
+    pub borrowed_amount: u128,
+    pub collateral_chain: String,
+    pub collateral_asset: String,
+    pub collateral_amount: u128,
+    pub liquidation_threshold: f64,
+    pub status: LendingPositionStatus,
+    pub created_at: u64,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug, PartialEq)]
+pub enum LendingPositionStatus {
+    Active,
+    UnderCollateralized,
+    Liquidated,
+    Closed,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct CapitalMove {
+    pub move_id: String,
+    pub pool_id: String,
+    pub from_chain: String,
+    pub to_chain: String,
+    pub amount: u128,
+    pub expected_yield_improvement: f64,
+    pub risk_score: u8,
+    pub execution_time: u64,
+    pub status: CapitalMoveStatus,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug, PartialEq)]
+pub enum CapitalMoveStatus {
+    Pending,
+    Executing,
+    Completed,
+    Failed,
+    Cancelled,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct ChainState {
+    pub chain_id: String,
+    pub last_block: u64,
+    pub last_update: u64,
+    pub is_healthy: bool,
+    pub response_time_ms: u64,
+    pub error_count: u32,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct CrossChainOperation {
+    pub operation_id: String,
+    pub pool_id: String,
+    pub operation_type: CrossChainOperationType,
+    pub source_chain: String,
+    pub target_chain: String,
+    pub amount: u128,
+    pub status: CrossChainOperationStatus,
+    pub created_at: u64,
+    pub completed_at: Option<u64>,
+    pub error_message: Option<String>,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub enum CrossChainOperationType {
+    Deposit,
+    Withdrawal,
+    YieldOptimization,
+    LiquidityRebalancing,
+    EmergencyWithdrawal,
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug, PartialEq)]
+pub enum CrossChainOperationStatus {
+    Pending,
+    Executing,
+    Completed,
+    Failed,
+    Cancelled,
+}
