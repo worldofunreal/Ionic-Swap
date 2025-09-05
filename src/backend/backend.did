@@ -7,6 +7,7 @@ type AtomicSwapOrder = record {
   destination_amount : text;
   hashlock : text;
   evm_destination_address : opt text;
+  solana_destination_address : opt text;
   secret : text;
   created_at : nat64;
   source_htlc_id : opt text;
@@ -157,7 +158,14 @@ type RiskConfig = record {
   min_collateral_ratio : float64;
   liquidation_threshold : float64;
 };
-type SwapDirection = variant { EVMtoICP; ICPtoEVM };
+type SwapDirection = variant { 
+  EVMtoICP; 
+  ICPtoEVM; 
+  ICPtoSolana; 
+  SolanatoICP; 
+  EVMtoSolana; 
+  SolanatoEVM; 
+};
 type SwapOrderStatus = variant {
   Refunded;
   DestinationHTLCClaimed;
@@ -252,6 +260,47 @@ service : () -> {
   create_icp_to_evm_order : (text, text, text, text, text, text, nat64) -> (
       Result,
     );
+  // Create an EVM→Solana order with automatic permit execution
+  create_evm_to_solana_order : (
+      text,
+      text,
+      text,
+      text,
+      nat64,
+      text,
+      nat64,
+      PermitRequest,
+    ) -> (Result);
+  // Create a Solana→EVM order
+  create_solana_to_evm_order : (
+      text,
+      text,
+      text,
+      nat64,
+      text,
+      text,
+      nat64,
+    ) -> (Result);
+  // Create an ICP→Solana order
+  create_icp_to_solana_order : (
+      text,
+      text,
+      text,
+      text,
+      nat64,
+      text,
+      nat64,
+    ) -> (Result);
+  // Create a Solana→ICP order
+  create_solana_to_icp_order : (
+      text,
+      text,
+      text,
+      nat64,
+      text,
+      text,
+      nat64,
+    ) -> (Result);
   // Create a Solana-specific liquidity pool
   create_solana_liquidity_pool_public : (text, text, nat) -> (Result);
   // Create a new unified liquidity pool
@@ -321,7 +370,29 @@ service : () -> {
   // Get Solana wallet for ICP principal (public API)
   get_solana_wallet_public : (text) -> (Result);
   // Get SPL token account balance (public API)
-  get_spl_token_balance_public : (text) -> (Result);
+  get_spl_token_balance_public : (text, text) -> (Result);
+  // Get canister's Solana address (public API)
+  get_canister_solana_address_public : () -> (Result);
+  // Create Solana HTLC (public API)
+  create_solana_htlc_public : (
+      text,
+      text,
+      text,
+      text,
+      nat64,
+      text,
+      nat64,
+    ) -> (Result);
+  // Claim Solana HTLC (public API)
+  claim_solana_htlc_public : (text, text) -> (Result);
+  // Refund Solana HTLC (public API)
+  refund_solana_htlc_public : (text, text) -> (Result);
+  // Get Solana HTLC status (public API)
+  get_solana_htlc_status_public : (text) -> (Result_2);
+  // List all Solana HTLCs (public API)
+  list_solana_htlcs_public : () -> (vec HTLC);
+  // Sign and send Solana transaction (public API)
+  sign_and_send_solana_transaction_public : (text) -> (Result);
   get_swap_order : (text) -> (opt CrossChainSwapOrder) query;
   get_total_fees : () -> (Result);
   get_transaction_count : (text) -> (Result);

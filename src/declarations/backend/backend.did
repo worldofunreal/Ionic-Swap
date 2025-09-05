@@ -1,251 +1,444 @@
-type PermitRequest = record {
-  owner : text;
-  spender : text;
-  value : text;
-  nonce : text;
-  deadline : text;
-  v : text;
-  r : text;
-  s : text;
-  signature : text;
-};
-
-type GaslessApprovalRequest = record {
-  permit_request : PermitRequest;
-  user_address : text;
-  amount : text;
-  token_address : text;
-};
-
-// Atomic Swap Types
-type SwapOrderStatus = variant {
-  Created;
-  SourceHTLCCreated;
-  DestinationHTLCCreated;
-  SourceHTLCClaimed;
-  DestinationHTLCClaimed;
-  Completed;
-  Expired;
-  Cancelled;
-};
-
 type AtomicSwapOrder = record {
-  order_id : text;
   maker : text;
-  taker : text;
-  source_token : text;
-  destination_token : text;
-  source_amount : text;
-  destination_amount : text;
-  secret : text;
-  hashlock : text;
-  timelock : nat64;
-  source_htlc_id : opt text;
-  destination_htlc_id : opt text;
   status : SwapOrderStatus;
-  created_at : nat64;
-  expires_at : nat64;
-  evm_destination_address : opt text;
   icp_destination_principal : opt text;
-  counter_order_id : opt text;
-};
-
-// Cross-Chain Swap Types
-type SwapDirection = variant {
-  EVMtoICP;
-  ICPtoEVM;
-};
-
-type CrossChainSwapOrder = record {
-  order_id : text;
-  maker : text;
   taker : text;
-  source_asset : text;
-  destination_asset : text;
-  source_amount : text;
+  destination_htlc_id : opt text;
   destination_amount : text;
+  hashlock : text;
+  evm_destination_address : opt text;
+  solana_destination_address : opt text;
+  secret : text;
+  created_at : nat64;
+  source_htlc_id : opt text;
+  order_id : text;
+  source_amount : text;
+  source_token : text;
+  expires_at : nat64;
+  counter_order_id : opt text;
+  destination_token : text;
+  timelock : nat64;
+};
+type CapitalMove = record {
+  status : CapitalMoveStatus;
+  to_chain : text;
+  execution_time : nat64;
+  move_id : text;
+  from_chain : text;
+  risk_score : nat8;
+  pool_id : text;
+  amount : nat;
+  expected_yield_improvement : float64;
+};
+type CapitalMoveStatus = variant {
+  Failed;
+  Executing;
+  Cancelled;
+  Completed;
+  Pending;
+};
+type ChainInitData = record {
+  init_params : blob;
+  chain_type : text;
+  ledger_address : text;
+};
+type ChainLedger = record {
+  created_at : nat64;
+  chain_id : text;
+  is_active : bool;
+  chain_type : text;
+  ledger_address : text;
+};
+type ChainLiquidity = record {
+  utilization_rate : float64;
+  available_liquidity : nat;
+  last_updated : nat64;
+  chain_id : text;
+  current_apy : float64;
+  risk_score : nat8;
+  is_active : bool;
+  borrowed_amount : nat;
+};
+type ChainState = record {
+  error_count : nat32;
+  response_time_ms : nat64;
+  is_healthy : bool;
+  last_block : nat64;
+  chain_id : text;
+  last_update : nat64;
+};
+type CrossChainSwapOrder = record {
+  maker : text;
   source_chain_id : nat64;
-  destination_chain_id : nat64;
+  destination_asset : text;
+  status : HTLCStatus;
+  taker : text;
+  direction : SwapDirection;
+  destination_amount : text;
   hashlock : text;
   secret : opt text;
-  status : HTLCStatus;
   created_at : nat64;
+  order_id : text;
+  source_amount : text;
   expiration_time : nat64;
-  direction : SwapDirection;
+  source_asset : text;
+  destination_chain_id : nat64;
 };
-
-// HTLC Types
-type HTLCStatus = variant {
-  Created;
-  Deposited;
-  Claimed;
-  Refunded;
-  Expired;
+type CrossChainTransfer = record {
+  source_chain : text;
+  status : TransferStatus;
+  recipient : text;
+  created_at : nat64;
+  transfer_id : text;
+  processed_at : opt nat64;
+  target_chain : text;
+  amount : text;
 };
-
+type GaslessApprovalRequest = record {
+  token_address : text;
+  user_address : text;
+  permit_request : PermitRequest;
+  amount : text;
+};
 type HTLC = record {
   id : text;
-  sender : text;
-  recipient : text;
-  amount : text;
-  hashlock : text;
-  secret : opt text;
-  timelock : nat64;
+  source_chain : nat64;
   status : HTLCStatus;
   token : text;
-  source_chain : nat64;
-  target_chain : nat64;
+  hashlock : text;
   is_cross_chain : bool;
-  order_hash : text;
-  created_at : nat64;
-};
-
-// Bridgeless Token Types
-type ChainInitData = record {
-  chain_name : text;
-  chain_id : text;
-  token_symbol : text;
-  token_name : text;
-  total_supply : nat;
-};
-
-type ChainLedger = record {
-  chain_id : text;
-  chain_name : text;
-  token_symbol : text;
-  token_name : text;
-  total_supply : nat;
-  circulating_supply : nat;
-  created_at : nat64;
-};
-
-type CrossChainTransfer = record {
-  transfer_id : text;
-  amount : text;
-  source_chain : text;
-  target_chain : text;
   recipient : text;
-  status : text;
+  secret : opt text;
   created_at : nat64;
+  sender : text;
+  order_hash : text;
+  target_chain : nat64;
+  amount : text;
+  timelock : nat64;
 };
-
-service : {
-  // JSON-RPC Methods
-  "get_sepolia_block_number" : () -> (variant { Ok : text; Err : text });
-  "get_transaction_receipt" : (text) -> (variant { Ok : text; Err : text });
-  "get_balance" : (text) -> (variant { Ok : text; Err : text });
-  "get_transaction_count" : (text) -> (variant { Ok : text; Err : text });
-  
-  // Contract Interaction Methods
-  "get_icp_network_signer" : () -> (variant { Ok : text; Err : text });
-  "get_claim_fee" : () -> (variant { Ok : text; Err : text });
-  "get_refund_fee" : () -> (variant { Ok : text; Err : text });
-  "get_total_fees" : () -> (variant { Ok : text; Err : text });
-  
-  // Testing Methods
-  "test_all_contract_functions" : () -> (variant { Ok : text; Err : text });
-  "test_basic_rpc" : () -> (variant { Ok : text; Err : text });
-  "test_deployment_transaction" : () -> (variant { Ok : text; Err : text });
-  
-  // Utility Methods
-  "get_contract_info" : () -> (text);
-  "initialize_nonce" : () -> (variant { Ok : text; Err : text });
-  
-  // EVM Integration Methods
-  "get_public_key" : () -> (variant { Ok : text; Err : text });
-  "get_ethereum_address" : () -> (variant { Ok : text; Err : text });
-  "test_signing_address" : () -> (variant { Ok : text; Err : text });
-  "test_simple_transaction" : () -> (variant { Ok : text; Err : text });
-  
-  // Gasless Approval Method
-  "execute_gasless_approval" : (GaslessApprovalRequest) -> (variant { Ok : text; Err : text });
-  
-  // Core HTLC Functions
-  "create_htlc_escrow" : (text, text, text, text, text, text, nat64, SwapDirection, nat64, nat64) -> (variant { Ok : text; Err : text });
-  "deposit_to_htlc" : (text) -> (variant { Ok : text; Err : text });
-  "claim_htlc_funds" : (text, text) -> (variant { Ok : text; Err : text });
-  "refund_htlc_funds" : (text) -> (variant { Ok : text; Err : text });
-  
-  // Cross-Chain Swap Functions
-  "create_cross_chain_swap_order" : (text, text, text, text, text, text, nat64, nat64, nat64) -> (variant { Ok : text; Err : text });
-  "execute_cross_chain_swap" : (text) -> (variant { Ok : text; Err : text });
-  "complete_cross_chain_swap" : (text) -> (variant { Ok : text; Err : text });
-  
-  // Query Functions
-  "get_htlc" : (text) -> (opt HTLC);
-  "get_swap_order" : (text) -> (opt CrossChainSwapOrder);
-  "get_all_htlcs" : () -> (vec HTLC);
-  "get_all_swap_orders" : () -> (vec CrossChainSwapOrder);
-  
-  // Atomic Swap Methods
-  "create_icp_to_evm_order" : (text, text, text, text, text, text, nat64) -> (variant { Ok : text; Err : text });
-  "create_evm_to_icp_order" : (text, text, text, text, text, text, nat64, PermitRequest) -> (variant { Ok : text; Err : text });
-  "create_evm_htlc" : (text, bool) -> (variant { Ok : text; Err : text });
-  "claim_evm_htlc" : (text, text) -> (variant { Ok : text; Err : text });
-  "execute_atomic_swap" : (text) -> (variant { Ok : text; Err : text });
-  "get_atomic_swap_order" : (text) -> (opt AtomicSwapOrder) query;
-  "get_all_atomic_swap_orders" : () -> (vec AtomicSwapOrder) query;
-  "get_orders_by_status" : (SwapOrderStatus) -> (vec AtomicSwapOrder) query;
-  "get_compatible_orders" : (text) -> (vec AtomicSwapOrder) query;
-  "check_expired_orders" : () -> (variant { Ok : text; Err : text });
-  
-  // ICRC Public API Endpoints
-  "transfer_icrc_tokens_public" : (text, text, nat) -> (variant { Ok : text; Err : text });
-  "get_icrc_balance_public" : (text, text) -> (variant { Ok : nat; Err : text }) query;
-  "transfer_from_icrc_tokens_public" : (text, text, text, nat) -> (variant { Ok : text; Err : text });
-  
-  // ICP HTLC Public API Endpoints
-  "create_icp_htlc_public" : (text, text, nat, text, nat64, text) -> (variant { Ok : text; Err : text });
-  "claim_icp_htlc_public" : (text, text, text) -> (variant { Ok : text; Err : text });
-  "refund_icp_htlc_public" : (text, text) -> (variant { Ok : text; Err : text });
-  "get_icp_htlc_status_public" : (text) -> (variant { Ok : HTLCStatus; Err : text }) query;
-  "list_icp_htlcs_public" : () -> (vec HTLC) query;
-  
-  // Cross-Chain Swap Public API Endpoints
-  "coordinate_cross_chain_swap_public" : (text, SwapDirection) -> (variant { Ok : text; Err : text });
-  "validate_cross_chain_order_public" : (text) -> (variant { Ok : bool; Err : text }) query;
-  "get_cross_chain_swap_status_public" : (text) -> (variant { Ok : SwapOrderStatus; Err : text }) query;
-  "complete_cross_chain_swap_public" : (text, text) -> (variant { Ok : text; Err : text });
-  
-  // Bridgeless Token API Endpoints
-  "initialize_bridgeless_token_public" : (text, text, text) -> (variant { Ok : text; Err : text });
-  "create_chain_ledger_public" : (text, ChainInitData) -> (variant { Ok : text; Err : text });
-  "authorize_cross_chain_transfer_public" : (text, text, text, text) -> (variant { Ok : text; Err : text });
-  "get_all_chain_ledgers_public" : () -> (vec ChainLedger) query;
-  "get_chain_ledger_public" : (text) -> (opt ChainLedger) query;
-  "get_all_cross_chain_transfers_public" : () -> (vec CrossChainTransfer) query;
-  "get_cross_chain_transfer_public" : (text) -> (opt CrossChainTransfer) query;
-  "get_root_contract_address_public" : () -> (opt text) query;
-  
-  // ============================================================================
-  // SOLANA PUBLIC API ENDPOINTS
-  // ============================================================================
-  
-  // Basic Solana Operations
-  "get_solana_balance_public" : (text) -> (variant { Ok : nat64; Err : text });
-  "get_solana_slot_public" : () -> (variant { Ok : nat64; Err : text });
-  "get_solana_account_info_public" : (text) -> (variant { Ok : text; Err : text });
-  
-  // SPL Token Operations
-  "get_spl_token_balance_public" : (text) -> (variant { Ok : text; Err : text });
-  "get_associated_token_address_public" : (text, text) -> (variant { Ok : text; Err : text }) query;
-  "create_associated_token_account_instruction_public" : (text, text, text) -> (variant { Ok : text; Err : text }) query;
-  "transfer_spl_tokens_instruction_public" : (text, text, text, nat64) -> (variant { Ok : text; Err : text }) query;
-  
-  // Transaction Operations
-  "send_sol_transaction_public" : (text, text, nat64) -> (variant { Ok : text; Err : text });
-  "send_spl_token_transaction_public" : (text, text, text, nat64) -> (variant { Ok : text; Err : text });
-  
-  // Wallet Management
-  "get_solana_wallet_public" : (text) -> (variant { Ok : text; Err : text }) query;
-  
-  // ============================================================================
-  // UNIFIED CROSS-CHAIN SWAP FUNCTIONS
-  // ============================================================================
-  
-  // Legacy permit submission
-  "submit_permit_signature" : (PermitRequest) -> (variant { Ok : text; Err : text });
-  
-  // ERC20 transfer
-  "transfer_erc20_tokens_public" : (text, text, text) -> (variant { Ok : text; Err : text });
+type HTLCStatus = variant { Refunded; Claimed; Deposited; Created; Expired };
+type PermitData = record {
+  r : text;
+  s : text;
+  v : nat8;
+  signature : text;
+  value : text;
+  owner : text;
+  token_address : text;
+  deadline : nat64;
+  spender : text;
+};
+type PermitRequest = record {
+  r : text;
+  s : text;
+  v : text;
+  signature : text;
+  value : text;
+  owner : text;
+  deadline : text;
+  nonce : text;
+  spender : text;
+};
+type Result = variant { Ok : text; Err : text };
+type Result_1 = variant { Ok : SwapOrderStatus; Err : text };
+type Result_2 = variant { Ok : HTLCStatus; Err : text };
+type Result_3 = variant { Ok : nat; Err : text };
+type Result_4 = variant {
+  Ok : vec record { text; ChainLiquidity };
+  Err : text;
+};
+type Result_5 = variant { Ok : UnifiedLiquidityPool; Err : text };
+type Result_6 = variant { Ok : vec record { text; float64 }; Err : text };
+type Result_7 = variant { Ok : nat64; Err : text };
+type Result_8 = variant { Ok : vec CapitalMove; Err : text };
+type Result_9 = variant { Ok : bool; Err : text };
+type RiskConfig = record {
+  emergency_pause_threshold : float64;
+  max_chain_exposure : float64;
+  min_collateral_ratio : float64;
+  liquidation_threshold : float64;
+};
+type SwapDirection = variant { 
+  EVMtoICP; 
+  ICPtoEVM; 
+  ICPtoSolana; 
+  SolanatoICP; 
+  EVMtoSolana; 
+  SolanatoEVM; 
+};
+type SwapOrderStatus = variant {
+  Refunded;
+  DestinationHTLCClaimed;
+  SourceHTLCCreated;
+  SourceHTLCClaimed;
+  Cancelled;
+  Created;
+  Completed;
+  Expired;
+  DestinationHTLCCreated;
+};
+type TransferStatus = variant { Failed; Authorized; Completed; Pending };
+type UnifiedLiquidityPool = record {
+  risk_parameters : RiskConfig;
+  last_optimized : nat64;
+  chain_distribution : vec record { text; ChainLiquidity };
+  created_at : nat64;
+  total_unified_liquidity : nat;
+  yield_optimization : YieldStrategy;
+  is_active : bool;
+  pool_id : text;
+  base_asset : text;
+};
+type YieldStrategy = record {
+  max_capital_movement : nat;
+  target_utilization : float64;
+  risk_tolerance : nat8;
+  min_yield_improvement : float64;
+  optimization_interval : nat64;
+};
+service : () -> {
+  // Add a new chain to an existing pool
+  add_chain_to_pool_public : (text, text, nat) -> (Result);
+  // Authorize a cross-chain transfer
+  authorize_cross_chain_transfer_public : (text, text, text, text) -> (Result);
+  // Check and process expired orders (automatic refund)
+  check_expired_orders : () -> (Result);
+  // Claim HTLC on EVM chain
+  claim_evm_htlc : (text, text) -> (Result);
+  claim_htlc_funds : (text, text) -> (Result);
+  complete_cross_chain_swap : (text) -> (Result);
+  // Complete a cross-chain swap by claiming tokens with the secret
+  // This is the manual withdrawal step after orders are paired
+  complete_cross_chain_swap_public : (text, text) -> (Result);
+  // Coordinate cross-chain swap (public API)
+  coordinate_cross_chain_swap_public : (text, SwapDirection) -> (Result);
+  // Create associated token account instruction (public API)
+  create_associated_token_account_instruction_public : (text, text, text) -> (
+      Result,
+    );
+  // Create a new chain ledger
+  create_chain_ledger_public : (text, ChainInitData) -> (Result);
+  create_cross_chain_swap_order : (
+      text,
+      text,
+      text,
+      text,
+      text,
+      text,
+      nat64,
+      nat64,
+      nat64,
+    ) -> (Result);
+  // Create HTLC on EVM chain for atomic swap
+  create_evm_htlc : (text, bool) -> (Result);
+  // Create an EVM→ICP order with automatic permit execution
+  // User must have previously signed the permit for the canister to spend their ERC20 tokens
+  create_evm_to_icp_order : (
+      text,
+      text,
+      text,
+      text,
+      text,
+      text,
+      nat64,
+      PermitRequest,
+    ) -> (Result);
+  create_htlc_escrow : (
+      text,
+      text,
+      text,
+      text,
+      text,
+      text,
+      nat64,
+      SwapDirection,
+      nat64,
+      nat64,
+    ) -> (Result);
+  // Create an ICP→EVM order with automatic token escrow
+  // User must have previously approved the canister to spend their ICRC tokens
+  create_icp_to_evm_order : (text, text, text, text, text, text, nat64) -> (
+      Result,
+    );
+  // Create an EVM→Solana order with automatic permit execution
+  create_evm_to_solana_order : (
+      text,
+      text,
+      text,
+      text,
+      nat64,
+      text,
+      nat64,
+      PermitRequest,
+    ) -> (Result);
+  // Create a Solana→EVM order
+  create_solana_to_evm_order : (
+      text,
+      text,
+      text,
+      nat64,
+      text,
+      text,
+      nat64,
+    ) -> (Result);
+  // Create an ICP→Solana order
+  create_icp_to_solana_order : (
+      text,
+      text,
+      text,
+      text,
+      nat64,
+      text,
+      nat64,
+    ) -> (Result);
+  // Create a Solana→ICP order
+  create_solana_to_icp_order : (
+      text,
+      text,
+      text,
+      nat64,
+      text,
+      text,
+      nat64,
+    ) -> (Result);
+  // Create a Solana-specific liquidity pool
+  create_solana_liquidity_pool_public : (text, text, nat) -> (Result);
+  // Create a new unified liquidity pool
+  create_unified_liquidity_pool_public : (text, vec text) -> (Result);
+  // Deposit liquidity into a specific chain within a pool
+  deposit_liquidity_cross_chain_public : (text, text, text, nat) -> (Result);
+  deposit_to_htlc : (text) -> (Result);
+  // Execute complete atomic swap (create both HTLCs and claim them)
+  execute_atomic_swap : (text) -> (Result);
+  execute_cross_chain_swap : (text) -> (Result);
+  execute_gasless_approval : (GaslessApprovalRequest) -> (Result);
+  // Get all atomic swap orders
+  get_all_atomic_swap_orders : () -> (vec AtomicSwapOrder);
+  // Get all chain ledgers
+  get_all_chain_ledgers_public : () -> (vec ChainLedger);
+  // Get health status of all chains
+  get_all_chain_states_public : () -> (vec ChainState);
+  // Get all cross-chain transfers
+  get_all_cross_chain_transfers_public : () -> (vec CrossChainTransfer);
+  get_all_htlcs : () -> (vec HTLC) query;
+  get_all_swap_orders : () -> (vec CrossChainSwapOrder) query;
+  // Get associated token account address (public API)
+  get_associated_token_address_public : (text, text) -> (Result);
+  // Get atomic swap order details
+  get_atomic_swap_order : (text) -> (opt AtomicSwapOrder);
+  get_balance : (text) -> (Result);
+  // Get chain ledger by ID
+  get_chain_ledger_public : (text) -> (opt ChainLedger);
+  get_claim_fee : () -> (Result);
+  // Get compatible orders for pairing (opposite direction, same tokens, similar amounts)
+  get_compatible_orders : (text) -> (vec AtomicSwapOrder);
+  get_contract_info : () -> (text) query;
+  // Get cross-chain swap status (public API)
+  get_cross_chain_swap_status_public : (text) -> (Result_1);
+  // Get cross-chain transfer by ID
+  get_cross_chain_transfer_public : (text) -> (opt CrossChainTransfer);
+  get_ethereum_address : () -> (Result);
+  get_htlc : (text) -> (opt HTLC) query;
+  // Get ICP HTLC status (public API)
+  get_icp_htlc_status_public : (text) -> (Result_2);
+  get_icp_network_signer : () -> (Result);
+  // Get ICRC-1 token balance (public API)
+  get_icrc_balance_public : (text, text) -> (Result_3);
+  // Get orders by status for manual pairing
+  get_orders_by_status : (SwapOrderStatus) -> (vec AtomicSwapOrder);
+  // Get liquidity distribution across chains for a pool
+  get_pool_chain_distribution_public : (text) -> (Result_4);
+  // Get pool information
+  get_pool_info_public : (text) -> (Result_5);
+  // Get total liquidity across all chains in a pool
+  get_pool_total_liquidity_public : (text) -> (Result_3);
+  // Get yield rates across all chains for a pool
+  get_pool_yield_rates_public : (text) -> (Result_6);
+  get_public_key : () -> (Result);
+  get_refund_fee : () -> (Result);
+  // Get root contract address
+  get_root_contract_address_public : () -> (opt text);
+  get_sepolia_block_number : () -> (Result);
+  // Get Solana account info (public API)
+  get_solana_account_info_public : (text) -> (Result);
+  // Get Solana account balance (public API)
+  get_solana_balance_public : (text) -> (Result_7);
+  // Get Solana chain state
+  get_solana_chain_state_public : () -> (ChainState);
+  // Get Solana slot (block number) (public API)
+  get_solana_slot_public : () -> (Result_7);
+  // Get Solana wallet for ICP principal (public API)
+  get_solana_wallet_public : (text) -> (Result);
+  // Get SPL token account balance (public API)
+  get_spl_token_balance_public : (text, text) -> (Result);
+  // Get canister's Solana address (public API)
+  get_canister_solana_address_public : () -> (Result);
+  // Create Solana HTLC (public API)
+  create_solana_htlc_public : (
+      text,
+      text,
+      text,
+      text,
+      nat64,
+      text,
+      nat64,
+    ) -> (Result);
+  // Claim Solana HTLC (public API)
+  claim_solana_htlc_public : (text, text) -> (Result);
+  // Refund Solana HTLC (public API)
+  refund_solana_htlc_public : (text, text) -> (Result);
+  // Get Solana HTLC status (public API)
+  get_solana_htlc_status_public : (text) -> (Result_2);
+  // List all Solana HTLCs (public API)
+  list_solana_htlcs_public : () -> (vec HTLC);
+  // Sign and send Solana transaction (public API)
+  sign_and_send_solana_transaction_public : (text) -> (Result);
+  get_swap_order : (text) -> (opt CrossChainSwapOrder) query;
+  get_total_fees : () -> (Result);
+  get_transaction_count : (text) -> (Result);
+  get_transaction_receipt : (text) -> (Result);
+  // Initialize the bridgeless token system
+  initialize_bridgeless_token_public : (text, text, text) -> (Result);
+  initialize_nonce : () -> (Result);
+  // List all pools
+  list_all_pools_public : () -> (vec text);
+  // List all ICP HTLCs (public API)
+  list_icp_htlcs_public : () -> (vec HTLC);
+  // Basic yield optimization for a pool
+  optimize_pool_yields_basic_public : (text) -> (Result_8);
+  refund_htlc_funds : (text) -> (Result);
+  // Refund an ICP HTLC (public API)
+  refund_icp_htlc_public : (text, text) -> (Result);
+  // Send SOL transaction (public API)
+  send_sol_transaction_public : (text, text, nat64) -> (Result);
+  // Send SPL token transaction (public API)
+  send_spl_token_transaction_public : (text, text, text, nat64) -> (Result);
+  // Simulate yield rates for testing (mock data)
+  simulate_yield_rates_public : (text, vec record { text; float64 }) -> (
+      Result,
+    );
+  submit_permit_signature : (PermitData) -> (Result);
+  test_all_contract_functions : () -> (Result);
+  test_basic_rpc : () -> (Result);
+  test_deployment_transaction : () -> (Result);
+  test_signing_address : () -> (Result);
+  test_simple_transaction : () -> (Result);
+  // Test endpoint to verify unified pool system is working
+  test_unified_pool_system : () -> (text);
+  // Transfer ERC20 tokens from backend canister to recipient
+  transfer_erc20_tokens_public : (text, text, text) -> (Result);
+  // Transfer from ICRC-1 tokens (public API)
+  transfer_from_icrc_tokens_public : (text, text, text, nat) -> (Result);
+  // Transfer ICRC-1 tokens (public API)
+  transfer_icrc_tokens_public : (text, text, nat) -> (Result);
+  // Transfer SPL tokens instruction (public API)
+  transfer_spl_tokens_instruction_public : (text, text, text, nat64) -> (
+      Result,
+    );
+  // Update chain health state
+  update_chain_health_state_public : (text, nat64, nat64, bool) -> (Result);
+  // Validate cross-chain order (public API)
+  validate_cross_chain_order_public : (text) -> (Result_9);
+  // Withdraw liquidity from a specific chain within a pool
+  withdraw_liquidity_cross_chain_public : (text, text, text, nat) -> (Result);
 }

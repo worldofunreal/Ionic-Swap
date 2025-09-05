@@ -25,4 +25,8 @@ sha3 = "0.10"
 
 # Solana Integration - Using remote sol_rpc canister instead of direct dependencies
 bs58 = "0.5.1"
-bincode = "1.3.3" 
+bincode = "1.3.3"
+
+# ECDSA for Solana transaction signing
+k256 = "0.13"
+ecdsa = "0.16" 

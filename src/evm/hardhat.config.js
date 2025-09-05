@@ -71,12 +71,88 @@ module.exports = {
       gas: 5000000, // Standard gas limit
       timeout: 60000,
       allowUnlimitedContractSize: true
+    },
+
+    // Ethereum testnets
+    holesky: {
+      url: process.env.HOLESKY_RPC_URL || "https://holesky.infura.io/v3/YOUR-PROJECT-ID",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 17000,
+      gasPrice: process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : 20000000000, // 20 gwei default
+      gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 5000000,
+      timeout: 60000
+    },
+
+    // Polygon testnets
+    mumbai: {
+      url: process.env.MUMBAI_RPC_URL || "https://polygon-mumbai.infura.io/v3/YOUR-PROJECT-ID",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 80001,
+      gasPrice: process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : 30000000000, // 30 gwei default
+      gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 5000000,
+      timeout: 60000
+    },
+
+    amoy: {
+      url: process.env.AMOY_RPC_URL || "https://polygon-amoy.infura.io/v3/YOUR-PROJECT-ID",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 80002,
+      gasPrice: process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : 30000000000, // 30 gwei default
+      gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 5000000,
+      timeout: 60000
+    },
+
+    // BSC testnets
+    bscTestnet: {
+      url: process.env.BSC_TESTNET_RPC_URL || "https://data-seed-prebsc-1-s1.binance.org:8545",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 97,
+      gasPrice: process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : 10000000000, // 10 gwei default
+      gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 5000000,
+      timeout: 60000
+    },
+
+    // Arbitrum testnets
+    arbitrumSepolia: {
+      url: process.env.ARBITRUM_SEPOLIA_RPC_URL || "https://sepolia-rollup.arbitrum.io/rpc",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 421614,
+      gasPrice: process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : 100000000, // 0.1 gwei default
+      gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 5000000,
+      timeout: 60000
+    },
+
+    // Optimism testnets
+    optimismSepolia: {
+      url: process.env.OPTIMISM_SEPOLIA_RPC_URL || "https://sepolia.optimism.io",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 11155420,
+      gasPrice: process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : 1000000, // 0.001 gwei default
+      gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 5000000,
+      timeout: 60000
+    },
+
+    // Base testnets
+    baseSepolia: {
+      url: process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 84532,
+      gasPrice: process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : 1000000, // 0.001 gwei default
+      gas: process.env.GAS_LIMIT ? parseInt(process.env.GAS_LIMIT) : 5000000,
+      timeout: 60000
     }
   },
   
   etherscan: {
     apiKey: {
       sepolia: process.env.ETHERSCAN_API_KEY || "",
+      holesky: process.env.ETHERSCAN_API_KEY || "",
+      mumbai: process.env.POLYGONSCAN_API_KEY || "",
+      amoy: process.env.POLYGONSCAN_API_KEY || "",
+      bscTestnet: process.env.BSCSCAN_API_KEY || "",
+      arbitrumSepolia: process.env.ARBISCAN_API_KEY || "",
+      optimismSepolia: process.env.OPTIMISM_API_KEY || "",
+      baseSepolia: process.env.BASESCAN_API_KEY || "",
       etherlink: process.env.ETHERLINK_EXPLORER_API_KEY || "",
       etherlinkTestnet: process.env.ETHERLINK_EXPLORER_API_KEY || ""
     },
@@ -111,6 +187,46 @@ module.exports = {
         urls: {
           apiURL: "https://elated-tan-skat.explorer.mainnet.skalenodes.com/api",
           browserURL: "https://elated-tan-skat.explorer.mainnet.skalenodes.com"
+        }
+      },
+      {
+        network: "mumbai",
+        chainId: 80001,
+        urls: {
+          apiURL: "https://api-testnet.polygonscan.com/api",
+          browserURL: "https://mumbai.polygonscan.com"
+        }
+      },
+      {
+        network: "bscTestnet",
+        chainId: 97,
+        urls: {
+          apiURL: "https://api-testnet.bscscan.com/api",
+          browserURL: "https://testnet.bscscan.com"
+        }
+      },
+      {
+        network: "arbitrumSepolia",
+        chainId: 421614,
+        urls: {
+          apiURL: "https://api-sepolia.arbiscan.io/api",
+          browserURL: "https://sepolia.arbiscan.io"
+        }
+      },
+      {
+        network: "optimismSepolia",
+        chainId: 11155420,
+        urls: {
+          apiURL: "https://api-sepolia-optimistic.etherscan.io/api",
+          browserURL: "https://sepolia-optimism.etherscan.io"
+        }
+      },
+      {
+        network: "baseSepolia",
+        chainId: 84532,
+        urls: {
+          apiURL: "https://api-sepolia.basescan.org/api",
+          browserURL: "https://sepolia.basescan.org"
         }
       }
     ]

@@ -231,7 +231,7 @@ pub async fn create_icp_htlc(
 }
 
 /// Claim an ICP HTLC using the secret
-#[allow(dead_code)]
+
 pub async fn claim_icp_htlc(
     order_id: &str,
     htlc_id: &str,
@@ -406,7 +406,7 @@ pub fn list_icp_htlcs() -> Vec<HTLC> {
 
 
 /// Execute a complete EVM→ICP swap flow
-#[allow(dead_code)]
+
 pub async fn execute_evm_to_icp_swap(
     order_id: &str,
     evm_htlc_id: &str,
@@ -472,7 +472,7 @@ pub async fn execute_evm_to_icp_swap(
 }
 
 /// Execute a complete ICP→EVM swap flow
-#[allow(dead_code)]
+
 pub async fn execute_icp_to_evm_swap(
     order_id: &str,
     icp_htlc_id: &str,
@@ -550,6 +550,34 @@ pub async fn coordinate_cross_chain_swap(
             
             Ok(format!("ICP→EVM swap coordination initiated for order: {}", order_id))
         },
+        SwapDirection::ICPtoSolana => {
+            // For ICP→Solana, we need to create the ICP HTLC first
+            if let Some(order) = orders.get_mut(order_id) {
+                order.status = SwapOrderStatus::SourceHTLCCreated;
+            }
+            Ok(format!("ICP→Solana swap coordination initiated for order: {}", order_id))
+        },
+        SwapDirection::SolanatoICP => {
+            // For Solana→ICP, we need to create the Solana HTLC first
+            if let Some(order) = orders.get_mut(order_id) {
+                order.status = SwapOrderStatus::SourceHTLCCreated;
+            }
+            Ok(format!("Solana→ICP swap coordination initiated for order: {}", order_id))
+        },
+        SwapDirection::EVMtoSolana => {
+            // For EVM→Solana, we need to create the EVM HTLC first
+            if let Some(order) = orders.get_mut(order_id) {
+                order.status = SwapOrderStatus::SourceHTLCCreated;
+            }
+            Ok(format!("EVM→Solana swap coordination initiated for order: {}", order_id))
+        },
+        SwapDirection::SolanatoEVM => {
+            // For Solana→EVM, we need to create the Solana HTLC first
+            if let Some(order) = orders.get_mut(order_id) {
+                order.status = SwapOrderStatus::SourceHTLCCreated;
+            }
+            Ok(format!("Solana→EVM swap coordination initiated for order: {}", order_id))
+        },
     }
 }
 
@@ -591,7 +619,7 @@ pub fn get_cross_chain_swap_status(order_id: &str) -> Result<SwapOrderStatus, St
 }
 
 /// Complete a cross-chain swap by claiming both HTLCs
-#[allow(dead_code)]
+
 pub async fn complete_cross_chain_swap(
     order_id: &str,
     secret: &str,

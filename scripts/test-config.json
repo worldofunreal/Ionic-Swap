@@ -1,0 +1,55 @@
+{
+  "backend": {
+    "canisterId": "uxrrr-q7777-77774-qaaaq-cai",
+    "localHost": "http://127.0.0.1:4943"
+  },
+  "networks": {
+    "sepolia": {
+      "rpc": "https://sepolia.infura.io/v3/YOUR_INFURA_KEY",
+      "chainId": 11155111
+    },
+    "solana": {
+      "testnetRpc": "https://api.testnet.solana.com",
+      "devnetRpc": "https://api.devnet.solana.com"
+    }
+  },
+  "tokens": {
+    "spiral": {
+      "evm": "0x4c7c4cE3709602585A426dDdaa4a68e57022E716",
+      "icp": "rdmx6-jaaaa-aaaah-qcaiq-cai",
+      "solana": "So11111111111111111111111111111111111111112"
+    },
+    "stardust": {
+      "evm": "0x905403c2fEe3749e7Ec55C5F202a923e421aD226",
+      "icp": "rrkah-fqaaa-aaaah-qcaiq-cai",
+      "solana": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    }
+  },
+  "users": {
+    "evm": {
+      "user1": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
+      "user2": "0x8ba1f109551bD432803012645Hac136c0c8b3c9"
+    },
+    "icp": {
+      "user1": "rdmx6-jaaaa-aaaah-qcaiq-cai",
+      "user2": "rrkah-fqaaa-aaaah-qcaiq-cai"
+    },
+    "solana": {
+      "user1": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+      "user2": "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1"
+    }
+  },
+  "testAmounts": {
+    "evm": "1000000000000000000",
+    "icp": "1000000000000000000",
+    "solana": 1000000
+  },
+  "timelock": 3600,
+  "notes": {
+    "evm": "Replace with actual Sepolia testnet token addresses",
+    "icp": "Replace with actual ICRC token canister IDs",
+    "solana": "Replace with actual SPL token mint addresses",
+    "users": "Replace with actual testnet addresses/principals",
+    "rpc": "Replace with your actual RPC endpoints and API keys"
+  }
+}

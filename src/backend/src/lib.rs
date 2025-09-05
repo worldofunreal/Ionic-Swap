@@ -652,9 +652,9 @@ pub async fn complete_cross_chain_swap_public(
     
     // Handle different swap directions
     if order.maker.starts_with("0x") {
-        // EVM→ICP swap: Claim ICP HTLC and send to user's specified principal
+        // EVM→ICP or EVM→Solana swap: Claim destination HTLC and send to user's specified address
         if let Some(icp_destination) = &order.icp_destination_principal {
-            // Transfer ICRC tokens from canister to user's destination
+            // EVM→ICP swap: Transfer ICRC tokens from canister to user's destination
             let amount_u128 = order.destination_amount.parse::<u128>()
                 .map_err(|e| format!("Invalid destination amount: {}", e))?;
             
@@ -671,14 +671,93 @@ pub async fn complete_cross_chain_swap_public(
             }
             
             Ok(format!("EVM→ICP swap completed! ICRC tokens sent to {}: {}", icp_destination, transfer_result))
+        } else if let Some(solana_destination) = &order.solana_destination_address {
+            // EVM→Solana swap: Transfer SPL tokens from canister to user's destination
+            let amount_u64 = order.destination_amount.parse::<u64>()
+                .map_err(|e| format!("Invalid destination amount: {}", e))?;
+            
+            let canister_solana_address = solana::get_canister_solana_address().await?;
+            let canister_token_account = solana::get_associated_token_address(&canister_solana_address, &order.destination_token)?;
+            let destination_token_account = solana::get_associated_token_address(solana_destination, &order.destination_token)?;
+            
+            let transfer_result = solana::transfer_spl_tokens_from_canister(
+                &canister_token_account,
+                &destination_token_account,
+                &canister_solana_address,
+                amount_u64,
+            ).await?;
+            
+            // Update order status
+            let orders = get_atomic_swap_orders();
+            if let Some(order) = orders.get_mut(&order_id) {
+                order.status = SwapOrderStatus::Completed;
+            }
+            
+            Ok(format!("EVM→Solana swap completed! SPL tokens sent to {}: {}", solana_destination, transfer_result))
         } else {
-            Err("No ICP destination principal specified for EVM→ICP swap".to_string())
+            Err("No destination address specified for EVM swap".to_string())
+        }
+    } else if order.maker.len() > 44 {
+        // Solana→EVM or Solana→ICP swap: Transfer tokens directly to user's address
+        ic_cdk::println!("🔍 Processing Solana→EVM/ICP swap...");
+        
+        if let Some(evm_destination) = &order.evm_destination_address {
+            // Solana→EVM swap: Transfer ERC20 tokens directly to user's address
+            ic_cdk::println!("  ✅ EVM destination address found: {}", evm_destination);
+            
+            ic_cdk::println!("  🔍 Transferring ERC20 tokens to user...");
+            ic_cdk::println!("    Token: {}", order.destination_token);
+            ic_cdk::println!("    Recipient: {}", evm_destination);
+            ic_cdk::println!("    Amount: {}", order.destination_amount);
+            
+            // Transfer ERC20 tokens from canister to user's destination address
+            let transfer_result = evm::transfer_erc20_tokens(
+                &order.destination_token,
+                evm_destination,
+                &order.destination_amount,
+            ).await?;
+            
+            ic_cdk::println!("  ✅ ERC20 transfer completed: {}", transfer_result);
+            
+            // Update order status
+            let orders = get_atomic_swap_orders();
+            if let Some(order) = orders.get_mut(&order_id) {
+                order.status = SwapOrderStatus::Completed;
+                ic_cdk::println!("  ✅ Order status updated to Completed");
+            }
+            
+            Ok(format!("Solana→EVM swap completed! EVM tokens sent to {}: Transfer: {}", 
+                      evm_destination, transfer_result))
+        } else if let Some(icp_destination) = &order.icp_destination_principal {
+            // Solana→ICP swap: Transfer ICRC tokens from canister to user's destination
+            let amount_u128 = order.destination_amount.parse::<u128>()
+                .map_err(|e| format!("Invalid destination amount: {}", e))?;
+            
+            let transfer_result = transfer_icrc_tokens(
+                &order.destination_token,
+                icp_destination,
+                amount_u128,
+            ).await?;
+            
+            // Update order status
+            let orders = get_atomic_swap_orders();
+            if let Some(order) = orders.get_mut(&order_id) {
+                order.status = SwapOrderStatus::Completed;
+            }
+            
+            Ok(format!("Solana→ICP swap completed! ICRC tokens sent to {}: {}", icp_destination, transfer_result))
+        } else {
+            ic_cdk::println!("  ❌ No destination address found for Solana swap");
+            ic_cdk::println!("    Order evm_destination_address: {:?}", order.evm_destination_address);
+            ic_cdk::println!("    Order icp_destination_principal: {:?}", order.icp_destination_principal);
+            Err("No destination address specified for Solana swap".to_string())
         }
     } else {
-        ic_cdk::println!("🔍 Processing ICP→EVM swap...");
+        // ICP→EVM or ICP→Solana swap: Transfer tokens directly to user's address
+        ic_cdk::println!("🔍 Processing ICP→EVM/Solana swap...");
         
-        // ICP→EVM swap: Transfer ERC20 tokens directly to user's address
         if let Some(evm_destination) = &order.evm_destination_address {
+            // ICP→EVM swap: Transfer ERC20 tokens directly to user's address
             ic_cdk::println!("  ✅ EVM destination address found: {}", evm_destination);
             
             ic_cdk::println!("  🔍 Transferring ERC20 tokens to user...");
@@ -704,10 +783,34 @@ pub async fn complete_cross_chain_swap_public(
             
             Ok(format!("ICP→EVM swap completed! EVM tokens sent to {}: Transfer: {}", 
                       evm_destination, transfer_result))
+        } else if let Some(solana_destination) = &order.solana_destination_address {
+            // ICP→Solana swap: Transfer SPL tokens from canister to user's destination
+            let amount_u64 = order.destination_amount.parse::<u64>()
+                .map_err(|e| format!("Invalid destination amount: {}", e))?;
+            
+            let canister_solana_address = solana::get_canister_solana_address().await?;
+            let canister_token_account = solana::get_associated_token_address(&canister_solana_address, &order.destination_token)?;
+            let destination_token_account = solana::get_associated_token_address(solana_destination, &order.destination_token)?;
+            
+            let transfer_result = solana::transfer_spl_tokens_from_canister(
+                &canister_token_account,
+                &destination_token_account,
+                &canister_solana_address,
+                amount_u64,
+            ).await?;
+            
+            // Update order status
+            let orders = get_atomic_swap_orders();
+            if let Some(order) = orders.get_mut(&order_id) {
+                order.status = SwapOrderStatus::Completed;
+            }
+            
+            Ok(format!("ICP→Solana swap completed! SPL tokens sent to {}: {}", solana_destination, transfer_result))
         } else {
-            ic_cdk::println!("  ❌ No EVM destination address found for ICP→EVM swap");
+            ic_cdk::println!("  ❌ No destination address found for ICP swap");
             ic_cdk::println!("    Order evm_destination_address: {:?}", order.evm_destination_address);
-            Err("No EVM destination address specified for ICP→EVM swap".to_string())
+            ic_cdk::println!("    Order solana_destination_address: {:?}", order.solana_destination_address);
+            Err("No destination address specified for ICP swap".to_string())
         }
     }
 }
@@ -842,6 +945,84 @@ pub fn get_solana_wallet_public(principal: String) -> Result<String, String> {
 }
 
 // ============================================================================
+// SOLANA HTLC PUBLIC API ENDPOINTS
+// ============================================================================
+
+/// Create a Solana HTLC (public API)
+#[update]
+#[candid_method]
+pub async fn create_solana_htlc_public(
+    order_id: String,
+    token_mint: String,
+    amount: u64,
+    hashlock: String,
+    timelock: u64,
+    user_address: String,
+    is_source_htlc: bool,
+) -> Result<String, String> {
+    solana::create_solana_htlc(
+        &order_id,
+        &token_mint,
+        amount,
+        &hashlock,
+        timelock,
+        &user_address,
+        is_source_htlc,
+    ).await
+}
+
+/// Claim a Solana HTLC (public API)
+#[update]
+#[candid_method]
+pub async fn claim_solana_htlc_public(
+    order_id: String,
+    htlc_id: String,
+    secret: String,
+) -> Result<String, String> {
+    solana::claim_solana_htlc(&order_id, &htlc_id, &secret).await
+}
+
+/// Refund a Solana HTLC (public API)
+#[update]
+#[candid_method]
+pub async fn refund_solana_htlc_public(
+    order_id: String,
+    htlc_id: String,
+) -> Result<String, String> {
+    solana::refund_solana_htlc(&order_id, &htlc_id).await
+}
+
+/// Get Solana HTLC status (public API)
+#[query]
+#[candid_method]
+pub fn get_solana_htlc_status_public(htlc_id: String) -> Result<crate::types::HTLCStatus, String> {
+    solana::get_solana_htlc_status(&htlc_id)
+}
+
+/// List all Solana HTLCs (public API)
+#[query]
+#[candid_method]
+pub fn list_solana_htlcs_public() -> Vec<crate::types::HTLC> {
+    solana::list_solana_htlcs()
+}
+
+/// Get canister's Solana address (public API)
+#[query]
+#[candid_method]
+pub async fn get_canister_solana_address_public() -> Result<String, String> {
+    solana::get_canister_solana_address().await
+}
+
+/// Sign and send a Solana transaction (public API)
+#[update]
+#[candid_method]
+pub async fn sign_and_send_solana_transaction_public(
+    transaction_data: String,
+) -> Result<String, String> {
+    solana::sign_and_send_solana_transaction(&transaction_data).await
+}
+
+// ============================================================================
 // UTILITY METHODS
 // ============================================================================
 
@@ -922,10 +1103,41 @@ fn is_compatible_orders(order1: &AtomicSwapOrder, order2: &AtomicSwapOrder) -> b
     ic_cdk::println!("      Amount1: {}, Amount2: {}, Tolerance: {}", amount1, amount2, amount_tolerance);
     ic_cdk::println!("      Amounts compatible: {}", amounts_compatible);
     
-    let result = tokens_match && amounts_compatible;
+    // Check if swap directions are compatible
+    let directions_compatible = is_compatible_swap_direction(order1, order2);
+    ic_cdk::println!("      Directions compatible: {}", directions_compatible);
+    
+    let result = tokens_match && amounts_compatible && directions_compatible;
     ic_cdk::println!("      Final result: {}", result);
     
     result
+}
+
+/// Check if swap directions are compatible for pairing
+fn is_compatible_swap_direction(order1: &AtomicSwapOrder, order2: &AtomicSwapOrder) -> bool {
+    // Determine chain types for each order
+    let order1_source_chain = get_chain_type(&order1.source_token);
+    let order1_dest_chain = get_chain_type(&order1.destination_token);
+    let order2_source_chain = get_chain_type(&order2.source_token);
+    let order2_dest_chain = get_chain_type(&order2.destination_token);
+    
+    ic_cdk::println!("      Order1: {} -> {}", order1_source_chain, order1_dest_chain);
+    ic_cdk::println!("      Order2: {} -> {}", order2_source_chain, order2_dest_chain);
+    
+    // Orders are compatible if they have opposite directions
+    // e.g., EVM->ICP with ICP->EVM, or Solana->EVM with EVM->Solana
+    (order1_source_chain == order2_dest_chain) && (order1_dest_chain == order2_source_chain)
+}
+
+/// Determine chain type from token address
+fn get_chain_type(token_address: &str) -> &'static str {
+    if token_address.starts_with("0x") {
+        "EVM"
+    } else if token_address.len() > 44 {
+        "Solana" // Solana addresses are typically base58 encoded and longer
+    } else {
+        "ICP" // ICP canister IDs are shorter
+    }
 }
 
 /// Create HTLCs for paired orders
@@ -1243,6 +1455,7 @@ pub async fn create_icp_to_evm_order(
         expires_at,
         evm_destination_address: Some(evm_destination_address),
         icp_destination_principal: None, // Not needed for ICP→EVM
+        solana_destination_address: None, // Not needed for ICP→EVM
         counter_order_id: None, // Will be set when paired
     };
     
@@ -1345,6 +1558,7 @@ pub async fn create_evm_to_icp_order(
         expires_at,
         evm_destination_address: None, // Not needed for EVM→ICP
         icp_destination_principal: Some(icp_destination_principal),
+        solana_destination_address: None, // Not needed for EVM→ICP
         counter_order_id: None, // Will be set when paired
     };
     
@@ -1388,6 +1602,371 @@ pub async fn create_evm_to_icp_order(
     }
     
     Ok(format!("EVM→ICP order created successfully! Order ID: {}, EVM HTLC: {}, Permit executed: {}", order_id, evm_htlc_id, permit_result))
+}
+
+// ============================================================================
+// SOLANA ORDER CREATION FUNCTIONS
+// ============================================================================
+
+/// Create a Solana→EVM order with automatic SPL token escrow
+#[update]
+#[candid_method]
+pub async fn create_solana_to_evm_order(
+    user_solana_address: String,      // Solana user's address (base58)
+    source_token_mint: String,        // SPL token mint address
+    destination_token_address: String, // EVM token address (0x...)
+    source_amount: u64,               // SPL amount
+    destination_amount: String,       // EVM amount
+    evm_destination_address: String,  // Where EVM tokens should be sent (0x...)
+    timelock_duration: u64,           // Duration in seconds
+) -> Result<String, String> {
+    // Generate secret and hashlock
+    let secret = generate_htlc_secret();
+    let secret_bytes = secret.as_bytes();
+    let hashlock_bytes = evm::keccak256(secret_bytes);
+    let hashlock = format!("0x{}", hex::encode(hashlock_bytes));
+    
+    // Calculate timestamps
+    let current_time = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
+    let timelock = current_time + timelock_duration;
+    let expires_at = timelock + 3600; // Add 1 hour buffer
+    
+    // Create order ID
+    let order_id = generate_order_id();
+    
+    // Create the order
+    let order = AtomicSwapOrder {
+        order_id: order_id.clone(),
+        maker: user_solana_address.clone(), // Solana user
+        taker: ic_cdk::api::id().to_string(), // Backend canister as taker
+        source_token: source_token_mint.clone(),
+        destination_token: destination_token_address.clone(),
+        source_amount: source_amount.to_string(),
+        destination_amount: destination_amount.clone(),
+        secret,
+        hashlock: hashlock.clone(),
+        timelock,
+        source_htlc_id: None,
+        destination_htlc_id: None,
+        status: SwapOrderStatus::Created,
+        created_at: current_time,
+        expires_at,
+        evm_destination_address: Some(evm_destination_address),
+        icp_destination_principal: None, // Not needed for Solana→EVM
+        solana_destination_address: None, // Not needed for Solana→EVM
+        counter_order_id: None, // Will be set when paired
+    };
+    
+    // Store the order
+    get_atomic_swap_orders().insert(order_id.clone(), order);
+    
+    // Automatically create Solana HTLC to hold the tokens
+    let solana_htlc_id = solana::create_solana_htlc(
+        &order_id,
+        &source_token_mint,
+        source_amount,
+        &hashlock,
+        timelock,
+        &user_solana_address,
+        true, // This is a source HTLC
+    ).await?;
+    
+    // Update order status to indicate Solana HTLC is created
+    let orders = get_atomic_swap_orders();
+    if let Some(order) = orders.get_mut(&order_id) {
+        order.source_htlc_id = Some(solana_htlc_id.clone());
+        order.status = SwapOrderStatus::SourceHTLCCreated;
+    }
+    
+    // Try to automatically pair this order with existing compatible orders
+    if let Some(paired_order_id) = try_pair_orders(&order_id).await {
+        ic_cdk::println!("✅ Order automatically paired with: {}", paired_order_id);
+        
+        // Set counter order IDs for both orders
+        let orders = get_atomic_swap_orders();
+        if let Some(order) = orders.get_mut(&order_id) {
+            order.counter_order_id = Some(paired_order_id.clone());
+        }
+        if let Some(paired_order) = orders.get_mut(&paired_order_id) {
+            paired_order.counter_order_id = Some(order_id.clone());
+        }
+    } else {
+        ic_cdk::println!("⏳ Order created, waiting for compatible counter-order");
+    }
+    
+    Ok(format!("Solana→EVM order created successfully! Order ID: {}, Solana HTLC: {}", order_id, solana_htlc_id))
+}
+
+/// Create an EVM→Solana order with automatic permit execution
+#[update]
+#[candid_method]
+pub async fn create_evm_to_solana_order(
+    user_address: String,             // EVM user's address (0x...)
+    source_token_address: String,     // EVM token address (0x...)
+    destination_token_mint: String,   // SPL token mint address
+    source_amount: String,            // EVM amount
+    destination_amount: u64,          // SPL amount
+    solana_destination_address: String, // Where SPL tokens should be sent (base58)
+    timelock_duration: u64,           // Duration in seconds
+    permit_request: crate::types::PermitRequest, // User's signed permit
+) -> Result<String, String> {
+    // Generate secret and hashlock
+    let secret = generate_htlc_secret();
+    let secret_bytes = secret.as_bytes();
+    let hashlock_bytes = evm::keccak256(secret_bytes);
+    let hashlock = format!("0x{}", hex::encode(hashlock_bytes));
+    
+    // Calculate timestamps
+    let current_time = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
+    let timelock = current_time + timelock_duration;
+    let expires_at = timelock + 3600; // Add 1 hour buffer
+    
+    // Create order ID
+    let order_id = generate_order_id();
+    
+    // Get canister's Ethereum address for the taker
+    let canister_eth_address = evm::get_ethereum_address().await?;
+    
+    // Create the order
+    let order = AtomicSwapOrder {
+        order_id: order_id.clone(),
+        maker: user_address.clone(), // EVM user
+        taker: canister_eth_address, // Backend canister's EVM address as taker
+        source_token: source_token_address.clone(),
+        destination_token: destination_token_mint.clone(),
+        source_amount: source_amount.clone(),
+        destination_amount: destination_amount.to_string(),
+        secret,
+        hashlock,
+        timelock,
+        source_htlc_id: None,
+        destination_htlc_id: None,
+        status: SwapOrderStatus::Created,
+        created_at: current_time,
+        expires_at,
+        evm_destination_address: None, // Not needed for EVM→Solana
+        icp_destination_principal: None, // Not needed for EVM→Solana
+        solana_destination_address: Some(solana_destination_address),
+        counter_order_id: None, // Will be set when paired
+    };
+    
+    // Store the order
+    get_atomic_swap_orders().insert(order_id.clone(), order);
+    
+    // Automatically execute the permit to pull ERC20 tokens into escrow
+    let gasless_request = crate::types::GaslessApprovalRequest {
+        permit_request,
+        user_address: user_address.clone(),
+        amount: source_amount.clone(),
+        token_address: source_token_address.clone(),
+    };
+    
+    let permit_result = evm::execute_gasless_approval(gasless_request).await?;
+    
+    // Create EVM HTLC to hold the tokens
+    let evm_htlc_id = evm::create_evm_htlc(order_id.clone(), true).await?;
+    
+    // Update order status to indicate EVM HTLC is created
+    let orders = get_atomic_swap_orders();
+    if let Some(order) = orders.get_mut(&order_id) {
+        order.source_htlc_id = Some(evm_htlc_id.clone());
+        order.status = SwapOrderStatus::SourceHTLCCreated;
+    }
+    
+    // Try to automatically pair this order with existing compatible orders
+    if let Some(paired_order_id) = try_pair_orders(&order_id).await {
+        ic_cdk::println!("✅ Order automatically paired with: {}", paired_order_id);
+        
+        // Set counter order IDs for both orders
+        let orders = get_atomic_swap_orders();
+        if let Some(order) = orders.get_mut(&order_id) {
+            order.counter_order_id = Some(paired_order_id.clone());
+        }
+        if let Some(paired_order) = orders.get_mut(&paired_order_id) {
+            paired_order.counter_order_id = Some(order_id.clone());
+        }
+    } else {
+        ic_cdk::println!("⏳ Order created, waiting for compatible counter-order");
+    }
+    
+    Ok(format!("EVM→Solana order created successfully! Order ID: {}, EVM HTLC: {}, Permit executed: {}", order_id, evm_htlc_id, permit_result))
+}
+
+/// Create an ICP→Solana order with automatic ICRC token escrow
+#[update]
+#[candid_method]
+pub async fn create_icp_to_solana_order(
+    user_principal: String,           // ICP user's principal ID
+    source_token_canister: String,    // ICRC token canister ID
+    destination_token_mint: String,   // SPL token mint address
+    source_amount: String,            // ICRC amount
+    destination_amount: u64,          // SPL amount
+    solana_destination_address: String, // Where SPL tokens should be sent (base58)
+    timelock_duration: u64,           // Duration in seconds
+) -> Result<String, String> {
+    // Generate secret and hashlock
+    let secret = generate_htlc_secret();
+    let secret_bytes = secret.as_bytes();
+    let hashlock_bytes = evm::keccak256(secret_bytes);
+    let hashlock = format!("0x{}", hex::encode(hashlock_bytes));
+    
+    // Calculate timestamps
+    let current_time = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
+    let timelock = current_time + timelock_duration;
+    let expires_at = timelock + 3600; // Add 1 hour buffer
+    
+    // Create order ID
+    let order_id = generate_order_id();
+    
+    // Create the order
+    let order = AtomicSwapOrder {
+        order_id: order_id.clone(),
+        maker: user_principal.clone(), // ICP user
+        taker: ic_cdk::api::id().to_string(), // Backend canister as taker
+        source_token: source_token_canister.clone(),
+        destination_token: destination_token_mint.clone(),
+        source_amount: source_amount.clone(),
+        destination_amount: destination_amount.to_string(),
+        secret,
+        hashlock,
+        timelock,
+        source_htlc_id: None,
+        destination_htlc_id: None,
+        status: SwapOrderStatus::Created,
+        created_at: current_time,
+        expires_at,
+        evm_destination_address: None, // Not needed for ICP→Solana
+        icp_destination_principal: None, // Not needed for ICP→Solana
+        solana_destination_address: Some(solana_destination_address),
+        counter_order_id: None, // Will be set when paired
+    };
+    
+    // Store the order
+    get_atomic_swap_orders().insert(order_id.clone(), order);
+    
+    // Automatically pull ICRC tokens into escrow
+    let amount_u128 = source_amount.parse::<u128>()
+        .map_err(|e| format!("Invalid source amount: {}", e))?;
+    
+    let transfer_result = transfer_from_icrc_tokens(
+        &source_token_canister,
+        &user_principal, // from: ICP user
+        &ic_cdk::api::id().to_string(), // to: backend canister (escrow)
+        amount_u128,
+    ).await?;
+    
+    // Update order status to indicate tokens are in escrow
+    let orders = get_atomic_swap_orders();
+    if let Some(order) = orders.get_mut(&order_id) {
+        order.status = SwapOrderStatus::SourceHTLCCreated;
+    }
+    
+    // Try to automatically pair this order with existing compatible orders
+    if let Some(paired_order_id) = try_pair_orders(&order_id).await {
+        ic_cdk::println!("✅ Order automatically paired with: {}", paired_order_id);
+        
+        // Set counter order IDs for both orders
+        let orders = get_atomic_swap_orders();
+        if let Some(order) = orders.get_mut(&order_id) {
+            order.counter_order_id = Some(paired_order_id.clone());
+        }
+        if let Some(paired_order) = orders.get_mut(&paired_order_id) {
+            paired_order.counter_order_id = Some(order_id.clone());
+        }
+    } else {
+        ic_cdk::println!("⏳ Order created, waiting for compatible counter-order");
+    }
+    
+    Ok(format!("ICP→Solana order created successfully! Order ID: {}, ICRC tokens escrowed: {}", order_id, transfer_result))
+}
+
+/// Create a Solana→ICP order with automatic SPL token escrow
+#[update]
+#[candid_method]
+pub async fn create_solana_to_icp_order(
+    user_solana_address: String,      // Solana user's address (base58)
+    source_token_mint: String,        // SPL token mint address
+    destination_token_canister: String, // ICRC token canister ID
+    source_amount: u64,               // SPL amount
+    destination_amount: String,       // ICRC amount
+    icp_destination_principal: String, // Where ICRC tokens should be sent
+    timelock_duration: u64,           // Duration in seconds
+) -> Result<String, String> {
+    // Generate secret and hashlock
+    let secret = generate_htlc_secret();
+    let secret_bytes = secret.as_bytes();
+    let hashlock_bytes = evm::keccak256(secret_bytes);
+    let hashlock = format!("0x{}", hex::encode(hashlock_bytes));
+    
+    // Calculate timestamps
+    let current_time = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
+    let timelock = current_time + timelock_duration;
+    let expires_at = timelock + 3600; // Add 1 hour buffer
+    
+    // Create order ID
+    let order_id = generate_order_id();
+    
+    // Create the order
+    let order = AtomicSwapOrder {
+        order_id: order_id.clone(),
+        maker: user_solana_address.clone(), // Solana user
+        taker: ic_cdk::api::id().to_string(), // Backend canister as taker
+        source_token: source_token_mint.clone(),
+        destination_token: destination_token_canister.clone(),
+        source_amount: source_amount.to_string(),
+        destination_amount: destination_amount.clone(),
+        secret,
+        hashlock: hashlock.clone(),
+        timelock,
+        source_htlc_id: None,
+        destination_htlc_id: None,
+        status: SwapOrderStatus::Created,
+        created_at: current_time,
+        expires_at,
+        evm_destination_address: None, // Not needed for Solana→ICP
+        icp_destination_principal: Some(icp_destination_principal),
+        solana_destination_address: None, // Not needed for Solana→ICP
+        counter_order_id: None, // Will be set when paired
+    };
+    
+    // Store the order
+    get_atomic_swap_orders().insert(order_id.clone(), order);
+    
+    // Automatically create Solana HTLC to hold the tokens
+    let solana_htlc_id = solana::create_solana_htlc(
+        &order_id,
+        &source_token_mint,
+        source_amount,
+        &hashlock,
+        timelock,
+        &user_solana_address,
+        true, // This is a source HTLC
+    ).await?;
+    
+    // Update order status to indicate Solana HTLC is created
+    let orders = get_atomic_swap_orders();
+    if let Some(order) = orders.get_mut(&order_id) {
+        order.source_htlc_id = Some(solana_htlc_id.clone());
+        order.status = SwapOrderStatus::SourceHTLCCreated;
+    }
+    
+    // Try to automatically pair this order with existing compatible orders
+    if let Some(paired_order_id) = try_pair_orders(&order_id).await {
+        ic_cdk::println!("✅ Order automatically paired with: {}", paired_order_id);
+        
+        // Set counter order IDs for both orders
+        let orders = get_atomic_swap_orders();
+        if let Some(order) = orders.get_mut(&order_id) {
+            order.counter_order_id = Some(paired_order_id.clone());
+        }
+        if let Some(paired_order) = orders.get_mut(&paired_order_id) {
+            paired_order.counter_order_id = Some(order_id.clone());
+        }
+    } else {
+        ic_cdk::println!("⏳ Order created, waiting for compatible counter-order");
+    }
+    
+    Ok(format!("Solana→ICP order created successfully! Order ID: {}, Solana HTLC: {}", order_id, solana_htlc_id))
 }
 
 

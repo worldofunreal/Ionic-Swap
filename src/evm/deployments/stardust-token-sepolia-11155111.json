@@ -1,0 +1,17 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "contractAddress": "0x905403c2fEe3749e7Ec55C5F202a923e421aD226",
+  "deployer": "0xf0d056015Bdd86C0EFD07000F75Ea10873A1d0A7",
+  "deploymentTime": "2025-09-05T15:40:57.227Z",
+  "transactionHash": "0x5657e9290fa2de249e00257364cc497fa38cf835901bbdc278e511bc8e957f87",
+  "blockNumber": null,
+  "gasUsed": "1208983",
+  "tokenInfo": {
+    "name": "Stardust",
+    "symbol": "STD",
+    "decimals": 8,
+    "totalSupply": "1000000.0",
+    "deployerBalance": "1000000.0"
+  }
+}

@@ -4,6 +4,29 @@
 
 pub const SEPOLIA_CHAIN_ID: u64 = 11155111;
 
+// Ethereum testnets
+pub const HOLESKY_CHAIN_ID: u64 = 17000;
+
+// Polygon testnets
+pub const MUMBAI_CHAIN_ID: u64 = 80001;
+pub const AMOY_CHAIN_ID: u64 = 80002;
+
+// BSC testnets
+pub const BSC_TESTNET_CHAIN_ID: u64 = 97;
+pub const CHAPEL_CHAIN_ID: u64 = 97;
+
+// Arbitrum testnets
+pub const ARBITRUM_SEPOLIA_CHAIN_ID: u64 = 421614;
+pub const ARBITRUM_GOERLI_CHAIN_ID: u64 = 421613;
+
+// Optimism testnets
+pub const OPTIMISM_SEPOLIA_CHAIN_ID: u64 = 11155420;
+pub const OPTIMISM_GOERLI_CHAIN_ID: u64 = 420;
+
+// Base testnets
+pub const BASE_SEPOLIA_CHAIN_ID: u64 = 84532;
+pub const BASE_GOERLI_CHAIN_ID: u64 = 84531;
+
 // SKALE Europa Hub Chain IDs (unused - keeping for future reference)
 // pub const EUROPA_TESTNET_CHAIN_ID: u64 = 1444673419;
 // pub const EUROPA_MAINNET_CHAIN_ID: u64 = 2046399126;
@@ -40,7 +63,37 @@ pub const SPIRAL_ICRC_CANISTER_ID: &str = "mxzaz-hqaaa-aaaar-qaada-cai";
 pub const STARDUST_ICRC_CANISTER_ID: &str = "myb77-3aaaa-aaaar-qaaea-cai";
 
 pub const ICP_SIGNER_ADDRESS: &str = "0x6a3Ff928a09D21d82B27e9B002BBAea7fc123A00";
-pub const INFURA_URL: &str = "https://sepolia.infura.io/v3/70b7e4d32357459a9af10d6503eae303";
+
+// ============================================================================
+// RPC ENDPOINTS
+// ============================================================================
+
+// Ethereum testnets
+pub const SEPOLIA_RPC_URL: &str = "https://sepolia.infura.io/v3/70b7e4d32357459a9af10d6503eae303";
+pub const HOLESKY_RPC_URL: &str = "https://holesky.infura.io/v3/70b7e4d32357459a9af10d6503eae303";
+
+// Polygon testnets
+pub const MUMBAI_RPC_URL: &str = "https://polygon-mumbai.infura.io/v3/70b7e4d32357459a9af10d6503eae303";
+pub const AMOY_RPC_URL: &str = "https://polygon-amoy.infura.io/v3/70b7e4d32357459a9af10d6503eae303";
+
+// BSC testnets
+pub const BSC_TESTNET_RPC_URL: &str = "https://data-seed-prebsc-1-s1.binance.org:8545";
+pub const CHAPEL_RPC_URL: &str = "https://data-seed-prebsc-1-s1.binance.org:8545";
+
+// Arbitrum testnets
+pub const ARBITRUM_SEPOLIA_RPC_URL: &str = "https://sepolia-rollup.arbitrum.io/rpc";
+pub const ARBITRUM_GOERLI_RPC_URL: &str = "https://goerli-rollup.arbitrum.io/rpc";
+
+// Optimism testnets
+pub const OPTIMISM_SEPOLIA_RPC_URL: &str = "https://sepolia.optimism.io";
+pub const OPTIMISM_GOERLI_RPC_URL: &str = "https://goerli.optimism.io";
+
+// Base testnets
+pub const BASE_SEPOLIA_RPC_URL: &str = "https://sepolia.base.org";
+pub const BASE_GOERLI_RPC_URL: &str = "https://goerli.base.org";
+
+// Legacy (keeping for compatibility)
+pub const INFURA_URL: &str = SEPOLIA_RPC_URL;
 
 // Function selectors for HTLC contract
 

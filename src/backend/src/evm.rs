@@ -266,7 +266,7 @@ pub async fn send_raw_transaction(signed_tx: &str) -> Result<String, String> {
 
 /// Encode the createHTLC function call for ERC20 tokens
 /// Encode createHTLCERC20 function call
-#[allow(deprecated)]
+
 pub fn encode_create_htlc_erc20_call(
     recipient: &str,
     token: &str,
@@ -343,8 +343,8 @@ pub fn encode_create_htlc_erc20_call(
 }
 
 /// Encode the claimHTLC function call
-#[allow(dead_code)]
-#[allow(deprecated)]
+
+
 pub fn encode_claim_htlc_call(htlc_id: &str, secret: &str) -> Result<String, String> {
     // Function signature: claimHTLC(uint256 htlcId, bytes32 secret)
     let function = Function {
@@ -383,7 +383,7 @@ pub fn encode_claim_htlc_call(htlc_id: &str, secret: &str) -> Result<String, Str
 }
 
 /// Encode claimHTLCByICP function call
-#[allow(deprecated)]
+
 pub fn encode_claim_htlc_by_icp_call(htlc_id: &str, secret: &str, recipient: &str) -> Result<String, String> {
     // Define the function signature
     let function = Function {
@@ -716,7 +716,7 @@ pub fn encode_htlc_permit_call(permit_data: &crate::types::PermitData) -> Result
 }
 
 /// Encode HTLC permit and transfer call
-#[allow(dead_code)]
+
 pub fn encode_htlc_permit_and_transfer_call(permit_request: &crate::types::PermitRequest) -> Result<String, String> {
     // executePermitAndTransfer function selector: executePermitAndTransfer(address,address,address,uint256,uint256,uint8,bytes32,bytes32)
     // Function signature: executePermitAndTransfer(address,address,address,uint256,uint256,uint8,bytes32,bytes32)

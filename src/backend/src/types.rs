@@ -18,8 +18,21 @@ pub enum HTLCStatus {
 // Swap Direction
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub enum SwapDirection {
-    ICPtoEVM,  // ICP -> EVM
-    EVMtoICP,  // EVM -> ICP
+    ICPtoEVM,      // ICP -> EVM
+    EVMtoICP,      // EVM -> ICP
+    ICPtoSolana,   // ICP -> Solana
+    SolanatoICP,   // Solana -> ICP
+    EVMtoSolana,   // EVM -> Solana
+    SolanatoEVM,   // Solana -> EVM
+}
+
+// Chain IDs
+#[derive(CandidType, Deserialize, Clone, Debug, PartialEq)]
+pub enum ChainId {
+    ICP = 0,
+    Sepolia = 1,
+    SolanaTestnet = 2,
+    SolanaDevnet = 3,
 }
 
 // HTLC Structure (matching EVM contract)
@@ -62,6 +75,7 @@ pub struct AtomicSwapOrder {
     // New fields for destination addresses
     pub evm_destination_address: Option<String>, // Where EVM tokens should be sent (0x address)
     pub icp_destination_principal: Option<String>, // Where ICP tokens should be sent (principal)
+    pub solana_destination_address: Option<String>, // Where Solana tokens should be sent (base58 address)
     // Counter order tracking for token forwarding
     pub counter_order_id: Option<String>, // ID of the paired counter order
 }
