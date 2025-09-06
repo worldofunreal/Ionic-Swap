@@ -2,13 +2,13 @@ const { Actor, HttpAgent } = require("@dfinity/agent");
 const { Principal } = require("@dfinity/principal");
 
 // Configuration
-const BACKEND_CANISTER_ID = "be2us-64aaa-aaaaa-qaabq-cai"; // Replace with your canister ID
+const BACKEND_CANISTER_ID = "uxrrr-q7777-77774-qaaaq-cai"; // Updated backend canister ID
 const LOCAL_HOST = "http://127.0.0.1:4943";
 
-// Test configuration
+// Test configuration for Solana Testnet
 const TEST_CONFIG = {
-    solanaUser: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM", // Replace with actual Solana testnet address
-    tokenMint: "So11111111111111111111111111111111111111112", // Replace with actual SPL token mint
+    solanaUser: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM", // Known testnet address
+    tokenMint: "So11111111111111111111111111111111111111112", // Wrapped SOL on testnet
     amount: 1000000, // 1 token (assuming 6 decimals)
     timelock: 3600 // 1 hour
 };
@@ -18,10 +18,10 @@ async function initBackendActor() {
     const agent = new HttpAgent({ host: LOCAL_HOST });
     await agent.fetchRootKey();
     
-    const backendIdl = await fetch(`${LOCAL_HOST}/canister/${BACKEND_CANISTER_ID}/did`)
-        .then(response => response.text());
+    // Import the IDL factory from the declarations
+    const { idlFactory } = require('../src/declarations/backend');
     
-    return Actor.createActor(backendIdl, {
+    return Actor.createActor(idlFactory, {
         agent,
         canisterId: BACKEND_CANISTER_ID,
     });

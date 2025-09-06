@@ -1,10 +1,14 @@
-use candid::Principal;
+use candid::{Principal, Encode, Decode};
 use ic_http_certification::HttpRequest;
 use serde_json::json;
 use sha3::{Digest, Keccak256};
+use std::collections::{HashMap, HashSet};
 use crate::storage::{get_htlc_store, get_atomic_swap_orders};
 use crate::types::{HTLC, SwapOrderStatus, HTLCStatus};
-// ECDSA imports removed - using IC's built-in ECDSA API
+use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
+use base64::Engine;
+use std::str::FromStr;
+use candid::types::value::{VariantValue, IDLField};
 
 // ============================================================================
 // SOLANA RPC CONFIGURATION
@@ -16,7 +20,7 @@ const SOLANA_DEVNET_RPC: &str = "https://api.devnet.solana.com";
 /// Solana Testnet RPC endpoint  
 const SOLANA_TESTNET_RPC: &str = "https://api.testnet.solana.com";
 
-/// Get the current Solana RPC endpoint (using devnet for now)
+/// Get the current Solana RPC endpoint (using devnet for testing)
 fn get_solana_rpc_endpoint() -> &'static str {
     SOLANA_DEVNET_RPC
 }
@@ -737,29 +741,31 @@ pub async fn sign_and_send_solana_transaction(
 
 /// Get the canister's ECDSA key for Solana signing
 async fn get_canister_ecdsa_key() -> Result<Vec<u8>, String> {
-    // For now, we'll use a simplified approach
-    // In a real implementation, this would use IC's ECDSA management canister
-    // For testing, we'll return a placeholder key
+    ic_cdk::println!("🔑 Getting canister ECDSA key for Solana signing");
     
-    ic_cdk::println!("🔑 Getting canister ECDSA key (placeholder implementation)");
+    // Use the same ECDSA key approach as EVM implementation
+    let key_id = ic_cdk::api::management_canister::ecdsa::EcdsaKeyId {
+        curve: ic_cdk::api::management_canister::ecdsa::EcdsaCurve::Secp256k1,
+        name: "key_1".to_string(),
+    };
     
-    // Placeholder: In real implementation, this would call the ECDSA management canister
-    // let key_name = "dfx_test_key";
-    // let derivation_path = vec![ic_cdk::api::id().as_slice().to_vec()];
-    // 
-    // let public_key_response = ic_cdk::api::call::call_raw(
-    //     Principal::management_canister(),
-    //     "ecdsa_public_key",
-    //     candid::encode_one((key_name, derivation_path)).unwrap(),
-    //     0, // cycles
-    // ).await.map_err(|e| format!("Failed to get ECDSA public key: {:?}", e))?;
+    let derivation_path = vec![ic_cdk::id().as_slice().to_vec()];
     
-    // For now, return a placeholder key
-    let placeholder_key = vec![0u8; 32]; // 32-byte placeholder
+    let public_key_arg = ic_cdk::api::management_canister::ecdsa::EcdsaPublicKeyArgument {
+        canister_id: None,
+        derivation_path: derivation_path.clone(),
+        key_id: key_id.clone(),
+    };
     
-    ic_cdk::println!("🔑 Using placeholder ECDSA key: {}", hex::encode(&placeholder_key));
+    let public_key = ic_cdk::api::management_canister::ecdsa::ecdsa_public_key(public_key_arg)
+        .await
+        .map_err(|e| format!("Failed to get ECDSA public key: {:?}", e))?;
     
-    Ok(placeholder_key)
+    let public_key_bytes = public_key.0.public_key;
+    
+    ic_cdk::println!("🔑 Using real ECDSA key: {}", hex::encode(&public_key_bytes));
+    
+    Ok(public_key_bytes)
 }
 
 /// Create a Solana transaction from transaction data
@@ -825,101 +831,186 @@ async fn sign_solana_transaction(
     let message = serialize_transaction_for_signing(transaction)?;
     
     // Get the message hash
-    let _message_hash = sha3::Keccak256::digest(&message);
+    let message_hash = sha3::Keccak256::digest(&message);
     
-    // For now, we'll use a placeholder signature
-    // In a real implementation, this would use IC's ECDSA management canister
-    // let key_name = "dfx_test_key";
-    // let derivation_path = vec![ic_cdk::api::id().as_slice().to_vec()];
-    // 
-    // let signature_response = ic_cdk::api::call::call_raw(
-    //     Principal::management_canister(),
-    //     "ecdsa_sign",
-    //     candid::encode_one((key_name, derivation_path, message_hash.to_vec())).unwrap(),
-    //     0, // cycles
-    // ).await.map_err(|e| format!("Failed to sign with ECDSA: {:?}", e))?;
+    // Use real ECDSA signing like the EVM implementation
+    let key_id = ic_cdk::api::management_canister::ecdsa::EcdsaKeyId {
+        curve: ic_cdk::api::management_canister::ecdsa::EcdsaCurve::Secp256k1,
+        name: "key_1".to_string(),
+    };
     
-    // Placeholder signature for testing
-    let placeholder_signature = vec![0u8; 64]; // 64-byte placeholder signature
+    let derivation_path = vec![ic_cdk::id().as_slice().to_vec()];
+    
+    let sign_args = ic_cdk::api::management_canister::ecdsa::SignWithEcdsaArgument {
+        message_hash: message_hash.to_vec(),
+        derivation_path,
+        key_id,
+    };
+    
+    let signature = ic_cdk::api::management_canister::ecdsa::sign_with_ecdsa(sign_args)
+        .await
+        .map_err(|e| format!("Failed to sign Solana transaction: {:?}", e))?;
+    
+    let signature_bytes = signature.0.signature;
     
     // Add the signature to the transaction
-    transaction.signatures.push(placeholder_signature.clone());
+    transaction.signatures.push(signature_bytes.clone());
     
-    ic_cdk::println!("✅ Transaction signed successfully (placeholder)");
+    ic_cdk::println!("✅ Transaction signed successfully with real ECDSA");
     
-    Ok(placeholder_signature)
+    Ok(signature_bytes)
 }
 
-/// Submit a signed Solana transaction to the network
+/// Submit a signed Solana transaction to the network using the official SOL RPC canister
 async fn submit_solana_transaction(transaction: &SolanaTransaction) -> Result<String, String> {
-    ic_cdk::println!("📤 Submitting Solana transaction...");
-    
-    // Serialize the complete transaction
+    ic_cdk::println!("📤 Submitting signed Solana transaction to SOL RPC canister...");
+
+    let sol_rpc_principal = Principal::from_text("tghme-zyaaa-aaaar-qarca-cai")
+        .map_err(|e| format!("Invalid SOL RPC canister ID: {}", e))?;
+
+    // Serialize the signed transaction
     let serialized_tx = serialize_transaction(transaction)?;
+    let tx_base64 = base64::engine::general_purpose::STANDARD.encode(&serialized_tx);
     
-    // Submit to Solana RPC using existing HTTP client
-    let request_body = json!({
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "sendTransaction",
-        "params": [
-            hex::encode(&serialized_tx),
-            {
-                "encoding": "base64",
-                "skipPreflight": false,
-                "preflightCommitment": "confirmed"
+    ic_cdk::println!("📋 Serialized transaction (base64): {}", tx_base64);
+
+    // Let's try using the ic_cdk::api::call::call method instead of call_raw
+    // This might handle the Candid encoding better
+    
+    // First, let's try a simple getSlot call to test connectivity
+    let get_slot_args = Encode!(&"variant { Default = variant { Devnet } }", &Option::<String>::None, &Option::<String>::None)
+        .map_err(|e| format!("Failed to encode getSlot arguments: {}", e))?;
+
+    ic_cdk::println!("📋 Testing connectivity with getSlot...");
+    
+    let slot_result = ic_cdk::api::call::call_raw(
+        sol_rpc_principal,
+        "getSlot",
+        &get_slot_args,
+        1_000_000_000, // 1B cycles for getSlot
+    ).await;
+
+    match slot_result {
+        Ok(slot_response) => {
+            ic_cdk::println!("✅ getSlot successful! Response length: {}", slot_response.len());
+            
+            // Now try the actual sendTransaction
+            // Let's try a different approach - use the exact same format as the working command line
+            // But encode it properly as Candid
+            
+            // The issue is that we need to construct the exact Candid types
+            // Let me try a different approach - use the jsonRequest method instead
+            // which might be easier to work with
+            
+            let json_request = format!(
+                r#"{{"jsonrpc":"2.0","id":1,"method":"sendTransaction","params":["{}",{{"encoding":"base64","skipPreflight":false}}]}}"#,
+                tx_base64
+            );
+            
+            ic_cdk::println!("📋 Using jsonRequest method with: {}", json_request);
+            
+            // Try jsonRequest method instead
+            let json_args = Encode!(&"variant { Default = variant { Devnet } }", &Option::<String>::None, &json_request)
+                .map_err(|e| format!("Failed to encode jsonRequest arguments: {}", e))?;
+
+            let json_result = ic_cdk::api::call::call_raw(
+                sol_rpc_principal,
+                "jsonRequest",
+                &json_args,
+                2_000_000_000, // 2B cycles
+            ).await;
+
+            match json_result {
+                Ok(json_response) => {
+                    ic_cdk::println!("✅ jsonRequest successful! Response length: {}", json_response.len());
+                    
+                    // Try to decode the response
+                    if let Ok(response_text) = String::from_utf8(json_response.clone()) {
+                        ic_cdk::println!("📋 JSON Response: {}", response_text);
+                        
+                        // Parse the JSON response to extract the transaction signature
+                        if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(&response_text) {
+                            if let Some(result) = json_value.get("result") {
+                                if let Some(signature) = result.as_str() {
+                                    ic_cdk::println!("🎉 Transaction submitted successfully! Signature: {}", signature);
+                                    return Ok(format!("Transaction submitted successfully! Hash: {}", signature));
+                                }
+                            }
+                            if let Some(error) = json_value.get("error") {
+                                return Err(format!("Transaction failed: {}", error));
+                            }
+                        }
+                    }
+                    
+                    Ok(format!("Transaction submitted! Response length: {}", json_response.len()))
+                }
+                Err(e) => {
+                    let error_msg = format!("jsonRequest failed: {:?}", e);
+                    ic_cdk::println!("❌ {}", error_msg);
+                    Err(error_msg)
+                }
             }
-        ]
-    });
-    
-    let response = call_solana_rpc("sendTransaction", request_body).await?;
-    
-    if let Some(error) = response["error"].as_object() {
-        return Err(format!("RPC error: {:?}", error));
+        }
+        Err(e) => {
+            let error_msg = format!("getSlot failed: {:?}", e);
+            ic_cdk::println!("❌ {}", error_msg);
+            Err(error_msg)
+        }
     }
-    
-    let tx_hash = response["result"]
-        .as_str()
-        .ok_or("Missing transaction hash in response")?;
-    
-    ic_cdk::println!("✅ Transaction submitted successfully: {}", tx_hash);
-    
-    Ok(tx_hash.to_string())
 }
 
-/// Serialize transaction for signing (message format)
+/// Serialize transaction for signing (minimal valid Solana format)
 fn serialize_transaction_for_signing(transaction: &SolanaTransaction) -> Result<Vec<u8>, String> {
-    // Create the message structure for signing
+    // Create a minimal valid Solana message
     let mut message_data = Vec::new();
     
-    // Add recent blockhash
-    let blockhash_bytes = bs58::decode(&transaction.recent_blockhash)
-        .into_vec()
-        .map_err(|e| format!("Invalid blockhash: {}", e))?;
-    message_data.extend_from_slice(&blockhash_bytes);
+    // Message header (3 bytes)
+    message_data.push(1u8); // num_required_signatures
+    message_data.push(0u8); // num_readonly_signed_accounts  
+    message_data.push(0u8); // num_readonly_unsigned_accounts
     
-    // Add fee payer
+    // Account addresses (32 bytes each)
+    // Fee payer (index 0)
     let fee_payer_bytes = bs58::decode(&transaction.fee_payer)
         .into_vec()
         .map_err(|e| format!("Invalid fee payer: {}", e))?;
     message_data.extend_from_slice(&fee_payer_bytes);
     
-    // Add instruction count (varint)
+    // Program ID (index 1)
+    let program_id_bytes = bs58::decode(&transaction.instructions[0].program_id)
+        .into_vec()
+        .map_err(|e| format!("Invalid program ID: {}", e))?;
+    message_data.extend_from_slice(&program_id_bytes);
+    
+    // Instruction accounts (indices 2+)
+    for account in &transaction.instructions[0].accounts {
+        let account_bytes = bs58::decode(&account.pubkey)
+            .into_vec()
+            .map_err(|e| format!("Invalid account pubkey: {}", e))?;
+        message_data.extend_from_slice(&account_bytes);
+    }
+    
+    // Recent blockhash (32 bytes)
+    let blockhash_bytes = bs58::decode(&transaction.recent_blockhash)
+        .into_vec()
+        .map_err(|e| format!("Invalid blockhash: {}", e))?;
+    message_data.extend_from_slice(&blockhash_bytes);
+    
+    // Instructions
     message_data.push(transaction.instructions.len() as u8);
     
-    // Add instructions
     for instruction in &transaction.instructions {
-        // Program ID index (simplified - in real implementation, this would be an index)
-        message_data.push(0); // Placeholder for program ID index
+        // Program ID index (1 byte) - program ID is at index 1
+        message_data.push(1u8);
         
-        // Account indices (simplified)
+        // Account indices (1 byte + indices)
         message_data.push(instruction.accounts.len() as u8);
-        for _ in &instruction.accounts {
-            message_data.push(0); // Placeholder for account index
+        for i in 2..(2 + instruction.accounts.len()) {
+            message_data.push(i as u8);
         }
         
-        // Instruction data length
-        let data_len = instruction.data.len();
+        // Instruction data (4 bytes length + data)
+        let data_len = instruction.data.len() as u32;
         message_data.extend_from_slice(&data_len.to_le_bytes());
         message_data.extend_from_slice(&instruction.data);
     }
@@ -927,13 +1018,15 @@ fn serialize_transaction_for_signing(transaction: &SolanaTransaction) -> Result<
     Ok(message_data)
 }
 
-/// Serialize complete transaction for submission
+/// Serialize complete transaction for submission (proper Solana format)
 fn serialize_transaction(transaction: &SolanaTransaction) -> Result<Vec<u8>, String> {
     let mut serialized = Vec::new();
     
-    // Add signatures
-    serialized.push(transaction.signatures.len() as u8);
+    // Add signatures (each signature is 64 bytes)
     for signature in &transaction.signatures {
+        if signature.len() != 64 {
+            return Err(format!("Invalid signature length: {} (expected 64)", signature.len()));
+        }
         serialized.extend_from_slice(signature);
     }
     

@@ -170,3 +170,4 @@ npx hardhat run scripts/deploy-all-testnets.js
 - Join Discord/Telegram communities for each network
 - Use alternative RPC endpoints if main ones are down
 
+

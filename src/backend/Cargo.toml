@@ -23,10 +23,25 @@ rlp = "0.5"
 ethers-core = "2.0"
 sha3 = "0.10"
 
-# Solana Integration - Using remote sol_rpc canister instead of direct dependencies
+# Solana Integration - Using official SOL RPC canister
 bs58 = "0.5.1"
 bincode = "1.3.3"
+base64 = "0.21"
 
 # ECDSA for Solana transaction signing
 k256 = "0.13"
-ecdsa = "0.16" 
+ecdsa = "0.16"
+
+# SOL RPC canister client - using official libraries
+sol_rpc_client = { version = "3.0.0", features = ["ed25519"] }
+sol_rpc_types = "3.0.0"
+solana-hash = "3.0.0"
+solana-instruction = "3.0.0"
+solana-message = "3.0.0"
+solana-pubkey = { version = "3.0.0", features = ["curve25519"] }
+solana-signature = "3.1.0"
+solana-system-interface = { version = "2.0.0", features = ["bincode"] }
+solana-transaction = { version = "3.0.0", features = ["bincode"] }
+spl-associated-token-account-interface = "2.0.0"
+ic-ed25519 = "0.2.0"
+num = "0.4.3" 

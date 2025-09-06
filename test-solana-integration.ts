@@ -2,12 +2,12 @@ import { Actor, HttpAgent } from '@dfinity/agent';
 import { idlFactory } from './src/declarations/backend';
 
 // Test configuration
-const CANISTER_ID = 'uzt4z-lp777-77774-qaabq-cai'; // Your backend canister ID
+const CANISTER_ID = 'uxrrr-q7777-77774-qaaaq-cai'; // Updated backend canister ID
 const HOST = 'http://127.0.0.1:4943';
 
-// Known Solana Devnet accounts for testing
-const KNOWN_SOLANA_ACCOUNT = '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM'; // Known account with SOL
-const USDC_MINT_ADDRESS = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'; // USDC on Devnet
+// Known Solana Testnet accounts for testing
+const KNOWN_SOLANA_ACCOUNT = '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM'; // Known account with SOL (works on testnet too)
+const USDC_MINT_ADDRESS = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'; // USDC on Testnet
 const TEST_ICP_PRINCIPAL = '2vxsx-fae'; // Test ICP principal
 
 async function testSolanaIntegration() {
