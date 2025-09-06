@@ -21,6 +21,7 @@ mod ed25519;
 mod solana_wallet;
 mod spl;
 mod state;
+mod solana_htlc;
 
 use constants::*;
 use types::*;
@@ -1269,6 +1270,52 @@ async fn get_account_owner(account: &Pubkey) -> Pubkey {
         .unwrap_or_else(|| panic!("Account not found for pubkey `{account}`"))
         .owner;
     Pubkey::from_str(&owner).unwrap()
+}
+
+// ============================================================================
+// SOLANA HTLC PROGRAM INTERACTION
+// ============================================================================
+
+/// Create HTLC using deployed Solana program
+#[update]
+#[candid_method]
+pub async fn create_solana_htlc_program(
+    order_id: String,
+    token_mint: String,
+    amount: Nat,
+    hashlock: String,
+    timelock: i64,
+    recipient: String,
+) -> String {
+    solana_htlc::create_solana_htlc_program(
+        &order_id,
+        &token_mint,
+        amount.0.to_u64().unwrap(),
+        &hashlock,
+        timelock,
+        &recipient,
+    ).await.unwrap()
+}
+
+/// Claim HTLC using deployed Solana program
+#[update]
+#[candid_method]
+pub async fn claim_solana_htlc_program(
+    order_id: String,
+    secret: String,
+    recipient: String,
+) -> String {
+    solana_htlc::claim_solana_htlc_program(&order_id, &secret, &recipient).await.unwrap()
+}
+
+/// Refund HTLC using deployed Solana program
+#[update]
+#[candid_method]
+pub async fn refund_solana_htlc_program(
+    order_id: String,
+    sender: String,
+) -> String {
+    solana_htlc::refund_solana_htlc_program(&order_id, &sender).await.unwrap()
 }
 
 // ============================================================================

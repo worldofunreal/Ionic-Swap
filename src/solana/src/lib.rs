@@ -5,69 +5,35 @@ use solana_program::{
     entrypoint::ProgramResult,
     msg,
     program_error::ProgramError,
-    program_pack::Pack,
     pubkey::Pubkey,
-    rent::Rent,
-    system_instruction,
+    clock::Clock,
     sysvar::Sysvar,
 };
-use spl_token::{
-    instruction as token_instruction,
-    state::Mint,
-};
-
 
 // Declare and export the program's entrypoint
 entrypoint!(process_instruction);
 
-// Program state structures
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
-pub struct TokenMetadata {
-    pub name: String,
-    pub symbol: String,
-    pub uri: String,
-    pub decimals: u8,
-    pub total_supply: u64,
-    pub mint_authority: Pubkey,
-    pub freeze_authority: Option<Pubkey>,
+pub struct Htlc {
+    pub sender: [u8; 32],
+    pub recipient: [u8; 32],
+    pub amount: u64,
+    pub hashlock: [u8; 32],
+    pub timelock: i64,
+    pub status: u8, // 0=Created, 1=Claimed, 2=Refunded
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
-pub enum TokenInstruction {
-    /// Initialize a new token mint
-    /// Accounts expected:
-    /// 0. `[signer]` The account of the person initializing the mint
-    /// 1. `[writable]` The mint account to initialize
-    /// 2. `[]` The rent sysvar
-    /// 3. `[]` The token program
-    InitializeMint {
-        decimals: u8,
-        mint_authority: Pubkey,
-        freeze_authority: Option<Pubkey>,
-        name: String,
-        symbol: String,
-        uri: String,
-    },
-    
-    /// Mint tokens to an account
-    /// Accounts expected:
-    /// 0. `[signer]` The mint authority
-    /// 1. `[writable]` The mint account
-    /// 2. `[writable]` The destination account
-    /// 3. `[]` The token program
-    MintTo {
+pub enum HtlcInstruction {
+    CreateHtlc {
         amount: u64,
+        hashlock: [u8; 32],
+        timelock: i64,
     },
-    
-    /// Transfer tokens between accounts
-    /// Accounts expected:
-    /// 0. `[signer]` The source account owner
-    /// 1. `[writable]` The source account
-    /// 2. `[writable]` The destination account
-    /// 3. `[]` The token program
-    Transfer {
-        amount: u64,
+    ClaimHtlc {
+        secret: [u8; 32],
     },
+    RefundHtlc,
 }
 
 pub fn process_instruction(
@@ -75,185 +41,131 @@ pub fn process_instruction(
     accounts: &[AccountInfo],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    let instruction = TokenInstruction::try_from_slice(instruction_data)?;
-
+    let instruction = HtlcInstruction::try_from_slice(instruction_data)?;
+    
     match instruction {
-        TokenInstruction::InitializeMint {
-            decimals,
-            mint_authority,
-            freeze_authority,
-            name,
-            symbol,
-            uri,
-        } => {
-            msg!("Instruction: InitializeMint");
-            process_initialize_mint(
-                program_id,
-                accounts,
-                decimals,
-                mint_authority,
-                freeze_authority,
-                name,
-                symbol,
-                uri,
-            )
+        HtlcInstruction::CreateHtlc { amount, hashlock, timelock } => {
+            create_htlc(program_id, accounts, amount, hashlock, timelock)
         }
-        TokenInstruction::MintTo { amount } => {
-            msg!("Instruction: MintTo");
-            process_mint_to(program_id, accounts, amount)
+        HtlcInstruction::ClaimHtlc { secret } => {
+            claim_htlc(program_id, accounts, secret)
         }
-        TokenInstruction::Transfer { amount } => {
-            msg!("Instruction: Transfer");
-            process_transfer(program_id, accounts, amount)
+        HtlcInstruction::RefundHtlc => {
+            refund_htlc(program_id, accounts)
         }
     }
 }
 
-fn process_initialize_mint(
-    _program_id: &Pubkey,
+fn create_htlc(
+    program_id: &Pubkey,
     accounts: &[AccountInfo],
-    decimals: u8,
-    mint_authority: Pubkey,
-    freeze_authority: Option<Pubkey>,
-    name: String,
-    symbol: String,
-    _uri: String,
+    amount: u64,
+    hashlock: [u8; 32],
+    timelock: i64,
 ) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter();
-    let payer = next_account_info(account_info_iter)?;
-    let mint_account = next_account_info(account_info_iter)?;
-    let rent = &Rent::from_account_info(next_account_info(account_info_iter)?)?;
-    let token_program = next_account_info(account_info_iter)?;
-
-    if !payer.is_signer {
+    let accounts_iter = &mut accounts.iter();
+    let sender = next_account_info(accounts_iter)?;
+    let htlc_account = next_account_info(accounts_iter)?;
+    
+    // Verify sender is signer
+    if !sender.is_signer {
         return Err(ProgramError::MissingRequiredSignature);
     }
+    
+    // Get current time
+    let clock = Clock::get()?;
+    
+    // Validate timelock is in the future
+    if timelock <= clock.unix_timestamp {
+        return Err(ProgramError::InvalidArgument);
+    }
+    
+    // Create HTLC
+    let htlc = Htlc {
+        sender: sender.key.to_bytes(),
+        recipient: sender.key.to_bytes(), // Simplified
+        amount,
+        hashlock,
+        timelock,
+        status: 0, // Created
+    };
+    
+    // Serialize and store HTLC
+    let htlc_data = borsh::to_vec(&htlc).map_err(|_| ProgramError::InvalidAccountData)?;
+    htlc_account.try_borrow_mut_data()?[..htlc_data.len()].copy_from_slice(&htlc_data);
+    
+    msg!("HTLC created with amount: {}", amount);
+    Ok(())
+}
 
-    if !mint_account.is_writable {
+fn claim_htlc(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    secret: [u8; 32],
+) -> ProgramResult {
+    let accounts_iter = &mut accounts.iter();
+    let _claimant = next_account_info(accounts_iter)?;
+    let htlc_account = next_account_info(accounts_iter)?;
+    
+    // Deserialize HTLC
+    let htlc_data = &htlc_account.try_borrow_data()?;
+    let mut htlc: Htlc = Htlc::try_from_slice(htlc_data)?;
+    
+    // Check if already claimed or refunded
+    if htlc.status != 0 {
         return Err(ProgramError::InvalidAccountData);
     }
-
-    // Initialize the mint account
-    let mint_authority_pubkey = mint_authority;
-    let freeze_authority_pubkey = freeze_authority;
-
-    let space = Mint::LEN;
-    let lamports = rent.minimum_balance(space);
-
-    // Create the mint account
-    let create_account_ix = system_instruction::create_account(
-        payer.key,
-        mint_account.key,
-        lamports,
-        space as u64,
-        &spl_token::id(),
-    );
-
-    solana_program::program::invoke(
-        &create_account_ix,
-        &[payer.clone(), mint_account.clone()],
-    )?;
-
-    // Initialize the mint
-    let init_mint_ix = token_instruction::initialize_mint(
-        &spl_token::id(),
-        mint_account.key,
-        &mint_authority_pubkey,
-        freeze_authority_pubkey.as_ref(),
-        decimals,
-    )?;
-
-    solana_program::program::invoke(
-        &init_mint_ix,
-        &[
-            mint_account.clone(),
-            token_program.clone(),
-        ],
-    )?;
-
-    msg!("Mint initialized successfully");
-    msg!("Mint address: {}", mint_account.key);
-    msg!("Name: {}", name);
-    msg!("Symbol: {}", symbol);
-    msg!("Decimals: {}", decimals);
-
+    
+    // Verify secret matches hashlock
+    let mut hasher = solana_program::keccak::Hasher::default();
+    hasher.hash(&secret);
+    let computed_hash = hasher.result();
+    
+    if computed_hash.to_bytes() != htlc.hashlock {
+        return Err(ProgramError::InvalidArgument);
+    }
+    
+    // Mark as claimed
+    htlc.status = 1;
+    
+    // Update account data
+    let htlc_data = borsh::to_vec(&htlc).map_err(|_| ProgramError::InvalidAccountData)?;
+    htlc_account.try_borrow_mut_data()?[..htlc_data.len()].copy_from_slice(&htlc_data);
+    
+    msg!("HTLC claimed successfully");
     Ok(())
 }
 
-fn process_mint_to(
-    _program_id: &Pubkey,
+fn refund_htlc(
+    program_id: &Pubkey,
     accounts: &[AccountInfo],
-    amount: u64,
 ) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter();
-    let mint_authority = next_account_info(account_info_iter)?;
-    let mint_account = next_account_info(account_info_iter)?;
-    let destination_account = next_account_info(account_info_iter)?;
-    let token_program = next_account_info(account_info_iter)?;
-
-    if !mint_authority.is_signer {
-        return Err(ProgramError::MissingRequiredSignature);
+    let accounts_iter = &mut accounts.iter();
+    let _refunder = next_account_info(accounts_iter)?;
+    let htlc_account = next_account_info(accounts_iter)?;
+    
+    // Deserialize HTLC
+    let htlc_data = &htlc_account.try_borrow_data()?;
+    let mut htlc: Htlc = Htlc::try_from_slice(htlc_data)?;
+    
+    // Check if already claimed or refunded
+    if htlc.status != 0 {
+        return Err(ProgramError::InvalidAccountData);
     }
-
-    // Mint tokens
-    let mint_to_ix = token_instruction::mint_to(
-        &spl_token::id(),
-        mint_account.key,
-        destination_account.key,
-        mint_authority.key,
-        &[],
-        amount,
-    )?;
-
-    solana_program::program::invoke(
-        &mint_to_ix,
-        &[
-            mint_account.clone(),
-            destination_account.clone(),
-            mint_authority.clone(),
-            token_program.clone(),
-        ],
-    )?;
-
-    msg!("Minted {} tokens", amount);
-    Ok(())
-}
-
-fn process_transfer(
-    _program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    amount: u64,
-) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter();
-    let source_owner = next_account_info(account_info_iter)?;
-    let source_account = next_account_info(account_info_iter)?;
-    let destination_account = next_account_info(account_info_iter)?;
-    let token_program = next_account_info(account_info_iter)?;
-
-    if !source_owner.is_signer {
-        return Err(ProgramError::MissingRequiredSignature);
+    
+    // Check if timelock has expired
+    let clock = Clock::get()?;
+    if clock.unix_timestamp < htlc.timelock {
+        return Err(ProgramError::InvalidArgument);
     }
-
-    // Transfer tokens
-    let transfer_ix = token_instruction::transfer(
-        &spl_token::id(),
-        source_account.key,
-        destination_account.key,
-        source_owner.key,
-        &[],
-        amount,
-    )?;
-
-    solana_program::program::invoke(
-        &transfer_ix,
-        &[
-            source_account.clone(),
-            destination_account.clone(),
-            source_owner.clone(),
-            token_program.clone(),
-        ],
-    )?;
-
-    msg!("Transferred {} tokens", amount);
+    
+    // Mark as refunded
+    htlc.status = 2;
+    
+    // Update account data
+    let htlc_data = borsh::to_vec(&htlc).map_err(|_| ProgramError::InvalidAccountData)?;
+    htlc_account.try_borrow_mut_data()?[..htlc_data.len()].copy_from_slice(&htlc_data);
+    
+    msg!("HTLC refunded successfully");
     Ok(())
 }

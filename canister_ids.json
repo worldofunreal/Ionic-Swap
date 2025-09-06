@@ -1,5 +1,11 @@
 {
   "backend": {
     "ic": "5w2a3-wqaaa-aaaap-qqaea-cai"
+  },
+  "spiral_token": {
+    "ic": "ej2n5-qaaaa-aaaap-qqc3a-cai"
+  },
+  "stardust_token": {
+    "ic": "eo3lj-5yaaa-aaaap-qqc3q-cai"
   }
 }

@@ -10,10 +10,14 @@
     "test:setup": "node scripts/test-setup.js",
     "deploy:devnet": "node scripts/deploy.js --network devnet",
     "deploy:testnet": "node scripts/deploy.js --network testnet",
+    "deploy:htlc": "node scripts/deploy-htlc.js",
     "create-token": "node scripts/create-token.js",
     "create-simple-token": "node scripts/create-simple-token.js",
     "mint-tokens": "node scripts/mint-tokens.js",
-    "transfer-tokens": "node scripts/transfer-tokens.js"
+    "transfer-tokens": "node scripts/transfer-tokens.js",
+    "transfer-sol": "node scripts/transfer-sol.js",
+    "test:htlc": "node scripts/test-htlc-interaction.js",
+    "deploy:spiral-stardust": "node scripts/deploy-spiral-stardust.js"
   },
   "dependencies": {
     "@solana/web3.js": "^1.87.0",

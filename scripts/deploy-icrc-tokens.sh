@@ -7,26 +7,21 @@ set -e
 
 echo "🚀 Starting ICRC-1 token deployment..."
 
-# Check if dfx is running
-if ! dfx ping > /dev/null 2>&1; then
-    echo "❌ dfx is not running. Please start dfx first with: dfx start --clean --background"
+# Check if dfx can connect to mainnet
+if ! dfx ping ic > /dev/null 2>&1; then
+    echo "❌ Cannot connect to mainnet ICP. Please check your internet connection and try again"
     exit 1
 fi
 
-# Create minter identity if it doesn't exist
-if ! dfx identity list | grep -q "minter"; then
-    echo "📝 Creating minter identity..."
-    dfx identity new minter --disable-encryption
-fi
-
-# Export minter principal
-dfx identity use minter
+# Use bizkit identity for everything (minter, archive controller, deployer)
 export MINTER_ACCOUNT_ID=$(dfx identity get-principal)
-echo "🔑 Minter principal: $MINTER_ACCOUNT_ID"
-
-# Use current identity for archive controller
 export ARCHIVE_CONTROLLER=$(dfx identity get-principal)
-echo "🔑 Archive controller principal: $ARCHIVE_CONTROLLER"
+export DEPLOY_ID=$(dfx identity get-principal)
+
+echo "🔑 Using bizkit identity for all roles:"
+echo "   Minter principal: $MINTER_ACCOUNT_ID"
+echo "   Archive controller principal: $ARCHIVE_CONTROLLER"
+echo "   Deployer principal: $DEPLOY_ID"
 
 # Set archive options (recommended values)
 export TRIGGER_THRESHOLD=2000
@@ -37,8 +32,7 @@ export CYCLE_FOR_ARCHIVE_CREATION=10000000000000
 export FEATURE_FLAGS=true
 
 # Deploy Spiral Token (SPIRAL)
-echo "🪙 Deploying Spiral Token (SPIRAL)..."
-export DEPLOY_ID=$(dfx identity get-principal)
+echo "🪙 Deploying Spiral Token (SPIRAL) to mainnet ICP..."
 
 # Spiral Token configuration (matching SpiralToken.sol)
 export TOKEN_NAME="Spiral"
@@ -54,7 +48,7 @@ echo "   Initial Supply: $PRE_MINTED_TOKENS (100,000,000 tokens)"
 echo "   Transfer Fee: $TRANSFER_FEE"
 echo "   ICRC-2 Support: Enabled"
 
-dfx deploy spiral_token --argument "(variant {Init =
+dfx deploy spiral_token --network ic --argument "(variant {Init =
 record {
      token_symbol = \"${TOKEN_SYMBOL}\";
      token_name = \"${TOKEN_NAME}\";
@@ -91,7 +85,7 @@ echo "   Initial Supply: $PRE_MINTED_TOKENS (100,000,000 tokens)"
 echo "   Transfer Fee: $TRANSFER_FEE"
 echo "   ICRC-2 Support: Enabled"
 
-dfx deploy stardust_token --argument "(variant {Init =
+dfx deploy stardust_token --network ic --argument "(variant {Init =
 record {
      token_symbol = \"${TOKEN_SYMBOL}\";
      token_name = \"${TOKEN_NAME}\";
@@ -122,20 +116,22 @@ echo "   Archive Controller: $ARCHIVE_CONTROLLER"
 echo "   Deployer Principal: $DEPLOY_ID"
 echo ""
 echo "🪙 Spiral Token (SPIRAL):"
-echo "   Canister ID: $(dfx canister id spiral_token)"
+echo "   Canister ID: $(dfx canister id spiral_token --network ic)"
 echo "   Initial Supply: 100,000,000 SPIRAL"
 echo "   Decimals: 8"
 echo "   ICRC-2: Enabled"
+echo "   Network: Mainnet ICP"
 echo ""
 echo "🪙 Stardust Token (STD):"
-echo "   Canister ID: $(dfx canister id stardust_token)"
+echo "   Canister ID: $(dfx canister id stardust_token --network ic)"
 echo "   Initial Supply: 100,000,000 STD"
 echo "   Decimals: 8"
 echo "   ICRC-2: Enabled"
+echo "   Network: Mainnet ICP"
 echo ""
-echo "🔗 Candid UI URLs:"
-echo "   Spiral Token: http://127.0.0.1:4943/?canisterId=$(dfx canister id __Candid_UI)&id=$(dfx canister id spiral_token)"
-echo "   Stardust Token: http://127.0.0.1:4943/?canisterId=$(dfx canister id __Candid_UI)&id=$(dfx canister id stardust_token)"
+echo "🔗 Mainnet Explorer URLs:"
+echo "   Spiral Token: https://dashboard.internetcomputer.org/canister/$(dfx canister id spiral_token --network ic)"
+echo "   Stardust Token: https://dashboard.internetcomputer.org/canister/$(dfx canister id stardust_token --network ic)"
 echo ""
 echo "📝 Next steps:"
 echo "   1. Test token transfers using dfx canister call"

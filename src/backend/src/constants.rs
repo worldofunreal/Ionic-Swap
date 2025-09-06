@@ -56,11 +56,13 @@ pub const EUROPA_HTLC_CONTRACT_ADDRESS: &str = "0x6fFfB1Ca5249C76671F4b5426e7f31
 
 // pub const EUROPA_STARDUST_TOKEN_ADDRESS: &str = "0x9229D364070b6B8bEe81F75D076Dc67AEded3365";
 
-// ICRC-1 Token Canister IDs
+// ICRC-1 Token Canister IDs (Mainnet ICP)
+pub const SPIRAL_ICRC_CANISTER_ID: &str = "ej2n5-qaaaa-aaaap-qqc3a-cai";
+pub const STARDUST_ICRC_CANISTER_ID: &str = "eo3lj-5yaaa-aaaap-qqc3q-cai";
 
-pub const SPIRAL_ICRC_CANISTER_ID: &str = "mxzaz-hqaaa-aaaar-qaada-cai";
-
-pub const STARDUST_ICRC_CANISTER_ID: &str = "myb77-3aaaa-aaaar-qaaea-cai";
+// Solana Token Mint Addresses (Devnet)
+pub const SPIRAL_SOLANA_MINT: &str = "HSErF7xjoMowD4RoYzcigBRSoPv5CoZRRgxvxBAsTdWK";
+pub const STARDUST_SOLANA_MINT: &str = "A1wZAwvc5r8LPoKbbdTXHY25VU2ZkQrk7ikW5QgbzdtH";
 
 pub const ICP_SIGNER_ADDRESS: &str = "0x6a3Ff928a09D21d82B27e9B002BBAea7fc123A00";
 
