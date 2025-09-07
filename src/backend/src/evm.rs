@@ -86,7 +86,7 @@ pub async fn get_public_key() -> Result<String, String> {
     // Get the Ethereum address using ic-cdk ECDSA
     let key_id = ic_cdk::api::management_canister::ecdsa::EcdsaKeyId {
         curve: ic_cdk::api::management_canister::ecdsa::EcdsaCurve::Secp256k1,
-        name: "dfx_test_key".to_string(),
+        name: "key_1".to_string(),
     };
     
     let derivation_path = vec![ic_cdk::id().as_slice().to_vec()];
@@ -191,7 +191,7 @@ pub async fn sign_eip1559_transaction(
     // Get the canister's public key for signature recovery
     let key_id = ic_cdk::api::management_canister::ecdsa::EcdsaKeyId {
         curve: ic_cdk::api::management_canister::ecdsa::EcdsaCurve::Secp256k1,
-        name: "dfx_test_key".to_string(),
+        name: "key_1".to_string(),
     };
     
     let derivation_path = vec![ic_cdk::id().as_slice().to_vec()];

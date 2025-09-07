@@ -1,13 +1,5 @@
 export const idlFactory = ({ IDL }) => {
   const Result = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
-  const SwapDirection = IDL.Variant({
-    'EVMtoSolana' : IDL.Null,
-    'EVMtoICP' : IDL.Null,
-    'ICPtoEVM' : IDL.Null,
-    'ICPtoSolana' : IDL.Null,
-    'SolanatoEVM' : IDL.Null,
-    'SolanatoICP' : IDL.Null,
-  });
   const ChainInitData = IDL.Record({
     'init_params' : IDL.Vec(IDL.Nat8),
     'chain_type' : IDL.Text,
@@ -29,38 +21,6 @@ export const idlFactory = ({ IDL }) => {
     'user_address' : IDL.Text,
     'permit_request' : PermitRequest,
     'amount' : IDL.Text,
-  });
-  const SwapOrderStatus = IDL.Variant({
-    'Refunded' : IDL.Null,
-    'DestinationHTLCClaimed' : IDL.Null,
-    'SourceHTLCCreated' : IDL.Null,
-    'SourceHTLCClaimed' : IDL.Null,
-    'Cancelled' : IDL.Null,
-    'Created' : IDL.Null,
-    'Completed' : IDL.Null,
-    'Expired' : IDL.Null,
-    'DestinationHTLCCreated' : IDL.Null,
-  });
-  const AtomicSwapOrder = IDL.Record({
-    'maker' : IDL.Text,
-    'status' : SwapOrderStatus,
-    'icp_destination_principal' : IDL.Opt(IDL.Text),
-    'taker' : IDL.Text,
-    'destination_htlc_id' : IDL.Opt(IDL.Text),
-    'destination_amount' : IDL.Text,
-    'hashlock' : IDL.Text,
-    'evm_destination_address' : IDL.Opt(IDL.Text),
-    'secret' : IDL.Text,
-    'created_at' : IDL.Nat64,
-    'source_htlc_id' : IDL.Opt(IDL.Text),
-    'solana_destination_address' : IDL.Opt(IDL.Text),
-    'order_id' : IDL.Text,
-    'source_amount' : IDL.Text,
-    'source_token' : IDL.Text,
-    'expires_at' : IDL.Nat64,
-    'counter_order_id' : IDL.Opt(IDL.Text),
-    'destination_token' : IDL.Text,
-    'timelock' : IDL.Nat64,
   });
   const ChainLedger = IDL.Record({
     'created_at' : IDL.Nat64,
@@ -93,49 +53,7 @@ export const idlFactory = ({ IDL }) => {
     'target_chain' : IDL.Text,
     'amount' : IDL.Text,
   });
-  const HTLCStatus = IDL.Variant({
-    'Refunded' : IDL.Null,
-    'Claimed' : IDL.Null,
-    'Deposited' : IDL.Null,
-    'Created' : IDL.Null,
-    'Expired' : IDL.Null,
-  });
-  const HTLC = IDL.Record({
-    'id' : IDL.Text,
-    'source_chain' : IDL.Nat64,
-    'status' : HTLCStatus,
-    'token' : IDL.Text,
-    'hashlock' : IDL.Text,
-    'is_cross_chain' : IDL.Bool,
-    'recipient' : IDL.Text,
-    'secret' : IDL.Opt(IDL.Text),
-    'created_at' : IDL.Nat64,
-    'sender' : IDL.Text,
-    'order_hash' : IDL.Text,
-    'target_chain' : IDL.Nat64,
-    'amount' : IDL.Text,
-    'timelock' : IDL.Nat64,
-  });
-  const CrossChainSwapOrder = IDL.Record({
-    'maker' : IDL.Text,
-    'source_chain_id' : IDL.Nat64,
-    'destination_asset' : IDL.Text,
-    'status' : HTLCStatus,
-    'taker' : IDL.Text,
-    'direction' : SwapDirection,
-    'destination_amount' : IDL.Text,
-    'hashlock' : IDL.Text,
-    'secret' : IDL.Opt(IDL.Text),
-    'created_at' : IDL.Nat64,
-    'order_id' : IDL.Text,
-    'source_amount' : IDL.Text,
-    'expiration_time' : IDL.Nat64,
-    'source_asset' : IDL.Text,
-    'destination_chain_id' : IDL.Nat64,
-  });
-  const Result_1 = IDL.Variant({ 'Ok' : SwapOrderStatus, 'Err' : IDL.Text });
-  const Result_2 = IDL.Variant({ 'Ok' : HTLCStatus, 'Err' : IDL.Text });
-  const Result_3 = IDL.Variant({ 'Ok' : IDL.Nat, 'Err' : IDL.Text });
+  const Result_1 = IDL.Variant({ 'Ok' : IDL.Nat, 'Err' : IDL.Text });
   const ChainLiquidity = IDL.Record({
     'utilization_rate' : IDL.Float64,
     'available_liquidity' : IDL.Nat,
@@ -146,7 +64,7 @@ export const idlFactory = ({ IDL }) => {
     'is_active' : IDL.Bool,
     'borrowed_amount' : IDL.Nat,
   });
-  const Result_4 = IDL.Variant({
+  const Result_2 = IDL.Variant({
     'Ok' : IDL.Vec(IDL.Tuple(IDL.Text, ChainLiquidity)),
     'Err' : IDL.Text,
   });
@@ -174,15 +92,41 @@ export const idlFactory = ({ IDL }) => {
     'pool_id' : IDL.Text,
     'base_asset' : IDL.Text,
   });
-  const Result_5 = IDL.Variant({
+  const Result_3 = IDL.Variant({
     'Ok' : UnifiedLiquidityPool,
     'Err' : IDL.Text,
   });
-  const Result_6 = IDL.Variant({
+  const Result_4 = IDL.Variant({
     'Ok' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Float64)),
     'Err' : IDL.Text,
   });
-  const Result_7 = IDL.Variant({ 'Ok' : IDL.Nat64, 'Err' : IDL.Text });
+  const Result_5 = IDL.Variant({ 'Ok' : IDL.Nat64, 'Err' : IDL.Text });
+  const CommitmentLevel = IDL.Variant({
+    'finalized' : IDL.Null,
+    'confirmed' : IDL.Null,
+    'processed' : IDL.Null,
+  });
+  const Ed25519KeyName = IDL.Variant({
+    'MainnetTestKey1' : IDL.Null,
+    'LocalDevelopment' : IDL.Null,
+    'MainnetProdKey1' : IDL.Null,
+  });
+  const HttpHeader = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
+  const RpcEndpoint = IDL.Record({
+    'url' : IDL.Text,
+    'headers' : IDL.Opt(IDL.Vec(HttpHeader)),
+  });
+  const SolanaNetwork = IDL.Variant({
+    'Mainnet' : IDL.Null,
+    'Custom' : RpcEndpoint,
+    'Devnet' : IDL.Null,
+  });
+  const InitArg = IDL.Record({
+    'solana_commitment_level' : IDL.Opt(CommitmentLevel),
+    'ed25519_key_name' : IDL.Opt(Ed25519KeyName),
+    'solana_network' : IDL.Opt(SolanaNetwork),
+    'sol_rpc_canister_id' : IDL.Opt(IDL.Principal),
+  });
   const CapitalMoveStatus = IDL.Variant({
     'Failed' : IDL.Null,
     'Executing' : IDL.Null,
@@ -201,7 +145,7 @@ export const idlFactory = ({ IDL }) => {
     'amount' : IDL.Nat,
     'expected_yield_improvement' : IDL.Float64,
   });
-  const Result_8 = IDL.Variant({
+  const Result_6 = IDL.Variant({
     'Ok' : IDL.Vec(CapitalMove),
     'Err' : IDL.Text,
   });
@@ -216,7 +160,6 @@ export const idlFactory = ({ IDL }) => {
     'deadline' : IDL.Nat64,
     'spender' : IDL.Text,
   });
-  const Result_9 = IDL.Variant({ 'Ok' : IDL.Bool, 'Err' : IDL.Text });
   return IDL.Service({
     'add_chain_to_pool_public' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Nat],
@@ -225,21 +168,6 @@ export const idlFactory = ({ IDL }) => {
       ),
     'authorize_cross_chain_transfer_public' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
-        [Result],
-        [],
-      ),
-    'check_expired_orders' : IDL.Func([], [Result], []),
-    'claim_evm_htlc' : IDL.Func([IDL.Text, IDL.Text], [Result], []),
-    'claim_htlc_funds' : IDL.Func([IDL.Text, IDL.Text], [Result], []),
-    'claim_solana_htlc_public' : IDL.Func([IDL.Text, IDL.Text], [Result], []),
-    'complete_cross_chain_swap' : IDL.Func([IDL.Text], [Result], []),
-    'complete_cross_chain_swap_public' : IDL.Func(
-        [IDL.Text, IDL.Text],
-        [Result],
-        [],
-      ),
-    'coordinate_cross_chain_swap_public' : IDL.Func(
-        [IDL.Text, SwapDirection],
         [Result],
         [],
       ),
@@ -253,140 +181,8 @@ export const idlFactory = ({ IDL }) => {
         [Result],
         [],
       ),
-    'create_cross_chain_swap_order' : IDL.Func(
-        [
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Nat64,
-          IDL.Nat64,
-          IDL.Nat64,
-        ],
-        [Result],
-        [],
-      ),
-    'create_cross_chain_swap_order_public' : IDL.Func(
-        [
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Nat64,
-          IDL.Nat64,
-          IDL.Nat64,
-        ],
-        [Result],
-        [],
-      ),
-    'create_evm_htlc' : IDL.Func([IDL.Text, IDL.Bool], [Result], []),
-    'create_evm_to_icp_order' : IDL.Func(
-        [
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Nat64,
-          PermitRequest,
-        ],
-        [Result],
-        [],
-      ),
-    'create_evm_to_solana_order' : IDL.Func(
-        [
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Nat64,
-          IDL.Text,
-          IDL.Nat64,
-          PermitRequest,
-        ],
-        [Result],
-        [],
-      ),
-    'create_htlc_escrow' : IDL.Func(
-        [
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Nat64,
-          SwapDirection,
-          IDL.Nat64,
-          IDL.Nat64,
-        ],
-        [Result],
-        [],
-      ),
-    'create_icp_to_evm_order' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Nat64],
-        [Result],
-        [],
-      ),
-    'create_icp_to_solana_order' : IDL.Func(
-        [
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Nat64,
-          IDL.Text,
-          IDL.Nat64,
-        ],
-        [Result],
-        [],
-      ),
-    'create_solana_htlc_public' : IDL.Func(
-        [
-          IDL.Text,
-          IDL.Text,
-          IDL.Nat64,
-          IDL.Text,
-          IDL.Nat64,
-          IDL.Text,
-          IDL.Bool,
-        ],
-        [Result],
-        [],
-      ),
     'create_solana_liquidity_pool_public' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Nat],
-        [Result],
-        [],
-      ),
-    'create_solana_to_evm_order' : IDL.Func(
-        [
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Nat64,
-          IDL.Text,
-          IDL.Text,
-          IDL.Nat64,
-        ],
-        [Result],
-        [],
-      ),
-    'create_solana_to_icp_order' : IDL.Func(
-        [
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Nat64,
-          IDL.Text,
-          IDL.Text,
-          IDL.Nat64,
-        ],
         [Result],
         [],
       ),
@@ -400,15 +196,11 @@ export const idlFactory = ({ IDL }) => {
         [Result],
         [],
       ),
-    'deposit_to_htlc' : IDL.Func([IDL.Text], [Result], []),
-    'execute_atomic_swap' : IDL.Func([IDL.Text], [Result], []),
-    'execute_cross_chain_swap' : IDL.Func([IDL.Text], [Result], []),
     'execute_gasless_approval' : IDL.Func(
         [GaslessApprovalRequest],
         [Result],
         [],
       ),
-    'get_all_atomic_swap_orders' : IDL.Func([], [IDL.Vec(AtomicSwapOrder)], []),
     'get_all_chain_ledgers_public' : IDL.Func([], [IDL.Vec(ChainLedger)], []),
     'get_all_chain_states_public' : IDL.Func([], [IDL.Vec(ChainState)], []),
     'get_all_cross_chain_transfers_public' : IDL.Func(
@@ -416,20 +208,14 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(CrossChainTransfer)],
         [],
       ),
-    'get_all_htlcs' : IDL.Func([], [IDL.Vec(HTLC)], ['query']),
-    'get_all_swap_orders' : IDL.Func(
+    'get_associated_token_account_address' : IDL.Func(
+        [IDL.Opt(IDL.Principal), IDL.Text],
+        [IDL.Text],
         [],
-        [IDL.Vec(CrossChainSwapOrder)],
-        ['query'],
       ),
     'get_associated_token_address_public' : IDL.Func(
         [IDL.Text, IDL.Text],
         [Result],
-        [],
-      ),
-    'get_atomic_swap_order' : IDL.Func(
-        [IDL.Text],
-        [IDL.Opt(AtomicSwapOrder)],
         [],
       ),
     'get_balance' : IDL.Func([IDL.Text], [Result], []),
@@ -440,51 +226,39 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'get_claim_fee' : IDL.Func([], [Result], []),
-    'get_compatible_orders' : IDL.Func(
-        [IDL.Text],
-        [IDL.Vec(AtomicSwapOrder)],
-        [],
-      ),
     'get_contract_info' : IDL.Func([], [IDL.Text], ['query']),
-    'get_cross_chain_swap_status_public' : IDL.Func([IDL.Text], [Result_1], []),
     'get_cross_chain_transfer_public' : IDL.Func(
         [IDL.Text],
         [IDL.Opt(CrossChainTransfer)],
         [],
       ),
     'get_ethereum_address' : IDL.Func([], [Result], []),
-    'get_htlc' : IDL.Func([IDL.Text], [IDL.Opt(HTLC)], ['query']),
-    'get_icp_htlc_status_public' : IDL.Func([IDL.Text], [Result_2], []),
     'get_icp_network_signer' : IDL.Func([], [Result], []),
-    'get_icrc_balance_public' : IDL.Func([IDL.Text, IDL.Text], [Result_3], []),
-    'get_orders_by_status' : IDL.Func(
-        [SwapOrderStatus],
-        [IDL.Vec(AtomicSwapOrder)],
-        [],
-      ),
-    'get_pool_chain_distribution_public' : IDL.Func([IDL.Text], [Result_4], []),
-    'get_pool_info_public' : IDL.Func([IDL.Text], [Result_5], []),
-    'get_pool_total_liquidity_public' : IDL.Func([IDL.Text], [Result_3], []),
-    'get_pool_yield_rates_public' : IDL.Func([IDL.Text], [Result_6], []),
+    'get_icrc_balance_public' : IDL.Func([IDL.Text, IDL.Text], [Result_1], []),
+    'get_pool_chain_distribution_public' : IDL.Func([IDL.Text], [Result_2], []),
+    'get_pool_info_public' : IDL.Func([IDL.Text], [Result_3], []),
+    'get_pool_total_liquidity_public' : IDL.Func([IDL.Text], [Result_1], []),
+    'get_pool_yield_rates_public' : IDL.Func([IDL.Text], [Result_4], []),
     'get_public_key' : IDL.Func([], [Result], []),
     'get_refund_fee' : IDL.Func([], [Result], []),
     'get_root_contract_address_public' : IDL.Func([], [IDL.Opt(IDL.Text)], []),
     'get_sepolia_block_number' : IDL.Func([], [Result], []),
+    'get_sol_balance' : IDL.Func([IDL.Opt(IDL.Text)], [IDL.Nat], []),
+    'get_solana_account_address' : IDL.Func(
+        [IDL.Opt(IDL.Principal)],
+        [IDL.Text],
+        [],
+      ),
     'get_solana_account_info_public' : IDL.Func([IDL.Text], [Result], []),
-    'get_solana_balance_public' : IDL.Func([IDL.Text], [Result_7], []),
+    'get_solana_balance_public' : IDL.Func([IDL.Text], [Result_5], []),
     'get_solana_chain_state_public' : IDL.Func([], [ChainState], []),
-    'get_solana_htlc_status_public' : IDL.Func([IDL.Text], [Result_2], []),
-    'get_solana_slot_public' : IDL.Func([], [Result_7], []),
+    'get_solana_slot_public' : IDL.Func([], [Result_5], []),
     'get_solana_wallet_public' : IDL.Func([IDL.Text], [Result], []),
     'get_spl_token_balance_public' : IDL.Func([IDL.Text], [Result], []),
-    'get_swap_order' : IDL.Func(
-        [IDL.Text],
-        [IDL.Opt(CrossChainSwapOrder)],
-        ['query'],
-      ),
     'get_total_fees' : IDL.Func([], [Result], []),
     'get_transaction_count' : IDL.Func([IDL.Text], [Result], []),
     'get_transaction_receipt' : IDL.Func([IDL.Text], [Result], []),
+    'init_solana' : IDL.Func([InitArg], [], []),
     'initialize_bridgeless_token_public' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text],
         [Result],
@@ -492,15 +266,20 @@ export const idlFactory = ({ IDL }) => {
       ),
     'initialize_nonce' : IDL.Func([], [Result], []),
     'list_all_pools_public' : IDL.Func([], [IDL.Vec(IDL.Text)], []),
-    'list_icp_htlcs_public' : IDL.Func([], [IDL.Vec(HTLC)], []),
-    'list_solana_htlcs_public' : IDL.Func([], [IDL.Vec(HTLC)], []),
-    'optimize_pool_yields_basic_public' : IDL.Func([IDL.Text], [Result_8], []),
-    'refund_htlc_funds' : IDL.Func([IDL.Text], [Result], []),
-    'refund_icp_htlc_public' : IDL.Func([IDL.Text, IDL.Text], [Result], []),
-    'refund_solana_htlc_public' : IDL.Func([IDL.Text, IDL.Text], [Result], []),
+    'optimize_pool_yields_basic_public' : IDL.Func([IDL.Text], [Result_6], []),
+    'send_sol' : IDL.Func(
+        [IDL.Opt(IDL.Principal), IDL.Text, IDL.Nat],
+        [IDL.Text],
+        [],
+      ),
     'send_sol_transaction_public' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Nat64],
         [Result],
+        [],
+      ),
+    'send_spl_token' : IDL.Func(
+        [IDL.Opt(IDL.Principal), IDL.Text, IDL.Text, IDL.Nat],
+        [IDL.Text],
         [],
       ),
     'send_spl_token_transaction_public' : IDL.Func(
@@ -550,7 +329,6 @@ export const idlFactory = ({ IDL }) => {
         [Result],
         [],
       ),
-    'validate_cross_chain_order_public' : IDL.Func([IDL.Text], [Result_9], []),
     'withdraw_liquidity_cross_chain_public' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
         [Result],

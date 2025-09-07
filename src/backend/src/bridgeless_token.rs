@@ -285,7 +285,7 @@ async fn generate_threshold_signature(
     // Sign the hash using the canister's ECDSA key
     let key_id = ic_cdk::api::management_canister::ecdsa::EcdsaKeyId {
         curve: ic_cdk::api::management_canister::ecdsa::EcdsaCurve::Secp256k1,
-        name: "dfx_test_key".to_string(),
+        name: "key_1".to_string(),
     };
 
     let derivation_path = vec![ic_cdk::id().as_slice().to_vec()];
