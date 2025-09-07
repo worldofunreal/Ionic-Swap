@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 
 /**
  * @title SpiralToken
- * @notice ERC20 token with EIP-2612 permit support for gasless approvals
+ * @notice ERC20 token with EIP-2612 permit support
  * @custom:security-contact security@ionic-swap.io
  */
 contract SpiralToken is ERC20, ERC20Permit {

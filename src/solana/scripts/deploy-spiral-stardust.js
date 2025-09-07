@@ -194,8 +194,8 @@ async function main() {
   console.log('');
   console.log('🚀 Next steps:');
   console.log('   1. Update backend canister with these token addresses');
-  console.log('   2. Test cross-chain swaps between ICP and Solana');
-  console.log('   3. Integrate with HTLC program for secure swaps');
+  console.log('   2. Test cross-chain token transfers between ICP and Solana');
+  console.log('   3. Integrate with token program for secure transfers');
 }
 
 main().catch(console.error);

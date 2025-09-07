@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 
 /**
  * @title StardustToken
- * @notice ERC20 token with EIP-2612 permit support for testing cross-chain swaps
+ * @notice ERC20 token with EIP-2612 permit support
  * @custom:security-contact security@ionic-swap.io
  */
 contract StardustToken is ERC20, ERC20Permit {
