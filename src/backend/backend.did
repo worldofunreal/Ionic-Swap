@@ -7,10 +7,10 @@ type AtomicSwapOrder = record {
   destination_amount : text;
   hashlock : text;
   evm_destination_address : opt text;
-  solana_destination_address : opt text;
   secret : text;
   created_at : nat64;
   source_htlc_id : opt text;
+  solana_destination_address : opt text;
   order_id : text;
   source_amount : text;
   source_token : text;
@@ -67,6 +67,7 @@ type ChainState = record {
   chain_id : text;
   last_update : nat64;
 };
+type CommitmentLevel = variant { finalized; confirmed; processed };
 type CrossChainSwapOrder = record {
   maker : text;
   source_chain_id : nat64;
@@ -94,6 +95,11 @@ type CrossChainTransfer = record {
   target_chain : text;
   amount : text;
 };
+type Ed25519KeyName = variant {
+  MainnetTestKey1;
+  LocalDevelopment;
+  MainnetProdKey1;
+};
 type GaslessApprovalRequest = record {
   token_address : text;
   user_address : text;
@@ -117,6 +123,13 @@ type HTLC = record {
   timelock : nat64;
 };
 type HTLCStatus = variant { Refunded; Claimed; Deposited; Created; Expired };
+type HttpHeader = record { value : text; name : text };
+type InitArg = record {
+  solana_commitment_level : opt CommitmentLevel;
+  ed25519_key_name : opt Ed25519KeyName;
+  solana_network : opt SolanaNetwork;
+  sol_rpc_canister_id : opt principal;
+};
 type PermitData = record {
   r : text;
   s : text;
@@ -158,13 +171,15 @@ type RiskConfig = record {
   min_collateral_ratio : float64;
   liquidation_threshold : float64;
 };
-type SwapDirection = variant { 
-  EVMtoICP; 
-  ICPtoEVM; 
-  ICPtoSolana; 
-  SolanatoICP; 
-  EVMtoSolana; 
-  SolanatoEVM; 
+type RpcEndpoint = record { url : text; headers : opt vec HttpHeader };
+type SolanaNetwork = variant { Mainnet; Custom : RpcEndpoint; Devnet };
+type SwapDirection = variant {
+  EVMtoSolana;
+  EVMtoICP;
+  ICPtoEVM;
+  ICPtoSolana;
+  SolanatoEVM;
+  SolanatoICP;
 };
 type SwapOrderStatus = variant {
   Refunded;
@@ -206,6 +221,10 @@ service : () -> {
   // Claim HTLC on EVM chain
   claim_evm_htlc : (text, text) -> (Result);
   claim_htlc_funds : (text, text) -> (Result);
+  // Claim HTLC using deployed Solana program
+  claim_solana_htlc_program : (text, text, text) -> (text);
+  // Claim a Solana HTLC (public API)
+  claim_solana_htlc_public : (text, text, text) -> (Result);
   complete_cross_chain_swap : (text) -> (Result);
   // Complete a cross-chain swap by claiming tokens with the secret
   // This is the manual withdrawal step after orders are paired
@@ -219,6 +238,18 @@ service : () -> {
   // Create a new chain ledger
   create_chain_ledger_public : (text, ChainInitData) -> (Result);
   create_cross_chain_swap_order : (
+      text,
+      text,
+      text,
+      text,
+      text,
+      text,
+      nat64,
+      nat64,
+      nat64,
+    ) -> (Result);
+  // Universal market order execution - fills orders immediately like Binance
+  create_cross_chain_swap_order_public : (
       text,
       text,
       text,
@@ -243,6 +274,17 @@ service : () -> {
       nat64,
       PermitRequest,
     ) -> (Result);
+  // Create an EVM→Solana order with automatic permit execution
+  create_evm_to_solana_order : (
+      text,
+      text,
+      text,
+      text,
+      nat64,
+      text,
+      nat64,
+      PermitRequest,
+    ) -> (Result);
   create_htlc_escrow : (
       text,
       text,
@@ -260,49 +302,29 @@ service : () -> {
   create_icp_to_evm_order : (text, text, text, text, text, text, nat64) -> (
       Result,
     );
-  // Create an EVM→Solana order with automatic permit execution
-  create_evm_to_solana_order : (
-      text,
-      text,
-      text,
-      text,
-      nat64,
-      text,
-      nat64,
-      PermitRequest,
-    ) -> (Result);
-  // Create a Solana→EVM order
-  create_solana_to_evm_order : (
-      text,
-      text,
-      text,
-      nat64,
-      text,
-      text,
-      nat64,
-    ) -> (Result);
-  // Create an ICP→Solana order
-  create_icp_to_solana_order : (
-      text,
-      text,
-      text,
-      text,
-      nat64,
-      text,
-      nat64,
-    ) -> (Result);
-  // Create a Solana→ICP order
-  create_solana_to_icp_order : (
-      text,
-      text,
-      text,
-      nat64,
-      text,
-      text,
-      nat64,
-    ) -> (Result);
+  // Create an ICP→Solana order with automatic ICRC token escrow
+  create_icp_to_solana_order : (text, text, text, text, nat64, text, nat64) -> (
+      Result,
+    );
+  // Create HTLC using deployed Solana program
+  create_solana_htlc_program : (text, text, nat, text, int64, text) -> (text);
+  // Create a Solana HTLC (public API)
+  create_solana_htlc_public : (text, text, nat64, text, nat64, text, bool) -> (
+      Result,
+    );
   // Create a Solana-specific liquidity pool
   create_solana_liquidity_pool_public : (text, text, nat) -> (Result);
+  // Create a Solana→EVM order with automatic SPL token escrow
+  create_solana_to_evm_order : (text, text, text, nat64, text, text, nat64) -> (
+      Result,
+    );
+  // Create a Solana→ICP order with automatic SPL token escrow
+  create_solana_to_icp_order : (text, text, text, nat64, text, text, nat64) -> (
+      Result,
+    );
+  // Create SPL token transfer instruction for user approval (public API)
+  // This generates the instruction data that users need to sign to approve token transfers
+  create_spl_approval_instruction : (text, text, nat64, text) -> (Result);
   // Create a new unified liquidity pool
   create_unified_liquidity_pool_public : (text, vec text) -> (Result);
   // Deposit liquidity into a specific chain within a pool
@@ -322,11 +344,15 @@ service : () -> {
   get_all_cross_chain_transfers_public : () -> (vec CrossChainTransfer);
   get_all_htlcs : () -> (vec HTLC) query;
   get_all_swap_orders : () -> (vec CrossChainSwapOrder) query;
+  // Get associated token account address
+  get_associated_token_account_address : (opt principal, text) -> (text);
   // Get associated token account address (public API)
   get_associated_token_address_public : (text, text) -> (Result);
   // Get atomic swap order details
   get_atomic_swap_order : (text) -> (opt AtomicSwapOrder);
   get_balance : (text) -> (Result);
+  // Get canister's Solana address (public API)
+  get_canister_solana_address_public : () -> (Result);
   // Get chain ledger by ID
   get_chain_ledger_public : (text) -> (opt ChainLedger);
   get_claim_fee : () -> (Result);
@@ -344,6 +370,10 @@ service : () -> {
   get_icp_network_signer : () -> (Result);
   // Get ICRC-1 token balance (public API)
   get_icrc_balance_public : (text, text) -> (Result_3);
+  // Get order hashlock for verification (public API)
+  get_order_hashlock : (text) -> (Result);
+  // Get order secret for claiming (public API)
+  get_order_secret : (text) -> (Result);
   // Get orders by status for manual pairing
   get_orders_by_status : (SwapOrderStatus) -> (vec AtomicSwapOrder);
   // Get liquidity distribution across chains for a pool
@@ -359,44 +389,30 @@ service : () -> {
   // Get root contract address
   get_root_contract_address_public : () -> (opt text);
   get_sepolia_block_number : () -> (Result);
+  // Get SOL balance for an account
+  get_sol_balance : (opt text) -> (nat);
+  // Get Solana account address for a principal
+  get_solana_account_address : (opt principal) -> (text);
   // Get Solana account info (public API)
   get_solana_account_info_public : (text) -> (Result);
   // Get Solana account balance (public API)
   get_solana_balance_public : (text) -> (Result_7);
   // Get Solana chain state
   get_solana_chain_state_public : () -> (ChainState);
+  // Get Solana HTLC status (public API)
+  get_solana_htlc_status_public : (text) -> (Result_2);
   // Get Solana slot (block number) (public API)
   get_solana_slot_public : () -> (Result_7);
   // Get Solana wallet for ICP principal (public API)
   get_solana_wallet_public : (text) -> (Result);
   // Get SPL token account balance (public API)
   get_spl_token_balance_public : (text) -> (Result);
-  // Get canister's Solana address (public API)
-  get_canister_solana_address_public : () -> (Result);
-  // Create Solana HTLC (public API)
-  create_solana_htlc_public : (
-      text,
-      text,
-      nat64,
-      text,
-      nat64,
-      text,
-      bool,
-    ) -> (Result);
-  // Claim Solana HTLC (public API)
-  claim_solana_htlc_public : (text, text) -> (Result);
-  // Refund Solana HTLC (public API)
-  refund_solana_htlc_public : (text, text) -> (Result);
-  // Get Solana HTLC status (public API)
-  get_solana_htlc_status_public : (text) -> (Result_2);
-  // List all Solana HTLCs (public API)
-  list_solana_htlcs_public : () -> (vec HTLC);
-  // Sign and send Solana transaction (public API)
-  sign_and_send_solana_transaction_public : (text) -> (Result);
   get_swap_order : (text) -> (opt CrossChainSwapOrder) query;
   get_total_fees : () -> (Result);
   get_transaction_count : (text) -> (Result);
   get_transaction_receipt : (text) -> (Result);
+  // Initialize the Solana state
+  init_solana : (InitArg) -> ();
   // Initialize the bridgeless token system
   initialize_bridgeless_token_public : (text, text, text) -> (Result);
   initialize_nonce : () -> (Result);
@@ -404,15 +420,27 @@ service : () -> {
   list_all_pools_public : () -> (vec text);
   // List all ICP HTLCs (public API)
   list_icp_htlcs_public : () -> (vec HTLC);
+  // List all Solana HTLCs (public API)
+  list_solana_htlcs_public : () -> (vec HTLC);
   // Basic yield optimization for a pool
   optimize_pool_yields_basic_public : (text) -> (Result_8);
   refund_htlc_funds : (text) -> (Result);
   // Refund an ICP HTLC (public API)
   refund_icp_htlc_public : (text, text) -> (Result);
+  // Refund HTLC using deployed Solana program
+  refund_solana_htlc_program : (text, text) -> (text);
+  // Refund a Solana HTLC (public API)
+  refund_solana_htlc_public : (text, text) -> (Result);
+  // Send SOL from canister's account to recipient
+  send_sol : (opt principal, text, nat) -> (text);
   // Send SOL transaction (public API)
   send_sol_transaction_public : (text, text, nat64) -> (Result);
+  // Send SPL tokens
+  send_spl_token : (opt principal, text, text, nat) -> (text);
   // Send SPL token transaction (public API)
   send_spl_token_transaction_public : (text, text, text, nat64) -> (Result);
+  // Sign and send a Solana transaction (public API)
+  sign_and_send_solana_transaction_public : (text) -> (Result);
   // Simulate yield rates for testing (mock data)
   simulate_yield_rates_public : (text, vec record { text; float64 }) -> (
       Result,
@@ -427,9 +455,6 @@ service : () -> {
   test_unified_pool_system : () -> (text);
   // Transfer ERC20 tokens from backend canister to recipient
   transfer_erc20_tokens_public : (text, text, text) -> (Result);
-  // Universal market order execution - fills orders immediately like Binance
-  create_cross_chain_swap_order_public : (text, text, text, text, text, text, nat64, nat64, nat64) -> (Result);
-  // Removed approve_icrc_tokens_public - users should call icrc2_approve directly on token canisters
   // Transfer from ICRC-1 tokens (public API)
   transfer_from_icrc_tokens_public : (text, text, text, nat) -> (Result);
   // Transfer ICRC-1 tokens (public API)
