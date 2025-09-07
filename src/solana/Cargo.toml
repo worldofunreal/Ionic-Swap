@@ -1,14 +1,10 @@
 [package]
-name = "ionic-solana-htlc"
+name = "ionic-solana-token"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib"]
 
-[workspace]
-
 [dependencies]
-borsh = { version = "1.0", features = ["derive"] }
-solana-program = "1.17.0"
-sha2 = "0.10.8"
+anchor-lang = "0.28.0"

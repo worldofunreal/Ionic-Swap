@@ -175,7 +175,7 @@ npm run transfer-tokens
 The Solana token integrates with the existing Ionic Swap platform:
 
 1. **Frontend Integration**: Add Solana wallet connection (Phantom, Solflare)
-2. **Backend Integration**: Add Solana HTLC contracts
+2. **Backend Integration**: Add Solana token contracts
 3. **Cross-Chain Swaps**: Enable EVM ↔ Solana and ICP ↔ Solana swaps
 
 ### Frontend Changes Needed

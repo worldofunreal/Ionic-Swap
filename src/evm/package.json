@@ -1,7 +1,7 @@
 {
   "name": "ionic-swap-etherlink",
   "version": "1.0.0",
-  "description": "Etherlink integration for Ionic-Swap cross-chain HTLC system",
+  "description": "Etherlink integration for Ionic-Swap token system",
   "main": "index.js",
   "scripts": {
     "compile": "hardhat compile",
@@ -31,10 +31,8 @@
   },
   "keywords": [
     "etherlink",
-    "htlc",
+    "tokens",
     "cross-chain",
-    "1inch",
-    "fusion+",
     "solidity"
   ],
   "author": "Ionic-Swap Team",
