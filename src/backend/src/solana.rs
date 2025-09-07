@@ -141,7 +141,7 @@ pub async fn get_spl_token_balance(token_account: String) -> Result<String, Stri
 }
 
 /// Get associated token account address
-pub fn get_associated_token_address(
+pub async fn get_associated_token_address(
     wallet_address: &str,
     mint_address: &str,
 ) -> Result<String, String> {
@@ -151,9 +151,8 @@ pub fn get_associated_token_address(
     let mint_pubkey = Pubkey::from_str(mint_address)
         .map_err(|e| format!("Invalid mint address: {}", e))?;
     
-    // SPL Token program ID
-    let spl_token_program_id = Pubkey::from_str("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
-        .map_err(|e| format!("Invalid SPL Token program ID: {}", e))?;
+    // Get the token program ID dynamically for this mint
+    let token_program_id = get_account_owner(&mint_pubkey).await?;
     
     // Associated Token Program ID
     let associated_token_program_id = Pubkey::from_str("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
@@ -163,7 +162,7 @@ pub fn get_associated_token_address(
     let (ata_address, _) = Pubkey::find_program_address(
         &[
             wallet_pubkey.as_ref(),
-            spl_token_program_id.as_ref(),
+            token_program_id.as_ref(),
             mint_pubkey.as_ref(),
         ],
         &associated_token_program_id,
@@ -172,15 +171,32 @@ pub fn get_associated_token_address(
     Ok(ata_address.to_string())
 }
 
+/// Get the owner (program ID) of an account
+async fn get_account_owner(account: &Pubkey) -> Result<Pubkey, String> {
+    let account_info = client()
+        .get_account_info(*account)
+        .with_encoding(GetAccountInfoEncoding::Base64)
+        .send()
+        .await
+        .expect_consistent()
+        .map_err(|e| format!("Call to getAccountInfo failed: {:?}", e))?
+        .ok_or_else(|| format!("Account not found for pubkey `{}`", account))?;
+    
+    let owner = Pubkey::from_str(&account_info.owner)
+        .map_err(|e| format!("Invalid owner pubkey: {}", e))?;
+    
+    Ok(owner)
+}
+
 /// Create associated token account instruction
-pub fn create_associated_token_account_instruction(
+pub async fn create_associated_token_account_instruction(
     _funding_address: &str,
     wallet_address: &str,
     mint_address: &str,
 ) -> Result<(String, Vec<u8>), String> {
     // This would need the full Solana SDK for proper instruction building
     // For now, return a placeholder instruction structure
-    let associated_account = get_associated_token_address(wallet_address, mint_address)?;
+    let associated_account = get_associated_token_address(wallet_address, mint_address).await?;
 
     // Create a basic instruction structure (this is simplified)
     let instruction_data = vec![
@@ -326,7 +342,7 @@ pub async fn create_solana_htlc(
     let canister_solana_address = get_canister_solana_address().await?;
     
     // Check if tokens are already in the canister's escrow
-    let canister_token_account = get_associated_token_address(&canister_solana_address, token_mint)?;
+    let canister_token_account = get_associated_token_address(&canister_solana_address, token_mint).await?;
     let canister_balance = get_spl_token_balance(canister_token_account.clone()).await?;
     let current_balance: u64 = canister_balance.parse().unwrap_or(0);
     
@@ -336,7 +352,7 @@ pub async fn create_solana_htlc(
         ic_cdk::println!("✅ Tokens already in canister escrow, skipping transfer");
     } else {
         // Pull tokens from user to canister escrow
-        let user_token_account = get_associated_token_address(user_address, token_mint)?;
+        let user_token_account = get_associated_token_address(user_address, token_mint).await?;
         ic_cdk::println!("🔍 Pulling tokens from user token account {} to escrow", user_token_account);
         
         // Transfer SPL tokens from user to canister
@@ -437,7 +453,9 @@ pub async fn claim_solana_htlc(
     
     // Get canister's Solana address
     let canister_solana_address = get_canister_solana_address().await?;
-    let canister_token_account = get_associated_token_address(&canister_solana_address, &htlc.token)?;
+    ic_cdk::println!("🔍 Deriving ATA for canister address: {} and token: {}", canister_solana_address, htlc.token);
+    let canister_token_account = get_associated_token_address(&canister_solana_address, &htlc.token).await?;
+    ic_cdk::println!("🔍 Derived ATA address: {}", canister_token_account);
     
     // Handle different swap directions with destination addresses
     let transfer_result = if order.maker.starts_with("0x") || order.maker.len() > 44 {
@@ -446,7 +464,7 @@ pub async fn claim_solana_htlc(
         let solana_destination = order.solana_destination_address.as_ref()
             .unwrap_or(&order.taker); // Fallback to taker if no destination specified
         
-        let destination_token_account = get_associated_token_address(solana_destination, &htlc.token)?;
+        let destination_token_account = get_associated_token_address(solana_destination, &htlc.token).await?;
         
         transfer_spl_tokens_from_canister(
             &canister_token_account,
@@ -461,7 +479,7 @@ pub async fn claim_solana_htlc(
         let solana_destination = order.solana_destination_address.as_ref()
             .unwrap_or(&order.maker); // Use maker as destination
         
-        let destination_token_account = get_associated_token_address(solana_destination, &htlc.token)?;
+        let destination_token_account = get_associated_token_address(solana_destination, &htlc.token).await?;
         
         transfer_spl_tokens_from_canister(
             &canister_token_account,
@@ -509,10 +527,10 @@ pub async fn refund_solana_htlc(
     
     // Get canister's Solana address
     let canister_solana_address = get_canister_solana_address().await?;
-    let canister_token_account = get_associated_token_address(&canister_solana_address, &htlc.token)?;
+    let canister_token_account = get_associated_token_address(&canister_solana_address, &htlc.token).await?;
     
     // Transfer tokens back to the original sender
-    let original_sender_token_account = get_associated_token_address(&htlc.sender, &htlc.token)?;
+    let original_sender_token_account = get_associated_token_address(&htlc.sender, &htlc.token).await?;
     
     let transfer_result = transfer_spl_tokens_from_canister(
         &canister_token_account,

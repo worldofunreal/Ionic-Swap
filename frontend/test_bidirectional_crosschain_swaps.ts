@@ -21,7 +21,7 @@ const TEST_CONFIG = {
   SPIRAL_SOLANA_MINT: 'HSErF7xjoMowD4RoYzcigBRSoPv5CoZRRgxvxBAsTdWK',
   STARDUST_SOLANA_MINT: 'A1wZAwvc5r8LPoKbbdTXHY25VU2ZkQrk7ikW5QgbzdtH',
   SOLANA_RPC_URL: 'https://api.devnet.solana.com',
-  TEST_AMOUNT: 1000000, // 0.01 tokens (8 decimals)
+  TEST_AMOUNT: 1000, // 1000 tokens (reasonable test amount)
   LIQUIDITY_AMOUNT: 10000000000, // 100 tokens for canister liquidity
   TIMELOCK_DURATION: 3600, // 1 hour
 }

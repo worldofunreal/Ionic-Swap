@@ -616,10 +616,10 @@ pub async fn create_spl_approval_instruction(
     let canister_solana_address = solana::get_canister_solana_address().await?;
     
     // Get user's token account
-    let user_token_account = solana::get_associated_token_address(&user_solana_address, &token_mint)?;
+    let user_token_account = solana::get_associated_token_address(&user_solana_address, &token_mint).await?;
     
     // Get canister's token account (spender)
-    let spender_token_account = solana::get_associated_token_address(&spender_address, &token_mint)?;
+    let spender_token_account = solana::get_associated_token_address(&spender_address, &token_mint).await?;
     
     // Create transfer instruction data
     let instruction_data = solana::transfer_spl_tokens_instruction(
@@ -907,8 +907,8 @@ pub async fn complete_cross_chain_swap_public(
                 .map_err(|e| format!("Invalid destination amount: {}", e))?;
             
             let canister_solana_address = solana::get_canister_solana_address().await?;
-            let canister_token_account = solana::get_associated_token_address(&canister_solana_address, &order.destination_token)?;
-            let destination_token_account = solana::get_associated_token_address(solana_destination, &order.destination_token)?;
+            let canister_token_account = solana::get_associated_token_address(&canister_solana_address, &order.destination_token).await?;
+            let destination_token_account = solana::get_associated_token_address(solana_destination, &order.destination_token).await?;
             
             let transfer_result = solana::transfer_spl_tokens_from_canister(
                 &canister_token_account,
@@ -1019,8 +1019,8 @@ pub async fn complete_cross_chain_swap_public(
                 .map_err(|e| format!("Invalid destination amount: {}", e))?;
             
             let canister_solana_address = solana::get_canister_solana_address().await?;
-            let canister_token_account = solana::get_associated_token_address(&canister_solana_address, &order.destination_token)?;
-            let destination_token_account = solana::get_associated_token_address(solana_destination, &order.destination_token)?;
+            let canister_token_account = solana::get_associated_token_address(&canister_solana_address, &order.destination_token).await?;
+            let destination_token_account = solana::get_associated_token_address(solana_destination, &order.destination_token).await?;
             
             let transfer_result = solana::transfer_spl_tokens_from_canister(
                 &canister_token_account,
@@ -1092,28 +1092,28 @@ pub async fn get_spl_token_balance_public(token_account: String) -> Result<Strin
 }
 
 /// Get associated token account address (public API)
-#[query]
+#[update]
 #[candid_method]
-pub fn get_associated_token_address_public(
+pub async fn get_associated_token_address_public(
     wallet_address: String,
     mint_address: String,
 ) -> Result<String, String> {
-    get_associated_token_address(&wallet_address, &mint_address)
+    solana::get_associated_token_address(&wallet_address, &mint_address).await
 }
 
 /// Create associated token account instruction (public API)
-#[query]
+#[update]
 #[candid_method]
-pub fn create_associated_token_account_instruction_public(
+pub async fn create_associated_token_account_instruction_public(
     funding_address: String,
     wallet_address: String,
     mint_address: String,
 ) -> Result<String, String> {
-    let (account_address, instruction_data) = create_associated_token_account_instruction(
+    let (account_address, instruction_data) = solana::create_associated_token_account_instruction(
         &funding_address,
         &wallet_address,
         &mint_address,
-    )?;
+    ).await?;
     
     let response = serde_json::json!({
         "associated_token_account": account_address,
