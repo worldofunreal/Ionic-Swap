@@ -5,27 +5,17 @@
   "main": "index.js",
   "scripts": {
     "build": "cargo build-sbf",
-    "build:release": "cargo build-sbf --release",
-    "test": "cargo test",
-    "test:setup": "node scripts/test-setup.js",
-    "deploy:devnet": "node scripts/deploy.js --network devnet",
-    "deploy:testnet": "node scripts/deploy.js --network testnet",
-    "create-token": "node scripts/create-token.js",
-    "create-simple-token": "node scripts/create-simple-token.js",
-    "mint-tokens": "node scripts/mint-tokens.js",
-    "transfer-tokens": "node scripts/transfer-tokens.js",
-    "transfer-sol": "node scripts/transfer-sol.js",
     "deploy:spiral-stardust": "node scripts/deploy-spiral-stardust.js",
     "deploy:escrow": "node scripts/deploy-escrow.js",
-    "test:escrow": "node scripts/test-escrow.js"
+    "check:balances": "node scripts/check-sol-balances.js"
   },
   "dependencies": {
-    "@solana/web3.js": "^1.87.0",
-    "@solana/spl-token": "^0.3.9",
     "@coral-xyz/anchor": "^0.28.0",
+    "@solana/spl-token": "^0.3.9",
+    "@solana/web3.js": "^1.87.0",
     "bs58": "^5.0.0",
     "commander": "^11.1.0",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.6.1"
   },
   "devDependencies": {
     "@types/node": "^20.8.0",

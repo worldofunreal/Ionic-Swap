@@ -172,6 +172,7 @@ service : () -> {
   // Get cross-chain transfer by ID
   get_cross_chain_transfer_public : (text) -> (opt CrossChainTransfer);
   get_ethereum_address : () -> (Result);
+  get_ethereum_public_key : () -> (Result);
   get_icp_network_signer : () -> (Result);
   // Get ICRC-1 token balance (public API)
   get_icrc_balance_public : (text, text) -> (Result_1);
@@ -183,7 +184,6 @@ service : () -> {
   get_pool_total_liquidity_public : (text) -> (Result_1);
   // Get yield rates across all chains for a pool
   get_pool_yield_rates_public : (text) -> (Result_4);
-  get_public_key : () -> (Result);
   get_refund_fee : () -> (Result);
   // Get root contract address
   get_root_contract_address_public : () -> (opt text);
@@ -198,6 +198,7 @@ service : () -> {
   get_solana_balance_public : (text) -> (Result_5);
   // Get Solana chain state
   get_solana_chain_state_public : () -> (ChainState);
+  get_solana_public_key : () -> (Result);
   // Get Solana slot (block number) (public API)
   get_solana_slot_public : () -> (Result_5);
   // Get Solana wallet for ICP principal (public API)

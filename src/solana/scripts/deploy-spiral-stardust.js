@@ -24,18 +24,18 @@ async function main() {
   
   console.log(`📡 Network: ${network} (${endpoint})`);
 
-  // Load keypair
-  const keypairPath = options.keypair.replace('~', process.env.HOME);
-  let keypair;
+  // Load keypair from .env
+  require('dotenv').config();
   
-  try {
-    const keypairData = JSON.parse(fs.readFileSync(keypairPath, 'utf8'));
-    keypair = Keypair.fromSecretKey(new Uint8Array(keypairData));
-  } catch (error) {
-    console.error('❌ Failed to load keypair:', error.message);
-    console.log('💡 Create a keypair with: solana-keygen new --outfile ~/.config/solana/id.json');
+  if (!process.env.DEPLOYER_PRIVATE_KEY) {
+    console.error('❌ DEPLOYER_PRIVATE_KEY not found in .env file');
+    console.log('💡 Run: npm run generate:deployer');
     process.exit(1);
   }
+  
+  // Parse the private key from .env
+  const privateKeyArray = process.env.DEPLOYER_PRIVATE_KEY.split(',').map(Number);
+  const keypair = Keypair.fromSecretKey(new Uint8Array(privateKeyArray));
 
   console.log(`👤 Deployer: ${keypair.publicKey.toString()}`);
 

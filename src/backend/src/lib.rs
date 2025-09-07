@@ -180,8 +180,30 @@ async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<Str
 // ============================================================================
 
 #[update]
-async fn get_public_key() -> Result<String, String> {
+async fn get_ethereum_public_key() -> Result<String, String> {
     evm::get_public_key().await
+}
+
+#[update]
+async fn get_solana_public_key() -> Result<String, String> {
+    // Generate Solana public key from the same TSS key but for Solana
+    let key_id = ic_cdk::api::management_canister::ecdsa::EcdsaKeyId {
+        curve: ic_cdk::api::management_canister::ecdsa::EcdsaCurve::Secp256k1,
+        name: "key_1".to_string(),
+    };
+
+    let public_key_response = ic_cdk::api::management_canister::ecdsa::ecdsa_public_key(
+        ic_cdk::api::management_canister::ecdsa::EcdsaPublicKeyArgument {
+            canister_id: None,
+            derivation_path: vec![b"solana".to_vec()],
+            key_id: key_id.clone(),
+        },
+    ).await.map_err(|e| format!("Failed to get Solana public key: {:?}", e))?;
+
+    // Convert to Solana format (base58)
+    let public_key_bytes = public_key_response.0.public_key;
+    let solana_pubkey = bs58::encode(&public_key_bytes[1..]).into_string();
+    Ok(solana_pubkey)
 }
 
 #[update]

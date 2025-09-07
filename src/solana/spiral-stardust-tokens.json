@@ -1,13 +1,13 @@
 {
   "network": "devnet",
-  "deployer": "6bve2yBseLPuiAhj47CW8agLo4xKzkxAmtLKEnACwcES",
-  "timestamp": "2025-09-06T03:16:31.020Z",
+  "deployer": "GLxeKkwTFodLPcaRmsjrGhpKMorREAf4j4HsT6c8gwRM",
+  "timestamp": "2025-09-07T22:29:20.439Z",
   "tokens": {
     "spiral": {
       "name": "Spiral",
       "symbol": "SPIRAL",
-      "mint": "HSErF7xjoMowD4RoYzcigBRSoPv5CoZRRgxvxBAsTdWK",
-      "tokenAccount": "FjUk9eQYP57yodqaHUx21rdKPQHBfDdrPiPVhHuQKfT8",
+      "mint": "DAkvQyQigUzc4cdnMUA8UxrFmyK9513JME4dAMD1tHCy",
+      "tokenAccount": "AnuFCsfL7BLK44BTcF8aym4H3EY7jJv1rbAM6TZA23ri",
       "decimals": 8,
       "initialSupply": 10000000000000000,
       "initialSupplyFormatted": "100,000,000"
@@ -15,8 +15,8 @@
     "stardust": {
       "name": "Stardust",
       "symbol": "STD",
-      "mint": "A1wZAwvc5r8LPoKbbdTXHY25VU2ZkQrk7ikW5QgbzdtH",
-      "tokenAccount": "DSA6NS3N1QGxhzQbTs6YD99XeyPJubiqvCw6A1GQCqwm",
+      "mint": "2Peg6gadPcvuKASdaqqpi1Jib6B6d97tkoiSaBBy4MCY",
+      "tokenAccount": "6XVzuZkgB2rMuUv4aB9u36L2m7dat3jvue5wWYtJ6LMe",
       "decimals": 8,
       "initialSupply": 10000000000000000,
       "initialSupplyFormatted": "100,000,000"
