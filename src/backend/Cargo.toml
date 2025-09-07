@@ -22,6 +22,7 @@ ethabi = "18.0"
 rlp = "0.5"
 ethers-core = "2.0"
 sha3 = "0.10"
+sha2 = "0.10"
 
 # Solana Integration - Using official SOL RPC canister
 bs58 = "0.5.1"

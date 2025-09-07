@@ -56,14 +56,12 @@ pub async fn get_icrc_balance(
     let account_principal = Principal::from_text(account)
         .map_err(|e| format!("Invalid account principal: {}", e))?;
     
-    let balance_args = BalanceArgs {
-        account: Account {
-            owner: account_principal,
-            subaccount: None,
-        },
+    let account_record = Account {
+        owner: account_principal,
+        subaccount: None,
     };
     
-    let balance: (u128,) = call(canister_principal, "icrc1_balance_of", (balance_args,))
+    let balance: (u128,) = call(canister_principal, "icrc1_balance_of", (account_record,))
         .await
         .map_err(|e| format!("Failed to get balance: {:?}", e))?;
     
@@ -704,10 +702,6 @@ pub enum TransferError {
     GenericError { error_code: u128, message: String },
 }
 
-#[derive(CandidType, Deserialize)]
-pub struct BalanceArgs {
-    pub account: Account,
-}
 
 #[derive(CandidType, Deserialize)]
 pub struct ApproveArgs {

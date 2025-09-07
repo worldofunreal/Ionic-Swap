@@ -335,11 +335,11 @@ export const idlFactory = ({ IDL }) => {
         [
           IDL.Text,
           IDL.Text,
-          IDL.Text,
-          IDL.Text,
           IDL.Nat64,
           IDL.Text,
           IDL.Nat64,
+          IDL.Text,
+          IDL.Bool,
         ],
         [Result],
         [],

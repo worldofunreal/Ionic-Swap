@@ -377,11 +377,11 @@ service : () -> {
   create_solana_htlc_public : (
       text,
       text,
-      text,
-      text,
       nat64,
       text,
       nat64,
+      text,
+      bool,
     ) -> (Result);
   // Claim Solana HTLC (public API)
   claim_solana_htlc_public : (text, text) -> (Result);
@@ -427,6 +427,7 @@ service : () -> {
   test_unified_pool_system : () -> (text);
   // Transfer ERC20 tokens from backend canister to recipient
   transfer_erc20_tokens_public : (text, text, text) -> (Result);
+  // Removed approve_icrc_tokens_public - users should call icrc2_approve directly on token canisters
   // Transfer from ICRC-1 tokens (public API)
   transfer_from_icrc_tokens_public : (text, text, text, nat) -> (Result);
   // Transfer ICRC-1 tokens (public API)

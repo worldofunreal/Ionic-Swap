@@ -266,7 +266,7 @@ export interface _SERVICE {
     Result
   >,
   'create_solana_htlc_public' : ActorMethod<
-    [string, string, string, string, bigint, string, bigint],
+    [string, string, bigint, string, bigint, string, boolean],
     Result
   >,
   'create_solana_liquidity_pool_public' : ActorMethod<

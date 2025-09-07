@@ -1,5 +1,4 @@
 use candid::{Principal, Encode, Decode};
-use ic_http_certification::HttpRequest;
 use serde_json::json;
 use sha3::{Digest, Keccak256};
 use std::collections::{HashMap, HashSet};
@@ -9,25 +8,24 @@ use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 use base64::Engine;
 use std::str::FromStr;
 use candid::types::value::{VariantValue, IDLField};
+use sol_rpc_client::{IcRuntime, ed25519};
+use sol_rpc_types::{GetAccountInfoEncoding, GetAccountInfoParams};
+use solana_pubkey::Pubkey;
+use solana_message::Message;
+use solana_transaction::Transaction;
+use solana_system_interface::instruction;
+use solana_hash::Hash;
+use solana_instruction;
+use solana_signature;
+use bs58;
 
 // ============================================================================
 // SOLANA RPC CONFIGURATION
 // ============================================================================
 
-/// Solana Devnet RPC endpoint
-const SOLANA_DEVNET_RPC: &str = "https://api.devnet.solana.com";
-
-/// Solana Testnet RPC endpoint  
-const SOLANA_TESTNET_RPC: &str = "https://api.testnet.solana.com";
-
-/// Get the current Solana RPC endpoint (using devnet for testing)
-fn get_solana_rpc_endpoint() -> &'static str {
-    SOLANA_DEVNET_RPC
-}
-
-/// Get Solana testnet RPC endpoint
-pub fn get_solana_testnet_rpc_endpoint() -> &'static str {
-    SOLANA_TESTNET_RPC
+/// Get the SOL RPC client for making calls to Solana
+fn client() -> sol_rpc_client::SolRpcClient<IcRuntime> {
+    crate::client()
 }
 
 // ============================================================================
@@ -68,47 +66,8 @@ fn derive_solana_address(derivation_path: &[u8]) -> String {
 }
 
 // ============================================================================
-// HTTP RPC CALLS TO SOLANA
+// SOL RPC CLIENT CALLS TO SOLANA
 // ============================================================================
-
-/// Make an HTTP RPC call to Solana
-async fn call_solana_rpc(method: &str, params: serde_json::Value) -> Result<serde_json::Value, String> {
-    let request = json!({
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": method,
-        "params": params
-    });
-
-    let request_body = serde_json::to_string(&request)
-        .map_err(|e| format!("Failed to serialize request: {}", e))?;
-
-    let url = get_solana_rpc_endpoint();
-    
-    // Use the same HTTP client pattern as EVM
-    let http_request = HttpRequest::post(url)
-        .with_headers(vec![
-            ("Content-Type".to_string(), "application/json".to_string()),
-            ("User-Agent".to_string(), "ionic-swap-backend".to_string()),
-        ])
-        .with_body(request_body.into_bytes())
-        .build();
-
-    let response = crate::http_client::make_http_request(http_request).await?;
-    
-    let response_str = String::from_utf8(response.body().to_vec())
-        .map_err(|e| format!("Failed to decode response: {}", e))?;
-
-    let response_json: serde_json::Value = serde_json::from_str(&response_str)
-        .map_err(|e| format!("Failed to parse JSON response: {}", e))?;
-
-    // Check for RPC error
-    if let Some(error) = response_json.get("error") {
-        return Err(format!("Solana RPC error: {:?}", error));
-    }
-
-    Ok(response_json)
-}
 
 // ============================================================================
 // BASIC SOLANA OPERATIONS
@@ -116,50 +75,49 @@ async fn call_solana_rpc(method: &str, params: serde_json::Value) -> Result<serd
 
 /// Get Solana account balance
 pub async fn get_solana_balance(account: String) -> Result<u64, String> {
-    let params = json!([account]);
-    let response = call_solana_rpc("getBalance", params).await?;
+    let public_key = Pubkey::from_str(&account)
+        .map_err(|e| format!("Invalid Solana address: {}", e))?;
     
-    // Extract balance from response - handle both direct result and nested value
-    if let Some(result) = response["result"].as_u64() {
-        Ok(result)
-    } else if let Some(result) = response["result"]["value"].as_u64() {
-        Ok(result)
-    } else {
-        // Debug: print the actual response structure
-        let debug_response = serde_json::to_string(&response).unwrap_or_else(|_| "Failed to serialize".to_string());
-        Err(format!("Invalid response format - no balance found. Response: {}", debug_response))
-    }
+    let balance = client()
+        .get_balance(public_key)
+        .send()
+        .await
+        .expect_consistent()
+        .map_err(|e| format!("Call to getBalance failed: {:?}", e))?;
+    
+    Ok(balance)
 }
 
 /// Get Solana slot (block number)
 pub async fn get_solana_slot() -> Result<u64, String> {
-    let params = json!([]);
-    let response = call_solana_rpc("getSlot", params).await?;
+    let slot = client()
+        .get_slot()
+        .send()
+        .await
+        .expect_consistent()
+        .map_err(|e| format!("Call to getSlot failed: {:?}", e))?;
     
-    // Extract slot from response
-    if let Some(result) = response["result"].as_u64() {
-        Ok(result)
-    } else {
-        Err("Invalid response format - no slot found".to_string())
-    }
+    Ok(slot)
 }
 
 /// Get Solana account info
 pub async fn get_solana_account_info(account: String) -> Result<String, String> {
-    let params = json!([
-        account,
-        {
-            "encoding": "base64"
-        }
-    ]);
+    let public_key = Pubkey::from_str(&account)
+        .map_err(|e| format!("Invalid Solana address: {}", e))?;
     
-    let response = call_solana_rpc("getAccountInfo", params).await?;
+    let mut params = GetAccountInfoParams::from_pubkey(public_key);
+    params.encoding = Some(GetAccountInfoEncoding::Base64);
     
-    // Return the full result as string
-    if let Some(result) = response["result"]["value"].as_object() {
-        Ok(serde_json::to_string(&result).unwrap())
-    } else {
-        Err("Invalid response format - no account info found".to_string())
+    let account_info = client()
+        .get_account_info(params)
+        .send()
+        .await
+        .expect_consistent()
+        .map_err(|e| format!("Call to getAccountInfo failed: {:?}", e))?;
+    
+    match account_info {
+        Some(account) => Ok(serde_json::to_string(&account).unwrap()),
+        None => Err("Account not found".to_string()),
     }
 }
 
@@ -169,15 +127,17 @@ pub async fn get_solana_account_info(account: String) -> Result<String, String> 
 
 /// Get SPL token account balance
 pub async fn get_spl_token_balance(token_account: String) -> Result<String, String> {
-    let params = json!([token_account]);
-    let response = call_solana_rpc("getTokenAccountBalance", params).await?;
+    let public_key = Pubkey::from_str(&token_account)
+        .map_err(|e| format!("Invalid token account address: {}", e))?;
     
-    // Extract balance from response
-    if let Some(amount) = response["result"]["value"]["amount"].as_str() {
-        Ok(amount.to_string())
-    } else {
-        Err("Invalid response format - no token balance found".to_string())
-    }
+    let token_amount = client()
+        .get_token_account_balance(public_key)
+        .send()
+        .await
+        .expect_consistent()
+        .map_err(|e| format!("Call to getTokenAccountBalance failed: {:?}", e))?;
+    
+    Ok(token_amount.amount)
 }
 
 /// Get associated token account address
@@ -185,13 +145,31 @@ pub fn get_associated_token_address(
     wallet_address: &str,
     mint_address: &str,
 ) -> Result<String, String> {
-    // This would need the full Solana SDK for proper derivation
-    // For now, return a deterministic address based on inputs
-    let combined = format!("{}{}", wallet_address, mint_address);
-    let mut hasher = Keccak256::new();
-    hasher.update(combined.as_bytes());
-    let hash = hasher.finalize();
-    Ok(bs58::encode(&hash[..32]).into_string())
+    // Use proper Solana Associated Token Account derivation
+    let wallet_pubkey = Pubkey::from_str(wallet_address)
+        .map_err(|e| format!("Invalid wallet address: {}", e))?;
+    let mint_pubkey = Pubkey::from_str(mint_address)
+        .map_err(|e| format!("Invalid mint address: {}", e))?;
+    
+    // SPL Token program ID
+    let spl_token_program_id = Pubkey::from_str("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+        .map_err(|e| format!("Invalid SPL Token program ID: {}", e))?;
+    
+    // Associated Token Program ID
+    let associated_token_program_id = Pubkey::from_str("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
+        .map_err(|e| format!("Invalid Associated Token Program ID: {}", e))?;
+    
+    // Find the associated token account address
+    let (ata_address, _) = Pubkey::find_program_address(
+        &[
+            wallet_pubkey.as_ref(),
+            spl_token_program_id.as_ref(),
+            mint_pubkey.as_ref(),
+        ],
+        &associated_token_program_id,
+    );
+    
+    Ok(ata_address.to_string())
 }
 
 /// Create associated token account instruction
@@ -243,14 +221,11 @@ pub async fn send_sol_transaction(
     amount: u64,
 ) -> Result<String, String> {
     // Get latest blockhash for transaction
-    let blockhash_params = json!([{"commitment": "confirmed"}]);
-    let blockhash_response = call_solana_rpc("getLatestBlockhash", blockhash_params).await?;
-    
-    let blockhash = if let Some(result) = blockhash_response["result"]["value"]["blockhash"].as_str() {
-        result
-    } else {
-        return Err("Failed to get blockhash".to_string());
-    };
+    let blockhash = client()
+        .estimate_recent_blockhash()
+        .send()
+        .await
+        .map_err(|e| format!("Failed to get blockhash: {:?}", e))?;
 
     // Create transfer instruction (simplified)
     let instruction_data = vec![
@@ -283,14 +258,11 @@ pub async fn send_spl_token_transaction(
     amount: u64,
 ) -> Result<String, String> {
     // Get latest blockhash for transaction
-    let blockhash_params = json!([{"commitment": "confirmed"}]);
-    let blockhash_response = call_solana_rpc("getLatestBlockhash", blockhash_params).await?;
-    
-    let blockhash = if let Some(result) = blockhash_response["result"]["value"]["blockhash"].as_str() {
-        result
-    } else {
-        return Err("Failed to get blockhash".to_string());
-    };
+    let blockhash = client()
+        .estimate_recent_blockhash()
+        .send()
+        .await
+        .map_err(|e| format!("Failed to get blockhash: {:?}", e))?;
 
     // Create transfer instruction
     let instruction_data = transfer_spl_tokens_instruction(
@@ -332,10 +304,16 @@ pub async fn create_solana_htlc(
     user_address: &str, // User's Solana address for token withdrawal
     is_source_htlc: bool, // true for source HTLC, false for destination HTLC
 ) -> Result<String, String> {
+    ic_cdk::println!("🔍 Creating Solana HTLC for order: {}", order_id);
+    
     // Get the atomic swap order
     let orders = get_atomic_swap_orders();
     let order = orders.get(order_id)
-        .ok_or_else(|| format!("Order {} not found", order_id))?;
+        .ok_or_else(|| {
+            ic_cdk::println!("❌ Order {} not found in atomic swap orders", order_id);
+            ic_cdk::println!("Available orders: {:?}", orders.keys().collect::<Vec<_>>());
+            format!("Order {} not found", order_id)
+        })?;
     
     // Validate the order is in the correct state
     match order.status {
@@ -576,10 +554,28 @@ pub fn list_solana_htlcs() -> Vec<HTLC> {
 
 /// Get canister's Solana address
 pub async fn get_canister_solana_address() -> Result<String, String> {
-    // Derive Solana address from canister principal
-    let canister_principal = ic_cdk::api::id();
-    let wallet = SolanaWallet::new(canister_principal);
-    Ok(wallet.get_solana_address())
+    // Use the proper Ed25519 key derivation like the official example
+    let derivation_path = sol_rpc_client::ed25519::DerivationPath::from(ic_cdk::id().as_slice());
+    
+    ic_cdk::println!("🔍 Getting canister Solana address...");
+    ic_cdk::println!("   Canister ID: {}", ic_cdk::id());
+    ic_cdk::println!("   Derivation path: {:?}", derivation_path);
+    
+    // Get the Ed25519 public key using the same derivation path as signing
+    let (public_key, _) = sol_rpc_client::ed25519::get_pubkey(
+        &sol_rpc_client::IcRuntime,
+        None, // canister_id - use default
+        Some(&derivation_path),
+        sol_rpc_client::ed25519::Ed25519KeyId::MainnetTestKey1,
+    )
+    .await
+    .map_err(|e| format!("Failed to get Ed25519 public key: {:?}", e))?;
+    
+    // Convert to Solana address format
+    let address = bs58::encode(&public_key).into_string();
+    ic_cdk::println!("   Generated address: {}", address);
+    
+    Ok(address)
 }
 
 /// Transfer SPL tokens from user to canister (requires user signature)
@@ -601,14 +597,11 @@ pub async fn transfer_spl_tokens_from_user(
     )?;
     
     // Get latest blockhash
-    let blockhash_params = json!([{"commitment": "confirmed"}]);
-    let blockhash_response = call_solana_rpc("getLatestBlockhash", blockhash_params).await?;
-    
-    let blockhash = if let Some(result) = blockhash_response["result"]["value"]["blockhash"].as_str() {
-        result
-    } else {
-        return Err("Failed to get blockhash".to_string());
-    };
+    let blockhash = client()
+        .estimate_recent_blockhash()
+        .send()
+        .await
+        .map_err(|e| format!("Failed to get blockhash: {:?}", e))?;
     
     // Create transaction response (simulated)
     let response = json!({
@@ -640,14 +633,11 @@ pub async fn transfer_spl_tokens_from_canister(
     let canister_solana_address = get_canister_solana_address().await?;
     
     // Get latest blockhash
-    let blockhash_params = json!([{"commitment": "confirmed"}]);
-    let blockhash_response = call_solana_rpc("getLatestBlockhash", blockhash_params).await?;
-    
-    let blockhash = if let Some(result) = blockhash_response["result"]["value"]["blockhash"].as_str() {
-        result
-    } else {
-        return Err("Failed to get blockhash".to_string());
-    };
+    let blockhash = client()
+        .estimate_recent_blockhash()
+        .send()
+        .await
+        .map_err(|e| format!("Failed to get blockhash: {:?}", e))?;
     
     // Create SPL token transfer instruction
     let transfer_instruction = create_spl_transfer_instruction(
@@ -660,7 +650,7 @@ pub async fn transfer_spl_tokens_from_canister(
     // Create transaction data
     let transaction_data = json!({
         "instructions": [transfer_instruction],
-        "recent_blockhash": blockhash,
+        "recent_blockhash": blockhash.to_string(),
         "fee_payer": canister_solana_address
     });
     
@@ -827,136 +817,104 @@ async fn sign_solana_transaction(
 ) -> Result<Vec<u8>, String> {
     ic_cdk::println!("🔐 Signing Solana transaction...");
     
-    // Serialize the transaction for signing
-    let message = serialize_transaction_for_signing(transaction)?;
+    // Convert to proper Solana transaction first
+    let solana_tx = convert_to_solana_transaction(transaction)?;
     
-    // Get the message hash
-    let message_hash = sha3::Keccak256::digest(&message);
+    // Use the proper Solana signing approach with Ed25519
+    let derivation_path = sol_rpc_client::ed25519::DerivationPath::from(ic_cdk::id().as_slice());
     
-    // Use real ECDSA signing like the EVM implementation
-    let key_id = ic_cdk::api::management_canister::ecdsa::EcdsaKeyId {
-        curve: ic_cdk::api::management_canister::ecdsa::EcdsaCurve::Secp256k1,
-        name: "key_1".to_string(),
-    };
+    // Sign the message using the SOL RPC client's sign_message function
+    let signature = sol_rpc_client::ed25519::sign_message(
+        &sol_rpc_client::IcRuntime,
+        &solana_tx.message,
+        sol_rpc_client::ed25519::Ed25519KeyId::MainnetTestKey1,
+        Some(&derivation_path),
+    )
+    .await
+    .map_err(|e| format!("Failed to sign Solana transaction: {:?}", e))?;
     
-    let derivation_path = vec![ic_cdk::id().as_slice().to_vec()];
-    
-    let sign_args = ic_cdk::api::management_canister::ecdsa::SignWithEcdsaArgument {
-        message_hash: message_hash.to_vec(),
-        derivation_path,
-        key_id,
-    };
-    
-    let signature = ic_cdk::api::management_canister::ecdsa::sign_with_ecdsa(sign_args)
-        .await
-        .map_err(|e| format!("Failed to sign Solana transaction: {:?}", e))?;
-    
-    let signature_bytes = signature.0.signature;
+    let signature_bytes = signature.as_ref().to_vec();
     
     // Add the signature to the transaction
     transaction.signatures.push(signature_bytes.clone());
     
-    ic_cdk::println!("✅ Transaction signed successfully with real ECDSA");
+    ic_cdk::println!("✅ Transaction signed successfully with Ed25519");
     
     Ok(signature_bytes)
+}
+
+/// Convert our custom SolanaTransaction to proper Solana types
+fn convert_to_solana_transaction(transaction: &SolanaTransaction) -> Result<Transaction, String> {
+    // Convert fee payer
+    let fee_payer = Pubkey::from_str(&transaction.fee_payer)
+        .map_err(|e| format!("Invalid fee payer: {}", e))?;
+    
+    // Convert recent blockhash
+    let recent_blockhash = Hash::from_str(&transaction.recent_blockhash)
+        .map_err(|e| format!("Invalid blockhash: {}", e))?;
+    
+    // Convert instructions
+    let mut instructions = Vec::new();
+    for custom_instruction in &transaction.instructions {
+        let program_id = Pubkey::from_str(&custom_instruction.program_id)
+            .map_err(|e| format!("Invalid program ID: {}", e))?;
+        
+        let mut accounts = Vec::new();
+        for account_meta in &custom_instruction.accounts {
+            let pubkey = Pubkey::from_str(&account_meta.pubkey)
+                .map_err(|e| format!("Invalid account pubkey: {}", e))?;
+            
+            accounts.push(solana_instruction::AccountMeta {
+                pubkey,
+                is_signer: account_meta.is_signer,
+                is_writable: account_meta.is_writable,
+            });
+        }
+        
+        instructions.push(solana_instruction::Instruction {
+            program_id,
+            accounts,
+            data: custom_instruction.data.clone(),
+        });
+    }
+    
+    // Create message
+    let message = Message::new_with_blockhash(&instructions, Some(&fee_payer), &recent_blockhash);
+    
+    // Convert signatures
+    let mut signatures = Vec::new();
+    for signature_bytes in &transaction.signatures {
+        if signature_bytes.len() != 64 {
+            return Err(format!("Invalid signature length: {} (expected 64)", signature_bytes.len()));
+        }
+        let mut signature_array = [0u8; 64];
+        signature_array.copy_from_slice(signature_bytes);
+        signatures.push(solana_signature::Signature::from(signature_array));
+    }
+    
+    Ok(Transaction {
+        signatures,
+        message,
+    })
 }
 
 /// Submit a signed Solana transaction to the network using the official SOL RPC canister
 async fn submit_solana_transaction(transaction: &SolanaTransaction) -> Result<String, String> {
     ic_cdk::println!("📤 Submitting signed Solana transaction to SOL RPC canister...");
 
-    let sol_rpc_principal = Principal::from_text("tghme-zyaaa-aaaar-qarca-cai")
-        .map_err(|e| format!("Invalid SOL RPC canister ID: {}", e))?;
-
-    // Serialize the signed transaction
-    let serialized_tx = serialize_transaction(transaction)?;
-    let tx_base64 = base64::engine::general_purpose::STANDARD.encode(&serialized_tx);
+    // Convert our custom SolanaTransaction to proper Solana types
+    let solana_transaction = convert_to_solana_transaction(transaction)?;
     
-    ic_cdk::println!("📋 Serialized transaction (base64): {}", tx_base64);
-
-    // Let's try using the ic_cdk::api::call::call method instead of call_raw
-    // This might handle the Candid encoding better
+    // Submit using the SOL RPC client
+    let tx_id = client()
+        .send_transaction(solana_transaction)
+        .send()
+        .await
+        .expect_consistent()
+        .map_err(|e| format!("Call to sendTransaction failed: {:?}", e))?;
     
-    // First, let's try a simple getSlot call to test connectivity
-    let get_slot_args = Encode!(&"variant { Default = variant { Devnet } }", &Option::<String>::None, &Option::<String>::None)
-        .map_err(|e| format!("Failed to encode getSlot arguments: {}", e))?;
-
-    ic_cdk::println!("📋 Testing connectivity with getSlot...");
-    
-    let slot_result = ic_cdk::api::call::call_raw(
-        sol_rpc_principal,
-        "getSlot",
-        &get_slot_args,
-        1_000_000_000, // 1B cycles for getSlot
-    ).await;
-
-    match slot_result {
-        Ok(slot_response) => {
-            ic_cdk::println!("✅ getSlot successful! Response length: {}", slot_response.len());
-            
-            // Now try the actual sendTransaction
-            // Let's try a different approach - use the exact same format as the working command line
-            // But encode it properly as Candid
-            
-            // The issue is that we need to construct the exact Candid types
-            // Let me try a different approach - use the jsonRequest method instead
-            // which might be easier to work with
-            
-            let json_request = format!(
-                r#"{{"jsonrpc":"2.0","id":1,"method":"sendTransaction","params":["{}",{{"encoding":"base64","skipPreflight":false}}]}}"#,
-                tx_base64
-            );
-            
-            ic_cdk::println!("📋 Using jsonRequest method with: {}", json_request);
-            
-            // Try jsonRequest method instead
-            let json_args = Encode!(&"variant { Default = variant { Devnet } }", &Option::<String>::None, &json_request)
-                .map_err(|e| format!("Failed to encode jsonRequest arguments: {}", e))?;
-
-            let json_result = ic_cdk::api::call::call_raw(
-                sol_rpc_principal,
-                "jsonRequest",
-                &json_args,
-                2_000_000_000, // 2B cycles
-            ).await;
-
-            match json_result {
-                Ok(json_response) => {
-                    ic_cdk::println!("✅ jsonRequest successful! Response length: {}", json_response.len());
-                    
-                    // Try to decode the response
-                    if let Ok(response_text) = String::from_utf8(json_response.clone()) {
-                        ic_cdk::println!("📋 JSON Response: {}", response_text);
-                        
-                        // Parse the JSON response to extract the transaction signature
-                        if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(&response_text) {
-                            if let Some(result) = json_value.get("result") {
-                                if let Some(signature) = result.as_str() {
-                                    ic_cdk::println!("🎉 Transaction submitted successfully! Signature: {}", signature);
-                                    return Ok(format!("Transaction submitted successfully! Hash: {}", signature));
-                                }
-                            }
-                            if let Some(error) = json_value.get("error") {
-                                return Err(format!("Transaction failed: {}", error));
-                            }
-                        }
-                    }
-                    
-                    Ok(format!("Transaction submitted! Response length: {}", json_response.len()))
-                }
-                Err(e) => {
-                    let error_msg = format!("jsonRequest failed: {:?}", e);
-                    ic_cdk::println!("❌ {}", error_msg);
-                    Err(error_msg)
-                }
-            }
-        }
-        Err(e) => {
-            let error_msg = format!("getSlot failed: {:?}", e);
-            ic_cdk::println!("❌ {}", error_msg);
-            Err(error_msg)
-        }
-    }
+    ic_cdk::println!("✅ Transaction submitted successfully! Hash: {}", tx_id);
+    Ok(tx_id.to_string())
 }
 
 /// Serialize transaction for signing (minimal valid Solana format)

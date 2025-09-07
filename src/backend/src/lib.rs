@@ -1,5 +1,6 @@
 use candid::{candid_method, Principal};
 use ic_cdk_macros::*;
+use ic_cdk::call;
 use std::collections::HashMap;
 
 // ============================================================================
@@ -216,11 +217,35 @@ async fn deposit_to_htlc(htlc_id: String) -> Result<String, String> {
             return Err("HTLC is not in Created state".to_string());
         }
         
-        // For ICP side, we would transfer tokens here
-        // For EVM side, this would be handled by the contract
+        // Get the current caller (maker)
+        let caller = ic_cdk::caller();
+        let caller_str = caller.to_text();
         
+        // Get escrow account for this HTLC
+        let escrow_account = get_escrow_account(&htlc_id);
+        
+        // Parse amount
+        let amount = htlc.amount.parse::<u128>()
+            .map_err(|_| "Invalid amount format".to_string())?;
+        
+        // Determine token canister ID based on token name
+        let token_canister_id = match htlc.token.as_str() {
+            "spiral" => SPIRAL_ICRC_CANISTER_ID,
+            "stardust" => STARDUST_ICRC_CANISTER_ID,
+            _ => return Err("Unsupported token".to_string()),
+        };
+        
+        // Transfer tokens from user to canister for escrow using ICRC-2 transfer_from
+        let canister_id = ic_cdk::api::id().to_string();
+        let transfer_result = transfer_from_icrc_tokens(token_canister_id, &caller_str, &canister_id, amount).await?;
+        
+        ic_cdk::println!("✅ HTLC deposit: {} tokens transferred to canister for escrow", amount);
+        
+        // Update HTLC status
         htlc.status = HTLCStatus::Deposited;
-        Ok("Deposit successful".to_string())
+        
+        // Return transaction hash
+        Ok(format!("Deposit successful. Transaction: {}", transfer_result))
     } else {
         Err("HTLC not found".to_string())
     }
@@ -235,22 +260,40 @@ async fn claim_htlc_funds(htlc_id: String, secret: String) -> Result<String, Str
             return Err("HTLC is not in Deposited state".to_string());
         }
         
-        // Verify the secret matches the hashlock
-        // For now, we'll use a simple hash comparison
-        // In a real implementation, we'd use proper cryptographic hashing
-        let secret_hash = format!("0x{}", hex::encode(secret.as_bytes()));
+        // Verify the secret matches the hashlock using SHA-256
+        use sha2::{Sha256, Digest};
+        let mut hasher = Sha256::new();
+        hasher.update(secret.as_bytes());
+        let secret_hash = format!("0x{}", hex::encode(hasher.finalize()));
         
         if secret_hash != htlc.hashlock {
             return Err("Invalid secret".to_string());
         }
         
+        // Get escrow account for this HTLC
+        let escrow_account = get_escrow_account(&htlc_id);
+        
+        // Parse amount
+        let amount = htlc.amount.parse::<u128>()
+            .map_err(|_| "Invalid amount format".to_string())?;
+        
+        // Determine token canister ID based on token name
+        let token_canister_id = match htlc.token.as_str() {
+            "spiral" => SPIRAL_ICRC_CANISTER_ID,
+            "stardust" => STARDUST_ICRC_CANISTER_ID,
+            _ => return Err("Unsupported token".to_string()),
+        };
+        
+        // Transfer tokens from canister to recipient
+        let transfer_result = transfer_icrc_tokens(token_canister_id, &htlc.recipient, amount).await?;
+        ic_cdk::println!("✅ HTLC claim: {} tokens transferred to {}", amount, htlc.recipient);
+        
+        // Update HTLC status and store secret
         htlc.secret = Some(secret);
         htlc.status = HTLCStatus::Claimed;
         
-        // Transfer funds to taker
-        // This would be implemented based on the direction (ICP or EVM)
-        
-        Ok("Claim successful".to_string())
+        // Return transaction hash
+        Ok(format!("Claim successful. Transaction: {}", transfer_result))
     } else {
         Err("HTLC not found".to_string())
     }
@@ -281,6 +324,24 @@ async fn refund_htlc_funds(htlc_id: String) -> Result<String, String> {
         Err("HTLC not found".to_string())
     }
 }
+
+// ============================================================================
+// ESCROW ACCOUNT MANAGEMENT
+// ============================================================================
+
+/// Generate deterministic escrow account for HTLC
+fn get_escrow_account(htlc_id: &str) -> String {
+    // Use the canister's principal as the escrow account
+    // In a real implementation, this would be a subaccount
+    let canister_principal = ic_cdk::id();
+    format!("{}", canister_principal.to_text())
+}
+
+// ============================================================================
+// ICRC-2 APPROVAL FUNCTIONS
+// ============================================================================
+
+// Removed approve_icrc_tokens_public - users should call icrc2_approve directly on token canisters
 
 // ============================================================================
 // CROSS-CHAIN SWAP FUNCTIONS (1inch Fusion+ Style)
@@ -509,7 +570,76 @@ pub async fn execute_atomic_swap(order_id: String) -> Result<String, String> {
 #[query]
 #[candid_method]
 pub fn get_atomic_swap_order(order_id: String) -> Option<AtomicSwapOrder> {
-    get_atomic_swap_orders().get(&order_id).cloned()
+    ic_cdk::println!("🔍 get_atomic_swap_order called with order_id: {}", order_id);
+    let orders = get_atomic_swap_orders();
+    let order = orders.get(&order_id).cloned();
+    ic_cdk::println!("🔍 Found order: {:?}", order.is_some());
+    if let Some(ref order) = order {
+        ic_cdk::println!("🔍 Order details - secret: {}, hashlock: {}", order.secret, order.hashlock);
+    }
+    order
+}
+
+/// Get order secret for claiming (public API)
+#[query]
+#[candid_method]
+pub fn get_order_secret(order_id: String) -> Result<String, String> {
+    let orders = get_atomic_swap_orders();
+    let order = orders.get(&order_id)
+        .ok_or_else(|| format!("Order {} not found", order_id))?;
+    
+    Ok(order.secret.clone())
+}
+
+/// Get order hashlock for verification (public API)
+#[query]
+#[candid_method]
+pub fn get_order_hashlock(order_id: String) -> Result<String, String> {
+    let orders = get_atomic_swap_orders();
+    let order = orders.get(&order_id)
+        .ok_or_else(|| format!("Order {} not found", order_id))?;
+    
+    Ok(order.hashlock.clone())
+}
+
+/// Create SPL token transfer instruction for user approval (public API)
+/// This generates the instruction data that users need to sign to approve token transfers
+#[update]
+#[candid_method]
+pub async fn create_spl_approval_instruction(
+    user_solana_address: String,
+    token_mint: String,
+    amount: u64,
+    spender_address: String, // Canister's Solana address
+) -> Result<String, String> {
+    // Get canister's Solana address
+    let canister_solana_address = solana::get_canister_solana_address().await?;
+    
+    // Get user's token account
+    let user_token_account = solana::get_associated_token_address(&user_solana_address, &token_mint)?;
+    
+    // Get canister's token account (spender)
+    let spender_token_account = solana::get_associated_token_address(&spender_address, &token_mint)?;
+    
+    // Create transfer instruction data
+    let instruction_data = solana::transfer_spl_tokens_instruction(
+        &user_token_account,
+        &spender_token_account,
+        &user_solana_address, // authority (user)
+        amount,
+    )?;
+    
+    let response = serde_json::json!({
+        "instruction_data": hex::encode(instruction_data),
+        "user_token_account": user_token_account,
+        "spender_token_account": spender_token_account,
+        "user_address": user_solana_address,
+        "spender_address": spender_address,
+        "amount": amount,
+        "token_mint": token_mint
+    });
+    
+    Ok(serde_json::to_string(&response).unwrap())
 }
 
 /// Get all atomic swap orders
@@ -626,15 +756,14 @@ pub async fn transfer_icrc_tokens_public(
 }
 
 /// Get ICRC-1 token balance (public API)
-#[query]
+#[update]
 #[candid_method]
-pub fn get_icrc_balance_public(
-    _canister_id: String,
-    _account: String,
+pub async fn get_icrc_balance_public(
+    canister_id: String,
+    account: String,
 ) -> Result<u128, String> {
-    // For now, return a mock balance since we can't make inter-canister calls in queries
-    // In a real implementation, you'd need to store balances locally or use a different approach
-    Ok(100000000000u128) // Return 1000 tokens as mock balance
+    // Use the actual get_icrc_balance function to get real balances
+    get_icrc_balance(&canister_id, &account).await
 }
 
 
@@ -748,8 +877,11 @@ pub async fn complete_cross_chain_swap_public(
         return Err("Invalid secret for swap".to_string());
     }
     
-    // Handle different swap directions
-    if order.maker.starts_with("0x") {
+    // Handle different swap directions based on maker's chain type
+    let maker_chain_type = get_chain_type(&order.maker);
+    ic_cdk::println!("🔍 Maker chain type: {}", maker_chain_type);
+    
+    if maker_chain_type == "EVM" {
         // EVM→ICP or EVM→Solana swap: Claim destination HTLC and send to user's specified address
         if let Some(icp_destination) = &order.icp_destination_principal {
             // EVM→ICP swap: Transfer ICRC tokens from canister to user's destination
@@ -795,7 +927,7 @@ pub async fn complete_cross_chain_swap_public(
         } else {
             Err("No destination address specified for EVM swap".to_string())
         }
-    } else if order.maker.len() > 44 {
+    } else if maker_chain_type == "Solana" {
         // Solana→EVM or Solana→ICP swap: Transfer tokens directly to user's address
         ic_cdk::println!("🔍 Processing Solana→EVM/ICP swap...");
         
@@ -850,7 +982,7 @@ pub async fn complete_cross_chain_swap_public(
             ic_cdk::println!("    Order icp_destination_principal: {:?}", order.icp_destination_principal);
             Err("No destination address specified for Solana swap".to_string())
         }
-    } else {
+    } else if maker_chain_type == "ICP" {
         // ICP→EVM or ICP→Solana swap: Transfer tokens directly to user's address
         ic_cdk::println!("🔍 Processing ICP→EVM/Solana swap...");
         
@@ -910,6 +1042,8 @@ pub async fn complete_cross_chain_swap_public(
             ic_cdk::println!("    Order solana_destination_address: {:?}", order.solana_destination_address);
             Err("No destination address specified for ICP swap".to_string())
         }
+    } else {
+        Err(format!("Unrecognized maker chain type: {}", maker_chain_type))
     }
 }
 
@@ -1429,10 +1563,10 @@ fn is_compatible_swap_direction(order1: &AtomicSwapOrder, order2: &AtomicSwapOrd
 fn get_chain_type(token_address: &str) -> &'static str {
     if token_address.starts_with("0x") {
         "EVM"
-    } else if token_address.len() > 44 {
-        "Solana" // Solana addresses are typically base58 encoded and longer
+    } else if token_address.contains("-") {
+        "ICP" // ICP canister IDs and principals contain hyphens
     } else {
-        "ICP" // ICP canister IDs are shorter
+        "Solana" // Solana addresses are base58 encoded and don't contain hyphens
     }
 }
 
@@ -1658,6 +1792,15 @@ pub fn get_root_contract_address_public() -> Option<String> {
 fn init() {
     // Initialize the HTTP certification tree
     http_client::get_http_certification_tree();
+    
+    // Initialize SOL RPC client with default configuration
+    let init_arg = InitArg {
+        sol_rpc_canister_id: Some(Principal::from_text("tghme-zyaaa-aaaar-qarca-cai").unwrap()),
+        solana_network: Some(SolanaNetwork::Devnet),
+        ed25519_key_name: Some(Ed25519KeyName::MainnetTestKey1),
+        solana_commitment_level: Some(CommitmentLevel::Confirmed),
+    };
+    state::init_state(init_arg);
 }
 
 // Function to initialize nonce from blockchain (call this after deployment)
@@ -1689,6 +1832,15 @@ fn pre_upgrade() {
 fn post_upgrade() {
     // Re-initialize the HTTP certification tree after upgrade
     http_client::get_http_certification_tree();
+    
+    // Re-initialize SOL RPC client with default configuration
+    let init_arg = InitArg {
+        sol_rpc_canister_id: Some(Principal::from_text("tghme-zyaaa-aaaar-qarca-cai").unwrap()),
+        solana_network: Some(SolanaNetwork::Devnet),
+        ed25519_key_name: Some(Ed25519KeyName::MainnetTestKey1),
+        solana_commitment_level: Some(CommitmentLevel::Confirmed),
+    };
+    state::init_state(init_arg);
 }
 
 
@@ -2100,6 +2252,8 @@ pub async fn create_icp_to_solana_order(
     solana_destination_address: String, // Where SPL tokens should be sent (base58)
     timelock_duration: u64,           // Duration in seconds
 ) -> Result<String, String> {
+    ic_cdk::println!("🔍 Creating ICP→Solana order...");
+    
     // Generate secret and hashlock
     let secret = generate_htlc_secret();
     let secret_bytes = secret.as_bytes();
@@ -2113,6 +2267,7 @@ pub async fn create_icp_to_solana_order(
     
     // Create order ID
     let order_id = generate_order_id();
+    ic_cdk::println!("🔍 Generated order ID: {}", order_id);
     
     // Create the order
     let order = AtomicSwapOrder {
@@ -2139,6 +2294,14 @@ pub async fn create_icp_to_solana_order(
     
     // Store the order
     get_atomic_swap_orders().insert(order_id.clone(), order);
+    ic_cdk::println!("✅ Order {} stored successfully", order_id);
+    
+    // Verify the order was stored correctly
+    let stored_order = get_atomic_swap_orders().get(&order_id);
+    if stored_order.is_none() {
+        return Err("Failed to store order".to_string());
+    }
+    ic_cdk::println!("✅ Order {} verified in storage", order_id);
     
     // Automatically pull ICRC tokens into escrow
     let amount_u128 = source_amount.parse::<u128>()
@@ -2188,6 +2351,8 @@ pub async fn create_solana_to_icp_order(
     icp_destination_principal: String, // Where ICRC tokens should be sent
     timelock_duration: u64,           // Duration in seconds
 ) -> Result<String, String> {
+    ic_cdk::println!("🔍 Creating Solana→ICP order...");
+    
     // Generate secret and hashlock
     let secret = generate_htlc_secret();
     let secret_bytes = secret.as_bytes();
@@ -2201,6 +2366,7 @@ pub async fn create_solana_to_icp_order(
     
     // Create order ID
     let order_id = generate_order_id();
+    ic_cdk::println!("🔍 Generated order ID: {}", order_id);
     
     // Create the order
     let order = AtomicSwapOrder {
@@ -2227,8 +2393,17 @@ pub async fn create_solana_to_icp_order(
     
     // Store the order
     get_atomic_swap_orders().insert(order_id.clone(), order);
+    ic_cdk::println!("✅ Order {} stored successfully", order_id);
+    
+    // Verify the order was stored correctly
+    let stored_order = get_atomic_swap_orders().get(&order_id);
+    if stored_order.is_none() {
+        return Err("Failed to store order".to_string());
+    }
+    ic_cdk::println!("✅ Order {} verified in storage", order_id);
     
     // Automatically create Solana HTLC to hold the tokens
+    ic_cdk::println!("🔍 Creating Solana HTLC for order: {}", order_id);
     let solana_htlc_id = solana::create_solana_htlc(
         &order_id,
         &source_token_mint,
