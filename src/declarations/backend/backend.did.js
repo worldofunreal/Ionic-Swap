@@ -268,6 +268,21 @@ export const idlFactory = ({ IDL }) => {
         [Result],
         [],
       ),
+    'create_cross_chain_swap_order_public' : IDL.Func(
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Nat64,
+          IDL.Nat64,
+          IDL.Nat64,
+        ],
+        [Result],
+        [],
+      ),
     'create_evm_htlc' : IDL.Func([IDL.Text, IDL.Bool], [Result], []),
     'create_evm_to_icp_order' : IDL.Func(
         [
@@ -461,11 +476,7 @@ export const idlFactory = ({ IDL }) => {
     'get_solana_htlc_status_public' : IDL.Func([IDL.Text], [Result_2], []),
     'get_solana_slot_public' : IDL.Func([], [Result_7], []),
     'get_solana_wallet_public' : IDL.Func([IDL.Text], [Result], []),
-    'get_spl_token_balance_public' : IDL.Func(
-        [IDL.Text, IDL.Text],
-        [Result],
-        [],
-      ),
+    'get_spl_token_balance_public' : IDL.Func([IDL.Text], [Result], []),
     'get_swap_order' : IDL.Func(
         [IDL.Text],
         [IDL.Opt(CrossChainSwapOrder)],

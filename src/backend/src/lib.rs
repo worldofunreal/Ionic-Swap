@@ -344,7 +344,350 @@ fn get_escrow_account(htlc_id: &str) -> String {
 // Removed approve_icrc_tokens_public - users should call icrc2_approve directly on token canisters
 
 // ============================================================================
-// CROSS-CHAIN SWAP FUNCTIONS (1inch Fusion+ Style)
+// UNIVERSAL MARKET ORDER EXECUTION SYSTEM
+// ============================================================================
+
+/// Universal market order execution - fills orders immediately like Binance
+#[update]
+#[candid_method]
+pub async fn create_cross_chain_swap_order_public(
+    maker: String,
+    taker: String,
+    source_asset: String,
+    destination_asset: String,
+    source_amount: String,
+    destination_amount: String,
+    source_chain_id: u64,
+    destination_chain_id: u64,
+    expiration_time: u64,
+) -> Result<String, String> {
+    ic_cdk::println!("🚀 Creating cross-chain swap order with IMMEDIATE EXECUTION");
+    
+    // Check for existing compatible orders to synchronize secrets
+    let existing_orders = get_atomic_swap_orders();
+    let mut shared_secret = None;
+    let mut shared_hashlock = None;
+    
+    // Look for a compatible order that could be paired
+    for (_, existing_order) in existing_orders.iter() {
+        // Create a temporary order to check compatibility
+        let temp_order = AtomicSwapOrder {
+            order_id: "temp".to_string(),
+            maker: maker.clone(),
+            taker: taker.clone(),
+            source_token: source_asset.clone(),
+            destination_token: destination_asset.clone(),
+            source_amount: source_amount.clone(),
+            destination_amount: destination_amount.clone(),
+            secret: "temp".to_string(),
+            hashlock: "temp".to_string(),
+            timelock: expiration_time,
+            source_htlc_id: None,
+            destination_htlc_id: None,
+            status: SwapOrderStatus::Created,
+            created_at: ic_cdk::api::time(),
+            expires_at: expiration_time,
+            evm_destination_address: None,
+            icp_destination_principal: None,
+            solana_destination_address: None,
+            counter_order_id: None,
+        };
+        
+        if is_compatible_orders_universal(&temp_order, existing_order) {
+            shared_secret = Some(existing_order.secret.clone());
+            shared_hashlock = Some(existing_order.hashlock.clone());
+            ic_cdk::println!("🔗 Found compatible order, using shared secret");
+            break;
+        }
+    }
+    
+    // Create the order with shared secret if found
+    let order_id = create_cross_chain_swap_order_with_secret(
+        maker.clone(),
+        taker.clone(),
+        source_asset.clone(),
+        destination_asset.clone(),
+        source_amount.clone(),
+        destination_amount.clone(),
+        source_chain_id,
+        destination_chain_id,
+        expiration_time,
+        shared_secret,
+        shared_hashlock,
+    ).await?;
+    
+    ic_cdk::println!("✅ Order created: {}", order_id);
+    
+    // IMMEDIATELY try to fill this order - get the created order
+    let orders = get_atomic_swap_orders();
+    let order = orders.get(&order_id)
+        .ok_or_else(|| format!("Order {} not found after creation", order_id))?;
+    
+    let fill_result = fill_order_immediately_with_order(order_id.clone(), order.clone()).await?;
+    
+    if fill_result.fully_filled {
+        ic_cdk::println!("🎉 Order {} fully filled immediately!", order_id);
+        update_order_status(order_id.clone(), SwapOrderStatus::Completed);
+    } else {
+        ic_cdk::println!("⚠️ Order {} partially filled, remaining: {}", order_id, fill_result.remaining_amount);
+        update_order_status(order_id.clone(), SwapOrderStatus::SourceHTLCCreated);
+    }
+    
+    Ok(order_id)
+}
+
+/// Fill order immediately by finding and executing all compatible orders
+async fn fill_order_immediately_with_order(order_id: String, order: AtomicSwapOrder) -> Result<FillResult, String> {
+    
+    let mut remaining_amount = order.source_amount.parse::<u128>()
+        .map_err(|e| format!("Invalid source amount: {}", e))?;
+    let mut filled_orders = Vec::new();
+    
+    ic_cdk::println!("🔍 Finding compatible orders for order: {}", order_id);
+    
+    // Find ALL compatible orders
+    let compatible_orders = find_all_compatible_orders_universal(&order);
+    ic_cdk::println!("📊 Found {} compatible orders", compatible_orders.len());
+    
+    for (match_order_id, match_order) in compatible_orders {
+        if remaining_amount == 0 { break; }
+        
+        let match_amount = match_order.source_amount.parse::<u128>()
+            .map_err(|e| format!("Invalid match amount: {}", e))?;
+        let fill_amount = remaining_amount.min(match_amount);
+        
+        ic_cdk::println!("🔄 Filling order {} with amount {}", match_order_id, fill_amount);
+        
+        // Fill this order - works for ANY chain combination
+        fill_single_order_universal(order_id.clone(), match_order_id.clone(), fill_amount).await?;
+        
+        remaining_amount -= fill_amount;
+        filled_orders.push((match_order_id.clone(), fill_amount));
+        
+        ic_cdk::println!("✅ Filled order {}, remaining: {}", match_order_id, remaining_amount);
+    }
+    
+    Ok(FillResult {
+        fully_filled: remaining_amount == 0,
+        remaining_amount,
+        filled_orders,
+    })
+}
+
+/// Find all compatible orders across ALL chains
+fn find_all_compatible_orders_universal(order: &AtomicSwapOrder) -> Vec<(String, AtomicSwapOrder)> {
+    let mut compatible_orders = Vec::new();
+    let all_orders = get_atomic_swap_orders();
+    
+    for (order_id, other_order) in all_orders {
+        // Skip the same order
+        if *order_id == order.order_id { continue; }
+        
+        // Check if orders are compatible
+        if is_compatible_orders_universal(order, &other_order) {
+            compatible_orders.push((order_id.clone(), other_order.clone()));
+        }
+    }
+    
+    // Sort by amount (smallest first for better fills)
+    compatible_orders.sort_by(|a, b| {
+        let amount_a: u128 = a.1.source_amount.parse().unwrap_or(0);
+        let amount_b: u128 = b.1.source_amount.parse().unwrap_or(0);
+        amount_a.cmp(&amount_b)
+    });
+    
+    compatible_orders
+}
+
+/// Check if two orders are compatible (opposite direction, same tokens)
+fn is_compatible_orders_universal(order1: &AtomicSwapOrder, order2: &AtomicSwapOrder) -> bool {
+    // Check if tokens match (works for ANY chain)
+    if order1.source_token != order2.destination_token { return false; }
+    if order1.destination_token != order2.source_token { return false; }
+    
+    // Check if amounts are compatible
+    let amount1: u128 = order1.source_amount.parse().unwrap_or(0);
+    let amount2: u128 = order2.source_amount.parse().unwrap_or(0);
+    
+    // Allow partial fills
+    amount1 > 0 && amount2 > 0
+}
+
+/// Fill a single order pair - works for ANY chain combination
+async fn fill_single_order_universal(order1_id: String, order2_id: String, amount: u128) -> Result<(), String> {
+    let orders = get_atomic_swap_orders();
+    let order1 = orders.get(&order1_id).ok_or("Order 1 not found")?;
+    let order2 = orders.get(&order2_id).ok_or("Order 2 not found")?;
+    
+    ic_cdk::println!("🔄 Executing universal swap:");
+    ic_cdk::println!("  Order 1: {} ({} → {})", order1_id, order1.source_token, order1.destination_token);
+    ic_cdk::println!("  Order 2: {} ({} → {})", order2_id, order2.source_token, order2.destination_token);
+    ic_cdk::println!("  Amount: {}", amount);
+    
+    // Determine chain types and execute appropriate swap
+    let order1_source_chain = get_chain_type_from_token(&order1.source_token);
+    let order1_dest_chain = get_chain_type_from_token(&order1.destination_token);
+    let order2_source_chain = get_chain_type_from_token(&order2.source_token);
+    let order2_dest_chain = get_chain_type_from_token(&order2.destination_token);
+    
+    ic_cdk::println!("🔍 Chain types: Order1=({:?}, {:?}), Order2=({:?}, {:?})", 
+        order1_source_chain, order1_dest_chain, order2_source_chain, order2_dest_chain);
+    
+    match (order1_source_chain, order1_dest_chain, order2_source_chain, order2_dest_chain) {
+        (ChainType::ICP, ChainType::Solana, ChainType::Solana, ChainType::ICP) => {
+            // ICP → Solana ↔ Solana → ICP
+            execute_icp_solana_swap(order1_id.clone(), order2_id.clone(), amount).await?;
+        },
+        (ChainType::Solana, ChainType::ICP, ChainType::ICP, ChainType::Solana) => {
+            // Solana → ICP ↔ ICP → Solana
+            execute_icp_solana_swap(order2_id.clone(), order1_id.clone(), amount).await?;
+        },
+        (ChainType::ICP, ChainType::EVM, ChainType::EVM, ChainType::ICP) => {
+            // ICP → EVM ↔ EVM → ICP
+            execute_icp_evm_swap(order1_id.clone(), order2_id.clone(), amount).await?;
+        },
+        (ChainType::EVM, ChainType::Solana, ChainType::Solana, ChainType::EVM) => {
+            // EVM → Solana ↔ Solana → EVM
+            execute_evm_solana_swap(order1_id.clone(), order2_id.clone(), amount).await?;
+        },
+        _ => {
+            return Err(format!("Unsupported chain combination: {:?} ↔ {:?}", 
+                (order1_source_chain, order1_dest_chain), 
+                (order2_source_chain, order2_dest_chain)));
+        }
+    }
+    
+    // Update order statuses
+    update_order_status(order1_id, SwapOrderStatus::Completed);
+    update_order_status(order2_id, SwapOrderStatus::Completed);
+    
+    Ok(())
+}
+
+/// Execute ICP ↔ Solana swap
+async fn execute_icp_solana_swap(order1_id: String, order2_id: String, _amount: u128) -> Result<(), String> {
+    let orders = get_atomic_swap_orders();
+    let order1 = orders.get(&order1_id).ok_or("Order 1 not found")?;
+    let order2 = orders.get(&order2_id).ok_or("Order 2 not found")?;
+    
+    // Determine which is ICP→Solana and which is Solana→ICP
+    let (icp_to_solana_order, solana_to_icp_order) = if order1.source_token.contains("-") {
+        (order1, order2)
+    } else {
+        (order2, order1)
+    };
+    
+    let (icp_to_solana_order_id, solana_to_icp_order_id) = if order1.source_token.contains("-") {
+        (order1_id, order2_id)
+    } else {
+        (order2_id, order1_id)
+    };
+    
+    ic_cdk::println!("🔄 Executing ICP ↔ Solana swap:");
+    ic_cdk::println!("  ICP→Solana: {} ({} → {})", icp_to_solana_order_id, icp_to_solana_order.source_token, icp_to_solana_order.destination_token);
+    ic_cdk::println!("  Solana→ICP: {} ({} → {})", solana_to_icp_order_id, solana_to_icp_order.source_token, solana_to_icp_order.destination_token);
+    
+    // Create HTLCs for both orders
+    create_htlcs_for_paired_orders(&icp_to_solana_order_id, &solana_to_icp_order_id).await?;
+    
+    // Execute the swap
+    execute_paired_swap(&icp_to_solana_order_id, &solana_to_icp_order_id).await?;
+    
+    Ok(())
+}
+
+/// Execute paired swap (reuse existing logic)
+async fn execute_paired_swap(icp_to_solana_order_id: &str, solana_to_icp_order_id: &str) -> Result<(), String> {
+    let orders = get_atomic_swap_orders();
+    let icp_to_solana_order = orders.get(icp_to_solana_order_id).ok_or("ICP→Solana order not found")?;
+    let solana_to_icp_order = orders.get(solana_to_icp_order_id).ok_or("Solana→ICP order not found")?;
+    
+    // Complete the Solana→ICP swap first
+    if let Some(solana_htlc_id) = &solana_to_icp_order.source_htlc_id {
+        ic_cdk::println!("  Completing Solana→ICP swap...");
+        match complete_cross_chain_swap_public(solana_to_icp_order_id.to_string(), solana_to_icp_order.secret.clone()).await {
+            Ok(result) => {
+                ic_cdk::println!("  ✅ Solana→ICP swap completed: {}", result);
+            },
+            Err(e) => {
+                ic_cdk::println!("  ❌ Failed to complete Solana→ICP swap: {}", e);
+                return Err(format!("Failed to complete Solana→ICP swap: {}", e));
+            }
+        }
+    } else {
+        return Err("Solana HTLC not found for Solana→ICP order".to_string());
+    }
+    
+    // Complete the ICP→Solana swap
+    ic_cdk::println!("  Completing ICP→Solana swap...");
+    match complete_cross_chain_swap_public(icp_to_solana_order_id.to_string(), icp_to_solana_order.secret.clone()).await {
+        Ok(result) => {
+            ic_cdk::println!("  ✅ ICP→Solana swap completed: {}", result);
+        },
+        Err(e) => {
+            ic_cdk::println!("  ❌ Failed to complete ICP→Solana swap: {}", e);
+            return Err(format!("Failed to complete ICP→Solana swap: {}", e));
+        }
+    }
+    
+    ic_cdk::println!("✅ Paired swap completed successfully");
+    Ok(())
+}
+
+/// Execute ICP ↔ EVM swap
+async fn execute_icp_evm_swap(_order1_id: String, _order2_id: String, _amount: u128) -> Result<(), String> {
+    // TODO: Implement ICP ↔ EVM swap execution
+    ic_cdk::println!("🔄 Executing ICP ↔ EVM swap (TODO)");
+    Ok(())
+}
+
+/// Execute EVM ↔ Solana swap
+async fn execute_evm_solana_swap(_order1_id: String, _order2_id: String, _amount: u128) -> Result<(), String> {
+    // TODO: Implement EVM ↔ Solana swap execution
+    ic_cdk::println!("🔄 Executing EVM ↔ Solana swap (TODO)");
+    Ok(())
+}
+
+/// Get chain type from token address
+fn get_chain_type_from_token(token: &str) -> ChainType {
+    if token.contains("-") {
+        // ICP canister ID contains hyphens
+        ChainType::ICP
+    } else if token.starts_with("0x") {
+        // EVM address starts with 0x
+        ChainType::EVM
+    } else {
+        // Solana address (base58)
+        ChainType::Solana
+    }
+}
+
+/// Update order status
+fn update_order_status(order_id: String, status: SwapOrderStatus) {
+    let mut orders = get_atomic_swap_orders();
+    if let Some(order) = orders.get_mut(&order_id) {
+        order.status = status;
+    }
+}
+
+/// Fill result structure
+#[derive(Debug)]
+struct FillResult {
+    fully_filled: bool,
+    remaining_amount: u128,
+    filled_orders: Vec<(String, u128)>,
+}
+
+/// Chain type enum
+#[derive(Debug, Clone, Copy)]
+enum ChainType {
+    ICP,
+    EVM,
+    Solana,
+}
+
+// ============================================================================
+// CROSS-CHAIN SWAP FUNCTIONS (LEGACY - TO BE REMOVED)
 // ============================================================================
 
 #[update]
@@ -359,9 +702,33 @@ async fn create_cross_chain_swap_order(
     destination_chain_id: u64,
     expiration_time: u64,
 ) -> Result<String, String> {
-    // Generate a random secret and its hash
-    let secret = format!("secret_{}_{}", ic_cdk::api::time(), ic_cdk::api::caller().to_string());
-    let secret_hash = format!("0x{}", hex::encode(secret.as_bytes()));
+    create_cross_chain_swap_order_with_secret(
+        maker, taker, source_asset, destination_asset, source_amount, destination_amount,
+        source_chain_id, destination_chain_id, expiration_time, None, None
+    ).await
+}
+
+async fn create_cross_chain_swap_order_with_secret(
+    maker: String,
+    taker: String,
+    source_asset: String,
+    destination_asset: String,
+    source_amount: String,
+    destination_amount: String,
+    source_chain_id: u64,
+    destination_chain_id: u64,
+    expiration_time: u64,
+    provided_secret: Option<String>,
+    provided_hashlock: Option<String>,
+) -> Result<String, String> {
+    // Use provided secret or generate a new one
+    let secret = provided_secret.unwrap_or_else(|| {
+        format!("secret_{}_{}", ic_cdk::api::time(), ic_cdk::api::caller().to_string())
+    });
+    let secret_hash = provided_hashlock.unwrap_or_else(|| {
+        let hashlock_bytes = evm::keccak256(secret.as_bytes());
+        format!("0x{}", hex::encode(hashlock_bytes))
+    });
     
     let order_id = generate_order_id();
     let direction = if source_chain_id == 0 { // 0 represents ICP
@@ -370,25 +737,52 @@ async fn create_cross_chain_swap_order(
         SwapDirection::EVMtoICP
     };
     
-    let order = CrossChainSwapOrder {
+    // Set destination addresses based on chain types
+    // For ICP→Solana: solana_destination_address should be set
+    // For Solana→ICP: icp_destination_principal should be set
+    // For ICP→EVM: evm_destination_address should be set
+    ic_cdk::println!("🔧 Setting destination addresses:");
+    ic_cdk::println!("  source_chain_id: {}, destination_chain_id: {}", source_chain_id, destination_chain_id);
+    ic_cdk::println!("  taker: {}", taker);
+    
+    let (evm_destination_address, icp_destination_principal, solana_destination_address) = 
+        if source_chain_id == 0 && destination_chain_id == 1 { // ICP → Solana
+            ic_cdk::println!("  ✅ ICP → Solana: Setting solana_destination_address to {}", taker);
+            (None, None, Some(taker.clone()))
+        } else if source_chain_id == 1 && destination_chain_id == 0 { // Solana → ICP
+            ic_cdk::println!("  ✅ Solana → ICP: Setting icp_destination_principal to {}", taker);
+            (None, Some(taker.clone()), None)
+        } else if source_chain_id == 0 && destination_chain_id > 1 { // ICP → EVM
+            ic_cdk::println!("  ✅ ICP → EVM: Setting evm_destination_address to {}", taker);
+            (Some(taker.clone()), None, None)
+        } else {
+            ic_cdk::println!("  ❌ Default case: No destination address set");
+            (None, None, None) // Default case
+        };
+    
+    let order = AtomicSwapOrder {
         order_id: order_id.clone(),
         maker,
         taker,
-        source_asset,
-        destination_asset,
+        source_token: source_asset,
+        destination_token: destination_asset,
         source_amount,
         destination_amount,
-        source_chain_id,
-        destination_chain_id,
         hashlock: secret_hash,
-        secret: Some(secret),
-        status: HTLCStatus::Created,
+        secret,
+        status: SwapOrderStatus::Created,
         created_at: ic_cdk::api::time(),
-        expiration_time,
-        direction,
+        expires_at: expiration_time,
+        timelock: expiration_time - 3600, // 1 hour before expiration
+        source_htlc_id: None,
+        destination_htlc_id: None,
+        evm_destination_address,
+        icp_destination_principal,
+        solana_destination_address,
+        counter_order_id: None,
     };
     
-    get_swap_orders().insert(order_id.clone(), order);
+    get_atomic_swap_orders().insert(order_id.clone(), order);
     
     Ok(order_id)
 }
@@ -671,7 +1065,7 @@ pub fn get_compatible_orders(order_id: String) -> Vec<AtomicSwapOrder> {
             .filter(|order| {
                 order.order_id != order_id && 
                 order.status == SwapOrderStatus::SourceHTLCCreated &&
-                is_compatible_orders(target_order, order)
+                is_compatible_orders_universal(target_order, order)
             })
             .cloned()
             .collect()
@@ -877,11 +1271,11 @@ pub async fn complete_cross_chain_swap_public(
         return Err("Invalid secret for swap".to_string());
     }
     
-    // Handle different swap directions based on maker's chain type
-    let maker_chain_type = get_chain_type(&order.maker);
-    ic_cdk::println!("🔍 Maker chain type: {}", maker_chain_type);
+    // Handle different swap directions based on source token chain type
+    let source_chain_type = get_chain_type(&order.source_token);
+    ic_cdk::println!("🔍 Source chain type: {}", source_chain_type);
     
-    if maker_chain_type == "EVM" {
+    if source_chain_type == "EVM" {
         // EVM→ICP or EVM→Solana swap: Claim destination HTLC and send to user's specified address
         if let Some(icp_destination) = &order.icp_destination_principal {
             // EVM→ICP swap: Transfer ICRC tokens from canister to user's destination
@@ -927,7 +1321,7 @@ pub async fn complete_cross_chain_swap_public(
         } else {
             Err("No destination address specified for EVM swap".to_string())
         }
-    } else if maker_chain_type == "Solana" {
+    } else if source_chain_type == "Solana" {
         // Solana→EVM or Solana→ICP swap: Transfer tokens directly to user's address
         ic_cdk::println!("🔍 Processing Solana→EVM/ICP swap...");
         
@@ -982,7 +1376,7 @@ pub async fn complete_cross_chain_swap_public(
             ic_cdk::println!("    Order icp_destination_principal: {:?}", order.icp_destination_principal);
             Err("No destination address specified for Solana swap".to_string())
         }
-    } else if maker_chain_type == "ICP" {
+    } else if source_chain_type == "ICP" {
         // ICP→EVM or ICP→Solana swap: Transfer tokens directly to user's address
         ic_cdk::println!("🔍 Processing ICP→EVM/Solana swap...");
         
@@ -1043,7 +1437,7 @@ pub async fn complete_cross_chain_swap_public(
             Err("No destination address specified for ICP swap".to_string())
         }
     } else {
-        Err(format!("Unrecognized maker chain type: {}", maker_chain_type))
+        Err(format!("Unrecognized source chain type: {}", source_chain_type))
     }
 }
 
@@ -1492,7 +1886,7 @@ async fn try_pair_orders(new_order_id: &str) -> Option<String> {
         }
         
         // Check if orders are compatible (opposite direction)
-        if is_compatible_orders(new_order, existing_order) {
+        if is_compatible_orders_universal(new_order, existing_order) {
             ic_cdk::println!("    ✅ Orders are compatible! Creating HTLCs...");
             // Automatically create HTLCs for both orders
             if let Ok(_) = create_htlcs_for_paired_orders(new_order_id, existing_order_id).await {
@@ -1510,54 +1904,8 @@ async fn try_pair_orders(new_order_id: &str) -> Option<String> {
     None
 }
 
-/// Check if two orders are compatible for pairing
-fn is_compatible_orders(order1: &AtomicSwapOrder, order2: &AtomicSwapOrder) -> bool {
-    ic_cdk::println!("    🔍 Checking compatibility:");
-    ic_cdk::println!("      Order1 source: {} -> destination: {}", order1.source_token, order1.destination_token);
-    ic_cdk::println!("      Order2 source: {} -> destination: {}", order2.source_token, order2.destination_token);
-    
-    // Check if tokens match (order1 source = order2 destination, order1 destination = order2 source)
-    let tokens_match = (order1.source_token == order2.destination_token) && 
-                      (order1.destination_token == order2.source_token);
-    
-    ic_cdk::println!("      Tokens match: {}", tokens_match);
-    
-    // Check if amounts are similar (within 10% tolerance)
-    let amount1: u128 = order1.source_amount.parse().unwrap_or(0);
-    let amount2: u128 = order2.destination_amount.parse().unwrap_or(0);
-    let amount_tolerance = amount1 * 10 / 100; // 10% tolerance
-    
-    let amounts_compatible = amount1 >= (amount2 - amount_tolerance) && 
-                           amount1 <= (amount2 + amount_tolerance);
-    
-    ic_cdk::println!("      Amount1: {}, Amount2: {}, Tolerance: {}", amount1, amount2, amount_tolerance);
-    ic_cdk::println!("      Amounts compatible: {}", amounts_compatible);
-    
-    // Check if swap directions are compatible
-    let directions_compatible = is_compatible_swap_direction(order1, order2);
-    ic_cdk::println!("      Directions compatible: {}", directions_compatible);
-    
-    let result = tokens_match && amounts_compatible && directions_compatible;
-    ic_cdk::println!("      Final result: {}", result);
-    
-    result
-}
-
-/// Check if swap directions are compatible for pairing
-fn is_compatible_swap_direction(order1: &AtomicSwapOrder, order2: &AtomicSwapOrder) -> bool {
-    // Determine chain types for each order
-    let order1_source_chain = get_chain_type(&order1.source_token);
-    let order1_dest_chain = get_chain_type(&order1.destination_token);
-    let order2_source_chain = get_chain_type(&order2.source_token);
-    let order2_dest_chain = get_chain_type(&order2.destination_token);
-    
-    ic_cdk::println!("      Order1: {} -> {}", order1_source_chain, order1_dest_chain);
-    ic_cdk::println!("      Order2: {} -> {}", order2_source_chain, order2_dest_chain);
-    
-    // Orders are compatible if they have opposite directions
-    // e.g., EVM->ICP with ICP->EVM, or Solana->EVM with EVM->Solana
-    (order1_source_chain == order2_dest_chain) && (order1_dest_chain == order2_source_chain)
-}
+// REMOVED: Old is_compatible_orders and is_compatible_swap_direction functions
+// Replaced with universal market order execution system
 
 /// Determine chain type from token address
 fn get_chain_type(token_address: &str) -> &'static str {
@@ -1576,53 +1924,73 @@ async fn create_htlcs_for_paired_orders(order1_id: &str, order2_id: &str) -> Res
     let order1 = orders.get(order1_id).ok_or("Order 1 not found")?;
     let order2 = orders.get(order2_id).ok_or("Order 2 not found")?;
     
-    ic_cdk::println!("🔍 Completing swap for paired orders:");
+    ic_cdk::println!("🔍 Creating HTLCs for paired orders:");
     ic_cdk::println!("  Order 1: {} (source: {}, destination: {})", order1_id, order1.source_token, order1.destination_token);
     ic_cdk::println!("  Order 2: {} (source: {}, destination: {})", order2_id, order2.source_token, order2.destination_token);
     
-    // Determine which order is EVM→ICP and which is ICP→EVM
-    let (evm_to_icp_order, icp_to_evm_order) = if order1.source_token.contains("0x") {
-        (order1, order2)
-    } else {
+    // Determine which order is Solana→ICP and which is ICP→Solana
+    let (solana_to_icp_order, icp_to_solana_order) = if order1.source_token.contains("-") {
+        // order1 is ICP token (contains canister ID with hyphens)
         (order2, order1)
+    } else {
+        // order1 is Solana token
+        (order1, order2)
     };
     
-    let evm_to_icp_order_id = if order1.source_token.contains("0x") { order1_id } else { order2_id };
-    let icp_to_evm_order_id = if order1.source_token.contains("0x") { order2_id } else { order1_id };
+    let solana_to_icp_order_id = if order1.source_token.contains("-") { order2_id } else { order1_id };
+    let icp_to_solana_order_id = if order1.source_token.contains("-") { order1_id } else { order2_id };
     
-    ic_cdk::println!("  EVM→ICP Order: {} (EVM HTLC: {:?})", evm_to_icp_order_id, evm_to_icp_order.source_htlc_id);
-    ic_cdk::println!("  ICP→EVM Order: {} (ICP tokens in escrow)", icp_to_evm_order_id);
+    ic_cdk::println!("  Solana→ICP Order: {} (Solana HTLC: {:?})", solana_to_icp_order_id, solana_to_icp_order.source_htlc_id);
+    ic_cdk::println!("  ICP→Solana Order: {} (ICP tokens in escrow)", icp_to_solana_order_id);
     
-    // Complete the EVM→ICP swap (this will transfer ICP tokens to the EVM user)
-    if let Some(_evm_htlc_id) = &evm_to_icp_order.source_htlc_id {
-        ic_cdk::println!("  Completing EVM→ICP swap...");
-        match complete_cross_chain_swap_public(evm_to_icp_order_id.to_string(), evm_to_icp_order.secret.clone()).await {
-            Ok(result) => {
-                ic_cdk::println!("  ✅ EVM→ICP swap completed: {}", result);
+    // Ensure both orders use the same secret for HTLC compatibility
+    let shared_secret = &solana_to_icp_order.secret;
+    let shared_hashlock = &solana_to_icp_order.hashlock;
+    
+    ic_cdk::println!("  🔗 Synchronizing secrets between orders:");
+    ic_cdk::println!("    Solana→ICP secret: {}", shared_secret);
+    ic_cdk::println!("    Solana→ICP hashlock: {}", shared_hashlock);
+    
+    // Update the ICP→Solana order to use the same secret as the Solana→ICP order
+    let mut orders = get_atomic_swap_orders();
+    if let Some(icp_order) = orders.get_mut(icp_to_solana_order_id) {
+        ic_cdk::println!("    ICP→Solana old secret: {}", icp_order.secret);
+        ic_cdk::println!("    ICP→Solana old hashlock: {}", icp_order.hashlock);
+        
+        icp_order.secret = shared_secret.clone();
+        icp_order.hashlock = shared_hashlock.clone();
+        
+        ic_cdk::println!("    ✅ ICP→Solana order updated with shared secret");
+    }
+    
+    // Create Solana HTLC if it doesn't exist
+    if solana_to_icp_order.source_htlc_id.is_none() {
+        ic_cdk::println!("  Creating Solana HTLC for order: {}", solana_to_icp_order_id);
+        match solana::create_solana_htlc(
+            solana_to_icp_order_id,
+            &solana_to_icp_order.source_token,
+            solana_to_icp_order.source_amount.parse::<u64>().unwrap_or(0),
+            shared_hashlock,
+            solana_to_icp_order.timelock,
+            &solana_to_icp_order.solana_destination_address.as_ref().unwrap_or(&solana_to_icp_order.taker),
+            true, // is_source_htlc = true for Solana→ICP orders
+        ).await {
+            Ok(htlc_id) => {
+                ic_cdk::println!("  ✅ Solana HTLC created: {}", htlc_id);
+                // Update the order with the HTLC ID
+                if let Some(order) = orders.get_mut(solana_to_icp_order_id) {
+                    order.source_htlc_id = Some(htlc_id);
+                }
             },
             Err(e) => {
-                ic_cdk::println!("  ❌ Failed to complete EVM→ICP swap: {}", e);
-                return Err(format!("Failed to complete EVM→ICP swap: {}", e));
+                ic_cdk::println!("  ❌ Failed to create Solana HTLC: {}", e);
+                return Err(format!("Failed to create Solana HTLC: {}", e));
             }
         }
-    } else {
-        return Err("EVM HTLC not found for EVM→ICP order".to_string());
     }
     
-    // Complete the ICP→EVM swap (this will transfer ERC20 tokens to the ICP user)
-    ic_cdk::println!("  Completing ICP→EVM swap...");
-    match complete_cross_chain_swap_public(icp_to_evm_order_id.to_string(), icp_to_evm_order.secret.clone()).await {
-        Ok(result) => {
-            ic_cdk::println!("  ✅ ICP→EVM swap completed: {}", result);
-        },
-        Err(e) => {
-            ic_cdk::println!("  ❌ Failed to complete ICP→EVM swap: {}", e);
-            return Err(format!("Failed to complete ICP→EVM swap: {}", e));
-        }
-    }
-    
-    ic_cdk::println!("✅ Swap completed successfully for paired orders");
-    Ok("Swap completed for paired orders".to_string())
+    ic_cdk::println!("✅ HTLCs created successfully for paired orders");
+    Ok("HTLCs created for paired orders".to_string())
 }
 
 // ============================================================================

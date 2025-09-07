@@ -370,7 +370,7 @@ service : () -> {
   // Get Solana wallet for ICP principal (public API)
   get_solana_wallet_public : (text) -> (Result);
   // Get SPL token account balance (public API)
-  get_spl_token_balance_public : (text, text) -> (Result);
+  get_spl_token_balance_public : (text) -> (Result);
   // Get canister's Solana address (public API)
   get_canister_solana_address_public : () -> (Result);
   // Create Solana HTLC (public API)
@@ -427,6 +427,8 @@ service : () -> {
   test_unified_pool_system : () -> (text);
   // Transfer ERC20 tokens from backend canister to recipient
   transfer_erc20_tokens_public : (text, text, text) -> (Result);
+  // Universal market order execution - fills orders immediately like Binance
+  create_cross_chain_swap_order_public : (text, text, text, text, text, text, nat64, nat64, nat64) -> (Result);
   // Removed approve_icrc_tokens_public - users should call icrc2_approve directly on token canisters
   // Transfer from ICRC-1 tokens (public API)
   transfer_from_icrc_tokens_public : (text, text, text, nat) -> (Result);

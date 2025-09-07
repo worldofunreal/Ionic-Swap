@@ -233,6 +233,10 @@ export interface _SERVICE {
     [string, string, string, string, string, string, bigint, bigint, bigint],
     Result
   >,
+  'create_cross_chain_swap_order_public' : ActorMethod<
+    [string, string, string, string, string, string, bigint, bigint, bigint],
+    Result
+  >,
   'create_evm_htlc' : ActorMethod<[string, boolean], Result>,
   'create_evm_to_icp_order' : ActorMethod<
     [string, string, string, string, string, string, bigint, PermitRequest],
@@ -338,7 +342,7 @@ export interface _SERVICE {
   'get_solana_htlc_status_public' : ActorMethod<[string], Result_2>,
   'get_solana_slot_public' : ActorMethod<[], Result_7>,
   'get_solana_wallet_public' : ActorMethod<[string], Result>,
-  'get_spl_token_balance_public' : ActorMethod<[string, string], Result>,
+  'get_spl_token_balance_public' : ActorMethod<[string], Result>,
   'get_swap_order' : ActorMethod<[string], [] | [CrossChainSwapOrder]>,
   'get_total_fees' : ActorMethod<[], Result>,
   'get_transaction_count' : ActorMethod<[string], Result>,
