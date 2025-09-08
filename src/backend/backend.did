@@ -1,34 +1,42 @@
-type CommitmentLevel = variant { finalized; confirmed; processed };
-type CreateEscrowWithPermitArgs = record {
-  permit_signature : blob;
-  deadline : nat64;
-  expiry_timestamp : nat64;
-  nonce : nat64;
+type SolanaNetwork = variant { Devnet; Testnet; Mainnet };
+type InitArg = record {
+  solana_network : opt SolanaNetwork;
+};
+
+type PermitMessage = record {
   order_id : blob;
-  user_pubkey : text;
   amount : nat64;
+  expiry_timestamp : int64;
+  user_pubkey : text;
+  nonce : nat64;
+  deadline : int64;
   token_mint : text;
 };
-type Ed25519KeyName = variant {
-  MainnetTestKey1;
-  LocalDevelopment;
-  MainnetProdKey1;
+
+type CreateEscrowWithPermitArgs = record {
+  order_id : blob;
+  amount : nat64;
+  expiry_timestamp : nat64;
+  permit_signature : blob;
+  nonce : nat64;
+  deadline : nat64;
+  user_pubkey : text;
+  token_mint : text;
 };
-type HttpHeader = record { value : text; name : text };
-type InitArg = record {
-  solana_commitment_level : opt CommitmentLevel;
-  ed25519_key_name : opt Ed25519KeyName;
-  solana_network : opt SolanaNetwork;
-  sol_rpc_canister_id : opt principal;
+
+type PermitResult = record {
+  success : bool;
+  transaction_hash : opt text;
+  error_message : opt text;
 };
-type Result = variant { Ok : text; Err : text };
-type RpcEndpoint = record { url : text; headers : opt vec HttpHeader };
-type SolanaNetwork = variant { Mainnet; Custom : RpcEndpoint; Devnet };
+
 service : (InitArg) -> {
-  create_escrow_with_permit : (CreateEscrowWithPermitArgs) -> (Result);
-  create_transfer_message : (opt principal, text, nat) -> (blob);
-  get_balance : (opt text) -> (nat);
-  send_sol : (opt principal, text, nat) -> (text);
-  sign_transaction : (opt principal, blob) -> (text);
+  // Core Solana operations
   solana_account : (opt principal) -> (text);
+  get_balance : (opt text) -> (variant { Ok : nat64; Err : text });
+  get_spl_token_balance : (text) -> (variant { Ok : text; Err : text });
+  get_associated_token_address : (text, text) -> (variant { Ok : text; Err : text });
+  
+  // Permit system
+  create_escrow_with_permit : (CreateEscrowWithPermitArgs) -> (variant { Ok : PermitResult; Err : text });
 }

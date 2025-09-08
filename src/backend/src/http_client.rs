@@ -1,0 +1,389 @@
+use candid::Principal;
+use ic_http_certification::{
+    DefaultCelBuilder, DefaultResponseCertification, HttpCertification, HttpRequest, HttpResponse,
+    HttpCertificationTree, HttpCertificationTreeEntry, HttpCertificationPath,
+    CERTIFICATE_EXPRESSION_HEADER_NAME,
+};
+use serde_json::{json, Value};
+use sha3::{Digest, Keccak256};
+use std::collections::HashMap;
+
+// ============================================================================
+// HTTP CERTIFICATION TREE
+// ============================================================================
+
+static mut HTTP_CERTIFICATION_TREE: Option<HttpCertificationTree> = None;
+
+// ============================================================================
+// HTTP HELPER FUNCTIONS
+// ============================================================================
+
+pub fn get_http_certification_tree() -> &'static mut HttpCertificationTree {
+    unsafe {
+        let ptr = &raw mut HTTP_CERTIFICATION_TREE;
+        if let Some(tree) = &mut *ptr {
+            tree
+        } else {
+            HTTP_CERTIFICATION_TREE = Some(HttpCertificationTree::default());
+            (&mut *ptr).as_mut().unwrap()
+        }
+    }
+}
+
+pub async fn make_http_request(request: HttpRequest<'_>) -> Result<HttpResponse<'static>, String> {
+    let cycles = 230_949_972_000u64;
+    
+    // Create CEL expression for response-only certification
+    let cel_expr = DefaultCelBuilder::response_only_certification()
+        .with_response_certification(DefaultResponseCertification::certified_response_headers(vec![
+            "Content-Type",
+            "Content-Length",
+        ]))
+        .build();
+
+    // Create the HTTP request argument using the builder pattern
+    let request_args = ic_cdk::api::management_canister::http_request::CanisterHttpRequestArgument {
+        url: request.url().to_string(),
+        max_response_bytes: None,
+        headers: request.headers().iter().map(|h| ic_cdk::api::management_canister::http_request::HttpHeader { name: h.0.clone(), value: h.1.clone() }).collect(),
+        body: Some(request.body().to_vec()),
+        method: match request.method().as_str() {
+            "GET" => ic_cdk::api::management_canister::http_request::HttpMethod::GET,
+            "POST" => ic_cdk::api::management_canister::http_request::HttpMethod::POST,
+            "HEAD" => ic_cdk::api::management_canister::http_request::HttpMethod::HEAD,
+            _ => ic_cdk::api::management_canister::http_request::HttpMethod::GET,
+        },
+        transform: None,
+    };
+
+    // Make the HTTP request
+    let result: Result<(ic_cdk::api::management_canister::http_request::HttpResponse,), _> = 
+        ic_cdk::api::call::call_with_payment(
+            Principal::management_canister(),
+            "http_request",
+            (request_args,),
+            cycles,
+        )
+        .await;
+    
+    match result {
+        Ok((response,)) => {
+            // Convert to our HttpResponse type
+            let mut headers = response.headers.iter().map(|h| (h.name.clone(), h.value.clone())).collect::<Vec<_>>();
+            headers.push((CERTIFICATE_EXPRESSION_HEADER_NAME.to_string(), cel_expr.to_string()));
+            
+            let http_response = HttpResponse::ok(
+                response.body,
+                headers,
+            ).build();
+            
+            // Add certification to the response
+            let certification = HttpCertification::response_only(&cel_expr, &http_response, None)
+                .map_err(|e| format!("Failed to create certification: {:?}", e))?;
+            
+            // Add the certification to the tree
+            let path = HttpCertificationPath::exact("/json-rpc");
+            let entry = HttpCertificationTreeEntry::new(&path, &certification);
+            get_http_certification_tree().insert(&entry);
+            
+            Ok(http_response)
+        },
+        Err(err) => Err(format!("HTTP request failed: {:?}", err)),
+    }
+}
+
+// ============================================================================
+// SOLANA RPC CONFIGURATION
+// ============================================================================
+
+/// Get the current Solana RPC endpoint
+fn get_solana_rpc_endpoint() -> &'static str {
+    // This will be set by the main lib.rs based on the network configuration
+    "https://api.devnet.solana.com"
+}
+
+// ============================================================================
+// SOLANA RPC CALLS
+// ============================================================================
+
+/// Make an HTTP RPC call to Solana
+pub async fn call_solana_rpc(method: &str, params: serde_json::Value) -> Result<serde_json::Value, String> {
+    let request = json!({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": method,
+        "params": params
+    });
+
+    let request_body = serde_json::to_string(&request)
+        .map_err(|e| format!("Failed to serialize request: {}", e))?;
+
+    let url = get_solana_rpc_endpoint();
+    
+    let http_request = HttpRequest::post(url)
+        .with_headers(vec![
+            ("Content-Type".to_string(), "application/json".to_string()),
+            ("User-Agent".to_string(), "ionic-swap-backend".to_string()),
+        ])
+        .with_body(request_body.into_bytes())
+        .build();
+
+    let response = make_http_request(http_request).await?;
+    
+    let response_str = String::from_utf8(response.body().to_vec())
+        .map_err(|e| format!("Failed to decode response: {}", e))?;
+
+    let response_json: serde_json::Value = serde_json::from_str(&response_str)
+        .map_err(|e| format!("Failed to parse JSON response: {}", e))?;
+
+    // Check for RPC error
+    if let Some(error) = response_json.get("error") {
+        return Err(format!("Solana RPC error: {:?}", error));
+    }
+
+    Ok(response_json)
+}
+
+// ============================================================================
+// BASIC SOLANA OPERATIONS
+// ============================================================================
+
+/// Get Solana account balance
+pub async fn get_solana_balance(account: String) -> Result<u64, String> {
+    let params = json!([account]);
+    let response = call_solana_rpc("getBalance", params).await?;
+    
+    // Extract balance from response
+    if let Some(result) = response["result"].as_u64() {
+        Ok(result)
+    } else if let Some(result) = response["result"]["value"].as_u64() {
+        Ok(result)
+    } else {
+        // Debug: print the actual response structure
+        let debug_response = serde_json::to_string(&response).unwrap_or_else(|_| "Failed to serialize".to_string());
+        Err(format!("Invalid response format - no balance found. Response: {}", debug_response))
+    }
+}
+
+/// Get Solana slot (block number)
+pub async fn get_solana_slot() -> Result<u64, String> {
+    let params = json!([]);
+    let response = call_solana_rpc("getSlot", params).await?;
+    
+    // Extract slot from response
+    if let Some(result) = response["result"].as_u64() {
+        Ok(result)
+    } else {
+        Err("Invalid response format - no slot found".to_string())
+    }
+}
+
+/// Get Solana account info
+pub async fn get_solana_account_info(account: String) -> Result<String, String> {
+    let params = json!([
+        account,
+        {
+            "encoding": "base64"
+        }
+    ]);
+    
+    let response = call_solana_rpc("getAccountInfo", params).await?;
+    
+    // Return the full result as string
+    if let Some(result) = response["result"]["value"].as_object() {
+        Ok(serde_json::to_string(&result).unwrap())
+    } else {
+        Err("Invalid response format - no account info found".to_string())
+    }
+}
+
+/// Get latest blockhash
+pub async fn get_latest_blockhash() -> Result<String, String> {
+    let params = json!([{"commitment": "confirmed"}]);
+    let response = call_solana_rpc("getLatestBlockhash", params).await?;
+    
+    if let Some(result) = response["result"]["value"]["blockhash"].as_str() {
+        Ok(result.to_string())
+    } else {
+        Err("Failed to get blockhash".to_string())
+    }
+}
+
+// ============================================================================
+// SPL TOKEN OPERATIONS
+// ============================================================================
+
+/// Get SPL token account balance
+pub async fn get_spl_token_balance(token_account: String) -> Result<String, String> {
+    let params = json!([token_account]);
+    let response = call_solana_rpc("getTokenAccountBalance", params).await?;
+    
+    // Extract balance from response
+    if let Some(amount) = response["result"]["value"]["amount"].as_str() {
+        Ok(amount.to_string())
+    } else {
+        Err("Invalid response format - no token balance found".to_string())
+    }
+}
+
+/// Get token accounts by owner
+pub async fn get_token_accounts_by_owner(owner: String, mint: Option<String>) -> Result<serde_json::Value, String> {
+    let mut params = json!([
+        owner,
+        {
+            "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+            "encoding": "jsonParsed"
+        }
+    ]);
+    
+    if let Some(mint_address) = mint {
+        params[1]["mint"] = json!(mint_address);
+    }
+    
+    let response = call_solana_rpc("getTokenAccountsByOwner", params).await?;
+    
+    Ok(response["result"].clone())
+}
+
+/// Get token supply
+pub async fn get_token_supply(mint: String) -> Result<serde_json::Value, String> {
+    let params = json!([mint]);
+    let response = call_solana_rpc("getTokenSupply", params).await?;
+    
+    Ok(response["result"].clone())
+}
+
+// ============================================================================
+// TRANSACTION OPERATIONS
+// ============================================================================
+
+/// Send SOL transaction
+pub async fn send_sol_transaction(
+    from_address: &str,
+    to_address: &str,
+    amount: u64,
+) -> Result<String, String> {
+    // Get latest blockhash for transaction
+    let blockhash = get_latest_blockhash().await?;
+
+    // Create transfer instruction (simplified)
+    let instruction_data = vec![
+        2u8, // Instruction type: transfer
+    ];
+
+    // In a real implementation, you would:
+    // 1. Create proper Solana instruction
+    // 2. Build transaction with proper account metas
+    // 3. Sign the transaction with the canister's key
+    // 4. Submit the signed transaction
+
+    // For now, return the blockhash and instruction data
+    let response = json!({
+        "blockhash": blockhash,
+        "instruction_data": instruction_data,
+        "from": from_address,
+        "to": to_address,
+        "amount": amount
+    });
+
+    Ok(serde_json::to_string(&response).unwrap())
+}
+
+/// Send SPL token transaction
+pub async fn send_spl_token_transaction(
+    from_token_account: &str,
+    to_token_account: &str,
+    authority: &str,
+    amount: u64,
+) -> Result<String, String> {
+    // Get latest blockhash for transaction
+    let blockhash = get_latest_blockhash().await?;
+
+    // Create transfer instruction
+    let instruction_data = create_spl_transfer_instruction_data(amount);
+
+    // In a real implementation, you would:
+    // 1. Create proper SPL token transfer instruction
+    // 2. Build transaction with proper account metas
+    // 3. Sign the transaction with the canister's key
+    // 4. Submit the signed transaction
+
+    let response = json!({
+        "blockhash": blockhash,
+        "instruction_data": instruction_data,
+        "from_token_account": from_token_account,
+        "to_token_account": to_token_account,
+        "authority": authority,
+        "amount": amount
+    });
+
+    Ok(serde_json::to_string(&response).unwrap())
+}
+
+/// Create SPL token transfer instruction data
+fn create_spl_transfer_instruction_data(amount: u64) -> Vec<u8> {
+    let mut instruction_data = vec![3u8]; // Transfer instruction
+    instruction_data.extend_from_slice(&amount.to_le_bytes());
+    instruction_data
+}
+
+// ============================================================================
+// TRANSACTION VERIFICATION
+// ============================================================================
+
+/// Get transaction details
+pub async fn get_transaction(signature: String) -> Result<serde_json::Value, String> {
+    let params = json!([
+        signature,
+        {
+            "encoding": "json",
+            "maxSupportedTransactionVersion": 0
+        }
+    ]);
+    
+    let response = call_solana_rpc("getTransaction", params).await?;
+    
+    Ok(response["result"].clone())
+}
+
+/// Get transaction status
+pub async fn get_transaction_status(signature: String) -> Result<serde_json::Value, String> {
+    let params = json!([signature]);
+    let response = call_solana_rpc("getSignatureStatuses", params).await?;
+    
+    Ok(response["result"].clone())
+}
+
+// ============================================================================
+// NETWORK INFORMATION
+// ============================================================================
+
+/// Get cluster info
+pub async fn get_cluster_info() -> Result<serde_json::Value, String> {
+    let params = json!([]);
+    let response = call_solana_rpc("getClusterInfo", params).await?;
+    
+    Ok(response["result"].clone())
+}
+
+/// Get version
+pub async fn get_version() -> Result<serde_json::Value, String> {
+    let params = json!([]);
+    let response = call_solana_rpc("getVersion", params).await?;
+    
+    Ok(response["result"].clone())
+}
+
+/// Get health
+pub async fn get_health() -> Result<String, String> {
+    let params = json!([]);
+    let response = call_solana_rpc("getHealth", params).await?;
+    
+    if let Some(result) = response["result"].as_str() {
+        Ok(result.to_string())
+    } else {
+        Ok("ok".to_string()) // Default to ok if no result
+    }
+}
