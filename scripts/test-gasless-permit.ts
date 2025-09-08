@@ -5,7 +5,8 @@ import {
   getAssociatedTokenAddress, 
   getAccount,
   TOKEN_PROGRAM_ID,
-  ASSOCIATED_TOKEN_PROGRAM_ID
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  createApproveCheckedInstruction
 } from '@solana/spl-token';
 import * as bip39 from 'bip39';
 import { createHash, randomBytes } from 'crypto';
@@ -75,20 +76,11 @@ const createPermitMessage = (user: string, tokenMint: string, amount: number, or
   };
 };
 
-// Sign permit message (mock implementation for testing)
-const signPermitMessage = async (message: PermitMessage, keypair: Keypair): Promise<string> => {
-  // Create message hash
-  const messageString = JSON.stringify(message);
-  const messageHash = createHash('sha256').update(messageString).digest();
-  
-  // Mock signature for testing (in real implementation, use proper Ed25519 signing)
-  const mockSignature = createHash('sha256')
-    .update(messageHash)
-    .update(keypair.secretKey)
-    .digest();
-  
-  // Return signature as base64
-  return Buffer.from(mockSignature).toString('base64');
+// Sign transaction with real Ed25519 (no mock signatures!)
+const signTransaction = async (transaction: Transaction, keypair: Keypair): Promise<Transaction> => {
+  // Sign the transaction with Alice's keypair
+  transaction.sign(keypair);
+  return transaction;
 };
 
 // Test gasless permit flow
@@ -129,60 +121,80 @@ const testGaslessPermit = async () => {
     console.log(`   Stardust: Account not found or error`);
   }
   
-  // Create permit message
-  const orderId = randomBytes(32); // Generate exactly 32 bytes
-  const nonce = Math.floor(Math.random() * 1000000);
-  const expiry = Date.now() + (24 * 60 * 60 * 1000); // 24 hours from now
+  // Get canister's Solana wallet address
+  console.log('\n🏦 Getting Canister\'s Solana Wallet...');
+  const { execSync } = require('child_process');
+  const canisterWalletOutput = execSync('dfx canister call backend get_canister_public_key', { encoding: 'utf8' });
+  const canisterWallet = canisterWalletOutput.trim().replace(/[()"]/g, '');
+  console.log(`   Canister Wallet: ${canisterWallet}`);
   
-  const permitMessage = createPermitMessage(
-    alice.solAddress,
-    SPIRAL_MINT,
-    1000 * Math.pow(10, 8), // 1000 SPIRAL tokens
-    orderId.toString('hex'), // Convert Buffer to hex string
-    nonce,
-    expiry
+  // Create ApproveChecked transaction for delegation
+  console.log('\n📝 Creating ApproveChecked Transaction:');
+  const amount = 1000 * Math.pow(10, 8); // 1000 SPIRAL tokens
+  const decimals = 8; // SPIRAL token decimals
+  
+  // Get Alice's associated token account
+  const aliceTokenAccount = await getAssociatedTokenAddress(
+    new PublicKey(SPIRAL_MINT),
+    alice.solKeypair.publicKey
   );
   
-  console.log('\n📝 Creating Permit Message:');
-  console.log(`   User: ${permitMessage.user}`);
-  console.log(`   Token: ${permitMessage.token_mint}`);
-  console.log(`   Amount: ${permitMessage.amount} (${permitMessage.amount / Math.pow(10, 8)} SPIRAL)`);
-  console.log(`   Order ID: ${permitMessage.order_id} (${permitMessage.order_id.length / 2} bytes)`);
-  console.log(`   Nonce: ${permitMessage.nonce}`);
-  console.log(`   Expiry: ${new Date(permitMessage.expiry).toISOString()}`);
+  // Get canister's associated token account
+  const canisterTokenAccount = await getAssociatedTokenAddress(
+    new PublicKey(SPIRAL_MINT),
+    new PublicKey(canisterWallet)
+  );
   
-  // Sign permit message
-  console.log('\n✍️  Signing Permit Message...');
-  const permitSignature = await signPermitMessage(permitMessage, alice.solKeypair);
-  console.log(`   Signature: ${permitSignature}`);
+  console.log(`   Alice Token Account: ${aliceTokenAccount.toString()}`);
+  console.log(`   Canister Token Account: ${canisterTokenAccount.toString()}`);
+  console.log(`   Amount: ${amount} (${amount / Math.pow(10, 8)} SPIRAL)`);
+  console.log(`   Decimals: ${decimals}`);
   
-  // Call canister to create escrow with permit
-  console.log('\n🚀 Calling Canister to Create Gasless Escrow...');
+  // Create ApproveChecked instruction
+  const approveInstruction = createApproveCheckedInstruction(
+    aliceTokenAccount,           // source (Alice's ATA)
+    new PublicKey(SPIRAL_MINT),  // mint
+    new PublicKey(canisterWallet), // delegate (canister)
+    alice.solKeypair.publicKey,  // owner (Alice)
+    amount,                      // amount
+    decimals                     // decimals
+  );
+  
+  // Get latest blockhash
+  const { blockhash } = await connection.getLatestBlockhash();
+  
+  // Create transaction with canister as fee payer
+  const transaction = new Transaction({
+    recentBlockhash: blockhash,
+    feePayer: new PublicKey(canisterWallet) // Canister pays gas!
+  });
+  
+  transaction.add(approveInstruction);
+  
+  console.log('\n✍️  Signing Transaction with Alice\'s Key...');
+  // Alice signs the transaction (but canister pays gas)
+  const signedTransaction = await signTransaction(transaction, alice.solKeypair);
+  console.log(`   Transaction signed by Alice`);
+  
+  // Send signed transaction to canister for co-signing and submission
+  console.log('\n🚀 Sending Signed Transaction to Canister...');
   console.log('   This will:');
-  console.log('   1. Verify Alice\'s signature');
-  console.log('   2. Create escrow on Solana (canister pays gas)');
-  console.log('   3. Transfer Alice\'s tokens to escrow');
+  console.log('   1. Canister co-signs as fee payer');
+  console.log('   2. Canister submits to Solana');
+  console.log('   3. Alice delegates tokens to canister');
   console.log('   4. Alice pays NO gas fees!');
   
-  // Make actual canister call
-  console.log('\n📞 Making Actual Canister Call...');
+  // Serialize the partially signed transaction (Alice signed, canister will co-sign)
+  const serializedTransaction = signedTransaction.serialize({ requireAllSignatures: false });
+  const transactionBase64 = serializedTransaction.toString('base64');
+  
+  console.log('\n📞 Sending Transaction to Canister...');
   try {
-    const { execSync } = require('child_process');
+    const canisterCall = `dfx canister call backend submit_delegation_transaction '(blob "${transactionBase64}")'`;
     
-    const canisterCall = `dfx canister call backend create_escrow_with_permit '(record {
-      user_pubkey = "${alice.solAddress}";
-      token_mint = "${SPIRAL_MINT}";
-      amount = ${permitMessage.amount};
-      order_id = blob "${orderId.toString('hex')}";
-      nonce = ${nonce};
-      expiry_timestamp = ${expiry};
-      permit_signature = blob "${Buffer.from(permitSignature, 'base64').toString('hex')}";
-      deadline = ${expiry}
-    })'`;
-    
-    console.log('   Executing:', canisterCall);
+    console.log('   Executing delegation transaction...');
     const result = execSync(canisterCall, { encoding: 'utf8', timeout: 30000 });
-    console.log('   ✅ Canister call successful!');
+    console.log('   ✅ Delegation transaction successful!');
     console.log('   Result:', result);
     
     // Check Alice's balance after the call

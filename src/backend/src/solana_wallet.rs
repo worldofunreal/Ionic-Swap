@@ -140,9 +140,9 @@ pub async fn get_ed25519_public_key_async() -> Result<(Vec<u8>, [u8; 32]), Strin
 
 /// Derive a Solana account from a derivation path
 fn derive_solana_address(derivation_path: &[u8]) -> String {
-    // For now, use a simple hash-based derivation
-    // In production, you'd use proper HD wallet derivation
+    // Use the SAME derivation method as key generation for consistency
     let mut hasher = Keccak256::new();
+    hasher.update(b"solana_wallet_seed");
     hasher.update(derivation_path);
     let hash = hasher.finalize();
     bs58::encode(&hash[..32]).into_string()

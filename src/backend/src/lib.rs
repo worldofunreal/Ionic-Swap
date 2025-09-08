@@ -138,6 +138,14 @@ pub async fn get_public_key(owner: Option<Principal>) -> String {
     wallet.get_public_key_base58()
 }
 
+/// Get the canister's own public key (always returns canister's wallet)
+#[update]
+pub async fn get_canister_public_key() -> String {
+    let canister_principal = ic_cdk::api::id();
+    let wallet = solana_wallet::SolanaWallet::new(canister_principal);
+    wallet.get_public_key_base58()
+}
+
 /// Get the SOL balance of a given account
 #[update]
 pub async fn get_balance(account: Option<String>) -> Result<u64, String> {
@@ -217,6 +225,79 @@ pub async fn test_ed25519() -> Result<String, String> {
 }
 
 /// Create escrow using permit (gasless for user) - SIMPLIFIED VERSION
+/// Submit delegation transaction (Alice signs, canister co-signs and pays gas)
+#[update]
+pub async fn submit_delegation_transaction(transaction_data: Vec<u8>) -> Result<String, String> {
+    ic_cdk::println!("🚀 Submitting delegation transaction (Alice signed, canister co-signs)");
+    ic_cdk::println!("   Received transaction data: {} bytes", transaction_data.len());
+    
+    // The transaction data is base64 encoded, decode it first
+    let decoded_data = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &transaction_data)
+        .map_err(|e| format!("Failed to decode base64 transaction data: {}", e))?;
+    
+    ic_cdk::println!("   Decoded transaction data: {} bytes", decoded_data.len());
+    
+    // Try to deserialize the transaction
+    let mut transaction: Transaction = match bincode::deserialize::<Transaction>(&decoded_data) {
+        Ok(tx) => {
+            ic_cdk::println!("   ✅ Transaction deserialized successfully");
+            ic_cdk::println!("   Signatures: {}", tx.signatures.len());
+            tx
+        },
+        Err(e) => {
+            ic_cdk::println!("   ❌ Failed to deserialize transaction: {}", e);
+            ic_cdk::println!("   First 100 bytes: {:?}", &transaction_data[..std::cmp::min(100, transaction_data.len())]);
+            return Err(format!("Failed to deserialize transaction: {}", e));
+        }
+    };
+    
+    // Get canister's wallet for co-signing
+    let canister_principal = ic_cdk::api::id();
+    let canister_wallet = solana_wallet::SolanaWallet::new(canister_principal);
+    
+    // Sign the transaction message with canister's key (as fee payer)
+    let message_bytes = bincode::serialize(&transaction.message)
+        .map_err(|e| format!("Failed to serialize message: {}", e))?;
+    
+    let canister_signature = canister_wallet.sign_message(&message_bytes).await?;
+    let signature = Signature::try_from(canister_signature.as_slice())
+        .map_err(|e| format!("Invalid canister signature: {}", e))?;
+    
+    // Replace the canister's signature (it should be at index 0, as fee payer)
+    // The signatures must be in the same order as the signers in the message header
+    if transaction.signatures.len() >= 1 {
+        transaction.signatures[0] = signature; // Replace canister's signature at index 0
+    } else {
+        transaction.signatures.push(signature); // Add if not enough signatures
+    }
+    
+    ic_cdk::println!("   Final signatures count: {}", transaction.signatures.len());
+    ic_cdk::println!("   Message header signers: {}", transaction.message.header.num_required_signatures);
+    
+    // Debug: Print the actual public keys in the message
+    ic_cdk::println!("   🔍 Message Account Keys (first 2 are signers):");
+    for (i, pubkey) in transaction.message.account_keys.iter().enumerate() {
+        if i < 2 {
+            ic_cdk::println!("     Signer {}: {}", i, pubkey.to_string());
+        } else {
+            ic_cdk::println!("     Account {}: {}", i, pubkey.to_string());
+        }
+    }
+    
+    // Debug: Print our canister's public key
+    let canister_pubkey = canister_wallet.get_public_key_base58();
+    ic_cdk::println!("   🔍 Our Canister Public Key: {}", canister_pubkey);
+    
+    ic_cdk::println!("   ✅ Canister co-signed the transaction");
+    
+    // Submit the fully signed transaction to Solana
+    let tx_hash = submit_proper_solana_transaction(&transaction).await?;
+    
+    ic_cdk::println!("   ✅ Delegation transaction submitted: {}", tx_hash);
+    
+    Ok(tx_hash)
+}
+
 #[update]
 pub async fn create_escrow_with_permit(args: CreateEscrowWithPermitArgs) -> Result<PermitResult, String> {
     ic_cdk::println!("🚀 SIMPLIFIED: Pulling tokens from Alice to canister");
@@ -291,21 +372,22 @@ async fn transfer_spl_tokens_with_permit(
     ic_cdk::println!("Canister token account: {}", canister_token_account);
     
     // Create SPL token transfer instruction
+    // The canister acts as authority (Alice pre-authorizes via permit)
     let transfer_instruction = spl::create_transfer_instruction(
         &user_token_account,
         &canister_token_account,
-        user_pubkey, // authority (user signs via permit)
+        &canister_address, // canister is the authority (Alice pre-authorizes via permit)
         amount,
     )?;
     
     // Get latest blockhash
     let blockhash = http_client::get_latest_blockhash().await?;
     
-    // Create transaction
+    // Create transaction with canister as fee payer (canister pays gas)
     let transaction_data = json!({
         "instructions": [transfer_instruction],
         "recent_blockhash": blockhash,
-        "fee_payer": user_pubkey
+        "fee_payer": canister_address
     });
     
     // Sign and send transaction using permit
@@ -315,6 +397,7 @@ async fn transfer_spl_tokens_with_permit(
     
     Ok(tx_hash)
 }
+
 
 /// Verify permit signature
 async fn verify_permit_signature(
@@ -361,7 +444,7 @@ async fn sign_and_send_with_permit(
         .map_err(|e| format!("Failed to parse transaction data: {}", e))?;
     
     // Create PROPER Solana transaction using real libraries (not custom serialization!)
-    let transaction = create_proper_solana_transaction(&tx_data, permit_signature)?;
+    let transaction = create_proper_solana_transaction(&tx_data, permit_signature).await?;
     
     // Submit the transaction using proper serialization
     let tx_hash = submit_proper_solana_transaction(&transaction).await?;
@@ -372,7 +455,7 @@ async fn sign_and_send_with_permit(
 }
 
 /// Create PROPER Solana transaction using real libraries (not custom serialization!)
-fn create_proper_solana_transaction(
+async fn create_proper_solana_transaction(
     tx_data: &serde_json::Value,
     permit_signature: &[u8; 64],
 ) -> Result<Transaction, String> {
@@ -396,12 +479,16 @@ fn create_proper_solana_transaction(
             .map_err(|_| "Invalid blockhash length")?
     );
     
-    let fee_payer_bytes = bs58::decode(fee_payer)
-        .into_vec()
-        .map_err(|e| format!("Invalid fee payer: {}", e))?;
+    // Use canister as fee payer (canister pays gas, not Alice)
+    let canister_principal = ic_cdk::api::id();
+    let canister_wallet = solana_wallet::SolanaWallet::new(canister_principal);
+    let canister_pubkey = canister_wallet.get_public_key_base58();
     let fee_payer_pubkey = Pubkey::new_from_array(
-        fee_payer_bytes.try_into()
-            .map_err(|_| "Invalid fee payer length")?
+        bs58::decode(&canister_pubkey)
+            .into_vec()
+            .map_err(|e| format!("Invalid canister pubkey: {}", e))?
+            .try_into()
+            .map_err(|_| "Invalid canister pubkey length")?
     );
     
     // Create proper Solana instructions
@@ -472,11 +559,16 @@ fn create_proper_solana_transaction(
         &blockhash,
     );
     
-    // Convert permit signature to proper Solana signature
-    let signature = Signature::try_from(permit_signature.as_slice())
-        .map_err(|e| format!("Invalid permit signature: {}", e))?;
+    // Sign the transaction with canister's signature (canister pays gas)
+    // The permit signature is used for authorization, not transaction signing
+    let message_bytes = bincode::serialize(&message)
+        .map_err(|e| format!("Failed to serialize message: {}", e))?;
     
-    // Create proper Solana transaction
+    let canister_signature = canister_wallet.sign_message(&message_bytes).await?;
+    let signature = Signature::try_from(canister_signature.as_slice())
+        .map_err(|e| format!("Invalid canister signature: {}", e))?;
+    
+    // Create proper Solana transaction with canister's signature
     let transaction = Transaction {
         signatures: vec![signature],
         message,
