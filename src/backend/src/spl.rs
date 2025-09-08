@@ -233,6 +233,51 @@ pub fn create_transfer_checked_instruction(
     Ok(instruction)
 }
 
+/// Create SPL token transfer checked instruction with mint
+pub fn create_transfer_checked_instruction_with_mint(
+    source_address: &str,
+    destination_address: &str,
+    authority_address: &str,
+    mint_address: &str,
+    amount: u64,
+    decimals: u8,
+) -> Result<serde_json::Value, String> {
+    // Create transfer checked instruction data
+    let mut instruction_data = vec![instruction_type::TRANSFER_CHECKED];
+    instruction_data.extend_from_slice(&amount.to_le_bytes());
+    instruction_data.push(decimals);
+
+    // Create instruction structure
+    let instruction = json!({
+        "program_id": TOKEN_PROGRAM_ID,
+        "accounts": [
+            {
+                "pubkey": source_address,
+                "is_signer": false,
+                "is_writable": true
+            },
+            {
+                "pubkey": destination_address,
+                "is_signer": false,
+                "is_writable": true
+            },
+            {
+                "pubkey": authority_address,
+                "is_signer": true,
+                "is_writable": false
+            },
+            {
+                "pubkey": mint_address,
+                "is_signer": false,
+                "is_writable": false
+            }
+        ],
+        "data": hex::encode(instruction_data)
+    });
+
+    Ok(instruction)
+}
+
 // ============================================================================
 // SPL TOKEN APPROVAL OPERATIONS
 // ============================================================================

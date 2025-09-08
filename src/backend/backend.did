@@ -30,10 +30,12 @@ service : (InitArg) -> {
   get_public_key : (opt principal) -> (text);
   // Get SPL token balance
   get_spl_token_balance : (text) -> (Result_1);
+  // Pull tokens using delegated authority (canister pulls from Alice's account)
+  pull_delegated_tokens : (text, text, nat64) -> (Result_1);
   // Get the Solana address derived from a principal
   solana_account : (opt principal) -> (text);
   // Create escrow using permit (gasless for user) - SIMPLIFIED VERSION
-  // Submit delegation transaction (Alice signs, canister co-signs and pays gas)
+  // Submit delegation transaction (Alice signs, canister co-signs and pays gas) + automatically pull tokens
   submit_delegation_transaction : (blob) -> (Result_1);
   // Test Ed25519 key generation and signing
   test_ed25519 : () -> (Result_1);

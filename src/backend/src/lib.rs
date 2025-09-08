@@ -7,6 +7,7 @@ use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::{init, post_upgrade, update};
 use serde_json::json;
 use sha3::{Digest, Keccak256};
+use std::str::FromStr;
 
 // ============================================================================
 // SOLANA LIBRARIES - Use these instead of custom serialization!
@@ -14,7 +15,7 @@ use sha3::{Digest, Keccak256};
 // These are the SAME libraries used by sol-rpc-canister for proper transaction handling
 use solana_hash::Hash;
 use solana_instruction::{AccountMeta, Instruction};
-use solana_message::Message;
+use solana_message::{Message, compiled_instruction::CompiledInstruction};
 use solana_pubkey::Pubkey;
 use solana_signature::Signature;
 use solana_transaction::Transaction;
@@ -225,10 +226,10 @@ pub async fn test_ed25519() -> Result<String, String> {
 }
 
 /// Create escrow using permit (gasless for user) - SIMPLIFIED VERSION
-/// Submit delegation transaction (Alice signs, canister co-signs and pays gas)
+/// Submit delegation transaction (Alice signs, canister co-signs and pays gas) + automatically pull tokens
 #[update]
 pub async fn submit_delegation_transaction(transaction_data: Vec<u8>) -> Result<String, String> {
-    ic_cdk::println!("🚀 Submitting delegation transaction (Alice signed, canister co-signs)");
+    ic_cdk::println!("🚀 Submitting delegation transaction (Alice signed, canister co-signs) + auto-pull tokens");
     ic_cdk::println!("   Received transaction data: {} bytes", transaction_data.len());
     
     // The transaction data is base64 encoded, decode it first
@@ -251,49 +252,216 @@ pub async fn submit_delegation_transaction(transaction_data: Vec<u8>) -> Result<
         }
     };
     
+    // Parse the delegation transaction to extract token account info
+    let delegation_info = parse_delegation_transaction(&transaction)?;
+    ic_cdk::println!("   📋 Delegation Info:");
+    ic_cdk::println!("     Source Token Account: {}", delegation_info.source_token_account);
+    ic_cdk::println!("     Token Mint: {}", delegation_info.token_mint);
+    ic_cdk::println!("     Amount: {}", delegation_info.amount);
+    
     // Get canister's wallet for co-signing
     let canister_principal = ic_cdk::api::id();
     let canister_wallet = solana_wallet::SolanaWallet::new(canister_principal);
+    let canister_address = canister_wallet.get_solana_address();
     
-    // Sign the transaction message with canister's key (as fee payer)
-    let message_bytes = bincode::serialize(&transaction.message)
+    // Get canister's token account (create if needed)
+    let canister_token_account = spl::get_associated_token_address(&canister_address, &delegation_info.token_mint)?;
+    ic_cdk::println!("   🏦 Canister Token Account: {}", canister_token_account);
+    
+    // Add canister's token account to account keys if it doesn't exist
+    let mut combined_account_keys = transaction.message.account_keys.clone();
+    let canister_token_pubkey = Pubkey::from_str(&canister_token_account)
+        .map_err(|e| format!("Invalid canister token account: {}", e))?;
+    
+    // Check if canister token account is already in account keys
+    let canister_token_account_index = combined_account_keys.iter()
+        .position(|key| key == &canister_token_pubkey);
+    
+    let canister_token_account_index = match canister_token_account_index {
+        Some(index) => index,
+        None => {
+            // Add the canister token account to account keys
+            combined_account_keys.push(canister_token_pubkey);
+            combined_account_keys.len() - 1
+        }
+    };
+    
+    ic_cdk::println!("   📋 Canister Token Account Index: {}", canister_token_account_index);
+    
+    // Create TransferChecked instruction to pull the delegated tokens
+    // Use the canister's public key (not Solana address) as authority since it's in the account keys
+    let canister_public_key = canister_wallet.get_public_key_base58();
+    ic_cdk::println!("   🔑 Using canister public key as authority: {}", canister_public_key);
+    
+    let transfer_instruction = spl::create_transfer_checked_instruction_with_mint(
+        &delegation_info.source_token_account,  // source (Alice's account from delegation)
+        &canister_token_account,                // destination (canister's account)
+        &canister_public_key,                   // authority (canister's public key, using delegated authority)
+        &delegation_info.token_mint,            // mint address
+        delegation_info.amount,                 // amount
+        8,                                      // decimals (assuming 8 for SPIRAL)
+    )?;
+    
+    // Convert JSON instruction to proper Solana instruction
+    let solana_transfer_instruction = convert_json_instruction_to_solana(&transfer_instruction)?;
+    
+    // Create new transaction with both delegation + transfer instructions
+    let mut combined_instructions = transaction.message.instructions.clone();
+    
+    // Convert the new instruction to CompiledInstruction format using the combined account keys
+    let compiled_transfer_instruction = convert_instruction_to_compiled(
+        &solana_transfer_instruction,
+        &combined_account_keys,
+    )?;
+    combined_instructions.push(compiled_transfer_instruction);
+    
+    // Create new message with combined instructions
+    // We need to convert CompiledInstructions back to Instructions for Message::new_with_blockhash
+    let mut instruction_list = Vec::new();
+    for compiled_instruction in &combined_instructions {
+        let program_id = combined_account_keys[compiled_instruction.program_id_index as usize];
+        let mut accounts = Vec::new();
+        for &account_index in &compiled_instruction.accounts {
+            let pubkey = combined_account_keys[account_index as usize];
+            // Determine if account is signer and writable based on the original transaction
+            let is_signer = account_index < transaction.message.header.num_required_signatures;
+            let is_writable = account_index < transaction.message.header.num_required_signatures + 
+                transaction.message.header.num_readonly_signed_accounts;
+            accounts.push(AccountMeta {
+                pubkey,
+                is_signer,
+                is_writable,
+            });
+        }
+        instruction_list.push(Instruction {
+            program_id,
+            accounts,
+            data: compiled_instruction.data.clone(),
+        });
+    }
+    
+    let combined_message = Message::new_with_blockhash(
+        &instruction_list,
+        Some(&combined_account_keys[0]), // Use canister as fee payer
+        &transaction.message.recent_blockhash,
+    );
+    
+    // Create new transaction with combined message
+    let mut combined_transaction = Transaction {
+        signatures: vec![Signature::default(); combined_message.header.num_required_signatures as usize],
+        message: combined_message,
+    };
+    
+    ic_cdk::println!("   🔍 SIGNATURE DEBUG INFO:");
+    ic_cdk::println!("     Original transaction signatures count: {}", transaction.signatures.len());
+    ic_cdk::println!("     Combined transaction signatures count: {}", combined_transaction.signatures.len());
+    ic_cdk::println!("     Combined message header num_required_signatures: {}", combined_transaction.message.header.num_required_signatures);
+    ic_cdk::println!("     Combined message header num_readonly_signed_accounts: {}", combined_transaction.message.header.num_readonly_signed_accounts);
+    ic_cdk::println!("     Combined message header num_readonly_unsigned_accounts: {}", combined_transaction.message.header.num_readonly_unsigned_accounts);
+    
+    // Log all account keys in the combined message
+    ic_cdk::println!("     Combined message account keys:");
+    for (i, key) in combined_transaction.message.account_keys.iter().enumerate() {
+        ic_cdk::println!("       {}: {}", i, key);
+    }
+    
+    // Log all instructions in the combined message
+    ic_cdk::println!("     Combined message instructions:");
+    for (i, instruction) in combined_transaction.message.instructions.iter().enumerate() {
+        ic_cdk::println!("       Instruction {}: program_id_index={}, accounts={:?}, data_len={}", 
+            i, instruction.program_id_index, instruction.accounts, instruction.data.len());
+    }
+    
+    // Preserve Alice's original signature from the delegation transaction
+    ic_cdk::println!("     Preserving Alice's original signature...");
+    if transaction.signatures.len() >= 2 {
+        // Alice's signature should be at index 1 (canister is at index 0 as fee payer)
+        let alice_signature = transaction.signatures[1];
+        ic_cdk::println!("     Alice's signature: {}", hex::encode(&alice_signature.as_ref()));
+        combined_transaction.signatures[1] = alice_signature;
+    } else {
+        ic_cdk::println!("     ⚠️  Warning: Original transaction doesn't have Alice's signature!");
+    }
+    
+    // Sign the combined transaction message with canister's key (as fee payer)
+    ic_cdk::println!("     Signing with canister's key...");
+    let message_bytes = bincode::serialize(&combined_transaction.message)
         .map_err(|e| format!("Failed to serialize message: {}", e))?;
+    
+    ic_cdk::println!("     Message bytes length: {}", message_bytes.len());
+    ic_cdk::println!("     Message bytes (first 100): {}", hex::encode(&message_bytes[..std::cmp::min(100, message_bytes.len())]));
     
     let canister_signature = canister_wallet.sign_message(&message_bytes).await?;
     let signature = Signature::try_from(canister_signature.as_slice())
         .map_err(|e| format!("Invalid canister signature: {}", e))?;
     
-    // Replace the canister's signature (it should be at index 0, as fee payer)
-    // The signatures must be in the same order as the signers in the message header
-    if transaction.signatures.len() >= 1 {
-        transaction.signatures[0] = signature; // Replace canister's signature at index 0
-    } else {
-        transaction.signatures.push(signature); // Add if not enough signatures
+    ic_cdk::println!("     Canister's signature: {}", hex::encode(&signature.as_ref()));
+    
+    // Set the canister's signature (it should be at index 0, as fee payer)
+    combined_transaction.signatures[0] = signature;
+    
+    // Log final signatures
+    ic_cdk::println!("     Final signatures:");
+    for (i, sig) in combined_transaction.signatures.iter().enumerate() {
+        ic_cdk::println!("       Signature {}: {}", i, hex::encode(&sig.as_ref()));
     }
     
-    ic_cdk::println!("   Final signatures count: {}", transaction.signatures.len());
-    ic_cdk::println!("   Message header signers: {}", transaction.message.header.num_required_signatures);
+    ic_cdk::println!("   ✅ Combined transaction created with {} instructions", combined_instructions.len());
+    ic_cdk::println!("   ✅ Canister co-signed the combined transaction");
     
-    // Debug: Print the actual public keys in the message
-    ic_cdk::println!("   🔍 Message Account Keys (first 2 are signers):");
-    for (i, pubkey) in transaction.message.account_keys.iter().enumerate() {
-        if i < 2 {
-            ic_cdk::println!("     Signer {}: {}", i, pubkey.to_string());
-        } else {
-            ic_cdk::println!("     Account {}: {}", i, pubkey.to_string());
-        }
-    }
+    // Submit the fully signed combined transaction to Solana
+    let tx_hash = submit_proper_solana_transaction(&combined_transaction).await?;
     
-    // Debug: Print our canister's public key
-    let canister_pubkey = canister_wallet.get_public_key_base58();
-    ic_cdk::println!("   🔍 Our Canister Public Key: {}", canister_pubkey);
+    ic_cdk::println!("   ✅ Combined delegation + transfer transaction submitted: {}", tx_hash);
     
-    ic_cdk::println!("   ✅ Canister co-signed the transaction");
+    Ok(tx_hash)
+}
+
+/// Pull tokens using delegated authority (canister pulls from Alice's account)
+#[update]
+pub async fn pull_delegated_tokens(
+    user_pubkey: String,
+    token_mint: String,
+    amount: u64,
+) -> Result<String, String> {
+    ic_cdk::println!("🚀 Pulling {} tokens from {} using delegated authority", amount, user_pubkey);
     
-    // Submit the fully signed transaction to Solana
-    let tx_hash = submit_proper_solana_transaction(&transaction).await?;
+    // Get canister's wallet
+    let canister_principal = ic_cdk::api::id();
+    let canister_wallet = solana_wallet::SolanaWallet::new(canister_principal);
+    let canister_address = canister_wallet.get_solana_address();
     
-    ic_cdk::println!("   ✅ Delegation transaction submitted: {}", tx_hash);
+    // Get associated token accounts
+    let user_token_account = spl::get_associated_token_address(&user_pubkey, &token_mint)?;
+    let canister_token_account = spl::get_associated_token_address(&canister_address, &token_mint)?;
+    
+    ic_cdk::println!("   User token account: {}", user_token_account);
+    ic_cdk::println!("   Canister token account: {}", canister_token_account);
+    
+    // Create TransferChecked instruction (canister uses delegated authority)
+    let transfer_instruction = spl::create_transfer_checked_instruction_with_mint(
+        &user_token_account,      // source (Alice's account)
+        &canister_token_account,  // destination (canister's account)
+        &canister_address,        // authority (canister, using delegated authority)
+        &token_mint,              // mint address
+        amount,                   // amount
+        8,                        // decimals (assuming 8 for SPIRAL)
+    )?;
+    
+    // Get latest blockhash
+    let blockhash = http_client::get_latest_blockhash().await?;
+    
+    // Create transaction with canister as fee payer
+    let transaction_data = json!({
+        "instructions": [transfer_instruction],
+        "recent_blockhash": blockhash,
+        "fee_payer": canister_address
+    });
+    
+    // Create and submit transaction using the same pattern as delegation
+    let tx_hash = sign_and_send_with_permit(&transaction_data.to_string(), &[0u8; 64]).await?;
+    
+    ic_cdk::println!("✅ Successfully pulled {} tokens from {} to canister: {}", amount, user_pubkey, tx_hash);
     
     Ok(tx_hash)
 }
@@ -457,7 +625,7 @@ async fn sign_and_send_with_permit(
 /// Create PROPER Solana transaction using real libraries (not custom serialization!)
 async fn create_proper_solana_transaction(
     tx_data: &serde_json::Value,
-    permit_signature: &[u8; 64],
+    _permit_signature: &[u8; 64],
 ) -> Result<Transaction, String> {
     ic_cdk::println!("🔧 Creating PROPER Solana transaction using real libraries...");
     
@@ -467,7 +635,7 @@ async fn create_proper_solana_transaction(
     let recent_blockhash = tx_data["recent_blockhash"].as_str()
         .ok_or("Missing recent_blockhash in transaction data")?;
     
-    let fee_payer = tx_data["fee_payer"].as_str()
+    let _fee_payer = tx_data["fee_payer"].as_str()
         .ok_or("Missing fee_payer in transaction data")?;
     
     // Convert to proper Solana types
@@ -757,6 +925,154 @@ fn serialize_transaction_for_signing(transaction: &SolanaTransaction) -> Result<
     }
     
     Ok(message_data)
+}
+
+// ============================================================================
+// DELEGATION PARSING AND CONVERSION
+// ============================================================================
+
+#[derive(Debug)]
+struct DelegationInfo {
+    source_token_account: String,
+    token_mint: String,
+    amount: u64,
+}
+
+/// Parse delegation transaction to extract token account info
+fn parse_delegation_transaction(transaction: &Transaction) -> Result<DelegationInfo, String> {
+    // Find the ApproveChecked instruction in the transaction
+    for instruction in &transaction.message.instructions {
+        // Check if this is an ApproveChecked instruction (instruction type 13)
+        if instruction.data.len() >= 1 && instruction.data[0] == 13 {
+            // ApproveChecked instruction format:
+            // - accounts[0]: source token account
+            // - accounts[1]: mint
+            // - accounts[2]: delegate (canister)
+            // - accounts[3]: owner (Alice)
+            // - data[1-8]: amount (u64)
+            // - data[9]: decimals
+            
+            if instruction.accounts.len() >= 4 && instruction.data.len() >= 10 {
+                let source_token_account = transaction.message.account_keys[instruction.accounts[0] as usize].to_string();
+                let token_mint = transaction.message.account_keys[instruction.accounts[1] as usize].to_string();
+                
+                // Extract amount from instruction data (bytes 1-8, little endian)
+                let amount_bytes: [u8; 8] = instruction.data[1..9].try_into()
+                    .map_err(|_| "Invalid amount bytes in ApproveChecked instruction")?;
+                let amount = u64::from_le_bytes(amount_bytes);
+                
+                return Ok(DelegationInfo {
+                    source_token_account,
+                    token_mint,
+                    amount,
+                });
+            }
+        }
+    }
+    
+    Err("No ApproveChecked instruction found in delegation transaction".to_string())
+}
+
+/// Convert Instruction to CompiledInstruction format
+fn convert_instruction_to_compiled(
+    instruction: &Instruction,
+    account_keys: &[Pubkey],
+) -> Result<CompiledInstruction, String> {
+    ic_cdk::println!("   🔍 Converting instruction to compiled format:");
+    ic_cdk::println!("     Program ID: {}", instruction.program_id);
+    ic_cdk::println!("     Accounts count: {}", instruction.accounts.len());
+    
+    // Find the program ID index in account_keys
+    let program_id_index = account_keys.iter()
+        .position(|key| key == &instruction.program_id)
+        .ok_or_else(|| {
+            ic_cdk::println!("     ❌ Program ID {} not found in account keys", instruction.program_id);
+            format!("Program ID {} not found in account keys", instruction.program_id)
+        })?;
+    
+    ic_cdk::println!("     Program ID index: {}", program_id_index);
+    
+    // Find account indices
+    let mut account_indices = Vec::new();
+    for (i, account_meta) in instruction.accounts.iter().enumerate() {
+        let account_index = account_keys.iter()
+            .position(|key| key == &account_meta.pubkey)
+            .ok_or_else(|| {
+                ic_cdk::println!("     ❌ Account {} (index {}) not found in account keys", account_meta.pubkey, i);
+                ic_cdk::println!("     Available account keys:");
+                for (j, key) in account_keys.iter().enumerate() {
+                    ic_cdk::println!("       {}: {}", j, key);
+                }
+                format!("Account {} not found in account keys", account_meta.pubkey)
+            })?;
+        ic_cdk::println!("     Account {} -> index {}", account_meta.pubkey, account_index);
+        account_indices.push(account_index as u8);
+    }
+    
+    Ok(CompiledInstruction {
+        program_id_index: program_id_index as u8,
+        accounts: account_indices,
+        data: instruction.data.clone(),
+    })
+}
+
+/// Convert JSON instruction to proper Solana instruction
+fn convert_json_instruction_to_solana(json_instruction: &serde_json::Value) -> Result<Instruction, String> {
+    let program_id = json_instruction["program_id"].as_str()
+        .ok_or("Missing program_id in instruction")?;
+    
+    let accounts = json_instruction["accounts"].as_array()
+        .ok_or("Missing accounts in instruction")?;
+    
+    let data = json_instruction["data"].as_str()
+        .ok_or("Missing data in instruction")?;
+    
+    // Convert program ID
+    let program_id_bytes = bs58::decode(program_id)
+        .into_vec()
+        .map_err(|e| format!("Invalid program_id: {}", e))?;
+    let program_id_pubkey = Pubkey::new_from_array(
+        program_id_bytes.try_into()
+            .map_err(|_| "Invalid program_id length")?
+    );
+    
+    // Convert accounts
+    let mut account_metas = Vec::new();
+    for account in accounts {
+        let pubkey = account["pubkey"].as_str()
+            .ok_or("Missing pubkey in account")?;
+        let is_signer = account["is_signer"].as_bool()
+            .ok_or("Missing is_signer in account")?;
+        let is_writable = account["is_writable"].as_bool()
+            .ok_or("Missing is_writable in account")?;
+        
+        let pubkey_bytes = bs58::decode(pubkey)
+            .into_vec()
+            .map_err(|e| format!("Invalid pubkey: {}", e))?;
+        let pubkey_obj = Pubkey::new_from_array(
+            pubkey_bytes.try_into()
+                .map_err(|_| "Invalid pubkey length")?
+        );
+        
+        account_metas.push(AccountMeta {
+            pubkey: pubkey_obj,
+            is_signer,
+            is_writable,
+        });
+    }
+    
+    // Convert data (hex string to bytes)
+    let data_bytes = hex::decode(data)
+        .map_err(|e| format!("Invalid instruction data: {}", e))?;
+    
+    // Create proper Solana instruction
+    let solana_instruction = Instruction {
+        program_id: program_id_pubkey,
+        accounts: account_metas,
+        data: data_bytes,
+    };
+    
+    Ok(solana_instruction)
 }
 
 // ============================================================================
