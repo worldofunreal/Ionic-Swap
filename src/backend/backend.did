@@ -1,137 +1,34 @@
-type InitArg = record {
-    // The canister will interact with this Solana network.
-    // If not specified, the value is set to `Devnet`.
-    solana_network : opt SolanaNetwork;
-    // Commitment level to use when interacting with the Solana blockchain.
-    // If not specified, the value is set to `finalized`.
-    solana_commitment_level : opt CommitmentLevel;
-    // EdDSA keys will be derived from this key.
-    // If not specified, the value is set to `TestKeyLocalDevelopment`.
-    ed25519_key_name : opt Ed25519KeyName;
-    // The canister will interact with this SOL RPC canister.
-    // If not specified, the value is set to `tghme-zyaaa-aaaar-qarca-cai`.
-    sol_rpc_canister_id : opt principal;
-};
-
-type SolanaNetwork = variant {
-    // Live production environment using the SOL RPC canister's default RPC providers for Mainnet.
-    Mainnet;
-    // Public testing and development using the SOL RPC canister's default RPC providers for Devnet.
-    Devnet;
-    // Custom RPC endpoint.
-    Custom : RpcEndpoint;
-};
-
-// A JSON-RPC endpoint
-type RpcEndpoint = record {
-    // The JSON-RPC endpoint URL, e.g. https://api.devnet.solana.com
-    url : text;
-    // Headers to include in requests to this endpoint, e.g. a bearer token header.
-    headers : opt vec HttpHeader;
-};
-
-// An HTTP header.
-type HttpHeader = record {
-  // The header value
-  value : text;
-  // The header name
-  name : text
-};
-
-// Commitment levels in Solana, representing finality guarantees of transactions and state queries.
-type CommitmentLevel = variant {
-  processed;
-  confirmed;
-  finalized;
-};
-
-type Ed25519KeyName = variant {
-    // For local development with `dfx`.
-    LocalDevelopment;
-    // For testing with the Internet Computer's test key.
-    MainnetTestKey1;
-    // For running the canister in a production environment using the Internet Computer's production key.
-    MainnetProdKey1;
-};
-
-// Atomic unit of SOL, i.e., 1 SOL = 10^9 Lamports
-type Lamport = nat;
-
-// Address on Solana i.e. a base58-encoded Ed25519 public key or Program Derived Address (PDA).
-type Address = text;
-
-// A transaction ID on Solana, i.e. the first signature in a transaction.
-type Txid = text;
-
-// Arguments for creating an escrow with permit
+type CommitmentLevel = variant { finalized; confirmed; processed };
 type CreateEscrowWithPermitArgs = record {
-    order_id: vec nat8;  // 32 bytes
-    amount: nat;
-    expiry_timestamp: int;
-    user_permit_signature: vec nat8;  // 64 bytes
-    nonce: nat;
-    deadline: int;
-    user_pubkey: Address;
-    token_mint: Address;
-    user_token_account: Address;
+  permit_signature : blob;
+  deadline : nat64;
+  expiry_timestamp : nat64;
+  nonce : nat64;
+  order_id : blob;
+  user_pubkey : text;
+  amount : nat64;
+  token_mint : text;
 };
-
+type Ed25519KeyName = variant {
+  MainnetTestKey1;
+  LocalDevelopment;
+  MainnetProdKey1;
+};
+type HttpHeader = record { value : text; name : text };
+type InitArg = record {
+  solana_commitment_level : opt CommitmentLevel;
+  ed25519_key_name : opt Ed25519KeyName;
+  solana_network : opt SolanaNetwork;
+  sol_rpc_canister_id : opt principal;
+};
+type Result = variant { Ok : text; Err : text };
+type RpcEndpoint = record { url : text; headers : opt vec HttpHeader };
+type SolanaNetwork = variant { Mainnet; Custom : RpcEndpoint; Devnet };
 service : (InitArg) -> {
-    // Returns the Solana address derived from a principal.
-    //
-    // Parameters:
-    // - `owner` (optional): The principal to derive the address from.
-    //   If omitted, the caller's principal is used.
-    solana_account : (owner: opt principal) -> (Address);
-
-    // Returns the SOL balance of a given account, in lamports.
-    //
-    // Parameters:
-    // - `account` (optional): The account address to query. If omitted,
-    //   the address is derived from the caller's principal.
-    get_balance : (account: opt Address) -> (Lamport);
-
-    // Sends SOL from a principal's derived address to a recipient Solana
-    // address. The transaction is built using a recent blockhash.
-    //
-    // Parameters:
-    // - `owner` (optional): The principal to derive the sender address from.
-    //   If omitted, the caller's principal is used.
-    // - `to`: The recipient Solana address.
-    // - `amount`: The amount of SOL to send, in lamports.
-    send_sol : (
-        owner: opt principal,
-        to: Address,
-        amount: Lamport
-    ) -> (Txid);
-
-    // Signs a transaction message and returns the signature (without sending).
-    //
-    // Parameters:
-    // - `owner` (optional): The principal to derive the signer address from.
-    //   If omitted, the caller's principal is used.
-    // - `message_bytes`: The serialized Solana message to sign.
-    sign_transaction : (
-        owner: opt principal,
-        message_bytes: vec nat8
-    ) -> (text);
-
-    // Creates a simple transfer instruction and returns the message bytes for signing.
-    //
-    // Parameters:
-    // - `owner` (optional): The principal to derive the sender address from.
-    //   If omitted, the caller's principal is used.
-    // - `to`: The recipient Solana address.
-    // - `amount`: The amount of SOL to send, in lamports.
-    create_transfer_message : (
-        owner: opt principal,
-        to: Address,
-        amount: Lamport
-    ) -> (vec nat8);
-
-    // Creates an escrow using a permit signature (gasless for user).
-    //
-    // Parameters:
-    // - `args`: The permit-based escrow creation arguments.
-    create_escrow_with_permit : (CreateEscrowWithPermitArgs) -> (Txid);
+  create_escrow_with_permit : (CreateEscrowWithPermitArgs) -> (Result);
+  create_transfer_message : (opt principal, text, nat) -> (blob);
+  get_balance : (opt text) -> (nat);
+  send_sol : (opt principal, text, nat) -> (text);
+  sign_transaction : (opt principal, blob) -> (text);
+  solana_account : (opt principal) -> (text);
 }

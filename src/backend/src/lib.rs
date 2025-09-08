@@ -221,26 +221,84 @@ pub struct PermitMessage {
 
 #[derive(CandidType, Deserialize)]
 pub struct CreateEscrowWithPermitArgs {
-    pub order_id: [u8; 32],
+    pub order_id: Vec<u8>,
     pub amount: u64,
-    pub expiry_timestamp: i64,
-    pub user_permit_signature: Vec<u8>,
+    pub expiry_timestamp: u64,
+    pub permit_signature: Vec<u8>,
     pub nonce: u64,
-    pub deadline: i64,
+    pub deadline: u64,
     pub user_pubkey: String,
     pub token_mint: String,
-    pub user_token_account: String,
 }
 
 // Create escrow using permit (gasless for user)
 #[update]
-pub async fn create_escrow_with_permit(args: CreateEscrowWithPermitArgs) -> String {
-    // TODO: Implement the full permit-based escrow creation
-    // For now, return a placeholder response
+pub async fn create_escrow_with_permit(args: CreateEscrowWithPermitArgs) -> Result<String, String> {
     ic_cdk::println!("Creating escrow with permit: order_id={:?}, amount={}, user={}", 
         args.order_id, args.amount, args.user_pubkey);
     
-    "placeholder_tx_id".to_string()
+    // Validate input parameters
+    if args.order_id.len() != 32 {
+        return Err("Order ID must be exactly 32 bytes".to_string());
+    }
+    
+    if args.permit_signature.len() != 64 {
+        return Err("Permit signature must be exactly 64 bytes".to_string());
+    }
+    
+    // Convert the arguments to the format expected by the Solana program
+    let order_id_array: [u8; 32] = {
+        let mut arr = [0u8; 32];
+        arr.copy_from_slice(&args.order_id);
+        arr
+    };
+    
+    let permit_signature_array: [u8; 64] = {
+        let mut arr = [0u8; 64];
+        arr.copy_from_slice(&args.permit_signature);
+        arr
+    };
+    
+    // Call the Solana program's reserve_with_permit method
+    match call_solana_reserve_with_permit(
+        order_id_array,
+        args.amount,
+        args.expiry_timestamp as i64,
+        permit_signature_array,
+        args.nonce,
+        args.deadline as i64,
+        args.user_pubkey,
+        args.token_mint,
+    ).await {
+        Ok(tx_id) => Ok(tx_id),
+        Err(e) => Err(format!("Failed to create escrow: {}", e)),
+    }
 }
 
+// Helper function to call the Solana program
+async fn call_solana_reserve_with_permit(
+    order_id: [u8; 32],
+    amount: u64,
+    expiry_timestamp: i64,
+    permit_signature: [u8; 64],
+    nonce: u64,
+    deadline: i64,
+    user_pubkey: String,
+    token_mint: String,
+) -> Result<String, String> {
+    // TODO: Implement actual Solana transaction creation and sending
+    // This would involve:
+    // 1. Creating the instruction to call reserve_with_permit on the Solana program
+    // 2. Building the transaction
+    // 3. Signing and sending it
+    // 4. Returning the transaction ID
+    
+    // For now, return a mock transaction ID based on the order_id
+    let tx_id = format!("solana_tx_{}", bs58::encode(&order_id[..8]).into_string());
+    ic_cdk::println!("Mock transaction created: {}", tx_id);
+    
+    Ok(tx_id)
+}
 
+// Enable Candid export
+ic_cdk::export_candid!();
