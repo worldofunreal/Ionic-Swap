@@ -8,7 +8,7 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID
 } from '@solana/spl-token';
 import * as bip39 from 'bip39';
-import { createHash } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 
 const SOLANA_RPC_URL = 'https://api.devnet.solana.com';
 const CANISTER_ADDRESS = '6n3cKK86zeiGtX9VBLLCqjyaUwYqNHFFoR7A4cQvjcwd'; // Backend canister address
@@ -130,7 +130,7 @@ const testGaslessPermit = async () => {
   }
   
   // Create permit message
-  const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const orderId = randomBytes(32); // Generate exactly 32 bytes
   const nonce = Math.floor(Math.random() * 1000000);
   const expiry = Date.now() + (24 * 60 * 60 * 1000); // 24 hours from now
   
@@ -138,7 +138,7 @@ const testGaslessPermit = async () => {
     alice.solAddress,
     SPIRAL_MINT,
     1000 * Math.pow(10, 8), // 1000 SPIRAL tokens
-    orderId,
+    orderId.toString('hex'), // Convert Buffer to hex string
     nonce,
     expiry
   );
@@ -147,7 +147,7 @@ const testGaslessPermit = async () => {
   console.log(`   User: ${permitMessage.user}`);
   console.log(`   Token: ${permitMessage.token_mint}`);
   console.log(`   Amount: ${permitMessage.amount} (${permitMessage.amount / Math.pow(10, 8)} SPIRAL)`);
-  console.log(`   Order ID: ${permitMessage.order_id}`);
+  console.log(`   Order ID: ${permitMessage.order_id} (${permitMessage.order_id.length / 2} bytes)`);
   console.log(`   Nonce: ${permitMessage.nonce}`);
   console.log(`   Expiry: ${new Date(permitMessage.expiry).toISOString()}`);
   
@@ -164,17 +164,44 @@ const testGaslessPermit = async () => {
   console.log('   3. Transfer Alice\'s tokens to escrow');
   console.log('   4. Alice pays NO gas fees!');
   
-  // TODO: Implement actual canister call
-  console.log('\n📞 Canister Call (Placeholder):');
-  console.log(`   dfx canister call backend create_escrow_with_permit '(`);
-  console.log(`     user: "${alice.solAddress}",`);
-  console.log(`     token_mint: "${SPIRAL_MINT}",`);
-  console.log(`     amount: ${permitMessage.amount},`);
-  console.log(`     order_id: "${orderId}",`);
-  console.log(`     nonce: ${nonce},`);
-  console.log(`     expiry: ${expiry},`);
-  console.log(`     signature: "${permitSignature}"`);
-  console.log(`   )' --network ic`);
+  // Make actual canister call
+  console.log('\n📞 Making Actual Canister Call...');
+  try {
+    const { execSync } = require('child_process');
+    
+    const canisterCall = `dfx canister call backend create_escrow_with_permit '(record {
+      user_pubkey = "${alice.solAddress}";
+      token_mint = "${SPIRAL_MINT}";
+      amount = ${permitMessage.amount};
+      order_id = blob "${orderId.toString('hex')}";
+      nonce = ${nonce};
+      expiry_timestamp = ${expiry};
+      permit_signature = blob "${Buffer.from(permitSignature, 'base64').toString('hex')}";
+      deadline = ${expiry}
+    })'`;
+    
+    console.log('   Executing:', canisterCall);
+    const result = execSync(canisterCall, { encoding: 'utf8', timeout: 30000 });
+    console.log('   ✅ Canister call successful!');
+    console.log('   Result:', result);
+    
+    // Check Alice's balance after the call
+    console.log('\n📊 Checking Alice\'s Balance After Canister Call:');
+    try {
+      const aliceSpiralAccount = await getAssociatedTokenAddress(
+        new PublicKey(SPIRAL_MINT),
+        alice.solKeypair.publicKey
+      );
+      const spiralBalance = await getAccount(connection, aliceSpiralAccount);
+      console.log(`   Spiral: ${spiralBalance.amount.toString()} (${Number(spiralBalance.amount) / Math.pow(10, 8)} SPIRAL)`);
+    } catch (error) {
+      console.log(`   Spiral: Error checking balance - ${error instanceof Error ? error.message : String(error)}`);
+    }
+    
+  } catch (error) {
+    console.log('   ❌ Canister call failed:', error instanceof Error ? error.message : String(error));
+    console.log('   This is expected if the backend function is not fully implemented yet.');
+  }
   
   console.log('\n🎉 Gasless Permit Flow Test Complete!');
   console.log('\n💡 Next Steps:');

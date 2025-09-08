@@ -10,7 +10,7 @@ import {
 import * as bip39 from 'bip39';
 
 const SOLANA_RPC_URL = 'https://api.devnet.solana.com';
-const DEPLOYER_KEYPAIR_PATH = '../src/solana/deployer-keypair.json';
+const DEPLOYER_KEYPAIR_PATH = './src/solana/deployer-keypair.json';
 
 // Token mint addresses from deployment
 const SPIRAL_MINT = 'DAkvQyQigUzc4cdnMUA8UxrFmyK9513JME4dAMD1tHCy';

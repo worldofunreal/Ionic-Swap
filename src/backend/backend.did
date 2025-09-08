@@ -19,12 +19,14 @@ type Result_1 = variant { Ok : text; Err : text };
 type Result_2 = variant { Ok : nat64; Err : text };
 type SolanaNetwork = variant { Mainnet; Testnet; Devnet };
 service : (InitArg) -> {
-  // Create escrow using permit (gasless for user)
+  // Create escrow using permit (gasless for user) - SIMPLIFIED VERSION
   create_escrow_with_permit : (CreateEscrowWithPermitArgs) -> (Result);
   // Get associated token account address
   get_associated_token_address : (text, text) -> (Result_1);
   // Get the SOL balance of a given account
   get_balance : (opt text) -> (Result_2);
+  // Get the public key for funding (base58 format)
+  get_public_key : (opt principal) -> (text);
   // Get SPL token balance
   get_spl_token_balance : (text) -> (Result_1);
   // Get the Solana address derived from a principal
