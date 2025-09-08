@@ -1,42 +1,34 @@
-type SolanaNetwork = variant { Devnet; Testnet; Mainnet };
-type InitArg = record {
-  solana_network : opt SolanaNetwork;
-};
-
-type PermitMessage = record {
-  order_id : blob;
-  amount : nat64;
-  expiry_timestamp : int64;
-  user_pubkey : text;
-  nonce : nat64;
-  deadline : int64;
-  token_mint : text;
-};
-
 type CreateEscrowWithPermitArgs = record {
-  order_id : blob;
-  amount : nat64;
-  expiry_timestamp : nat64;
   permit_signature : blob;
-  nonce : nat64;
   deadline : nat64;
+  expiry_timestamp : nat64;
+  nonce : nat64;
+  order_id : blob;
   user_pubkey : text;
+  amount : nat64;
   token_mint : text;
 };
-
+type InitArg = record { solana_network : opt SolanaNetwork };
 type PermitResult = record {
-  success : bool;
   transaction_hash : opt text;
   error_message : opt text;
+  success : bool;
 };
-
+type Result = variant { Ok : PermitResult; Err : text };
+type Result_1 = variant { Ok : text; Err : text };
+type Result_2 = variant { Ok : nat64; Err : text };
+type SolanaNetwork = variant { Mainnet; Testnet; Devnet };
 service : (InitArg) -> {
-  // Core Solana operations
+  // Create escrow using permit (gasless for user)
+  create_escrow_with_permit : (CreateEscrowWithPermitArgs) -> (Result);
+  // Get associated token account address
+  get_associated_token_address : (text, text) -> (Result_1);
+  // Get the SOL balance of a given account
+  get_balance : (opt text) -> (Result_2);
+  // Get SPL token balance
+  get_spl_token_balance : (text) -> (Result_1);
+  // Get the Solana address derived from a principal
   solana_account : (opt principal) -> (text);
-  get_balance : (opt text) -> (variant { Ok : nat64; Err : text });
-  get_spl_token_balance : (text) -> (variant { Ok : text; Err : text });
-  get_associated_token_address : (text, text) -> (variant { Ok : text; Err : text });
-  
-  // Permit system
-  create_escrow_with_permit : (CreateEscrowWithPermitArgs) -> (variant { Ok : PermitResult; Err : text });
+  // Test Ed25519 key generation and signing
+  test_ed25519 : () -> (Result_1);
 }

@@ -1,36 +1,41 @@
 #!/bin/bash
 
-# Deploy backend canister with automatic Candid generation
-set -e
+# Deploy Backend Canister Script
+# This script builds the backend canister, extracts Candid interface, and deploys
 
-echo "Building backend canister..."
-if ! cargo build --release --target wasm32-unknown-unknown --package backend; then
-    echo "❌ Compilation failed! Exiting immediately."
+set -e  # Exit on any error
+
+echo "🚀 Starting backend canister deployment..."
+
+# Check if candid-extractor is installed
+if ! command -v candid-extractor &> /dev/null; then
+    echo "❌ candid-extractor not found. Installing..."
+    cargo install candid-extractor
+fi
+
+# Check if dfx is running
+if ! dfx ping &> /dev/null; then
+    echo "❌ dfx is not running. Please start dfx first with: dfx start"
     exit 1
 fi
 
-echo "Extracting Candid interface..."
-if ! candid-extractor target/wasm32-unknown-unknown/release/backend.wasm > src/backend/backend.did; then
-    echo "❌ Candid extraction failed!"
-    exit 1
-fi
+echo "📦 Building backend canister..."
+cargo build --release --target wasm32-unknown-unknown --package backend
 
-echo "Generating declarations..."
-if ! dfx generate backend; then
-    echo "❌ Declaration generation failed!"
-    exit 1
-fi
+echo "🔍 Extracting Candid interface..."
+candid-extractor target/wasm32-unknown-unknown/release/backend.wasm > src/backend/backend.did
 
-echo "Deploying to mainnet..."
-if ! dfx deploy backend --network ic; then
-    echo "❌ Deployment failed!"
-    exit 1
-fi
+echo "📋 Generated Candid interface:"
+cat src/backend/backend.did
 
-CANISTER_ID=$(dfx canister id backend --network ic)
-echo "Deployment complete!"
-echo "Backend canister ID: $CANISTER_ID"
-echo "Candid UI: https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=$CANISTER_ID"
-echo ""
-echo "Now test the call manually with:"
-echo "dfx canister call backend create_escrow_with_permit --network ic '(record { order_id = blob \"12345678901234567890123456789012\"; amount = 100000000000 : nat64; expiry_timestamp = 1757425999053 : nat64; permit_signature = blob \"1234567890123456789012345678901234567890123456789012345678901234\"; nonce = 245460 : nat64; deadline = 1757425999053 : nat64; user_pubkey = \"8Tfg3vjV5Huk1YKpZ1FKCF9N6cz2jTYRPeH1vonNmXMG\"; token_mint = \"DAkvQyQigUzc4cdnMUA8UxrFmyK9513JME4dAMD1tHCy\" })'"
+echo "🚀 Deploying backend canister..."
+dfx deploy backend
+
+echo "✅ Backend canister deployed successfully!"
+echo "🌐 Candid UI: http://127.0.0.1:4943/?canisterId=$(dfx canister id backend)"
+
+# Test the Ed25519 functionality
+echo "🧪 Testing Ed25519 functionality..."
+dfx canister call backend test_ed25519
+
+echo "🎉 Deployment and testing complete!"

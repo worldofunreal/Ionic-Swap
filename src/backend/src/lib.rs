@@ -7,7 +7,6 @@ use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::{init, post_upgrade, update};
 use serde_json::json;
 use sha3::{Digest, Keccak256};
-use std::collections::HashMap;
 
 // ============================================================================
 // INITIALIZATION
@@ -114,7 +113,7 @@ pub struct PermitResult {
 #[update]
 pub async fn solana_account(owner: Option<Principal>) -> String {
     let owner = owner.unwrap_or_else(validate_caller_not_anonymous);
-    let wallet = solana_wallet::SolanaWallet::new(owner).await;
+    let wallet = solana_wallet::SolanaWallet::new(owner);
     wallet.get_solana_address()
 }
 
@@ -122,10 +121,9 @@ pub async fn solana_account(owner: Option<Principal>) -> String {
 #[update]
 pub async fn get_balance(account: Option<String>) -> Result<u64, String> {
     let account = account.unwrap_or_else(|| {
-        ic_cdk::spawn(async {
-            solana_account(None).await
-        });
-        "".to_string() // This is a placeholder - in real implementation we'd need to handle this differently
+        // For now, return empty string if no account provided
+        // In a real implementation, we'd need to handle this differently
+        "".to_string()
     });
     
     if account.is_empty() {
@@ -148,6 +146,53 @@ pub fn get_associated_token_address(
     mint_address: String,
 ) -> Result<String, String> {
     spl::get_associated_token_address(&wallet_address, &mint_address)
+}
+
+/// Test Ed25519 key generation and signing
+#[update]
+pub async fn test_ed25519() -> Result<String, String> {
+    ic_cdk::println!("Testing Ed25519 key generation and signing...");
+    
+    // Test key generation
+    let canister_principal = ic_cdk::api::id();
+    let wallet = solana_wallet::SolanaWallet::new(canister_principal);
+    
+    ic_cdk::println!("Created wallet for canister: {}", wallet.get_solana_address());
+    
+    // Get public key info
+    let public_key_bytes = wallet.get_public_key_bytes();
+    let public_key_base58 = wallet.get_public_key_base58();
+    
+    ic_cdk::println!("Public key (bytes): {}", hex::encode(&public_key_bytes));
+    ic_cdk::println!("Public key (base58): {}", public_key_base58);
+    
+    // Test signing different messages
+    let test_messages = vec![
+        b"Hello, IC Ed25519!",
+        b"Solana transaction test",
+        b"SPL token transfer",
+        b"Gasless permit signature",
+    ];
+    
+    let mut results = Vec::new();
+    for (i, message) in test_messages.iter().enumerate() {
+        let signature = wallet.sign_message(message).await?;
+        results.push(format!("Message {}: {} -> Signature: {}", 
+            i + 1, 
+            String::from_utf8_lossy(message),
+            hex::encode(&signature)
+        ));
+    }
+    
+    let result = format!(
+        "Ed25519 test successful!\n\nPublic Key (Base58): {}\nPublic Key (Hex): {}\nSolana Address: {}\n\nSignatures:\n{}",
+        public_key_base58,
+        hex::encode(&public_key_bytes),
+        wallet.get_solana_address(),
+        results.join("\n")
+    );
+    
+    Ok(result)
 }
 
 /// Create escrow using permit (gasless for user)
@@ -237,7 +282,7 @@ async fn transfer_spl_tokens_with_permit(
     
     // Get canister's Solana address
     let canister_principal = ic_cdk::api::id();
-    let canister_wallet = solana_wallet::SolanaWallet::new(canister_principal).await;
+    let canister_wallet = solana_wallet::SolanaWallet::new(canister_principal);
     let canister_address = canister_wallet.get_solana_address();
     
     // Get associated token accounts

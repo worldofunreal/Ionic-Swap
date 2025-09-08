@@ -4,9 +4,7 @@ use ic_http_certification::{
     HttpCertificationTree, HttpCertificationTreeEntry, HttpCertificationPath,
     CERTIFICATE_EXPRESSION_HEADER_NAME,
 };
-use serde_json::{json, Value};
-use sha3::{Digest, Keccak256};
-use std::collections::HashMap;
+use serde_json::json;
 
 // ============================================================================
 // HTTP CERTIFICATION TREE
