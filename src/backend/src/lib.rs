@@ -9,6 +9,19 @@ use serde_json::json;
 use sha3::{Digest, Keccak256};
 
 // ============================================================================
+// SOLANA LIBRARIES - Use these instead of custom serialization!
+// ============================================================================
+// These are the SAME libraries used by sol-rpc-canister for proper transaction handling
+use solana_hash::Hash;
+use solana_instruction::{AccountMeta, Instruction};
+use solana_message::Message;
+use solana_pubkey::Pubkey;
+use solana_signature::Signature;
+use solana_transaction::Transaction;
+use base64;
+use bincode;
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 
@@ -336,29 +349,181 @@ async fn verify_permit_signature(
     true // Placeholder - always return true for now
 }
 
-/// Sign and send transaction using permit signature
+/// Sign and send transaction using permit signature - USING PROPER SOLANA LIBRARIES!
 async fn sign_and_send_with_permit(
     transaction_data: &str,
     permit_signature: &[u8; 64],
 ) -> Result<String, String> {
-    ic_cdk::println!("Signing and sending transaction with permit...");
+    ic_cdk::println!("🚀 Signing and sending transaction with permit using PROPER Solana libraries...");
     
     // Parse the transaction data
     let tx_data: serde_json::Value = serde_json::from_str(transaction_data)
         .map_err(|e| format!("Failed to parse transaction data: {}", e))?;
     
-    // Create the transaction structure
-    let mut transaction = create_solana_transaction(&tx_data)?;
+    // Create PROPER Solana transaction using real libraries (not custom serialization!)
+    let transaction = create_proper_solana_transaction(&tx_data, permit_signature)?;
     
-    // Use the permit signature as the transaction signature
-    transaction.signatures.push(permit_signature.to_vec());
+    // Submit the transaction using proper serialization
+    let tx_hash = submit_proper_solana_transaction(&transaction).await?;
     
-    // Submit the transaction
-    let tx_hash = submit_solana_transaction(&transaction).await?;
-    
-    ic_cdk::println!("Transaction submitted with permit signature: {}", tx_hash);
+    ic_cdk::println!("✅ Transaction submitted with permit signature: {}", tx_hash);
     
     Ok(tx_hash)
+}
+
+/// Create PROPER Solana transaction using real libraries (not custom serialization!)
+fn create_proper_solana_transaction(
+    tx_data: &serde_json::Value,
+    permit_signature: &[u8; 64],
+) -> Result<Transaction, String> {
+    ic_cdk::println!("🔧 Creating PROPER Solana transaction using real libraries...");
+    
+    let instructions = tx_data["instructions"].as_array()
+        .ok_or("Missing instructions in transaction data")?;
+    
+    let recent_blockhash = tx_data["recent_blockhash"].as_str()
+        .ok_or("Missing recent_blockhash in transaction data")?;
+    
+    let fee_payer = tx_data["fee_payer"].as_str()
+        .ok_or("Missing fee_payer in transaction data")?;
+    
+    // Convert to proper Solana types
+    let blockhash_bytes = bs58::decode(recent_blockhash)
+        .into_vec()
+        .map_err(|e| format!("Invalid blockhash: {}", e))?;
+    let blockhash = Hash::new_from_array(
+        blockhash_bytes.try_into()
+            .map_err(|_| "Invalid blockhash length")?
+    );
+    
+    let fee_payer_bytes = bs58::decode(fee_payer)
+        .into_vec()
+        .map_err(|e| format!("Invalid fee payer: {}", e))?;
+    let fee_payer_pubkey = Pubkey::new_from_array(
+        fee_payer_bytes.try_into()
+            .map_err(|_| "Invalid fee payer length")?
+    );
+    
+    // Create proper Solana instructions
+    let mut solana_instructions = Vec::new();
+    
+    for instruction in instructions {
+        let program_id = instruction["program_id"].as_str()
+            .ok_or("Missing program_id in instruction")?;
+        
+        let accounts = instruction["accounts"].as_array()
+            .ok_or("Missing accounts in instruction")?;
+        
+        let data = instruction["data"].as_str()
+            .ok_or("Missing data in instruction")?;
+        
+        // Convert program ID
+        let program_id_bytes = bs58::decode(program_id)
+            .into_vec()
+            .map_err(|e| format!("Invalid program_id: {}", e))?;
+        let program_id_pubkey = Pubkey::new_from_array(
+            program_id_bytes.try_into()
+                .map_err(|_| "Invalid program_id length")?
+        );
+        
+        // Convert accounts
+        let mut account_metas = Vec::new();
+        for account in accounts {
+            let pubkey = account["pubkey"].as_str()
+                .ok_or("Missing pubkey in account")?;
+            let is_signer = account["is_signer"].as_bool()
+                .ok_or("Missing is_signer in account")?;
+            let is_writable = account["is_writable"].as_bool()
+                .ok_or("Missing is_writable in account")?;
+            
+            let pubkey_bytes = bs58::decode(pubkey)
+                .into_vec()
+                .map_err(|e| format!("Invalid pubkey: {}", e))?;
+            let pubkey_obj = Pubkey::new_from_array(
+                pubkey_bytes.try_into()
+                    .map_err(|_| "Invalid pubkey length")?
+            );
+            
+            account_metas.push(AccountMeta {
+                pubkey: pubkey_obj,
+                is_signer,
+                is_writable,
+            });
+        }
+        
+        // Convert data (hex string to bytes)
+        let data_bytes = hex::decode(data)
+            .map_err(|e| format!("Invalid instruction data: {}", e))?;
+        
+        // Create proper Solana instruction
+        let solana_instruction = Instruction {
+            program_id: program_id_pubkey,
+            accounts: account_metas,
+            data: data_bytes,
+        };
+        
+        solana_instructions.push(solana_instruction);
+    }
+    
+    // Create proper Solana message
+    let message = Message::new_with_blockhash(
+        &solana_instructions,
+        Some(&fee_payer_pubkey),
+        &blockhash,
+    );
+    
+    // Convert permit signature to proper Solana signature
+    let signature = Signature::try_from(permit_signature.as_slice())
+        .map_err(|e| format!("Invalid permit signature: {}", e))?;
+    
+    // Create proper Solana transaction
+    let transaction = Transaction {
+        signatures: vec![signature],
+        message,
+    };
+    
+    ic_cdk::println!("✅ Created PROPER Solana transaction with {} instructions", solana_instructions.len());
+    
+    Ok(transaction)
+}
+
+/// Submit PROPER Solana transaction using real serialization (not custom!)
+async fn submit_proper_solana_transaction(transaction: &Transaction) -> Result<String, String> {
+    ic_cdk::println!("📡 Submitting PROPER Solana transaction using real serialization...");
+    
+    // ============================================================================
+    // KEY DIFFERENCE: Use proper Solana serialization (Borsh) instead of custom!
+    // ============================================================================
+    // This is the SAME serialization used by sol-rpc-canister and all Solana clients
+    // We avoid custom serialization and use the official Solana libraries
+    let serialized_tx = bincode::serialize(transaction)
+        .map_err(|e| format!("Failed to serialize transaction: {}", e))?;
+    
+    ic_cdk::println!("   Serialized transaction: {} bytes", serialized_tx.len());
+    
+    // Submit to Solana RPC using proper format
+    let params = json!([
+        base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &serialized_tx),  // Use base64 encoding
+        {
+            "encoding": "base64",
+            "skipPreflight": false,
+            "preflightCommitment": "confirmed"
+        }
+    ]);
+    
+    let response = http_client::call_solana_rpc("sendTransaction", params).await?;
+    
+    if let Some(error) = response["error"].as_object() {
+        return Err(format!("RPC error: {:?}", error));
+    }
+    
+    let tx_hash = response["result"]
+        .as_str()
+        .ok_or("Missing transaction hash in response")?;
+    
+    ic_cdk::println!("✅ Transaction submitted successfully: {}", tx_hash);
+    
+    Ok(tx_hash.to_string())
 }
 
 /// Create a Solana transaction from transaction data
