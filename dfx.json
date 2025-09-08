@@ -3,7 +3,8 @@
     "backend": {
       "type": "rust",
       "package": "backend",
-      "candid": "src/backend/backend.did"
+      "candid": "src/backend/backend.did",
+      "init_arg": "(record { solana_network = opt variant { Devnet }; solana_commitment_level = opt variant { finalized }; ed25519_key_name = opt variant { MainnetProdKey1 }; sol_rpc_canister_id = opt principal \"tghme-zyaaa-aaaar-qarca-cai\" })"
     },
     "spiral_token": {
       "type": "custom",

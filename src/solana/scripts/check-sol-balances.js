@@ -11,8 +11,8 @@ const RPC_URLS = {
 const connection = new Connection(RPC_URLS[NETWORK], 'confirmed');
 
 // Addresses
-const DEPLOYER_ADDRESS = '6bve2yBseLPuiAhj47CW8agLo4xKzkxAmtLKEnACwcES';
-const CANISTER_ADDRESS = '4YicBFKxoMNqaqrjDKXdrBzXSAQT4Sqa4o9SPhnAJjvY';
+const DEPLOYER_ADDRESS = 'GLxeKkwTFodLPcaRmsjrGhpKMorREAf4j4HsT6c8gwRM';
+const CANISTER_ADDRESS = '6n3cKK86zeiGtX9VBLLCqjyaUwYqNHFFoR7A4cQvjcwd';
 const SPIRAL_MINT = 'HSErF7xjoMowD4RoYzcigBRSoPv5CoZRRgxvxBAsTdWK';
 const STARDUST_MINT = 'A1wZAwvc5r8LPoKbbdTXHY25VU2ZkQrk7ikW5QgbzdtH';
 

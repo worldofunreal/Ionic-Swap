@@ -14,20 +14,20 @@ const RPC_URLS = {
 const connection = new Connection(RPC_URLS[NETWORK], 'confirmed');
 
 async function loadKeypair() {
-    // Load environment variables
-    require('dotenv').config();
+    // Load deployer keypair from file
+    const keypairPath = path.join(__dirname, '..', 'deployer-keypair.json');
     
-    if (!process.env.DEPLOYER_PRIVATE_KEY) {
-        console.error('❌ DEPLOYER_PRIVATE_KEY not found in .env file');
-        console.log('💡 Run: npm run generate:deployer');
+    if (!fs.existsSync(keypairPath)) {
+        console.error('❌ deployer-keypair.json not found');
+        console.log('💡 Make sure the deployer keypair file exists');
         process.exit(1);
     }
     
-    // Parse the private key from .env (split by comma)
-    const privateKeyArray = process.env.DEPLOYER_PRIVATE_KEY.split(',').map(Number);
-    const keypair = Keypair.fromSecretKey(new Uint8Array(privateKeyArray));
+    // Read the keypair file
+    const keypairData = JSON.parse(fs.readFileSync(keypairPath, 'utf8'));
+    const keypair = Keypair.fromSecretKey(new Uint8Array(keypairData));
     
-    console.log(`📝 Using deterministic deployer: ${keypair.publicKey.toString()}`);
+    console.log(`📝 Using deployer: ${keypair.publicKey.toString()}`);
     return keypair;
 }
 
@@ -43,7 +43,7 @@ async function deployEscrowProgram() {
         const balance = await connection.getBalance(deployer.publicKey);
         console.log(`💰 Balance: ${balance / 1e9} SOL`);
         
-        if (balance < 2e9) { // 2 SOL minimum
+        if (balance < 0.5e9) { // 0.5 SOL minimum
             console.error('❌ Insufficient balance for deployment');
             process.exit(1);
         }
@@ -63,7 +63,7 @@ async function deployEscrowProgram() {
         }
         
         // Load the compiled program
-        const programPath = path.join(__dirname, '..', 'target', 'deploy', 'ionic_solana_escrow.so');
+        const programPath = path.join(__dirname, '..', 'target', 'deploy', 'ionic_solana.so');
         
         if (!fs.existsSync(programPath)) {
             console.error('❌ Compiled program not found');

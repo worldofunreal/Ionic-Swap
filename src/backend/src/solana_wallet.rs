@@ -1,9 +1,3 @@
-//! A demo of a very bare-bones Solana "wallet".
-//!
-//! The wallet here showcases how Solana addresses can be computed and how Solana transactions
-//! can be signed. It is missing several pieces that any production-grade wallet would have,
-//! such as error handling, access-control, caching, etc.
-
 use crate::{
     ed25519::Ed25519ExtendedPublicKey,
     state::{lazy_call_ed25519_public_key, read_state},
@@ -89,14 +83,5 @@ impl SolanaWallet {
 
     pub fn solana_account(&self) -> SolanaAccount {
         self.derive_account(self.owner.as_slice().into())
-    }
-
-    pub fn derived_nonce_account(&self) -> SolanaAccount {
-        self.derive_account(
-            [self.owner.as_slice(), "nonce-account".as_bytes()]
-                .concat()
-                .as_slice()
-                .into(),
-        )
     }
 }
