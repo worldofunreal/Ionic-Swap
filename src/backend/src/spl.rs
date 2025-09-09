@@ -319,6 +319,51 @@ pub fn create_approve_instruction(
     Ok(instruction)
 }
 
+/// Create SPL token approve checked instruction
+pub fn create_approve_checked_instruction_with_mint(
+    account_address: &str,
+    mint_address: &str,
+    delegate_address: &str,
+    authority_address: &str,
+    amount: u64,
+    decimals: u8,
+) -> Result<serde_json::Value, String> {
+    // Create approve checked instruction data
+    let mut instruction_data = vec![instruction_type::APPROVE_CHECKED];
+    instruction_data.extend_from_slice(&amount.to_le_bytes());
+    instruction_data.push(decimals);
+
+    // Create instruction structure
+    let instruction = json!({
+        "program_id": TOKEN_PROGRAM_ID,
+        "accounts": [
+            {
+                "pubkey": account_address,
+                "is_signer": false,
+                "is_writable": true
+            },
+            {
+                "pubkey": mint_address,
+                "is_signer": false,
+                "is_writable": false
+            },
+            {
+                "pubkey": delegate_address,
+                "is_signer": false,
+                "is_writable": false
+            },
+            {
+                "pubkey": authority_address,
+                "is_signer": true,
+                "is_writable": false
+            }
+        ],
+        "data": hex::encode(instruction_data)
+    });
+
+    Ok(instruction)
+}
+
 /// Create SPL token revoke instruction
 pub fn create_revoke_instruction(
     account_address: &str,

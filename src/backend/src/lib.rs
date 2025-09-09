@@ -226,10 +226,10 @@ pub async fn test_ed25519() -> Result<String, String> {
 }
 
 /// Create escrow using permit (gasless for user) - SIMPLIFIED VERSION
-/// Submit delegation transaction (Alice signs, canister co-signs and pays gas) + automatically pull tokens
+/// Submit delegation transaction (Alice signs both instructions, canister only signs as fee payer)
 #[update]
 pub async fn submit_delegation_transaction(transaction_data: Vec<u8>) -> Result<String, String> {
-    ic_cdk::println!("🚀 Submitting delegation transaction (Alice signed, canister co-signs) + auto-pull tokens");
+    ic_cdk::println!("🚀 Submitting delegation transaction (Alice signed both instructions, canister co-signs as fee payer)");
     ic_cdk::println!("   Received transaction data: {} bytes", transaction_data.len());
     
     // The transaction data is base64 encoded, decode it first
@@ -252,140 +252,48 @@ pub async fn submit_delegation_transaction(transaction_data: Vec<u8>) -> Result<
         }
     };
     
-    // Parse the delegation transaction to extract token account info
-    let delegation_info = parse_delegation_transaction(&transaction)?;
-    ic_cdk::println!("   📋 Delegation Info:");
-    ic_cdk::println!("     Source Token Account: {}", delegation_info.source_token_account);
-    ic_cdk::println!("     Token Mint: {}", delegation_info.token_mint);
-    ic_cdk::println!("     Amount: {}", delegation_info.amount);
+    // CORRECTED APPROACH: Atomic transaction with proper account ordering
+    // Fee payer = canister (index 0), signers = {canister, alice}
+    ic_cdk::println!("   📋 CORRECTED: Atomic transaction with proper account ordering");
+    ic_cdk::println!("   Instructions count: {}", transaction.message.instructions.len());
+    ic_cdk::println!("   1. ApproveChecked: Alice delegates to canister");
+    ic_cdk::println!("   2. TransferChecked: Canister transfers using delegated authority");
+    ic_cdk::println!("   Canister signs once (satisfies both fee payer AND delegate authority roles)");
     
-    // Get canister's wallet for co-signing
+    // Get canister's wallet for fee payer signature
     let canister_principal = ic_cdk::api::id();
     let canister_wallet = solana_wallet::SolanaWallet::new(canister_principal);
-    let canister_address = canister_wallet.get_solana_address();
     
-    // Get canister's token account (create if needed)
-    let canister_token_account = spl::get_associated_token_address(&canister_address, &delegation_info.token_mint)?;
-    ic_cdk::println!("   🏦 Canister Token Account: {}", canister_token_account);
-    
-    // Add canister's token account to account keys if it doesn't exist
-    let mut combined_account_keys = transaction.message.account_keys.clone();
-    let canister_token_pubkey = Pubkey::from_str(&canister_token_account)
-        .map_err(|e| format!("Invalid canister token account: {}", e))?;
-    
-    // Check if canister token account is already in account keys
-    let canister_token_account_index = combined_account_keys.iter()
-        .position(|key| key == &canister_token_pubkey);
-    
-    let canister_token_account_index = match canister_token_account_index {
-        Some(index) => index,
-        None => {
-            // Add the canister token account to account keys
-            combined_account_keys.push(canister_token_pubkey);
-            combined_account_keys.len() - 1
-        }
-    };
-    
-    ic_cdk::println!("   📋 Canister Token Account Index: {}", canister_token_account_index);
-    
-    // Create TransferChecked instruction to pull the delegated tokens
-    // Use the canister's public key (not Solana address) as authority since it's in the account keys
-    let canister_public_key = canister_wallet.get_public_key_base58();
-    ic_cdk::println!("   🔑 Using canister public key as authority: {}", canister_public_key);
-    
-    let transfer_instruction = spl::create_transfer_checked_instruction_with_mint(
-        &delegation_info.source_token_account,  // source (Alice's account from delegation)
-        &canister_token_account,                // destination (canister's account)
-        &canister_public_key,                   // authority (canister's public key, using delegated authority)
-        &delegation_info.token_mint,            // mint address
-        delegation_info.amount,                 // amount
-        8,                                      // decimals (assuming 8 for SPIRAL)
-    )?;
-    
-    // Convert JSON instruction to proper Solana instruction
-    let solana_transfer_instruction = convert_json_instruction_to_solana(&transfer_instruction)?;
-    
-    // Create new transaction with both delegation + transfer instructions
-    let mut combined_instructions = transaction.message.instructions.clone();
-    
-    // Convert the new instruction to CompiledInstruction format using the combined account keys
-    let compiled_transfer_instruction = convert_instruction_to_compiled(
-        &solana_transfer_instruction,
-        &combined_account_keys,
-    )?;
-    combined_instructions.push(compiled_transfer_instruction);
-    
-    // Create new message with combined instructions
-    // We need to convert CompiledInstructions back to Instructions for Message::new_with_blockhash
-    let mut instruction_list = Vec::new();
-    for compiled_instruction in &combined_instructions {
-        let program_id = combined_account_keys[compiled_instruction.program_id_index as usize];
-        let mut accounts = Vec::new();
-        for &account_index in &compiled_instruction.accounts {
-            let pubkey = combined_account_keys[account_index as usize];
-            // Determine if account is signer and writable based on the original transaction
-            let is_signer = account_index < transaction.message.header.num_required_signatures;
-            let is_writable = account_index < transaction.message.header.num_required_signatures + 
-                transaction.message.header.num_readonly_signed_accounts;
-            accounts.push(AccountMeta {
-                pubkey,
-                is_signer,
-                is_writable,
-            });
-        }
-        instruction_list.push(Instruction {
-            program_id,
-            accounts,
-            data: compiled_instruction.data.clone(),
-        });
-    }
-    
-    let combined_message = Message::new_with_blockhash(
-        &instruction_list,
-        Some(&combined_account_keys[0]), // Use canister as fee payer
-        &transaction.message.recent_blockhash,
-    );
-    
-    // Create new transaction with combined message
-    let mut combined_transaction = Transaction {
-        signatures: vec![Signature::default(); combined_message.header.num_required_signatures as usize],
-        message: combined_message,
-    };
+    // Alice has already signed both instructions as the authority
+    // We just need to co-sign as fee payer
+    let mut final_transaction = transaction;
     
     ic_cdk::println!("   🔍 SIGNATURE DEBUG INFO:");
-    ic_cdk::println!("     Original transaction signatures count: {}", transaction.signatures.len());
-    ic_cdk::println!("     Combined transaction signatures count: {}", combined_transaction.signatures.len());
-    ic_cdk::println!("     Combined message header num_required_signatures: {}", combined_transaction.message.header.num_required_signatures);
-    ic_cdk::println!("     Combined message header num_readonly_signed_accounts: {}", combined_transaction.message.header.num_readonly_signed_accounts);
-    ic_cdk::println!("     Combined message header num_readonly_unsigned_accounts: {}", combined_transaction.message.header.num_readonly_unsigned_accounts);
+    ic_cdk::println!("     Transaction signatures count: {}", final_transaction.signatures.len());
+    ic_cdk::println!("     Message header num_required_signatures: {}", final_transaction.message.header.num_required_signatures);
+    ic_cdk::println!("     Message header num_readonly_signed_accounts: {}", final_transaction.message.header.num_readonly_signed_accounts);
+    ic_cdk::println!("     Message header num_readonly_unsigned_accounts: {}", final_transaction.message.header.num_readonly_unsigned_accounts);
     
-    // Log all account keys in the combined message
-    ic_cdk::println!("     Combined message account keys:");
-    for (i, key) in combined_transaction.message.account_keys.iter().enumerate() {
+    // Log all account keys in the message
+    ic_cdk::println!("     Message account keys:");
+    for (i, key) in final_transaction.message.account_keys.iter().enumerate() {
         ic_cdk::println!("       {}: {}", i, key);
     }
     
-    // Log all instructions in the combined message
-    ic_cdk::println!("     Combined message instructions:");
-    for (i, instruction) in combined_transaction.message.instructions.iter().enumerate() {
+    // Log all instructions in the message
+    ic_cdk::println!("     Message instructions:");
+    for (i, instruction) in final_transaction.message.instructions.iter().enumerate() {
         ic_cdk::println!("       Instruction {}: program_id_index={}, accounts={:?}, data_len={}", 
             i, instruction.program_id_index, instruction.accounts, instruction.data.len());
     }
     
-    // Preserve Alice's original signature from the delegation transaction
-    ic_cdk::println!("     Preserving Alice's original signature...");
-    if transaction.signatures.len() >= 2 {
-        // Alice's signature should be at index 1 (canister is at index 0 as fee payer)
-        let alice_signature = transaction.signatures[1];
-        ic_cdk::println!("     Alice's signature: {}", hex::encode(&alice_signature.as_ref()));
-        combined_transaction.signatures[1] = alice_signature;
-    } else {
-        ic_cdk::println!("     ⚠️  Warning: Original transaction doesn't have Alice's signature!");
-    }
+    // Alice has already signed as owner (ApproveChecked)
+    // Canister needs to sign as fee payer AND delegate authority (single signature satisfies both)
+    ic_cdk::println!("     Alice has already signed as owner (ApproveChecked)");
+    ic_cdk::println!("     Co-signing with canister's key (satisfies fee payer AND delegate authority roles)...");
     
-    // Sign the combined transaction message with canister's key (as fee payer)
-    ic_cdk::println!("     Signing with canister's key...");
-    let message_bytes = bincode::serialize(&combined_transaction.message)
+    // Sign the transaction message with canister's key (satisfies both fee payer AND delegate authority)
+    let message_bytes = bincode::serialize(&final_transaction.message)
         .map_err(|e| format!("Failed to serialize message: {}", e))?;
     
     ic_cdk::println!("     Message bytes length: {}", message_bytes.len());
@@ -395,24 +303,24 @@ pub async fn submit_delegation_transaction(transaction_data: Vec<u8>) -> Result<
     let signature = Signature::try_from(canister_signature.as_slice())
         .map_err(|e| format!("Invalid canister signature: {}", e))?;
     
-    ic_cdk::println!("     Canister's signature: {}", hex::encode(&signature.as_ref()));
+    ic_cdk::println!("     Canister's signature (fee payer + delegate authority): {}", hex::encode(&signature.as_ref()));
     
-    // Set the canister's signature (it should be at index 0, as fee payer)
-    combined_transaction.signatures[0] = signature;
+    // Set the canister's signature at index 0 (fee payer position)
+    // This single signature satisfies both fee payer and delegate authority roles
+    final_transaction.signatures[0] = signature;
     
     // Log final signatures
     ic_cdk::println!("     Final signatures:");
-    for (i, sig) in combined_transaction.signatures.iter().enumerate() {
+    for (i, sig) in final_transaction.signatures.iter().enumerate() {
         ic_cdk::println!("       Signature {}: {}", i, hex::encode(&sig.as_ref()));
     }
     
-    ic_cdk::println!("   ✅ Combined transaction created with {} instructions", combined_instructions.len());
-    ic_cdk::println!("   ✅ Canister co-signed the combined transaction");
+    ic_cdk::println!("   ✅ Transaction co-signed by canister (fee payer + delegate authority)");
     
-    // Submit the fully signed combined transaction to Solana
-    let tx_hash = submit_proper_solana_transaction(&combined_transaction).await?;
+    // Submit the fully signed transaction to Solana
+    let tx_hash = submit_proper_solana_transaction(&final_transaction).await?;
     
-    ic_cdk::println!("   ✅ Combined delegation + transfer transaction submitted: {}", tx_hash);
+    ic_cdk::println!("   ✅ Atomic delegation + transfer transaction submitted: {}", tx_hash);
     
     Ok(tx_hash)
 }
