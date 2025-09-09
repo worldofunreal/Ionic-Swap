@@ -133,7 +133,7 @@ const testGaslessPermit = async () => {
   
   // Create ApproveChecked transaction for delegation
   console.log('\n📝 Creating ApproveChecked Transaction:');
-  const amount = 1000 * Math.pow(10, 8); // 1000 SPIRAL tokens
+    const amount = 100 * Math.pow(10, 8); // 100 SPIRAL tokens
   const decimals = 8; // SPIRAL token decimals
   
   // Get Alice's associated token account

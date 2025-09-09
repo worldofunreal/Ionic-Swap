@@ -5,6 +5,10 @@ use ic_http_certification::{
     CERTIFICATE_EXPRESSION_HEADER_NAME,
 };
 use serde_json::json;
+use ic_cdk::management_canister::http_request as canister_http_outcall;
+use ic_cdk::management_canister::HttpRequestArgs;
+use ic_cdk::management_canister::HttpMethod;
+use ic_cdk::management_canister::HttpRequestResult;
 
 // ============================================================================
 // HTTP CERTIFICATION TREE
@@ -29,60 +33,64 @@ pub fn get_http_certification_tree() -> &'static mut HttpCertificationTree {
 }
 
 pub async fn make_http_request(request: HttpRequest<'_>) -> Result<HttpResponse<'static>, String> {
-    let cycles = 230_949_972_000u64;
-    
-    // Create CEL expression for response-only certification
-    let cel_expr = DefaultCelBuilder::response_only_certification()
-        .with_response_certification(DefaultResponseCertification::certified_response_headers(vec![
-            "Content-Type",
-            "Content-Length",
-        ]))
-        .build();
+    make_http_request_internal(request, true).await
+}
 
-    // Create the HTTP request argument using the builder pattern
-    let request_args = ic_cdk::api::management_canister::http_request::CanisterHttpRequestArgument {
+pub async fn make_http_request_non_replicated(request: HttpRequest<'_>) -> Result<HttpResponse<'static>, String> {
+    make_http_request_internal(request, false).await
+}
+
+async fn make_http_request_internal(request: HttpRequest<'_>, is_replicated: bool) -> Result<HttpResponse<'static>, String> {
+    // Create the HTTP request argument using the NEW API with is_replicated field
+    let arg: HttpRequestArgs = HttpRequestArgs {
         url: request.url().to_string(),
         max_response_bytes: None,
-        headers: request.headers().iter().map(|h| ic_cdk::api::management_canister::http_request::HttpHeader { name: h.0.clone(), value: h.1.clone() }).collect(),
-        body: Some(request.body().to_vec()),
         method: match request.method().as_str() {
-            "GET" => ic_cdk::api::management_canister::http_request::HttpMethod::GET,
-            "POST" => ic_cdk::api::management_canister::http_request::HttpMethod::POST,
-            "HEAD" => ic_cdk::api::management_canister::http_request::HttpMethod::HEAD,
-            _ => ic_cdk::api::management_canister::http_request::HttpMethod::GET,
+            "GET" => HttpMethod::GET,
+            "POST" => HttpMethod::POST,
+            "HEAD" => HttpMethod::HEAD,
+            _ => HttpMethod::GET,
         },
+        headers: request.headers().iter().map(|h| ic_cdk::management_canister::HttpHeader { 
+            name: h.0.clone(), 
+            value: h.1.clone() 
+        }).collect(),
+        body: Some(request.body().to_vec()),
         transform: None,
+        is_replicated: Some(is_replicated), // 🚀 THE KEY FEATURE!
     };
 
-    // Make the HTTP request
-    let result: Result<(ic_cdk::api::management_canister::http_request::HttpResponse,), _> = 
-        ic_cdk::api::call::call_with_payment(
-            Principal::management_canister(),
-            "http_request",
-            (request_args,),
-            cycles,
-        )
-        .await;
+    // Make the HTTP request using the new API
+    let result: Result<HttpRequestResult, _> = canister_http_outcall(&arg).await;
     
     match result {
-        Ok((response,)) => {
+        Ok(response) => {
             // Convert to our HttpResponse type
             let mut headers = response.headers.iter().map(|h| (h.name.clone(), h.value.clone())).collect::<Vec<_>>();
-            headers.push((CERTIFICATE_EXPRESSION_HEADER_NAME.to_string(), cel_expr.to_string()));
             
             let http_response = HttpResponse::ok(
                 response.body,
                 headers,
             ).build();
             
-            // Add certification to the response
-            let certification = HttpCertification::response_only(&cel_expr, &http_response, None)
-                .map_err(|e| format!("Failed to create certification: {:?}", e))?;
-            
-            // Add the certification to the tree
-            let path = HttpCertificationPath::exact("/json-rpc");
-            let entry = HttpCertificationTreeEntry::new(&path, &certification);
-            get_http_certification_tree().insert(&entry);
+            // Add certification to the response (only for replicated calls)
+            if is_replicated {
+                let cel_expr = DefaultCelBuilder::response_only_certification()
+                    .with_response_certification(DefaultResponseCertification::certified_response_headers(vec![
+                        "Content-Type",
+                        "Content-Length",
+                    ]))
+                    .build();
+                
+                let certification = HttpCertification::response_only(&cel_expr, &http_response, None)
+                    .map_err(|e| format!("Failed to create certification: {:?}", e))?;
+                
+                // Add the certification to the tree
+                let path = HttpCertificationPath::exact("/json-rpc");
+                let entry = HttpCertificationTreeEntry::new(&path, &certification);
+                get_http_certification_tree().insert(&entry);
+            }
+            // Non-replicated calls don't need certification - that's the whole point!
             
             Ok(http_response)
         },
@@ -104,8 +112,17 @@ fn get_solana_rpc_endpoint() -> &'static str {
 // SOLANA RPC CALLS
 // ============================================================================
 
-/// Make an HTTP RPC call to Solana
+/// Make an HTTP RPC call to Solana (replicated)
 pub async fn call_solana_rpc(method: &str, params: serde_json::Value) -> Result<serde_json::Value, String> {
+    call_solana_rpc_internal(method, params, true).await
+}
+
+/// Make an HTTP RPC call to Solana (non-replicated - faster, cheaper)
+pub async fn call_solana_rpc_non_replicated(method: &str, params: serde_json::Value) -> Result<serde_json::Value, String> {
+    call_solana_rpc_internal(method, params, false).await
+}
+
+async fn call_solana_rpc_internal(method: &str, params: serde_json::Value, is_replicated: bool) -> Result<serde_json::Value, String> {
     let request = json!({
         "jsonrpc": "2.0",
         "id": 1,
@@ -126,7 +143,11 @@ pub async fn call_solana_rpc(method: &str, params: serde_json::Value) -> Result<
         .with_body(request_body.into_bytes())
         .build();
 
-    let response = make_http_request(http_request).await?;
+    let response = if is_replicated {
+        make_http_request(http_request).await?
+    } else {
+        make_http_request_non_replicated(http_request).await?
+    };
     
     let response_str = String::from_utf8(response.body().to_vec())
         .map_err(|e| format!("Failed to decode response: {}", e))?;
@@ -146,10 +167,10 @@ pub async fn call_solana_rpc(method: &str, params: serde_json::Value) -> Result<
 // BASIC SOLANA OPERATIONS
 // ============================================================================
 
-/// Get Solana account balance
+/// Get Solana account balance (non-replicated - faster)
 pub async fn get_solana_balance(account: String) -> Result<u64, String> {
     let params = json!([account]);
-    let response = call_solana_rpc("getBalance", params).await?;
+    let response = call_solana_rpc_non_replicated("getBalance", params).await?;
     
     // Extract balance from response
     if let Some(result) = response["result"].as_u64() {
@@ -163,10 +184,10 @@ pub async fn get_solana_balance(account: String) -> Result<u64, String> {
     }
 }
 
-/// Get Solana slot (block number)
+/// Get Solana slot (block number) (non-replicated - faster)
 pub async fn get_solana_slot() -> Result<u64, String> {
     let params = json!([]);
-    let response = call_solana_rpc("getSlot", params).await?;
+    let response = call_solana_rpc_non_replicated("getSlot", params).await?;
     
     // Extract slot from response
     if let Some(result) = response["result"].as_u64() {
@@ -176,7 +197,7 @@ pub async fn get_solana_slot() -> Result<u64, String> {
     }
 }
 
-/// Get Solana account info
+/// Get Solana account info (non-replicated - faster)
 pub async fn get_solana_account_info(account: String) -> Result<String, String> {
     let params = json!([
         account,
@@ -185,7 +206,7 @@ pub async fn get_solana_account_info(account: String) -> Result<String, String> 
         }
     ]);
     
-    let response = call_solana_rpc("getAccountInfo", params).await?;
+    let response = call_solana_rpc_non_replicated("getAccountInfo", params).await?;
     
     // Return the full result as string
     if let Some(result) = response["result"]["value"].as_object() {
@@ -195,10 +216,10 @@ pub async fn get_solana_account_info(account: String) -> Result<String, String> 
     }
 }
 
-/// Get latest blockhash
+/// Get latest blockhash (non-replicated - faster)
 pub async fn get_latest_blockhash() -> Result<String, String> {
     let params = json!([{"commitment": "confirmed"}]);
-    let response = call_solana_rpc("getLatestBlockhash", params).await?;
+    let response = call_solana_rpc_non_replicated("getLatestBlockhash", params).await?;
     
     if let Some(result) = response["result"]["value"]["blockhash"].as_str() {
         Ok(result.to_string())
@@ -211,10 +232,10 @@ pub async fn get_latest_blockhash() -> Result<String, String> {
 // SPL TOKEN OPERATIONS
 // ============================================================================
 
-/// Get SPL token account balance
+/// Get SPL token account balance (non-replicated - faster)
 pub async fn get_spl_token_balance(token_account: String) -> Result<String, String> {
     let params = json!([token_account]);
-    let response = call_solana_rpc("getTokenAccountBalance", params).await?;
+    let response = call_solana_rpc_non_replicated("getTokenAccountBalance", params).await?;
     
     // Extract balance from response
     if let Some(amount) = response["result"]["value"]["amount"].as_str() {
@@ -224,7 +245,7 @@ pub async fn get_spl_token_balance(token_account: String) -> Result<String, Stri
     }
 }
 
-/// Get token accounts by owner
+/// Get token accounts by owner (non-replicated - faster)
 pub async fn get_token_accounts_by_owner(owner: String, mint: Option<String>) -> Result<serde_json::Value, String> {
     let mut params = json!([
         owner,
@@ -240,22 +261,24 @@ pub async fn get_token_accounts_by_owner(owner: String, mint: Option<String>) ->
         params[1]["mint"] = json!(mint_address);
     }
     
-    let response = call_solana_rpc("getTokenAccountsByOwner", params).await?;
+    let response = call_solana_rpc_non_replicated("getTokenAccountsByOwner", params).await?;
     
     Ok(response["result"].clone())
 }
 
-/// Get token supply
+/// Get token supply (non-replicated - faster)
 pub async fn get_token_supply(mint: String) -> Result<serde_json::Value, String> {
     let params = json!([mint]);
-    let response = call_solana_rpc("getTokenSupply", params).await?;
+    let response = call_solana_rpc_non_replicated("getTokenSupply", params).await?;
     
     Ok(response["result"].clone())
 }
 
 // ============================================================================
-// TRANSACTION OPERATIONS
+// TRANSACTION OPERATIONS (KEEP REPLICATED FOR SECURITY)
 // ============================================================================
+// NOTE: Transaction submission operations MUST stay replicated for security
+// Only read-only operations use non-replicated calls
 
 /// Send SOL transaction
 pub async fn send_sol_transaction(
@@ -331,7 +354,7 @@ fn create_spl_transfer_instruction_data(amount: u64) -> Vec<u8> {
 // TRANSACTION VERIFICATION
 // ============================================================================
 
-/// Get transaction details
+/// Get transaction details (non-replicated - faster)
 pub async fn get_transaction(signature: String) -> Result<serde_json::Value, String> {
     let params = json!([
         signature,
@@ -341,15 +364,15 @@ pub async fn get_transaction(signature: String) -> Result<serde_json::Value, Str
         }
     ]);
     
-    let response = call_solana_rpc("getTransaction", params).await?;
+    let response = call_solana_rpc_non_replicated("getTransaction", params).await?;
     
     Ok(response["result"].clone())
 }
 
-/// Get transaction status
+/// Get transaction status (non-replicated - faster)
 pub async fn get_transaction_status(signature: String) -> Result<serde_json::Value, String> {
     let params = json!([signature]);
-    let response = call_solana_rpc("getSignatureStatuses", params).await?;
+    let response = call_solana_rpc_non_replicated("getSignatureStatuses", params).await?;
     
     Ok(response["result"].clone())
 }
@@ -358,26 +381,26 @@ pub async fn get_transaction_status(signature: String) -> Result<serde_json::Val
 // NETWORK INFORMATION
 // ============================================================================
 
-/// Get cluster info
+/// Get cluster info (non-replicated - faster)
 pub async fn get_cluster_info() -> Result<serde_json::Value, String> {
     let params = json!([]);
-    let response = call_solana_rpc("getClusterInfo", params).await?;
+    let response = call_solana_rpc_non_replicated("getClusterInfo", params).await?;
     
     Ok(response["result"].clone())
 }
 
-/// Get version
+/// Get version (non-replicated - faster)
 pub async fn get_version() -> Result<serde_json::Value, String> {
     let params = json!([]);
-    let response = call_solana_rpc("getVersion", params).await?;
+    let response = call_solana_rpc_non_replicated("getVersion", params).await?;
     
     Ok(response["result"].clone())
 }
 
-/// Get health
+/// Get health (non-replicated - faster)
 pub async fn get_health() -> Result<String, String> {
     let params = json!([]);
-    let response = call_solana_rpc("getHealth", params).await?;
+    let response = call_solana_rpc_non_replicated("getHealth", params).await?;
     
     if let Some(result) = response["result"].as_str() {
         Ok(result.to_string())

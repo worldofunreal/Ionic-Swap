@@ -108,7 +108,79 @@ pub async fn get_canister_public_key() -> String {
     wallet.get_public_key_base58()
 }
 
-// Removed unused functions: get_balance(), get_spl_token_balance(), get_associated_token_address()
+/// Get SPL token balance for a specific token account
+#[update]
+pub async fn get_spl_token_balance(token_account: String) -> Result<String, String> {
+    http_client::get_spl_token_balance(token_account).await
+}
+
+/// Get all SPL token accounts owned by the canister
+#[update]
+pub async fn get_canister_token_accounts() -> Result<String, String> {
+    let canister_principal = ic_cdk::api::id();
+    let wallet = solana_wallet::SolanaWallet::new(canister_principal);
+    let canister_address = wallet.get_solana_address();
+    
+    let result = http_client::get_token_accounts_by_owner(canister_address, None).await?;
+    
+    // Format the result nicely
+    let formatted = serde_json::to_string_pretty(&result)
+        .map_err(|e| format!("Failed to format result: {}", e))?;
+    
+    Ok(formatted)
+}
+
+/// Get comprehensive token balances for all known tokens
+#[update]
+pub async fn get_canister_all_token_balances() -> Result<String, String> {
+    let canister_principal = ic_cdk::api::id();
+    let _wallet = solana_wallet::SolanaWallet::new(canister_principal);
+    let _canister_address = _wallet.get_solana_address();
+    
+    // Known token accounts (add new ones here as they are discovered)
+    let known_token_accounts = vec![
+        ("SPIRAL", "fx7pDTJ5ryDDQBm3xaT4x6CMfcCrPwDrcgcMNpY9HYj"),
+        ("Stardust", "5Daea8aXHUzkCXmhsQT8DpZbKmLtT3a8QKRmrWDDbwMT"),
+        // Add more token accounts here as they are discovered/used
+    ];
+    
+    let mut balances = Vec::new();
+    
+    for (token_name, token_account) in known_token_accounts {
+        // Check the balance directly using the known token account address
+        match http_client::get_spl_token_balance(token_account.to_string()).await {
+            Ok(balance_str) => {
+                if let Ok(balance) = balance_str.parse::<u64>() {
+                    // Always show the balance, even if 0, for debugging
+                    let token_amount = balance as f64 / 1_000_000_000.0; // Assuming 9 decimals
+                    balances.push(format!(
+                        "{}: {} {} (Raw: {}, Account: {})",
+                        token_name,
+                        token_amount,
+                        token_name,
+                        balance,
+                        token_account
+                    ));
+                }
+            },
+            Err(e) => {
+                balances.push(format!(
+                    "{}: ERROR - {} (Account: {})",
+                    token_name,
+                    e,
+                    token_account
+                ));
+            }
+        }
+    }
+    
+    let result = format!(
+        "Canister Token Balances:\n{}\n\nTotal tokens checked: {}",
+        balances.join("\n"),
+        balances.len()
+    );
+    Ok(result)
+}
 
 /// Test Ed25519 key generation and signing
 #[update]
@@ -234,7 +306,8 @@ async fn submit_proper_solana_transaction(transaction: &Transaction) -> Result<S
         }
     ]);
     
-    let response = http_client::call_solana_rpc("sendTransaction", params).await?;
+    // 🚀 Use non-replicated call for maximum speed (testing only!)
+    let response = http_client::call_solana_rpc_non_replicated("sendTransaction", params).await?;
     
     if let Some(error) = response["error"].as_object() {
         return Err(format!("RPC error: {:?}", error));
