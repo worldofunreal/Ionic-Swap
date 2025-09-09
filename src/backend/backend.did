@@ -2,14 +2,10 @@ type InitArg = record { solana_network : opt SolanaNetwork };
 type Result = variant { Ok : text; Err : text };
 type SolanaNetwork = variant { Mainnet; Testnet; Devnet };
 service : (InitArg) -> {
-  // Get comprehensive token balances for all known tokens
-  get_canister_all_token_balances : () -> (Result);
   // Get the canister's own public key (always returns canister's wallet)
   get_canister_public_key : () -> (text);
-  // Get all SPL token accounts owned by the canister
-  get_canister_token_accounts : () -> (Result);
-  // Get SPL token balance for a specific token account
-  get_spl_token_balance : (text) -> (Result);
+  // Get comprehensive Solana token balances for all known tokens
+  get_solana_token_balances : () -> (Result);
   // Submit atomic delegation + transfer transaction (gasless for user)
   submit_delegation_transaction : (blob) -> (Result);
   // Test Ed25519 key generation and signing
