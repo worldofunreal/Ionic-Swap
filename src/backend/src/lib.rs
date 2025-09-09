@@ -1,6 +1,7 @@
 pub mod http_client;
 pub mod oracle;
 pub mod solana;
+pub mod evm;
 pub mod types;
 
 use candid::{CandidType, Deserialize};
@@ -126,6 +127,43 @@ pub async fn stop_price_scheduler() -> Result<String, String> {
 #[update]
 pub async fn debug_test_external_apis() -> Result<String, String> {
     oracle::debug_test_external_apis().await
+}
+
+// ============================================================================
+// EVM OPERATIONS
+// ============================================================================
+
+/// Get the canister's own Ethereum address (always returns canister's wallet)
+#[query]
+pub async fn get_canister_ethereum_address() -> String {
+    evm::get_canister_ethereum_address().await
+}
+
+/// Test secp256k1 key generation and signing
+#[update]
+pub async fn test_secp256k1() -> Result<String, String> {
+    evm::test_secp256k1().await
+}
+
+/// Test simple EVM transaction (get nonce, etc.)
+#[update]
+pub async fn test_simple_evm_transaction() -> Result<String, String> {
+    evm::test_simple_transaction().await
+}
+
+/// Submit gasless permit transaction (user signs permit, canister pays gas)
+#[update]
+pub async fn submit_gasless_permit(permit_request: evm::PermitRequest) -> Result<String, String> {
+    evm::submit_gasless_permit(permit_request).await
+}
+
+/// Submit atomic EVM swap transaction (permit + immediate token transfer)
+#[update]
+pub async fn swap_evm(
+    permit_request: evm::PermitRequest,
+    swap_request: evm::EvmSwapRequest
+) -> Result<evm::EvmSwapResult, String> {
+    evm::swap_evm(permit_request, swap_request).await
 }
 
 // ============================================================================

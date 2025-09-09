@@ -406,3 +406,50 @@ pub async fn get_health() -> Result<String, String> {
         Ok("ok".to_string()) // Default to ok if no result
     }
 }
+
+// ============================================================================
+// EVM HTTP CLIENT FUNCTIONS
+// ============================================================================
+
+/// Make a JSON-RPC call to an EVM node
+pub async fn make_json_rpc_call(method: &str, params: &str) -> Result<String, String> {
+    let url = "https://sepolia.infura.io/v3/70b7e4d32357459a9af10d6503eae303"; // TODO: Make this configurable
+    
+    let request_body = serde_json::json!({
+        "jsonrpc": "2.0",
+        "method": method,
+        "params": serde_json::from_str::<serde_json::Value>(params)
+            .map_err(|e| format!("Invalid JSON params: {}", e))?,
+        "id": 1
+    });
+    
+    let body_bytes = request_body.to_string().as_bytes().to_vec();
+    let request = HttpRequest::post(url)
+        .with_headers(vec![("Content-Type".to_string(), "application/json".to_string())])
+        .with_body(body_bytes)
+        .build();
+    
+    let response = make_http_request_non_replicated(request).await?;
+    
+    if response.status_code() != 200 {
+        return Err(format!("HTTP error: {}", response.status_code()));
+    }
+    
+    Ok(String::from_utf8_lossy(&response.body()).to_string())
+}
+
+/// Get transaction count (nonce) for an Ethereum address
+pub async fn get_transaction_count(address: String) -> Result<String, String> {
+    let params = format!(r#""{}""#, address);
+    make_json_rpc_call("eth_getTransactionCount", &params).await
+}
+
+/// Get current gas price
+pub async fn get_gas_price() -> Result<String, String> {
+    make_json_rpc_call("eth_gasPrice", "[]").await
+}
+
+/// Get latest block information
+pub async fn get_latest_block() -> Result<String, String> {
+    make_json_rpc_call("eth_getBlockByNumber", r#"["latest", false]"#).await
+}
