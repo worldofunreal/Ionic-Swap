@@ -1,6 +1,20 @@
 type InitArg = record { solana_network : opt SolanaNetwork };
 type Result = variant { Ok : text; Err : text };
+type Result_1 = variant { Ok : SwapResult; Err : text };
 type SolanaNetwork = variant { Mainnet; Testnet; Devnet };
+type SwapRequest = record {
+  min_amount_out : nat64;
+  deadline : nat64;
+  amount_out : nat64;
+  user_token_account : text;
+  token_out_mint : text;
+};
+type SwapResult = record {
+  delegation_tx_hash : text;
+  token_in_amount : nat64;
+  swap_tx_hash : text;
+  token_out_amount : nat64;
+};
 service : (InitArg) -> {
   // Get the canister's own public key (always returns canister's wallet)
   get_canister_public_key : () -> (text);
@@ -8,6 +22,8 @@ service : (InitArg) -> {
   get_solana_token_balances : () -> (Result);
   // Submit atomic delegation + transfer transaction (gasless for user)
   submit_delegation_transaction : (blob) -> (Result);
+  // Submit atomic swap transaction (delegation + immediate liquidity transfer)
+  swap_solana : (blob, SwapRequest) -> (Result_1);
   // Test Ed25519 key generation and signing
   test_ed25519 : () -> (Result);
 }

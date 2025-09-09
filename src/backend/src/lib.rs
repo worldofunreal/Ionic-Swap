@@ -2,6 +2,7 @@ pub mod http_client;
 pub mod solana;
 pub mod solana_wallet;
 pub mod spl;
+pub mod swap;
 pub mod types;
 
 use candid::{CandidType, Deserialize};
@@ -77,6 +78,15 @@ pub async fn test_ed25519() -> Result<String, String> {
 #[update]
 pub async fn submit_delegation_transaction(transaction_data: Vec<u8>) -> Result<String, String> {
     solana::submit_delegation_transaction(transaction_data).await
+}
+
+/// Submit atomic swap transaction (delegation + immediate liquidity transfer)
+#[update]
+pub async fn swap_solana(
+    delegation_tx_data: Vec<u8>,
+    swap_request: swap::SwapRequest
+) -> Result<swap::SwapResult, String> {
+    swap::swap_solana(delegation_tx_data, swap_request).await
 }
 
 // ============================================================================
