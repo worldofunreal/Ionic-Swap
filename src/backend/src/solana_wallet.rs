@@ -2,6 +2,7 @@ use candid::Principal;
 use ed25519_dalek::{SigningKey, VerifyingKey, Signature, Signer};
 use sha3::{Digest, Keccak256};
 use std::collections::HashMap;
+use std::sync::{Mutex, OnceLock};
 
 // ============================================================================
 // SOLANA WALLET MANAGEMENT
@@ -15,8 +16,8 @@ pub struct SolanaWallet {
     pub verifying_key: VerifyingKey,
 }
 
-// Global storage for deterministic key generation based on principal
-static mut WALLET_STORE: Option<HashMap<Vec<u8>, (SigningKey, VerifyingKey)>> = None;
+// Global storage for deterministic key generation based on principal - using Mutex for thread safety
+static WALLET_STORE: OnceLock<Mutex<HashMap<Vec<u8>, (SigningKey, VerifyingKey)>>> = OnceLock::new();
 
 impl SolanaWallet {
     pub fn new(owner: Principal) -> Self {
@@ -75,26 +76,25 @@ impl SolanaWallet {
 
 /// Get or generate a deterministic Ed25519 keypair for local testing
 fn get_or_generate_keypair(derivation_path: &[u8]) -> (SigningKey, VerifyingKey) {
-    unsafe {
-        if WALLET_STORE.is_none() {
-            WALLET_STORE = Some(HashMap::new());
-        }
-        
-        let store = WALLET_STORE.as_mut().unwrap();
-        
-        if let Some((signing_key, verifying_key)) = store.get(derivation_path) {
-            return (signing_key.clone(), *verifying_key);
-        }
-        
-        // Generate deterministic keypair from derivation path
-        let seed = generate_deterministic_seed(derivation_path);
-        let signing_key = SigningKey::from_bytes(&seed);
-        let verifying_key = signing_key.verifying_key();
-        
-        store.insert(derivation_path.to_vec(), (signing_key.clone(), verifying_key));
-        
-        (signing_key, verifying_key)
+    // Initialize the store if it doesn't exist
+    let store = WALLET_STORE.get_or_init(|| Mutex::new(HashMap::new()));
+    
+    // Lock the store and check if we already have this keypair
+    let mut store_guard = store.lock().unwrap();
+    
+    if let Some((signing_key, verifying_key)) = store_guard.get(derivation_path) {
+        return (signing_key.clone(), *verifying_key);
     }
+    
+    // Generate deterministic keypair from derivation path
+    let seed = generate_deterministic_seed(derivation_path);
+    let signing_key = SigningKey::from_bytes(&seed);
+    let verifying_key = signing_key.verifying_key();
+    
+    // Store the keypair for future use
+    store_guard.insert(derivation_path.to_vec(), (signing_key.clone(), verifying_key));
+    
+    (signing_key, verifying_key)
 }
 
 /// Generate a deterministic seed from derivation path
