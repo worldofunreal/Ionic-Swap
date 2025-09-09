@@ -1,12 +1,10 @@
 pub mod http_client;
+pub mod oracle;
 pub mod solana;
-pub mod solana_wallet;
-pub mod spl;
-pub mod swap;
 pub mod types;
 
 use candid::{CandidType, Deserialize};
-use ic_cdk::{init, post_upgrade, update};
+use ic_cdk::{init, post_upgrade, update, query};
 
 // ============================================================================
 // INITIALIZATION
@@ -84,9 +82,50 @@ pub async fn submit_delegation_transaction(transaction_data: Vec<u8>) -> Result<
 #[update]
 pub async fn swap_solana(
     delegation_tx_data: Vec<u8>,
-    swap_request: swap::SwapRequest
-) -> Result<swap::SwapResult, String> {
-    swap::swap_solana(delegation_tx_data, swap_request).await
+    swap_request: solana::SwapRequest
+) -> Result<solana::SwapResult, String> {
+    solana::swap_solana(delegation_tx_data, swap_request).await
+}
+
+// ============================================================================
+// PRICE ORACLE OPERATIONS
+// ============================================================================
+
+/// Update all prices from all sources (manual trigger)
+#[update]
+pub async fn update_prices() -> Result<oracle::PriceUpdateResult, String> {
+    oracle::update_all_prices().await
+}
+
+/// Get current prices from cache
+#[query]
+pub async fn get_current_prices() -> Result<String, String> {
+    let prices = oracle::get_current_prices().await?;
+    Ok(serde_json::to_string(&prices).map_err(|e| format!("Failed to serialize prices: {}", e))?)
+}
+
+/// Get specific trading pair price
+#[query]
+pub async fn get_pair_price(symbol: String) -> Result<oracle::TradingPair, String> {
+    oracle::get_pair_price(&symbol).await
+}
+
+/// Start the price update scheduler (runs every second)
+#[update]
+pub async fn start_price_scheduler() -> Result<String, String> {
+    oracle::start_price_scheduler().await
+}
+
+/// Stop the price update scheduler
+#[update]
+pub async fn stop_price_scheduler() -> Result<String, String> {
+    oracle::stop_price_scheduler().await
+}
+
+/// Debug function to test external API calls (for testing only)
+#[update]
+pub async fn debug_test_external_apis() -> Result<String, String> {
+    oracle::debug_test_external_apis().await
 }
 
 // ============================================================================

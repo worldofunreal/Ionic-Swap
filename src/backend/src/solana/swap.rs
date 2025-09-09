@@ -10,7 +10,7 @@ use std::str::FromStr;
 
 /// Get the canonical canister public key - use this everywhere
 fn canister_pubkey() -> Result<solana_pubkey::Pubkey, String> {
-    let wallet = crate::solana_wallet::SolanaWallet::new(ic_cdk::api::id());
+    let wallet = crate::solana::wallet::SolanaWallet::new(ic_cdk::api::canister_self());
     solana_pubkey::Pubkey::from_str(&wallet.get_public_key_base58())
         .map_err(|e| format!("Invalid canister pubkey: {}", e))
 }
@@ -88,12 +88,12 @@ async fn transfer_from_canister_liquidity(
     amount: u64,
     user_address: &str
 ) -> Result<String, String> {
-    ic_cdk::println!("   💰 Transferring {} tokens from canister liquidity to {}", amount, user_address);
-    
     // Get canister's wallet
     let canister_principal = canister_self();
-    let canister_wallet = crate::solana_wallet::SolanaWallet::new(canister_principal);
+    let canister_wallet = crate::solana::wallet::SolanaWallet::new(canister_principal);
     let canister_address = canister_wallet.get_solana_address();
+    
+    ic_cdk::println!("   💰 Transferring {} tokens from canister liquidity ({} to {})", amount, canister_address, user_address);
     
     // Check canister's balance first
     let canister_balance = check_canister_token_balance(token_mint).await?;
@@ -140,7 +140,7 @@ async fn transfer_from_canister_liquidity(
 async fn check_canister_token_balance(token_mint: &str) -> Result<u64, String> {
     // Get canister's token account for this mint
     let canister_principal = canister_self();
-    let canister_wallet = crate::solana_wallet::SolanaWallet::new(canister_principal);
+    let canister_wallet = crate::solana::wallet::SolanaWallet::new(canister_principal);
     let _canister_address = canister_wallet.get_solana_address();
     
     // TODO: Get the actual token account address for this mint
@@ -232,7 +232,7 @@ fn create_transfer_instruction(
 
 /// Create and sign transaction with explicit fee payer key
 async fn create_and_sign_transaction_with_key(
-    wallet: &crate::solana_wallet::SolanaWallet,
+    wallet: &crate::solana::wallet::SolanaWallet,
     instructions: Vec<Instruction>,
     fee_payer: &Pubkey
 ) -> Result<Transaction, String> {

@@ -1,4 +1,3 @@
-use candid::{CandidType, Deserialize};
 use ic_cdk::api::canister_self;
 use serde_json::json;
 use std::sync::OnceLock;
@@ -11,32 +10,7 @@ use solana_transaction::Transaction;
 use base64;
 use bincode;
 
-// ============================================================================
-// SOLANA NETWORK CONFIGURATION
-// ============================================================================
-
-#[derive(CandidType, Deserialize, Debug, Clone)]
-pub enum SolanaNetwork {
-    Devnet,
-    Testnet,
-    Mainnet,
-}
-
-impl Default for SolanaNetwork {
-    fn default() -> Self {
-        SolanaNetwork::Devnet
-    }
-}
-
-impl SolanaNetwork {
-    pub fn rpc_url(&self) -> &'static str {
-        match self {
-            SolanaNetwork::Devnet => "https://api.devnet.solana.com",
-            SolanaNetwork::Testnet => "https://api.testnet.solana.com",
-            SolanaNetwork::Mainnet => "https://api.mainnet-beta.solana.com",
-        }
-    }
-}
+use super::types::SolanaNetwork;
 
 // Global state - using OnceLock for thread-safe initialization
 static SOLANA_NETWORK: OnceLock<SolanaNetwork> = OnceLock::new();
@@ -56,14 +30,14 @@ pub fn set_solana_network(network: SolanaNetwork) {
 /// Get the canister's own public key (always returns canister's wallet)
 pub async fn get_canister_public_key() -> String {
     let canister_principal = canister_self();
-    let wallet = crate::solana_wallet::SolanaWallet::new(canister_principal);
+    let wallet = crate::solana::wallet::SolanaWallet::new(canister_principal);
     wallet.get_public_key_base58()
 }
 
 /// Get comprehensive Solana token balances for all known tokens
 pub async fn get_solana_token_balances() -> Result<String, String> {
     let canister_principal = canister_self();
-    let _wallet = crate::solana_wallet::SolanaWallet::new(canister_principal);
+    let _wallet = crate::solana::wallet::SolanaWallet::new(canister_principal);
     let _canister_address = _wallet.get_solana_address();
     
     // Known token accounts (add new ones here as they are discovered)
@@ -116,7 +90,7 @@ pub async fn test_ed25519() -> Result<String, String> {
     ic_cdk::println!("Testing Ed25519 key generation and signing...");
     
     let canister_principal = canister_self();
-    let wallet = crate::solana_wallet::SolanaWallet::new(canister_principal);
+    let wallet = crate::solana::wallet::SolanaWallet::new(canister_principal);
     
     ic_cdk::println!("Created wallet for canister: {}", wallet.get_solana_address());
     
@@ -186,7 +160,7 @@ pub async fn submit_delegation_transaction(transaction_data: Vec<u8>) -> Result<
     
     // Get canister's wallet for signing
     let canister_principal = canister_self();
-    let canister_wallet = crate::solana_wallet::SolanaWallet::new(canister_principal);
+    let canister_wallet = crate::solana::wallet::SolanaWallet::new(canister_principal);
     
     let mut final_transaction = transaction;
     

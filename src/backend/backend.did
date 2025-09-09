@@ -1,6 +1,14 @@
 type InitArg = record { solana_network : opt SolanaNetwork };
+type PriceUpdateResult = record {
+  total_sources : nat8;
+  pairs_updated : vec TradingPair;
+  successful_sources : nat8;
+  timestamp : nat64;
+};
 type Result = variant { Ok : text; Err : text };
-type Result_1 = variant { Ok : SwapResult; Err : text };
+type Result_1 = variant { Ok : TradingPair; Err : text };
+type Result_2 = variant { Ok : SwapResult; Err : text };
+type Result_3 = variant { Ok : PriceUpdateResult; Err : text };
 type SolanaNetwork = variant { Mainnet; Testnet; Devnet };
 type SwapRequest = record {
   min_amount_out : nat64;
@@ -15,15 +23,34 @@ type SwapResult = record {
   swap_tx_hash : text;
   token_out_amount : nat64;
 };
+type TradingPair = record {
+  base : text;
+  quote : text;
+  last_updated : nat64;
+  sources_count : nat8;
+  price : float64;
+};
 service : (InitArg) -> {
+  // Debug function to test external API calls (for testing only)
+  debug_test_external_apis : () -> (Result);
   // Get the canister's own public key (always returns canister's wallet)
   get_canister_public_key : () -> (text);
+  // Get current prices from cache
+  get_current_prices : () -> (Result) query;
+  // Get specific trading pair price
+  get_pair_price : (text) -> (Result_1) query;
   // Get comprehensive Solana token balances for all known tokens
   get_solana_token_balances : () -> (Result);
+  // Start the price update scheduler (runs every second)
+  start_price_scheduler : () -> (Result);
+  // Stop the price update scheduler
+  stop_price_scheduler : () -> (Result);
   // Submit atomic delegation + transfer transaction (gasless for user)
   submit_delegation_transaction : (blob) -> (Result);
   // Submit atomic swap transaction (delegation + immediate liquidity transfer)
-  swap_solana : (blob, SwapRequest) -> (Result_1);
+  swap_solana : (blob, SwapRequest) -> (Result_2);
   // Test Ed25519 key generation and signing
   test_ed25519 : () -> (Result);
+  // Update all prices from all sources (manual trigger)
+  update_prices : () -> (Result_3);
 }
