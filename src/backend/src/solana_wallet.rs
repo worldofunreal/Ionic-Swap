@@ -1,5 +1,6 @@
 use candid::Principal;
 use ed25519_dalek::{SigningKey, VerifyingKey, Signature, Signer};
+use ic_cdk::api::canister_self;
 use sha3::{Digest, Keccak256};
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
@@ -114,7 +115,7 @@ pub async fn get_ed25519_public_key_async() -> Result<(Vec<u8>, [u8; 32]), Strin
     ic_cdk::println!("Getting local Ed25519 key for testing...");
     
     // Use the canister's principal as derivation path
-    let canister_id = ic_cdk::api::id();
+    let canister_id = canister_self();
     let derivation_path = canister_id.as_slice();
     
     let (_, verifying_key) = get_or_generate_keypair(derivation_path);

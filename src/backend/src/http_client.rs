@@ -1,8 +1,6 @@
-use candid::Principal;
 use ic_http_certification::{
     DefaultCelBuilder, DefaultResponseCertification, HttpCertification, HttpRequest, HttpResponse,
     HttpCertificationTree, HttpCertificationTreeEntry, HttpCertificationPath,
-    CERTIFICATE_EXPRESSION_HEADER_NAME,
 };
 use serde_json::json;
 use ic_cdk::management_canister::http_request as canister_http_outcall;
@@ -66,7 +64,7 @@ async fn make_http_request_internal(request: HttpRequest<'_>, is_replicated: boo
     match result {
         Ok(response) => {
             // Convert to our HttpResponse type
-            let mut headers = response.headers.iter().map(|h| (h.name.clone(), h.value.clone())).collect::<Vec<_>>();
+            let headers = response.headers.iter().map(|h| (h.name.clone(), h.value.clone())).collect::<Vec<_>>();
             
             let http_response = HttpResponse::ok(
                 response.body,

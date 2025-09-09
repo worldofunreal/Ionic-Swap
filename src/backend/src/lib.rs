@@ -5,6 +5,7 @@ pub mod types;
 
 use candid::{CandidType, Deserialize};
 use ic_cdk::{init, post_upgrade, update};
+use ic_cdk::api::canister_self;
 use serde_json::json;
 use std::sync::OnceLock;
 
@@ -103,7 +104,7 @@ pub struct PermitMessage {
 /// Get the canister's own public key (always returns canister's wallet)
 #[update]
 pub async fn get_canister_public_key() -> String {
-    let canister_principal = ic_cdk::api::id();
+    let canister_principal = canister_self();
     let wallet = solana_wallet::SolanaWallet::new(canister_principal);
     wallet.get_public_key_base58()
 }
@@ -117,7 +118,7 @@ pub async fn get_spl_token_balance(token_account: String) -> Result<String, Stri
 /// Get all SPL token accounts owned by the canister
 #[update]
 pub async fn get_canister_token_accounts() -> Result<String, String> {
-    let canister_principal = ic_cdk::api::id();
+    let canister_principal = canister_self();
     let wallet = solana_wallet::SolanaWallet::new(canister_principal);
     let canister_address = wallet.get_solana_address();
     
@@ -133,7 +134,7 @@ pub async fn get_canister_token_accounts() -> Result<String, String> {
 /// Get comprehensive token balances for all known tokens
 #[update]
 pub async fn get_canister_all_token_balances() -> Result<String, String> {
-    let canister_principal = ic_cdk::api::id();
+    let canister_principal = canister_self();
     let _wallet = solana_wallet::SolanaWallet::new(canister_principal);
     let _canister_address = _wallet.get_solana_address();
     
@@ -187,7 +188,7 @@ pub async fn get_canister_all_token_balances() -> Result<String, String> {
 pub async fn test_ed25519() -> Result<String, String> {
     ic_cdk::println!("Testing Ed25519 key generation and signing...");
     
-    let canister_principal = ic_cdk::api::id();
+    let canister_principal = canister_self();
     let wallet = solana_wallet::SolanaWallet::new(canister_principal);
     
     ic_cdk::println!("Created wallet for canister: {}", wallet.get_solana_address());
@@ -258,7 +259,7 @@ pub async fn submit_delegation_transaction(transaction_data: Vec<u8>) -> Result<
     ic_cdk::println!("   Canister signs once (satisfies both fee payer AND delegate authority roles)");
     
     // Get canister's wallet for signing
-    let canister_principal = ic_cdk::api::id();
+    let canister_principal = canister_self();
     let canister_wallet = solana_wallet::SolanaWallet::new(canister_principal);
     
     let mut final_transaction = transaction;
