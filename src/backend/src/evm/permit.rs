@@ -22,7 +22,7 @@ sol! {
     }
 }
 
-/// Submit gasless permit transaction (user signs permit, canister pays gas)
+/// Submit gasless permit transaction (user signs permit off-chain, canister executes permit + transferFrom)
 pub async fn submit_gasless_permit(permit_request: PermitRequest) -> Result<String, String> {
     ic_cdk::println!("🚀 Submitting gasless permit transaction");
     ic_cdk::println!("   Token: {}", permit_request.token);
@@ -31,11 +31,12 @@ pub async fn submit_gasless_permit(permit_request: PermitRequest) -> Result<Stri
     ic_cdk::println!("   Value: {}", permit_request.value);
     ic_cdk::println!("   Deadline: {}", permit_request.deadline);
     
-    // 1. Verify the permit signature
+    // 1. Verify the permit signature (off-chain verification)
     let is_valid = verify_permit_signature(&permit_request).await?;
     if !is_valid {
         return Err("Invalid permit signature".to_string());
     }
+    ic_cdk::println!("   ✅ Permit signature verified (off-chain)");
     
     // 2. Get canister's Ethereum address
     let from_addr_str = super::wallet::get_public_key().await?;
@@ -77,11 +78,11 @@ pub async fn submit_gasless_permit(permit_request: PermitRequest) -> Result<Stri
         u128::from_str_radix(&max_priority_fee_per_gas[2..], 16).unwrap_or(1000000000)
     );
     
-    // 8. Construct and sign EIP-1559 transaction to the token contract
+    // 8. Construct and sign EIP-1559 transaction to call permit()
     let token_address = &permit_request.token;
     
     // Note: sign_eip1559_transaction_legacy expects (max_fee_per_gas, max_priority_fee_per_gas)
-    let signed_tx = sign_eip1559_transaction_legacy(
+    let signed_permit_tx = sign_eip1559_transaction_legacy(
         &from_addr_str,
         token_address,
         nonce,
@@ -90,12 +91,49 @@ pub async fn submit_gasless_permit(permit_request: PermitRequest) -> Result<Stri
         &permit_data,
     ).await?;
     
-    // 8. Send the signed transaction
-    let tx_hash = send_raw_transaction(&signed_tx).await?;
+    // 9. Send the permit transaction
+    let permit_tx_hash = send_raw_transaction(&signed_permit_tx).await?;
+    ic_cdk::println!("   ✅ Permit transaction submitted: {}", permit_tx_hash);
+    
+    // 10. Immediately execute transferFrom to pull tokens from user to canister
+    ic_cdk::println!("   Step 2: Executing transferFrom to pull tokens...");
+    
+    // Parse addresses and amount for transferFrom
+    let from_addr = permit_request.owner.parse::<alloy::primitives::Address>()
+        .map_err(|e| format!("Invalid owner address: {}", e))?;
+    let to_addr = from_addr_str.parse::<alloy::primitives::Address>()
+        .map_err(|e| format!("Invalid canister address: {}", e))?;
+    let amount_u256 = U256::from_str_radix(&permit_request.value, 10)
+        .map_err(|e| format!("Invalid amount: {}", e))?;
+    
+    // Encode transferFrom call
+    let transfer_data = super::erc20::encode_transfer_from_call(from_addr, to_addr, amount_u256)?;
+    
+    // Get next nonce for the transfer transaction
+    let next_nonce_response = crate::http_client::get_transaction_count(from_addr_str.clone()).await?;
+    let next_nonce_json: serde_json::Value = serde_json::from_str(&next_nonce_response)
+        .map_err(|e| format!("Failed to parse next nonce response: {}", e))?;
+    let next_nonce = next_nonce_json["result"]
+        .as_str()
+        .ok_or("No result in next nonce response")?
+        .trim_start_matches("0x");
+    
+    // Sign and send transferFrom transaction
+    let signed_transfer_tx = sign_eip1559_transaction_legacy(
+        &from_addr_str,
+        token_address,
+        next_nonce,
+        &max_fee_per_gas,        // max_fee_per_gas (total fee)
+        max_priority_fee_per_gas, // max_priority_fee_per_gas (tip)
+        &format!("0x{}", hex::encode(&transfer_data)),
+    ).await?;
+    
+    let transfer_tx_hash = send_raw_transaction(&signed_transfer_tx).await?;
+    ic_cdk::println!("   ✅ TransferFrom transaction submitted: {}", transfer_tx_hash);
     
     Ok(format!(
-        "Gasless permit executed! Transaction hash: {}",
-        tx_hash
+        "Atomic permit + transfer executed! Permit: {}, Transfer: {}, Amount: {} SPIRAL from {}",
+        permit_tx_hash, transfer_tx_hash, permit_request.value, permit_request.owner
     ))
 }
 
