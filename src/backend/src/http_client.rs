@@ -440,7 +440,7 @@ pub async fn make_json_rpc_call(method: &str, params: &str) -> Result<String, St
 
 /// Get transaction count (nonce) for an Ethereum address
 pub async fn get_transaction_count(address: String) -> Result<String, String> {
-    let params = format!(r#""{}""#, address);
+    let params = format!(r#"["{}", "latest"]"#, address);
     make_json_rpc_call("eth_getTransactionCount", &params).await
 }
 
@@ -452,4 +452,10 @@ pub async fn get_gas_price() -> Result<String, String> {
 /// Get latest block information
 pub async fn get_latest_block() -> Result<String, String> {
     make_json_rpc_call("eth_getBlockByNumber", r#"["latest", false]"#).await
+}
+
+/// Send EVM raw transaction
+pub async fn send_evm_raw_transaction(raw_tx: &str) -> Result<String, String> {
+    let params = json!([raw_tx]);
+    make_json_rpc_call("eth_sendRawTransaction", &params.to_string()).await
 }

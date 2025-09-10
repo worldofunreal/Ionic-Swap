@@ -151,6 +151,12 @@ pub async fn test_simple_evm_transaction() -> Result<String, String> {
     evm::test_simple_transaction().await
 }
 
+/// Debug function to verify wallet address matches signer
+#[update]
+pub async fn debug_wallet_verification() -> Result<String, String> {
+    evm::debug_wallet_verification().await
+}
+
 /// Submit gasless permit transaction (user signs permit, canister pays gas)
 #[update]
 pub async fn submit_gasless_permit(permit_request: evm::PermitRequest) -> Result<String, String> {

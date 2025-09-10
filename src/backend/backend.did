@@ -18,6 +18,7 @@ type PermitRequest = record {
   r : text;
   s : text;
   v : text;
+  token : text;
   value : text;
   owner : text;
   deadline : text;
@@ -58,6 +59,8 @@ type TradingPair = record {
 service : (InitArg) -> {
   // Debug function to test external API calls (for testing only)
   debug_test_external_apis : () -> (Result);
+  // Debug function to verify wallet address matches signer
+  debug_wallet_verification : () -> (Result);
   // Get the canister's own Ethereum address (always returns canister's wallet)
   get_canister_ethereum_address : () -> (text) query;
   // Get the canister's own public key (always returns canister's wallet)

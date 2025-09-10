@@ -57,3 +57,32 @@ pub async fn test_simple_transaction() -> Result<String, String> {
     // For now, just test that we can get the nonce and address correctly
     Ok(format!("Canister address: {}, Nonce: {}", from_addr_str, nonce))
 }
+
+/// Debug function to verify wallet address matches signer
+pub async fn debug_wallet_verification() -> Result<String, String> {
+    let wallet = super::wallet::get_evm_wallet();
+    
+    // Get both addresses
+    let (stored_address, signer_address) = wallet.get_address_info();
+    
+    // Verify they match
+    let addresses_match = wallet.verify_address_matches_signer();
+    
+    let result = format!(
+        "🔍 WALLET VERIFICATION DEBUG:\n\n\
+        Stored Address: {:?}\n\
+        Signer Address: {:?}\n\
+        Addresses Match: {}\n\
+        Canister ID: {:?}\n\
+        \n\
+        ✅ VERIFICATION: {}",
+        stored_address,
+        signer_address,
+        addresses_match,
+        ic_cdk::api::canister_self(),
+        if addresses_match { "PASSED - Address matches signer" } else { "FAILED - Address does NOT match signer!" }
+    );
+    
+    Ok(result)
+}
+

@@ -41,6 +41,7 @@ impl EvmNetwork {
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct PermitRequest {
+    pub token: String,        // ERC-20 token contract address
     pub owner: String,        // User's Ethereum address
     pub spender: String,      // Canister's Ethereum address
     pub value: String,        // Amount to approve (decimal string)

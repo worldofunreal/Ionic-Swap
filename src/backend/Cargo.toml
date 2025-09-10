@@ -37,13 +37,9 @@ solana-transaction = { version = "3.0.0", features = ["bincode"] }
 spl-associated-token-account-interface = "2.0.0"
 
 # ============================================================================
-# EVM LIBRARIES
+# EVM LIBRARIES (Alloy - modern replacement for ethers-rs)
 # ============================================================================
-primitive-types = "0.12"
-ethabi = "18.0"
-rlp = "0.5"
-ethers-core = "2.0"
-k256 = "0.13"
+alloy = { version = "1.0.30", features = ["signers", "signer-local", "consensus", "sol-types", "eips", "network", "rpc", "rpc-types", "serde"], default-features = false }
 
 [dev-dependencies]
 candid_parser = "0.1.4"

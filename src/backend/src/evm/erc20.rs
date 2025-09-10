@@ -1,8 +1,10 @@
-use primitive_types::U256;
-use super::wallet::{keccak256, sign_eip1559_transaction, send_raw_transaction};
+use alloy::primitives::{Address, U256, keccak256};
+use alloy::rpc::types::TransactionRequest;
+use alloy::network::TransactionBuilder;
+use super::wallet::{sign_eip1559_transaction_legacy, send_raw_transaction, send_transaction};
 
 // ============================================================================
-// ERC-20 TOKEN OPERATIONS
+// ERC-20 TOKEN OPERATIONS (Using Alloy primitives)
 // ============================================================================
 
 /// Transfer ERC20 tokens from canister to recipient
@@ -11,21 +13,15 @@ pub async fn transfer_erc20_tokens(
     recipient: &str,
     amount: &str,
 ) -> Result<String, String> {
-    // Encode ERC20 transfer function call
-    let transfer_signature = "transfer(address,uint256)";
-    let transfer_selector = keccak256(transfer_signature.as_bytes());
-    let transfer_selector_hex = format!("0x{}", hex::encode(&transfer_selector[..4]));
+    // Parse addresses
+    let _token_addr = token_address.parse::<Address>()
+        .map_err(|e| format!("Invalid token address: {}", e))?;
+    let recipient_addr = recipient.parse::<Address>()
+        .map_err(|e| format!("Invalid recipient address: {}", e))?;
     
-    // Encode recipient address (padded to 32 bytes)
-    let recipient_clean = recipient.trim_start_matches("0x");
-    let recipient_padded = format!("{:0>64}", recipient_clean);
-    
-    // Encode amount (padded to 32 bytes)
-    let amount_u256 = U256::from_dec_str(amount)
+    // Parse amount
+    let amount_u256 = U256::from_str_radix(amount, 10)
         .map_err(|e| format!("Invalid amount: {}", e))?;
-    let amount_hex = format!("{:0>64}", format!("{:x}", amount_u256));
-    
-    let encoded_data = format!("{}{}{}", transfer_selector_hex, recipient_padded, amount_hex);
     
     // Get canister's Ethereum address
     let canister_address = super::wallet::get_ethereum_address().await?;
@@ -50,14 +46,17 @@ pub async fn transfer_erc20_tokens(
     let gas_price_u256 = U256::from_str_radix(gas_price, 16).map_err(|e| format!("Invalid gas price: {}", e))?;
     let base_fee_per_gas = gas_price_u256;
     
+    // Encode transfer function call manually
+    let transfer_data = encode_transfer_call(recipient_addr, amount_u256)?;
+    
     // Sign and send transaction
-    let signed_tx = sign_eip1559_transaction(
+    let signed_tx = sign_eip1559_transaction_legacy(
         &canister_address,
         token_address,
         nonce,
         gas_price,
         &base_fee_per_gas.to_string(),
-        &encoded_data,
+        &format!("0x{}", hex::encode(transfer_data)),
     ).await?;
     
     let tx_hash = send_raw_transaction(&signed_tx).await?;
@@ -70,24 +69,66 @@ pub async fn transfer_erc20_tokens(
     Ok(tx_hash)
 }
 
+/// Transfer ERC20 tokens using Provider pattern (real blockchain interaction)
+pub async fn transfer_erc20_tokens_provider(
+    token_address: &str,
+    recipient: &str,
+    amount: &str,
+) -> Result<String, String> {
+    // Parse addresses
+    let token_addr = token_address.parse::<Address>()
+        .map_err(|e| format!("Invalid token address: {}", e))?;
+    let recipient_addr = recipient.parse::<Address>()
+        .map_err(|e| format!("Invalid recipient address: {}", e))?;
+    
+    // Parse amount
+    let amount_u256 = U256::from_str_radix(amount, 10)
+        .map_err(|e| format!("Invalid amount: {}", e))?;
+    
+    // Encode transfer function call
+    let transfer_data = encode_transfer_call(recipient_addr, amount_u256)?;
+    
+    // Get canister's Ethereum address
+    let canister_address = super::wallet::get_ethereum_address().await?;
+    let from_addr = canister_address.parse::<Address>()
+        .map_err(|e| format!("Invalid canister address: {}", e))?;
+    
+    // Create transaction request using Provider pattern
+    let tx = TransactionRequest::default()
+        .with_to(token_addr)
+        .with_from(from_addr)
+        .with_input(transfer_data)
+        .with_gas_limit(100_000) // Standard gas limit for ERC-20 transfers
+        .with_max_priority_fee_per_gas(1_000_000_000) // 1 gwei
+        .with_max_fee_per_gas(20_000_000_000); // 20 gwei
+    
+    // Send transaction using Provider pattern
+    let tx_hash = send_transaction(tx).await?;
+    
+    ic_cdk::println!("🔍 Token transfer sent successfully: {}", tx_hash);
+    ic_cdk::println!("  Token: {}", token_address);
+    ic_cdk::println!("  Recipient: {}", recipient);
+    ic_cdk::println!("  Amount: {}", amount);
+    
+    Ok(tx_hash)
+}
+
 /// Get ERC-20 token balance for an address
 pub async fn get_token_balance(token_address: &str, owner_address: &str) -> Result<String, String> {
+    // Parse addresses
+    let _token_addr = token_address.parse::<Address>()
+        .map_err(|e| format!("Invalid token address: {}", e))?;
+    let owner_addr = owner_address.parse::<Address>()
+        .map_err(|e| format!("Invalid owner address: {}", e))?;
+    
     // Encode balanceOf function call
-    let balance_of_signature = "balanceOf(address)";
-    let balance_of_selector = keccak256(balance_of_signature.as_bytes());
-    let balance_of_selector_hex = format!("0x{}", hex::encode(&balance_of_selector[..4]));
-    
-    // Encode owner address (padded to 32 bytes)
-    let owner_clean = owner_address.trim_start_matches("0x");
-    let owner_padded = format!("{:0>64}", owner_clean);
-    
-    let encoded_data = format!("{}{}", balance_of_selector_hex, owner_padded);
+    let balance_data = encode_balance_of_call(owner_addr)?;
     
     // Make eth_call to get balance
     let params = format!(
-        r#"{{"to": "{}", "data": "{}"}}"#,
+        r#"{{"to": "{}", "data": "0x{}"}}"#,
         token_address,
-        encoded_data
+        hex::encode(balance_data)
     );
     
     let response = crate::http_client::make_json_rpc_call("eth_call", &format!("[{}, \"latest\"]", params)).await?;
@@ -108,4 +149,73 @@ pub async fn get_token_balance(token_address: &str, owner_address: &str) -> Resu
         .map_err(|e| format!("Invalid balance hex: {}", e))?;
     
     Ok(balance_u256.to_string())
+}
+
+/// Encode transfer(address,uint256) function call
+fn encode_transfer_call(recipient: Address, amount: U256) -> Result<Vec<u8>, String> {
+    // Function selector for transfer(address,uint256)
+    let transfer_selector = keccak256(b"transfer(address,uint256)");
+    let mut data = transfer_selector[..4].to_vec();
+    
+    // Encode recipient address (32 bytes, padded)
+    let recipient_bytes = recipient.as_slice();
+    let mut recipient_padded = vec![0u8; 12]; // 12 bytes of padding
+    recipient_padded.extend_from_slice(recipient_bytes); // 20 bytes address
+    data.extend_from_slice(&recipient_padded);
+    
+    // Encode amount (32 bytes)
+    let mut amount_bytes = [0u8; 32];
+    amount.to_be_bytes_trimmed_vec().iter().rev().enumerate().for_each(|(i, &byte)| {
+        if i < 32 {
+            amount_bytes[31 - i] = byte;
+        }
+    });
+    data.extend_from_slice(&amount_bytes);
+    
+    Ok(data)
+}
+
+/// Encode balanceOf(address) function call
+fn encode_balance_of_call(owner: Address) -> Result<Vec<u8>, String> {
+    // Function selector for balanceOf(address)
+    let balance_of_selector = keccak256(b"balanceOf(address)");
+    let mut data = balance_of_selector[..4].to_vec();
+    
+    // Encode owner address (32 bytes, padded)
+    let owner_bytes = owner.as_slice();
+    let mut owner_padded = vec![0u8; 12]; // 12 bytes of padding
+    owner_padded.extend_from_slice(owner_bytes); // 20 bytes address
+    data.extend_from_slice(&owner_padded);
+    
+    Ok(data)
+}
+
+/// Encode transferFrom(address,address,uint256) function call
+pub fn encode_transfer_from_call(from: Address, to: Address, amount: U256) -> Result<Vec<u8>, String> {
+    // Function selector for transferFrom(address,address,uint256)
+    let transfer_from_selector = keccak256(b"transferFrom(address,address,uint256)");
+    let mut data = transfer_from_selector[..4].to_vec();
+    
+    // Encode from address (32 bytes, padded)
+    let from_bytes = from.as_slice();
+    let mut from_padded = vec![0u8; 12]; // 12 bytes of padding
+    from_padded.extend_from_slice(from_bytes); // 20 bytes address
+    data.extend_from_slice(&from_padded);
+    
+    // Encode to address (32 bytes, padded)
+    let to_bytes = to.as_slice();
+    let mut to_padded = vec![0u8; 12]; // 12 bytes of padding
+    to_padded.extend_from_slice(to_bytes); // 20 bytes address
+    data.extend_from_slice(&to_padded);
+    
+    // Encode amount (32 bytes)
+    let mut amount_bytes = [0u8; 32];
+    amount.to_be_bytes_trimmed_vec().iter().rev().enumerate().for_each(|(i, &byte)| {
+        if i < 32 {
+            amount_bytes[31 - i] = byte;
+        }
+    });
+    data.extend_from_slice(&amount_bytes);
+    
+    Ok(data)
 }

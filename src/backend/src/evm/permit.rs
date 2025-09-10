@@ -1,9 +1,103 @@
 use super::types::{PermitRequest, GaslessApprovalRequest};
-use super::wallet::{sign_eip1559_transaction, send_raw_transaction};
+use super::wallet::{sign_eip1559_transaction_legacy, send_raw_transaction};
+use alloy::primitives::U256;
+use alloy::signers::Signer;
+use alloy::sol;
+use alloy::sol_types::{eip712_domain, SolStruct};
+use serde::Serialize;
 
 // ============================================================================
 // EIP-2612 PERMIT FUNCTIONS
 // ============================================================================
+
+// Define the EIP-712 permit structure using sol! macro
+sol! {
+    #[derive(Serialize)]
+    struct Permit {
+        address owner;
+        address spender;
+        uint256 value;
+        uint256 nonce;
+        uint256 deadline;
+    }
+}
+
+/// Submit gasless permit transaction (user signs permit, canister pays gas)
+pub async fn submit_gasless_permit(permit_request: PermitRequest) -> Result<String, String> {
+    ic_cdk::println!("🚀 Submitting gasless permit transaction");
+    ic_cdk::println!("   Token: {}", permit_request.token);
+    ic_cdk::println!("   Owner: {}", permit_request.owner);
+    ic_cdk::println!("   Spender: {}", permit_request.spender);
+    ic_cdk::println!("   Value: {}", permit_request.value);
+    ic_cdk::println!("   Deadline: {}", permit_request.deadline);
+    
+    // 1. Verify the permit signature
+    let is_valid = verify_permit_signature(&permit_request).await?;
+    if !is_valid {
+        return Err("Invalid permit signature".to_string());
+    }
+    
+    // 2. Get canister's Ethereum address
+    let from_addr_str = super::wallet::get_public_key().await?;
+    
+    // 3. Get current nonce for the canister
+    let nonce_response = crate::http_client::get_transaction_count(from_addr_str.clone()).await?;
+    let nonce_json: serde_json::Value = serde_json::from_str(&nonce_response)
+        .map_err(|e| format!("Failed to parse nonce response: {}", e))?;
+    let nonce = nonce_json["result"]
+        .as_str()
+        .ok_or("No result in nonce response")?
+        .trim_start_matches("0x");
+    
+    // 4. Encode the permit function call on the token contract
+    let permit_data = encode_permit_call(&permit_request)?;
+    
+    // 5. Get current gas price and block info
+    let gas_price_response = crate::http_client::get_gas_price().await?;
+    let gas_price_json: serde_json::Value = serde_json::from_str(&gas_price_response)
+        .map_err(|e| format!("Failed to parse gas price response: {}", e))?;
+    let base_gas_price = gas_price_json["result"]
+        .as_str()
+        .ok_or("No result in gas price response")?
+        .trim_start_matches("0x");
+    
+    // 6. Get latest block for base fee
+    let block_response = crate::http_client::get_latest_block().await?;
+    let block_json: serde_json::Value = serde_json::from_str(&block_response)
+        .map_err(|e| format!("Failed to parse block response: {}", e))?;
+    let base_fee_per_gas = block_json["result"]["baseFeePerGas"]
+        .as_str()
+        .unwrap_or("0x3b9aca00") // 1 gwei default
+        .trim_start_matches("0x");
+    
+    // 7. Set proper gas prices (ensure minimum tip of 1 gwei)
+    let max_priority_fee_per_gas = "0x3b9aca00"; // 1 gwei minimum tip
+    let max_fee_per_gas = format!("0x{:x}", 
+        u128::from_str_radix(base_gas_price, 16).unwrap_or(1000000000) + 
+        u128::from_str_radix(&max_priority_fee_per_gas[2..], 16).unwrap_or(1000000000)
+    );
+    
+    // 8. Construct and sign EIP-1559 transaction to the token contract
+    let token_address = &permit_request.token;
+    
+    // Note: sign_eip1559_transaction_legacy expects (max_fee_per_gas, max_priority_fee_per_gas)
+    let signed_tx = sign_eip1559_transaction_legacy(
+        &from_addr_str,
+        token_address,
+        nonce,
+        &max_fee_per_gas,        // max_fee_per_gas (total fee)
+        max_priority_fee_per_gas, // max_priority_fee_per_gas (tip)
+        &permit_data,
+    ).await?;
+    
+    // 8. Send the signed transaction
+    let tx_hash = send_raw_transaction(&signed_tx).await?;
+    
+    Ok(format!(
+        "Gasless permit executed! Transaction hash: {}",
+        tx_hash
+    ))
+}
 
 /// Execute gasless approval using EIP-2612 permit
 pub async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result<String, String> {
@@ -46,15 +140,23 @@ pub async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result
         .unwrap_or("0x3b9aca00") // 1 gwei default
         .trim_start_matches("0x");
     
-    // 7. Construct and sign EIP-1559 transaction to the token contract
+    // 7. Set proper gas prices (ensure minimum tip of 1 gwei)
+    let max_priority_fee_per_gas = "0x3b9aca00"; // 1 gwei minimum tip
+    let max_fee_per_gas = format!("0x{:x}", 
+        u128::from_str_radix(base_gas_price, 16).unwrap_or(1000000000) + 
+        u128::from_str_radix(&max_priority_fee_per_gas[2..], 16).unwrap_or(1000000000)
+    );
+    
+    // 8. Construct and sign EIP-1559 transaction to the token contract
     let token_address = &request.token_address;
     
-    let signed_tx = sign_eip1559_transaction(
+    // Note: sign_eip1559_transaction_legacy expects (max_fee_per_gas, max_priority_fee_per_gas)
+    let signed_tx = sign_eip1559_transaction_legacy(
         &from_addr_str,
         token_address,
         nonce,
-        base_gas_price,
-        base_fee_per_gas,
+        &max_fee_per_gas,        // max_fee_per_gas (total fee)
+        max_priority_fee_per_gas, // max_priority_fee_per_gas (tip)
         &permit_data,
     ).await?;
     
@@ -142,4 +244,64 @@ pub fn encode_permit_call(permit_request: &PermitRequest) -> Result<String, Stri
     );
     
     Ok(encoded_data)
+}
+
+/// Sign a permit using proper EIP-712 domain separation
+pub async fn sign_permit_eip712(
+    owner: &str,
+    spender: &str,
+    value: &str,
+    nonce: &str,
+    deadline: &str,
+    token_address: &str,
+) -> Result<([u8; 32], [u8; 32], u8), String> {
+    use super::wallet::get_evm_wallet;
+    
+    // Parse addresses and values
+    let owner_addr = owner.parse::<alloy::primitives::Address>()
+        .map_err(|e| format!("Invalid owner address: {}", e))?;
+    let spender_addr = spender.parse::<alloy::primitives::Address>()
+        .map_err(|e| format!("Invalid spender address: {}", e))?;
+    let token_addr = token_address.parse::<alloy::primitives::Address>()
+        .map_err(|e| format!("Invalid token address: {}", e))?;
+    
+    let value_u256 = U256::from_str_radix(value, 10)
+        .map_err(|e| format!("Invalid value: {}", e))?;
+    let nonce_u256 = U256::from_str_radix(nonce, 10)
+        .map_err(|e| format!("Invalid nonce: {}", e))?;
+    let deadline_u256 = U256::from_str_radix(deadline, 10)
+        .map_err(|e| format!("Invalid deadline: {}", e))?;
+    
+    // Create EIP-712 domain
+    let domain = eip712_domain! {
+        name: "ERC20Permit",
+        version: "1",
+        chain_id: 11155111, // Sepolia testnet
+        verifying_contract: token_addr,
+    };
+    
+    // Create permit structure
+    let permit = Permit {
+        owner: owner_addr,
+        spender: spender_addr,
+        value: value_u256,
+        nonce: nonce_u256,
+        deadline: deadline_u256,
+    };
+    
+    // Derive the EIP-712 signing hash
+    let hash = permit.eip712_signing_hash(&domain);
+    
+    // Get wallet and sign the hash
+    let wallet = get_evm_wallet();
+    let signature = wallet.get_signer().sign_hash(&hash)
+        .await
+        .map_err(|e| format!("Failed to sign permit: {}", e))?;
+    
+    // Extract r, s, v from signature
+    let r_bytes: [u8; 32] = signature.r().to_be_bytes();
+    let s_bytes: [u8; 32] = signature.s().to_be_bytes();
+    let v = if signature.v() { 1 } else { 0 };
+    
+    Ok((r_bytes, s_bytes, v))
 }
