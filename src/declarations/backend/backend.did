@@ -1,34 +1,108 @@
-type CommitmentLevel = variant { finalized; confirmed; processed };
-type CreateEscrowWithPermitArgs = record {
-  permit_signature : blob;
+type EvmSwapRequest = record {
+  min_amount_out : nat64;
   deadline : nat64;
-  expiry_timestamp : nat64;
-  nonce : nat64;
-  order_id : blob;
-  user_pubkey : text;
-  amount : nat64;
-  token_mint : text;
+  amount_out : nat64;
+  user_address : text;
+  token_in_mint : text;
+  amount_in : nat64;
+  token_out_mint : text;
 };
-type Ed25519KeyName = variant {
-  MainnetTestKey1;
-  LocalDevelopment;
-  MainnetProdKey1;
+type EvmSwapResult = record {
+  token_in_amount : nat64;
+  permit_tx_hash : text;
+  swap_tx_hash : text;
+  token_out_amount : nat64;
 };
-type HttpHeader = record { value : text; name : text };
-type InitArg = record {
-  solana_commitment_level : opt CommitmentLevel;
-  ed25519_key_name : opt Ed25519KeyName;
-  solana_network : opt SolanaNetwork;
-  sol_rpc_canister_id : opt principal;
+type IcpPermitRequest = record {
+  r : text;
+  s : text;
+  v : text;
+  token : text;
+  owner : text;
+  deadline : text;
+  amount : text;
+  spender : text;
+};
+type InitArg = record { solana_network : opt SolanaNetwork };
+type PermitRequest = record {
+  r : text;
+  s : text;
+  v : text;
+  token : text;
+  value : text;
+  owner : text;
+  deadline : text;
+  spender : text;
+};
+type PriceUpdateResult = record {
+  total_sources : nat8;
+  pairs_updated : vec TradingPair;
+  successful_sources : nat8;
+  timestamp : nat64;
 };
 type Result = variant { Ok : text; Err : text };
-type RpcEndpoint = record { url : text; headers : opt vec HttpHeader };
-type SolanaNetwork = variant { Mainnet; Custom : RpcEndpoint; Devnet };
+type Result_1 = variant { Ok : TradingPair; Err : text };
+type Result_2 = variant { Ok : EvmSwapResult; Err : text };
+type Result_3 = variant { Ok : SwapResult; Err : text };
+type Result_4 = variant { Ok : PriceUpdateResult; Err : text };
+type SolanaNetwork = variant { Mainnet; Testnet; Devnet };
+type SwapRequest = record {
+  min_amount_out : nat64;
+  deadline : nat64;
+  amount_out : nat64;
+  user_token_account : text;
+  token_out_mint : text;
+};
+type SwapResult = record {
+  delegation_tx_hash : text;
+  token_in_amount : nat64;
+  swap_tx_hash : text;
+  token_out_amount : nat64;
+};
+type TradingPair = record {
+  base : text;
+  quote : text;
+  last_updated : nat64;
+  sources_count : nat8;
+  price : float64;
+};
 service : (InitArg) -> {
-  create_escrow_with_permit : (CreateEscrowWithPermitArgs) -> (Result);
-  create_transfer_message : (opt principal, text, nat) -> (blob);
-  get_balance : (opt text) -> (nat);
-  send_sol : (opt principal, text, nat) -> (text);
-  sign_transaction : (opt principal, blob) -> (text);
-  solana_account : (opt principal) -> (text);
+  // Debug function to test external API calls (for testing only)
+  debug_test_external_apis : () -> (Result);
+  // Debug function to verify wallet address matches signer
+  debug_wallet_verification : () -> (Result);
+  // Get the canister's own Ethereum address (always returns canister's wallet)
+  get_canister_ethereum_address : () -> (text) query;
+  // Get canister's ICRC token balances
+  get_canister_icrc_balances : () -> (Result);
+  // Get the canister's own public key (always returns canister's wallet)
+  get_canister_public_key : () -> (text);
+  // Get current prices from cache
+  get_current_prices : () -> (Result) query;
+  // Get specific trading pair price
+  get_pair_price : (text) -> (Result_1) query;
+  // Get comprehensive Solana token balances for all known tokens
+  get_solana_token_balances : () -> (Result);
+  // Start the price update scheduler (runs every second)
+  start_price_scheduler : () -> (Result);
+  // Stop the price update scheduler
+  stop_price_scheduler : () -> (Result);
+  // Submit atomic delegation + transfer transaction (gasless for user)
+  submit_delegation_transaction : (blob) -> (Result);
+  // Submit gasless permit transaction (user signs permit, canister pays gas)
+  submit_gasless_permit : (PermitRequest) -> (Result);
+  // Submit gasless permit transaction (user signs permit, canister pays gas)
+  submit_icp_gasless_permit : (IcpPermitRequest) -> (Result);
+  // Submit atomic EVM swap transaction (permit + immediate token transfer)
+  swap_evm : (PermitRequest, EvmSwapRequest) -> (Result_2);
+  // Submit atomic swap transaction (delegation + immediate liquidity transfer)
+  swap_solana : (blob, SwapRequest) -> (Result_3);
+  // Test Ed25519 key generation and signing
+  test_ed25519 : () -> (Result);
+  // Test secp256k1 key generation and signing
+  test_secp256k1 : () -> (Result);
+  // Test simple EVM transaction (get nonce, etc.)
+  test_simple_evm_transaction : () -> (Result);
+  // Update all prices from all sources (manual trigger)
+  update_prices : () -> (Result_4);
 }

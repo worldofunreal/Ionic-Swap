@@ -13,6 +13,16 @@ type EvmSwapResult = record {
   swap_tx_hash : text;
   token_out_amount : nat64;
 };
+type IcpPermitRequest = record {
+  r : text;
+  s : text;
+  v : text;
+  token : text;
+  owner : text;
+  deadline : text;
+  amount : text;
+  spender : text;
+};
 type InitArg = record { solana_network : opt SolanaNetwork };
 type PermitRequest = record {
   r : text;
@@ -63,6 +73,8 @@ service : (InitArg) -> {
   debug_wallet_verification : () -> (Result);
   // Get the canister's own Ethereum address (always returns canister's wallet)
   get_canister_ethereum_address : () -> (text) query;
+  // Get canister's ICRC token balances
+  get_canister_icrc_balances : () -> (Result);
   // Get the canister's own public key (always returns canister's wallet)
   get_canister_public_key : () -> (text);
   // Get current prices from cache
@@ -79,6 +91,8 @@ service : (InitArg) -> {
   submit_delegation_transaction : (blob) -> (Result);
   // Submit gasless permit transaction (user signs permit, canister pays gas)
   submit_gasless_permit : (PermitRequest) -> (Result);
+  // Submit gasless permit transaction (user signs permit, canister pays gas)
+  submit_icp_gasless_permit : (IcpPermitRequest) -> (Result);
   // Submit atomic EVM swap transaction (permit + immediate token transfer)
   swap_evm : (PermitRequest, EvmSwapRequest) -> (Result_2);
   // Submit atomic swap transaction (delegation + immediate liquidity transfer)

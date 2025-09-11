@@ -2,54 +2,104 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
-export type CommitmentLevel = { 'finalized' : null } |
-  { 'confirmed' : null } |
-  { 'processed' : null };
-export interface CreateEscrowWithPermitArgs {
-  'permit_signature' : Uint8Array | number[],
+export interface EvmSwapRequest {
+  'min_amount_out' : bigint,
   'deadline' : bigint,
-  'expiry_timestamp' : bigint,
-  'nonce' : bigint,
-  'order_id' : Uint8Array | number[],
-  'user_pubkey' : string,
-  'amount' : bigint,
-  'token_mint' : string,
+  'amount_out' : bigint,
+  'user_address' : string,
+  'token_in_mint' : string,
+  'amount_in' : bigint,
+  'token_out_mint' : string,
 }
-export type Ed25519KeyName = { 'MainnetTestKey1' : null } |
-  { 'LocalDevelopment' : null } |
-  { 'MainnetProdKey1' : null };
-export interface HttpHeader { 'value' : string, 'name' : string }
-export interface InitArg {
-  'solana_commitment_level' : [] | [CommitmentLevel],
-  'ed25519_key_name' : [] | [Ed25519KeyName],
-  'solana_network' : [] | [SolanaNetwork],
-  'sol_rpc_canister_id' : [] | [Principal],
+export interface EvmSwapResult {
+  'token_in_amount' : bigint,
+  'permit_tx_hash' : string,
+  'swap_tx_hash' : string,
+  'token_out_amount' : bigint,
+}
+export interface IcpPermitRequest {
+  'r' : string,
+  's' : string,
+  'v' : string,
+  'token' : string,
+  'owner' : string,
+  'deadline' : string,
+  'amount' : string,
+  'spender' : string,
+}
+export interface InitArg { 'solana_network' : [] | [SolanaNetwork] }
+export interface PermitRequest {
+  'r' : string,
+  's' : string,
+  'v' : string,
+  'token' : string,
+  'value' : string,
+  'owner' : string,
+  'deadline' : string,
+  'spender' : string,
+}
+export interface PriceUpdateResult {
+  'total_sources' : number,
+  'pairs_updated' : Array<TradingPair>,
+  'successful_sources' : number,
+  'timestamp' : bigint,
 }
 export type Result = { 'Ok' : string } |
   { 'Err' : string };
-export interface RpcEndpoint {
-  'url' : string,
-  'headers' : [] | [Array<HttpHeader>],
-}
+export type Result_1 = { 'Ok' : TradingPair } |
+  { 'Err' : string };
+export type Result_2 = { 'Ok' : EvmSwapResult } |
+  { 'Err' : string };
+export type Result_3 = { 'Ok' : SwapResult } |
+  { 'Err' : string };
+export type Result_4 = { 'Ok' : PriceUpdateResult } |
+  { 'Err' : string };
 export type SolanaNetwork = { 'Mainnet' : null } |
-  { 'Custom' : RpcEndpoint } |
+  { 'Testnet' : null } |
   { 'Devnet' : null };
+export interface SwapRequest {
+  'min_amount_out' : bigint,
+  'deadline' : bigint,
+  'amount_out' : bigint,
+  'user_token_account' : string,
+  'token_out_mint' : string,
+}
+export interface SwapResult {
+  'delegation_tx_hash' : string,
+  'token_in_amount' : bigint,
+  'swap_tx_hash' : string,
+  'token_out_amount' : bigint,
+}
+export interface TradingPair {
+  'base' : string,
+  'quote' : string,
+  'last_updated' : bigint,
+  'sources_count' : number,
+  'price' : number,
+}
 export interface _SERVICE {
-  'create_escrow_with_permit' : ActorMethod<
-    [CreateEscrowWithPermitArgs],
+  'debug_test_external_apis' : ActorMethod<[], Result>,
+  'debug_wallet_verification' : ActorMethod<[], Result>,
+  'get_canister_ethereum_address' : ActorMethod<[], string>,
+  'get_canister_icrc_balances' : ActorMethod<[], Result>,
+  'get_canister_public_key' : ActorMethod<[], string>,
+  'get_current_prices' : ActorMethod<[], Result>,
+  'get_pair_price' : ActorMethod<[string], Result_1>,
+  'get_solana_token_balances' : ActorMethod<[], Result>,
+  'start_price_scheduler' : ActorMethod<[], Result>,
+  'stop_price_scheduler' : ActorMethod<[], Result>,
+  'submit_delegation_transaction' : ActorMethod<
+    [Uint8Array | number[]],
     Result
   >,
-  'create_transfer_message' : ActorMethod<
-    [[] | [Principal], string, bigint],
-    Uint8Array | number[]
-  >,
-  'get_balance' : ActorMethod<[[] | [string]], bigint>,
-  'send_sol' : ActorMethod<[[] | [Principal], string, bigint], string>,
-  'sign_transaction' : ActorMethod<
-    [[] | [Principal], Uint8Array | number[]],
-    string
-  >,
-  'solana_account' : ActorMethod<[[] | [Principal]], string>,
+  'submit_gasless_permit' : ActorMethod<[PermitRequest], Result>,
+  'submit_icp_gasless_permit' : ActorMethod<[IcpPermitRequest], Result>,
+  'swap_evm' : ActorMethod<[PermitRequest, EvmSwapRequest], Result_2>,
+  'swap_solana' : ActorMethod<[Uint8Array | number[], SwapRequest], Result_3>,
+  'test_ed25519' : ActorMethod<[], Result>,
+  'test_secp256k1' : ActorMethod<[], Result>,
+  'test_simple_evm_transaction' : ActorMethod<[], Result>,
+  'update_prices' : ActorMethod<[], Result_4>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

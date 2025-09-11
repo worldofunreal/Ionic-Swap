@@ -2,6 +2,7 @@ pub mod http_client;
 pub mod oracle;
 pub mod solana;
 pub mod evm;
+pub mod icp;
 pub mod types;
 
 use candid::{CandidType, Deserialize};
@@ -171,6 +172,24 @@ pub async fn swap_evm(
 ) -> Result<evm::EvmSwapResult, String> {
     evm::swap_evm(permit_request, swap_request).await
 }
+
+// ============================================================================
+// ICP OPERATIONS
+// ============================================================================
+
+/// Submit gasless permit transaction (user signs permit, canister pays gas)
+#[update]
+pub async fn submit_icp_gasless_permit(permit_request: icp::IcpPermitRequest) -> Result<String, String> {
+    icp::submit_icp_gasless_permit(permit_request).await
+}
+
+
+/// Get canister's ICRC token balances
+#[update]
+pub async fn get_canister_icrc_balances() -> Result<String, String> {
+    icp::get_canister_icrc_balances().await
+}
+
 
 // ============================================================================
 // UTILITY FUNCTIONS
