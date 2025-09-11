@@ -306,7 +306,7 @@ export const useAuthStore = defineStore('auth', {
 
                 // Now initialize canister service
                 await canisterService.initializeWithPlug()
-              } catch (error) {
+              } catch {
                 console.warn(
                   'Failed to reconnect Plug, trying identity-based initialization...'
                 )
@@ -392,7 +392,7 @@ export const useAuthStore = defineStore('auth', {
 
                 // Now initialize canister service
                 await canisterService.initializeWithPlug()
-              } catch (error) {
+              } catch {
                 console.warn(
                   'Failed to reconnect Plug, trying identity-based initialization...'
                 )

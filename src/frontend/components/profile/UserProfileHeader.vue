@@ -132,6 +132,7 @@
               class="text-gray-900 dark:text-white"
               @click="handleMentionClick"
             >
+              <!-- eslint-disable-next-line vue/no-v-html -->
               <span v-html="formattedBio"/>
             </div>
           </div>
@@ -368,7 +369,7 @@
   })
 
   const auth = useAuthStore()
-  const route = useRoute()
+  const _route = useRoute()
   const followLoading = ref(false)
   const editProfileModalRef = ref<{ open: () => void } | null>(null)
   const isFollowing = ref(false)
@@ -477,7 +478,7 @@
   // Avatar URL - convert file paths to full URLs with cache busting
   const avatarUrl = computed(() => {
     // Force recomputation when profile updates
-    profileUpdateTrigger.value
+    void profileUpdateTrigger.value
 
     const avatarPath = userProfile.value?.avatar_url?.[0]
     if (!avatarPath) return null
@@ -500,7 +501,7 @@
   // Banner URL - convert file paths to full URLs with cache busting
   const bannerUrl = computed(() => {
     // Force recomputation when profile updates
-    profileUpdateTrigger.value
+    void profileUpdateTrigger.value
 
     const bannerPath = userProfile.value?.banner_url?.[0]
     if (!bannerPath) return null
@@ -522,10 +523,6 @@
 
   // Portfolio stats - using placeholder values for now
   const portfolioValueEth = computed(() => {
-    return '0.00' // Portfolio data not available in current backend User type
-  })
-
-  const portfolioValueUsd = computed(() => {
     return '0.00' // Portfolio data not available in current backend User type
   })
 

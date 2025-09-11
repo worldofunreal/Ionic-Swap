@@ -15,11 +15,26 @@
 </template>
 
 <script setup lang="ts">
-  const props = defineProps({
-    icon: String,
-    label: String,
-    to: String,
-    collapsed: Boolean,
-    hr: Boolean,
+  defineProps({
+    icon: {
+      type: String,
+      default: '',
+    },
+    label: {
+      type: String,
+      default: '',
+    },
+    to: {
+      type: String,
+      default: '/',
+    },
+    collapsed: {
+      type: Boolean,
+      default: false,
+    },
+    hr: {
+      type: Boolean,
+      default: false,
+    },
   })
 </script>

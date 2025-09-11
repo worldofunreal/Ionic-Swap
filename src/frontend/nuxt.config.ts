@@ -1,4 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import { resolve } from 'path'
+import wasm from 'vite-plugin-wasm'
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
@@ -96,7 +99,7 @@ export default defineNuxtConfig({
         crypto: 'crypto-browserify',
         stream: 'stream-browserify',
         // Backend declarations (currently using client-side only)
-        'declarations/backend': require('path').resolve(
+        'declarations/backend': resolve(
           __dirname,
           '../../declarations/backend'
         ),
@@ -139,7 +142,7 @@ export default defineNuxtConfig({
         },
       },
     },
-    plugins: [require('vite-plugin-wasm')()],
+    plugins: [wasm()],
     // Ensure WASM files are properly handled
     assetsInclude: ['**/*.wasm'],
   },
@@ -164,7 +167,7 @@ export default defineNuxtConfig({
       process: 'process',
       util: 'util',
       // Backend declarations (currently using client-side only)
-      'declarations/backend': require('path').resolve(
+      'declarations/backend': resolve(
         __dirname,
         '../../declarations/backend'
       ),

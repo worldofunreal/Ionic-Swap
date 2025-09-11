@@ -177,9 +177,6 @@
     try {
       await canisterService.followUser(props.user.id.toText())
 
-      // Update the user's following status
-      props.user.am_following_them = true
-
       // Clear cache to ensure fresh data
       canisterService.clearCache()
 
@@ -197,8 +194,6 @@
 
       // Handle "Already following" error gracefully
       if (error instanceof Error && error.message?.includes('Already following this user')) {
-        props.user.am_following_them = true
-
         const toast = useToast()
         toast.add({
           title: 'Already Following',
@@ -228,9 +223,6 @@
     followLoading.value = true
     try {
       await canisterService.unfollowUser(props.user.id.toText())
-
-      // Update the user's following status
-      props.user.am_following_them = false
 
       // Clear cache to ensure fresh data
       canisterService.clearCache()

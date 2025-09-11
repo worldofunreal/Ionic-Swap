@@ -467,7 +467,7 @@
                       Help us improve by sharing anonymous usage data
                     </p>
                   </div>
-                  <UToggle v-model="privacySettings.analyticsEnabled" />
+                  <USwitch v-model="privacySettings.analyticsEnabled" />
                 </div>
 
                 <div
@@ -483,7 +483,7 @@
                       Receive updates about new features and promotions
                     </p>
                   </div>
-                  <UToggle v-model="privacySettings.marketingEnabled" />
+                  <USwitch v-model="privacySettings.marketingEnabled" />
                 </div>
 
                 <div
@@ -499,7 +499,7 @@
                       Allow data sharing with trusted third-party services
                     </p>
                   </div>
-                  <UToggle v-model="privacySettings.thirdPartyEnabled" />
+                  <USwitch v-model="privacySettings.thirdPartyEnabled" />
                 </div>
               </div>
             </div>

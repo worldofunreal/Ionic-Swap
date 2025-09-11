@@ -184,7 +184,7 @@
       state.email = ''
       state.company = ''
       state.message = ''
-    } catch (error) {
+    } catch {
       toast.add({
         title: 'Error',
         description: 'Failed to send message. Please try again.',

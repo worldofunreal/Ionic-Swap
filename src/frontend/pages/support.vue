@@ -214,9 +214,6 @@
 
 <script setup lang="ts">
   import { ref } from 'vue'
-  import { useColorTheme } from '@/composables/useColorTheme'
-
-  const { currentTheme } = useColorTheme()
 
   const activeSection = ref('faq')
 

@@ -164,9 +164,6 @@
 
 <script setup lang="ts">
   import { ref, computed } from 'vue'
-  import { useColorTheme } from '@/composables/useColorTheme'
-
-  const { currentTheme } = useColorTheme()
 
   const selectedCategory = ref('All')
   const selectedChain = ref('All')

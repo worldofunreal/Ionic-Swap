@@ -221,7 +221,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, watch } from 'vue'
+  import { ref, computed } from 'vue'
   import { useAuthStore } from '@/stores/auth'
   import { canisterService } from '@/services/CanisterService'
   import { appCacheService } from '@/services/AppCacheService'
@@ -267,7 +267,7 @@
   // Avatar and banner URLs - convert file paths to full URLs with cache busting
   const avatarUrl = computed(() => {
     // Force recomputation when profile updates
-    profileUpdateTrigger.value
+    void profileUpdateTrigger.value
 
     const avatarPath = userProfile.value?.avatar_url?.[0]
     if (!avatarPath) return null
@@ -285,7 +285,7 @@
 
   const bannerUrl = computed(() => {
     // Force recomputation when profile updates
-    profileUpdateTrigger.value
+    void profileUpdateTrigger.value
 
     const bannerPath = userProfile.value?.banner_url?.[0]
     if (!bannerPath) return null

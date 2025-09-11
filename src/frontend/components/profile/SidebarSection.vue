@@ -30,6 +30,10 @@
 </template>
 <script setup lang="ts">
   defineProps<{ title: string; open: boolean }>()
+
+  defineEmits<{
+    toggle: []
+  }>()
 </script>
 <style scoped>
   .fade-enter-active,

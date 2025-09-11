@@ -90,8 +90,8 @@
         >
           <component
             :is="Motion"
-            v-for="(route, i) in routes"
-            :key="route.path"
+            v-for="(navRoute, i) in routes"
+            :key="navRoute.path"
             class="w-full"
             :initial="{ opacity: 0, y: 30 }"
             :enter="{
@@ -101,17 +101,17 @@
             }"
           >
             <NuxtLink
-              :to="route.path"
+              :to="navRoute.path"
               class="flex items-center justify-center gap-3 py-3 rounded-xl hover:text-cyan-400 transition-all neon-nav-link text-2xl font-bold"
               active-class="text-cyan-400"
               @click="handleClose"
             >
               <UIcon
-                v-if="route.icon"
-                :name="route.icon"
+                v-if="navRoute.icon"
+                :name="navRoute.icon"
                 class="text-cyan-400 text-2xl"
               />
-              {{ route.name }}
+              {{ navRoute.name }}
             </NuxtLink>
           </component>
         </nav>

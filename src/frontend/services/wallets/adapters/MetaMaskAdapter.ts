@@ -74,7 +74,7 @@ export class MetaMaskAdapter implements WalletAdapter {
         nativeWallet: 'metamask',
         signature,
       }
-    } catch (error) {
+    } catch {
       throw new Error(`MetaMask authentication canceled`)
     }
   }

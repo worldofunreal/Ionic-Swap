@@ -209,7 +209,7 @@ export class PhantomAdapter implements WalletAdapter {
         const evmResult = await this.getEvmAddress()
         nativeEvmAddress = evmResult || undefined
         console.log('Got native Phantom EVM address:', nativeEvmAddress)
-      } catch (error) {
+      } catch {
         console.log('Phantom EVM not available, using generated EVM address')
       }
 
@@ -219,7 +219,7 @@ export class PhantomAdapter implements WalletAdapter {
         const btcResult = await this.getBtcAddress()
         nativeBtcAddress = btcResult || undefined
         console.log('Got native Phantom Bitcoin address:', nativeBtcAddress)
-      } catch (error) {
+      } catch {
         console.log(
           'Phantom Bitcoin not available, using generated Bitcoin address'
         )

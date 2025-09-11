@@ -185,7 +185,7 @@
     }
 
     // Allow any Unicode characters except whitespace and problematic characters
-    if (/[\s\/\\:*?"<>|]/.test(usernameValue)) {
+    if (/[\s/\\:*?"<>|]/.test(usernameValue)) {
       return 'Username cannot contain whitespace or special characters'
     }
 
