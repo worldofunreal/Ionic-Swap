@@ -21,12 +21,8 @@
   import { defineProps } from 'vue'
   type Tab = string
   const tabs: Tab[] = [
-    'NFTs',
     'Tokens',
-    'Listings',
-    'Offers',
     'Portfolio',
-    'Created',
     'Following',
     'Followers',
     'Activity',

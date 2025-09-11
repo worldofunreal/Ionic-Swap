@@ -73,7 +73,7 @@
                   Marketplace Tour
                 </h4>
                 <p class="text-xs text-gray-400 dark:text-gray-500">
-                  Learn how to browse and trade NFTs
+                  Learn how to swap tokens across chains
                 </p>
               </div>
             </div>
@@ -101,7 +101,7 @@
                   Portfolio Tour
                 </h4>
                 <p class="text-xs text-gray-400 dark:text-gray-500">
-                  Manage your NFT collection and analytics
+                  Manage your token portfolio and analytics
                 </p>
               </div>
             </div>

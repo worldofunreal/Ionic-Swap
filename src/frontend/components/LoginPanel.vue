@@ -19,12 +19,12 @@
       <div class="p-8">
         <!-- Logo Section -->
         <div class="flex flex-col items-center mb-8">
-          <img src="/logo.svg" alt="NFTropoly Logo" class="w-12 h-12 mb-2" />
-          <img src="/logo-text.svg" alt="NFTropoly" class="h-6 light:invert" />
+          <img src="/logo.svg" alt="Ionic Swap Logo" class="w-12 h-12 mb-2" />
+          <img src="/logo-text.svg" alt="Ionic Swap" class="h-6 light:invert" />
         </div>
 
         <h2 class="text-2xl font-bold mb-6 text-center">
-          Sign in to Nftropoly
+          Sign in to Ionic Swap
         </h2>
         <div class="login-panel-buttons space-y-4">
           <UButton

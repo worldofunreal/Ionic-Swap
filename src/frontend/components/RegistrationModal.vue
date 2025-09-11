@@ -9,7 +9,7 @@
       <!-- Header with Logo -->
       <div class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
         <div class="flex items-center gap-3">
-          <img src="/logo.svg" alt="NFTropoly" class="w-8 h-8" />
+          <img src="/logo.svg" alt="Ionic Swap" class="w-8 h-8" />
         </div>
         <button 
           class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300" 
@@ -25,7 +25,7 @@
       <div class="p-5">
         <!-- Welcome Text -->
         <div class="text-center mb-6">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Welcome to NFTropoly</h2>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Welcome to Ionic Swap</h2>
           <p class="text-sm text-gray-500 dark:text-gray-400">Choose your username to get started</p>
         </div>
 
@@ -282,7 +282,7 @@
 
       // Show success notification
       toast.add({
-        title: `Welcome to NFTropoly ${profile.username}!`,
+        title: `Welcome to Ionic Swap ${profile.username}!`,
         description: `Let's get you started.`,
         color: 'success',
       })
@@ -293,7 +293,7 @@
       await navigateTo('/profile')
     } catch (err: any) {
       console.error('Registration error:', err)
-      error.value = err?.message || 'Please try again and report this annoying bug on Social Media or email hello@nftropoly.com'
+      error.value = err?.message || 'Please try again and report this annoying bug on Social Media or email support@ionicswap.com'
 
       toast.add({
         title: 'Registration Failed',

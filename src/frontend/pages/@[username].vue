@@ -59,21 +59,13 @@
   import ProfileTabs from '~/components/profile/ProfileTabs.vue'
   
   // Sidebar components for each tab
-  import NFTsSidebar from '@/components/profile/NFTsSidebar.vue'
   import TokensSidebar from '@/components/profile/TokensSidebar.vue'
-  import ListingsSidebar from '@/components/profile/ListingsSidebar.vue'
-  import OffersSidebar from '@/components/profile/OffersSidebar.vue'
   import PortfolioSidebar from '@/components/profile/PortfolioSidebar.vue'
-  import CreatedSidebar from '@/components/profile/CreatedSidebar.vue'
   import ActivitySidebar from '@/components/profile/ActivitySidebar.vue'
   
   // Main area components for each tab
-  import NFTsMain from '@/components/profile/NFTsMain.vue'
   import TokensMain from '@/components/profile/TokensMain.vue'
-  import ListingsMain from '@/components/profile/ListingsMain.vue'
-  import OffersMain from '@/components/profile/OffersMain.vue'
   import PortfolioMain from '@/components/profile/PortfolioMain.vue'
-  import CreatedMain from '@/components/profile/CreatedMain.vue'
   import FollowingMain from '@/components/profile/FollowingMain.vue'
   import FollowersMain from '@/components/profile/FollowersMain.vue'
   import ActivityMain from '@/components/profile/ActivityMain.vue'
@@ -85,7 +77,7 @@
   const loading = ref(true)
   const error = ref(false)
   const userProfile = ref<any>(null)
-  const activeTab = ref('NFTs')
+  const activeTab = ref('Tokens')
 
   // Extract username from route (remove @ symbol)
   const username = computed(() => {
@@ -133,7 +125,7 @@
 
   const profileAvatarUrl = computed(() => {
     const avatarPath = userProfile.value?.avatar_url?.[0]
-    if (!avatarPath) return 'https://nftropoly.com/logo.svg'
+    if (!avatarPath) return 'https://ionicswap.com/logo.svg'
     
     if (avatarPath.startsWith('http')) {
       return avatarPath
@@ -150,15 +142,15 @@
   // Set page meta tags for SEO
   useHead({
     title: computed(() => userProfile.value 
-      ? `${profileDisplayName.value} (@${username.value}) - Nftropoly` 
-      : 'Profile Not Found - Nftropoly'
+      ? `${profileDisplayName.value} (@${username.value}) - Ionic Swap` 
+      : 'Profile Not Found - Ionic Swap'
     ),
     meta: [
       {
         name: 'description',
         content: computed(() => userProfile.value 
-          ? profileBio.value || `View ${profileDisplayName.value}'s NFT collection, tokens, and activity on Nftropoly - The Multichain, Gasless NFT Marketplace`
-          : 'Profile not found on Nftropoly'
+          ? profileBio.value || `View ${profileDisplayName.value}'s token portfolio and activity on Ionic Swap - Cross-Chain Token Swapping`
+          : 'Profile not found on Ionic Swap'
         )
       },
       {
@@ -169,15 +161,15 @@
       {
         property: 'og:title',
         content: computed(() => userProfile.value 
-          ? `${profileDisplayName.value} (@${username.value}) - Nftropoly`
-          : 'Profile Not Found - Nftropoly'
+          ? `${profileDisplayName.value} (@${username.value}) - Ionic Swap`
+          : 'Profile Not Found - Ionic Swap'
         )
       },
       {
         property: 'og:description',
         content: computed(() => userProfile.value 
-          ? profileBio.value || `View ${profileDisplayName.value}'s NFT collection, tokens, and activity on Nftropoly`
-          : 'Profile not found on Nftropoly'
+          ? profileBio.value || `View ${profileDisplayName.value}'s token portfolio and activity on Ionic Swap`
+          : 'Profile not found on Ionic Swap'
         )
       },
       {
@@ -186,7 +178,7 @@
       },
       {
         property: 'og:url',
-        content: computed(() => `https://nftropoly.com/@${username.value}`)
+        content: computed(() => `https://ionicswap.com/@${username.value}`)
       },
       {
         property: 'og:image',
@@ -200,15 +192,15 @@
       {
         name: 'twitter:title',
         content: computed(() => userProfile.value 
-          ? `${profileDisplayName.value} (@${username.value}) - Nftropoly`
-          : 'Profile Not Found - Nftropoly'
+          ? `${profileDisplayName.value} (@${username.value}) - Ionic Swap`
+          : 'Profile Not Found - Ionic Swap'
         )
       },
       {
         name: 'twitter:description',
         content: computed(() => userProfile.value 
-          ? profileBio.value || `View ${profileDisplayName.value}'s NFT collection, tokens, and activity on Nftropoly`
-          : 'Profile not found on Nftropoly'
+          ? profileBio.value || `View ${profileDisplayName.value}'s token portfolio and activity on Ionic Swap`
+          : 'Profile not found on Ionic Swap'
         )
       },
       {
@@ -219,7 +211,7 @@
     link: [
       {
         rel: 'canonical',
-        href: computed(() => `https://nftropoly.com/@${username.value}`)
+        href: computed(() => `https://ionicswap.com/@${username.value}`)
       }
     ]
   })
@@ -232,25 +224,25 @@
       const structuredData = {
         '@context': 'https://schema.org',
         '@type': 'Person',
-        '@id': `https://nftropoly.com/@${username.value}`,
+        '@id': `https://ionicswap.com/@${username.value}`,
         name: profileDisplayName.value,
         alternateName: `@${username.value}`,
         description: profileBio.value,
         image: profileAvatarUrl.value,
-        url: `https://nftropoly.com/@${username.value}`,
+        url: `https://ionicswap.com/@${username.value}`,
         sameAs: [
           // Add social media links if available
           ...(userProfile.value.website ? [userProfile.value.website] : [])
         ],
         worksFor: {
           '@type': 'Organization',
-          name: 'Nftropoly',
-          url: 'https://nftropoly.com'
+          name: 'Ionic Swap',
+          url: 'https://ionicswap.com'
         },
-        knowsAbout: ['NFTs', 'Cryptocurrency', 'Digital Art', 'Blockchain'],
+        knowsAbout: ['DeFi', 'Cryptocurrency', 'Token Trading', 'Blockchain'],
         hasOccupation: {
           '@type': 'Occupation',
-          name: 'NFT Collector & Creator'
+          name: 'Token Trader & DeFi User'
         }
       }
       
@@ -265,18 +257,10 @@
 
   const tabComponent = computed(() => {
     switch (activeTab.value) {
-      case 'NFTs':
-        return NFTsMain
       case 'Tokens':
         return TokensMain
-      case 'Listings':
-        return ListingsMain
-      case 'Offers':
-        return OffersMain
       case 'Portfolio':
         return PortfolioMain
-      case 'Created':
-        return CreatedMain
       case 'Following':
         return FollowingMain
       case 'Followers':
@@ -284,28 +268,20 @@
       case 'Activity':
         return ActivityMain
       default:
-        return NFTsMain
+        return TokensMain
     }
   })
 
   const sidebarComponent = computed(() => {
     switch (activeTab.value) {
-      case 'NFTs':
-        return NFTsSidebar
       case 'Tokens':
         return TokensSidebar
-      case 'Listings':
-        return ListingsSidebar
-      case 'Offers':
-        return OffersSidebar
       case 'Portfolio':
         return PortfolioSidebar
-      case 'Created':
-        return CreatedSidebar
       case 'Activity':
         return ActivitySidebar
       default:
-        return NFTsSidebar
+        return TokensSidebar
     }
   })
 

@@ -23,7 +23,7 @@
           />
         </button>
         <!-- Search Bar -->
-        <div class="hidden md:flex items-center ml-2 search-nfts-section relative">
+        <div class="hidden md:flex items-center ml-2 search-tokens-section relative">
           <UInput
             v-model="search"
             placeholder="Search Ionic Swap"
@@ -264,7 +264,7 @@
   const handleSearchBlur = (event: FocusEvent) => {
     // Check if the related target (what we're focusing on) is within the search results
     const relatedTarget = event.relatedTarget as HTMLElement
-    const searchResultsContainer = document.querySelector('.search-nfts-section')
+    const searchResultsContainer = document.querySelector('.search-tokens-section')
     
     if (relatedTarget && searchResultsContainer?.contains(relatedTarget)) {
       // Don't close if clicking within search results

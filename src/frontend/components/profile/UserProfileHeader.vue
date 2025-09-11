@@ -193,10 +193,6 @@
               <span class="font-semibold text-gray-900 dark:text-white">{{ portfolioValueEth }} ETH</span>
             </div>
             <div class="flex items-center gap-1">
-              <span class="text-gray-600 dark:text-gray-400">NFTs:</span>
-              <span class="font-semibold text-gray-900 dark:text-white">{{ nftPercentage }}%</span>
-            </div>
-            <div class="flex items-center gap-1">
               <span class="text-gray-600 dark:text-gray-400">Tokens:</span>
               <span class="font-semibold text-gray-900 dark:text-white">{{ tokenPercentage }}%</span>
             </div>
@@ -407,10 +403,6 @@
 
   const portfolioValueUsd = computed(() => {
     return '0.00' // Portfolio data not available in current backend User type
-  })
-
-  const nftPercentage = computed(() => {
-    return '0' // Portfolio data not available in current backend User type
   })
 
   const tokenPercentage = computed(() => {

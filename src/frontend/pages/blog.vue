@@ -7,12 +7,11 @@
           <h1
             class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4"
           >
-            AI Workflows, Open Source & Web3: The World of Unreal Blog
+            DeFi Insights & Token Analysis: Ionic Swap Blog
           </h1>
           <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Explore insights on AI agentic workflows, open source tools, Web3,
-            blockchain, NFTs, CGI, AI art, and developer culture. Stay ahead in
-            creative coding and decentralized development.
+            Stay informed with the latest insights on DeFi, cross-chain swapping, token standards, 
+            gasless transactions, and the future of decentralized finance.
           </p>
         </div>
       </UContainer>
@@ -32,7 +31,7 @@
             <div class="relative h-48 overflow-hidden">
               <img
                 :src="post.image"
-                :alt="`${post.title} – ${post.category} | AI, Web3, Open Source, Blockchain, NFTs, CGI, AI Art`"
+                :alt="`${post.title} – ${post.category} | DeFi, Cross-Chain, Token Swapping, Gasless Transactions`"
                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
               >
               <div class="absolute top-4 left-4">
@@ -49,44 +48,36 @@
               <div
                 class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-3"
               >
-                <UIcon name="i-fa6-solid-calendar" />
-                {{ formatDate(post.date) }}
+                <UIcon name="i-heroicons-calendar" class="w-4 h-4" />
+                <span>{{ post.date }}</span>
+                <UIcon name="i-heroicons-clock" class="w-4 h-4 ml-2" />
+                <span>{{ post.readTime }}</span>
               </div>
-              <h3
-                class="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2"
+              <h2
+                class="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors"
               >
                 {{ post.title }}
-              </h3>
+              </h2>
               <p class="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
                 {{ post.description }}
               </p>
-
-              <!-- Tags -->
-              <div class="flex flex-wrap gap-2 mb-4">
-                <UBadge
-                  v-for="tag in post.tags?.slice(0, 3)"
-                  :key="tag"
-                  color="neutral"
-                  variant="soft"
-                  size="sm"
-                >
-                  {{ tag }}
-                </UBadge>
-              </div>
-
-              <!-- Read More -->
-              <UButton
-                :to="post._path"
-                color="primary"
-                variant="ghost"
-                class="w-full group-hover:bg-primary-50 dark:group-hover:bg-primary-950"
-              >
-                Read More
+              <div class="flex items-center justify-between">
+                <div class="flex flex-wrap gap-2">
+                  <UBadge
+                    v-for="tag in post.tags"
+                    :key="tag"
+                    color="neutral"
+                    variant="soft"
+                    size="sm"
+                  >
+                    {{ tag }}
+                  </UBadge>
+                </div>
                 <UIcon
-                  name="i-fa6-solid-arrow-right"
-                  class="ml-2 group-hover:translate-x-1 transition-transform"
+                  name="i-heroicons-arrow-right"
+                  class="w-5 h-5 text-primary-600 dark:text-primary-400 group-hover:translate-x-1 transition-transform"
                 />
-              </UButton>
+              </div>
             </div>
           </UCard>
         </div>
@@ -96,105 +87,106 @@
 </template>
 
 <script setup lang="ts">
-  interface BlogPost {
-    _path: string
-    title: string
-    description: string
-    date: string
-    image: string
-    category: string
-    tags: string[]
+import { useColorTheme } from '@/composables/useColorTheme'
+
+const { currentTheme } = useColorTheme()
+
+const blogPosts = [
+  {
+    _path: '/blog/cross-chain-swapping-guide',
+    title: 'Complete Guide to Cross-Chain Token Swapping',
+    description: 'Learn how to swap tokens across different blockchain networks seamlessly with Ionic Swap\'s innovative cross-chain technology.',
+    category: 'Tutorial',
+    date: '2024-01-15',
+    readTime: '8 min read',
+    image: '/blog/cross-chain-swapping.jpg',
+    tags: ['Cross-Chain', 'Tutorial', 'DeFi']
+  },
+  {
+    _path: '/blog/gasless-transactions-explained',
+    title: 'Gasless Transactions: The Future of DeFi',
+    description: 'Discover how gasless transactions work and why they\'re revolutionizing the DeFi space by eliminating gas fees.',
+    category: 'Technology',
+    date: '2024-01-10',
+    readTime: '6 min read',
+    image: '/blog/gasless-transactions.jpg',
+    tags: ['Gasless', 'Technology', 'DeFi']
+  },
+  {
+    _path: '/blog/token-standards-comparison',
+    title: 'ERC-20 vs SPL vs ICRC: Token Standards Compared',
+    description: 'A comprehensive comparison of token standards across Ethereum, Solana, and Internet Computer networks.',
+    category: 'Analysis',
+    date: '2024-01-05',
+    readTime: '10 min read',
+    image: '/blog/token-standards.jpg',
+    tags: ['Token Standards', 'Analysis', 'Blockchain']
+  },
+  {
+    _path: '/blog/defi-liquidity-pools',
+    title: 'Understanding Liquidity Pools in DeFi',
+    description: 'Learn how liquidity pools work, their role in automated market makers, and how they enable token swapping.',
+    category: 'Education',
+    date: '2024-01-01',
+    readTime: '7 min read',
+    image: '/blog/liquidity-pools.jpg',
+    tags: ['Liquidity', 'Education', 'AMM']
+  },
+  {
+    _path: '/blog/security-best-practices',
+    title: 'DeFi Security: Best Practices for Safe Trading',
+    description: 'Essential security tips and best practices to keep your tokens safe while trading in the DeFi ecosystem.',
+    category: 'Security',
+    date: '2023-12-28',
+    readTime: '9 min read',
+    image: '/blog/security.jpg',
+    tags: ['Security', 'Best Practices', 'DeFi']
+  },
+  {
+    _path: '/blog/ionic-swap-roadmap',
+    title: 'Ionic Swap Roadmap: What\'s Coming Next',
+    description: 'Get an exclusive look at Ionic Swap\'s development roadmap and upcoming features for 2024.',
+    category: 'Updates',
+    date: '2023-12-25',
+    readTime: '5 min read',
+    image: '/blog/roadmap.jpg',
+    tags: ['Roadmap', 'Updates', 'Ionic Swap']
   }
+]
 
-  const { data: blogPosts } = await useAsyncData<BlogPost[]>('blog-posts', () =>
-    $fetch('/api/blog-posts')
-  )
-
-  // Utility function to format dates
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  }
-
-  useHead({
-    title: 'Blog – AI Workflows, Open Source, Web3 | World of Unreal',
-    meta: [
-      {
-        name: 'description',
-        content:
-          'Insights on AI agentic workflows, open source tools, Web3, blockchain, NFTs, CGI, AI art, and developer culture. Explore the future of creative coding and decentralized development.',
-      },
-      {
-        name: 'keywords',
-        content:
-          'AI workflows, open source, Web3, blockchain, NFTs, CGI, AI art, developer culture, vibe coding, decentralized apps',
-      },
-      {
-        property: 'og:title',
-        content: 'Blog – AI Workflows, Open Source, Web3 | World of Unreal',
-      },
-      {
-        property: 'og:description',
-        content:
-          'Insights on AI agentic workflows, open source tools, Web3, blockchain, NFTs, CGI, AI art, and developer culture. Explore the future of creative coding and decentralized development.',
-      },
-      { property: 'og:type', content: 'website' },
-      { property: 'og:url', content: 'https://worldofunreal.com/blog' },
-      { property: 'og:image', content: '/logo_full.svg' },
-      { name: 'twitter:card', content: 'summary_large_image' },
-      {
-        name: 'twitter:title',
-        content: 'Blog – AI Workflows, Open Source, Web3 | World of Unreal',
-      },
-      {
-        name: 'twitter:description',
-        content:
-          'Insights on AI agentic workflows, open source tools, Web3, blockchain, NFTs, CGI, AI art, and developer culture. Explore the future of creative coding and decentralized development.',
-      },
-      { name: 'twitter:image', content: '/logo_full.svg' },
-    ],
-    link: [{ rel: 'canonical', href: 'https://worldofunreal.com/blog' }],
-    script: [
-      {
-        type: 'application/ld+json',
-        innerHTML: JSON.stringify({
-          '@context': 'https://schema.org',
-          '@type': 'BreadcrumbList',
-          itemListElement: [
-            {
-              '@type': 'ListItem',
-              position: 1,
-              name: 'Home',
-              item: 'https://worldofunreal.com/',
-            },
-            {
-              '@type': 'ListItem',
-              position: 2,
-              name: 'Blog',
-              item: 'https://worldofunreal.com/blog',
-            },
-          ],
-        }),
-      },
-    ],
-  })
+useHead({
+  title: 'DeFi Blog - Ionic Swap',
+  meta: [
+    {
+      name: 'description',
+      content: 'Stay informed with the latest insights on DeFi, cross-chain swapping, token standards, and gasless transactions.',
+    },
+    { property: 'og:title', content: 'DeFi Blog - Ionic Swap' },
+    {
+      property: 'og:description',
+      content: 'Stay informed with the latest insights on DeFi, cross-chain swapping, token standards, and gasless transactions.',
+    },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:url', content: 'https://ionicswap.com/blog' },
+    { property: 'og:image', content: '/logo.svg' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: 'DeFi Blog - Ionic Swap' },
+    {
+      name: 'twitter:description',
+      content: 'Stay informed with the latest insights on DeFi, cross-chain swapping, token standards, and gasless transactions.',
+    },
+    { name: 'twitter:image', content: '/logo.svg' },
+  ],
+  link: [{ rel: 'canonical', href: 'https://ionicswap.com/blog' }],
+})
 </script>
 
 <style scoped>
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 </style>
