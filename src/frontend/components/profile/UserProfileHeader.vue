@@ -344,9 +344,21 @@
     showRegistrationModal: () => void
   } | null>
 
+  interface UserProfile {
+    id: { toText(): string }
+    username: string
+    display_name?: string | string[]
+    bio?: string[]
+    avatar_url?: string[]
+    is_verified?: boolean
+    am_following_them?: boolean
+    is_following_me?: boolean
+    updated_at?: number
+  }
+
   // Props
   interface Props {
-    userProfile?: any
+    userProfile?: UserProfile
     isOwnProfile?: boolean
   }
 
@@ -358,7 +370,7 @@
   const auth = useAuthStore()
   const route = useRoute()
   const followLoading = ref(false)
-  const editProfileModalRef = ref<any>(null)
+  const editProfileModalRef = ref<{ open: () => void } | null>(null)
   const isFollowing = ref(false)
 
   // User profile data - use props if provided, otherwise use auth store
@@ -659,9 +671,9 @@
             description: `You are now following @${userProfile.value.username}`,
             color: 'success',
           })
-        } catch (error: any) {
+        } catch (error: unknown) {
           // Handle "Already following" error gracefully
-          if (error.message?.includes('Already following this user')) {
+          if (error instanceof Error && error.message?.includes('Already following this user')) {
             isFollowing.value = true
             const toast = useToast()
             toast.add({

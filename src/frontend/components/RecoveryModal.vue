@@ -113,9 +113,9 @@
 
         await navigateTo('/profile')
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       error.value =
-        err?.message || 'Recovery failed. Please check your recovery phrase.'
+        err instanceof Error ? err.message : 'Recovery failed. Please check your recovery phrase.'
 
       toast.add({
         title: 'Recovery Failed',

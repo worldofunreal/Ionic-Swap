@@ -43,7 +43,7 @@ export default defineEventHandler(async event => {
 </urlset>`
 
     return xml
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error generating sitemap:', error)
 
     // Return basic sitemap on error

@@ -77,13 +77,25 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref, onMounted, watch } from 'vue'
+  import { computed, ref } from 'vue'
   import { useRouter } from 'vue-router'
   import { useAuthStore } from '@/stores/auth'
   import { canisterService } from '@/services/CanisterService'
 
+  interface User {
+    id: { toText(): string }
+    username: string
+    display_name?: string | string[]
+    bio?: string[]
+    avatar_url?: string[]
+    is_verified?: boolean
+    am_following_them?: boolean
+    is_following_me?: boolean
+    updated_at?: number
+  }
+
   interface Props {
-    user: any
+    user: User
     showFollowButton?: boolean
     clickable?: boolean
   }
@@ -94,9 +106,9 @@
   })
 
   const emit = defineEmits<{
-    click: [user: any]
-    follow: [user: any]
-    unfollow: [user: any]
+    click: [user: User]
+    follow: [user: User]
+    unfollow: [user: User]
   }>()
 
   const authStore = useAuthStore()
@@ -180,11 +192,11 @@
 
       // Emit event to parent to update its state
       emit('follow', props.user)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Follow failed:', error)
 
       // Handle "Already following" error gracefully
-      if (error.message?.includes('Already following this user')) {
+      if (error instanceof Error && error.message?.includes('Already following this user')) {
         props.user.am_following_them = true
 
         const toast = useToast()

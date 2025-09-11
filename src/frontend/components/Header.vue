@@ -166,7 +166,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, watch, inject, type Ref } from 'vue'
+  import { ref, onMounted, onUnmounted, inject, type Ref } from 'vue'
   import { useNuxtApp } from '#imports'
   import { useAuthStore } from '@/stores/auth'
   import { canisterService } from '@/services/CanisterService'
@@ -181,15 +181,22 @@
   const { theme: colorMode, toggleTheme: toggleThemeAction } = useTheme()
   const { colorTheme, nextColorTheme } = useColorTheme()
   const authStore = useAuthStore()
-  const { $trackInteraction, $trackButtonClick } = useNuxtApp()
+  const { $trackButtonClick } = useNuxtApp()
+
+  interface SearchUser {
+    id: { toText(): string }
+    username: string
+    display_name?: string | string[]
+    avatar_url?: string[]
+    am_following_them?: boolean
+  }
 
   const scrolled = ref(false)
   const search = ref('')
-  const searchResults = ref<any[]>([])
+  const searchResults = ref<SearchUser[]>([])
   const searchLoading = ref(false)
   const searchError = ref('')
   const showSearchResults = ref(false)
-  const followingUser = ref<string | null>(null)
   const searchTimeout = ref<NodeJS.Timeout | null>(null)
 
   // Inject the login panel ref from the app
@@ -309,7 +316,7 @@
     }, 200)
   }
 
-  const selectUser = (user: any) => {
+  const selectUser = (user: SearchUser) => {
     // Navigate to user profile
     navigateTo(`/@${user.username}`)
     search.value = ''
@@ -322,7 +329,7 @@
     })
   }
 
-  const handleFollow = (user: any) => {
+  const handleFollow = (user: SearchUser) => {
     // Update the user's following status in search results
     const userIndex = searchResults.value.findIndex(u => u.id === user.id)
     if (userIndex !== -1) {
@@ -336,7 +343,7 @@
     })
   }
 
-  const handleUnfollow = (user: any) => {
+  const handleUnfollow = (user: SearchUser) => {
     // Update the user's following status in search results
     const userIndex = searchResults.value.findIndex(u => u.id === user.id)
     if (userIndex !== -1) {

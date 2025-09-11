@@ -1,29 +1,39 @@
 import type { WalletAdapter, CrossChainAuthResult } from '../types'
 import { CrossChainSeedService } from '../../CrossChainSeedService'
 
+interface EthereumProvider {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
+  selectedAddress?: string
+  isConnected: () => boolean
+  on: (event: string, callback: (data: unknown) => void) => void
+}
+
+interface SolanaProvider {
+  connect: () => Promise<{ publicKey: { toBase58(): string } }>
+  signMessage: (message: Uint8Array) => Promise<{ signature: Uint8Array }>
+  isConnected: boolean
+  publicKey?: { toBase58(): string }
+}
+
+interface PhantomBitcoinProvider {
+  isPhantom: boolean
+  requestAccounts: () => Promise<BtcAccount[]>
+  signMessage: (
+    address: string,
+    message: Uint8Array
+  ) => Promise<{ signature: Uint8Array }>
+  signPSBT: (psbt: Uint8Array, options: Record<string, unknown>) => Promise<Uint8Array>
+  on: (event: string, callback: (data: unknown) => void) => void
+}
+
 declare global {
   interface Window {
-    solana?: any
+    solana?: SolanaProvider
     phantom?: {
-      ethereum?: {
-        isPhantom: boolean
-        request: (args: { method: string; params?: any[] }) => Promise<any>
-        selectedAddress?: string
-        isConnected: () => boolean
-        on: (event: string, callback: (data: any) => void) => void
-      }
-      bitcoin?: {
-        isPhantom: boolean
-        requestAccounts: () => Promise<BtcAccount[]>
-        signMessage: (
-          address: string,
-          message: Uint8Array
-        ) => Promise<{ signature: Uint8Array }>
-        signPSBT: (psbt: Uint8Array, options: any) => Promise<Uint8Array>
-        on: (event: string, callback: (data: any) => void) => void
-      }
+      ethereum?: EthereumProvider & { isPhantom: boolean }
+      bitcoin?: PhantomBitcoinProvider
     }
-    ethereum?: any
+    ethereum?: EthereumProvider
   }
 }
 

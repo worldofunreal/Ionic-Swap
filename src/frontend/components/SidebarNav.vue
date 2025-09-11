@@ -39,10 +39,8 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue'
   import SidebarItem from './SidebarItem.vue'
-  import { useColorMode } from '#imports'
   import { useAuthStore } from '@/stores/auth'
 
-  const colorMode = useColorMode()
   const auth = useAuthStore()
 
   const collapsed = ref(true)
@@ -84,5 +82,4 @@
 </script>
 
 <style scoped>
-  /* Remove the old media query styles that were conflicting */
 </style>

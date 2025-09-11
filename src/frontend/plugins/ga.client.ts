@@ -2,7 +2,7 @@ import { defineNuxtPlugin, useRuntimeConfig } from '#imports'
 
 declare global {
   interface Window {
-    dataLayer: any[]
+    dataLayer: Record<string, unknown>[]
   }
 }
 

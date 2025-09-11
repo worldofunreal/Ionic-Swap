@@ -325,10 +325,10 @@
 
       // Navigate to profile page
       await navigateTo('/profile')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Registration error:', err)
       error.value =
-        err?.message ||
+        err instanceof Error ? err.message :
         'Please try again and report this annoying bug on Social Media or email support@ionicswap.com'
 
       toast.add({

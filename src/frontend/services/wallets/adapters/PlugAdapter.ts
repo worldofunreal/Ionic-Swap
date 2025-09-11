@@ -13,9 +13,9 @@ declare global {
         getPrincipal: () => Promise<string>
         createActor: (options: {
           canisterId: string
-          interfaceFactory: any
-        }) => Promise<any>
-        agent?: any
+          interfaceFactory: unknown
+        }) => Promise<unknown>
+        agent?: unknown
         principalId?: string
         accountId?: string
         signMessage?: (message: string) => Promise<string>

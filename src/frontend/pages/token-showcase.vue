@@ -331,7 +331,17 @@
     })
   })
 
-  const swapToken = (token: any) => {
+  interface Token {
+    symbol: string
+    name: string
+    icon: string
+    price: string
+    change24h: number
+    category: string
+    chain: string
+  }
+
+  const swapToken = (token: Token) => {
     // Navigate to swap page with pre-selected token
     navigateTo(`/?from=${token.symbol}`)
   }

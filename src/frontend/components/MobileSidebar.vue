@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-  import { useColorMode } from '#imports'
+  // Removed unused import: useColorMode
 
   // Define props
   interface Props {
@@ -68,7 +68,6 @@
     close: []
   }>()
 
-  const colorMode = useColorMode()
   const route = useRoute()
 
   const menuItems = [

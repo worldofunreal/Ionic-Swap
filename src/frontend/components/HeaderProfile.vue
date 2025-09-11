@@ -428,9 +428,9 @@
             description: `You are now following @${viewedProfileUsername.value}`,
             color: 'success',
           })
-        } catch (error: any) {
+        } catch (error: unknown) {
           // Handle "Already following" error gracefully
-          if (error.message?.includes('Already following this user')) {
+          if (error instanceof Error && error.message?.includes('Already following this user')) {
             isFollowing.value = true
             const toast = useToast()
             toast.add({

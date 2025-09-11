@@ -104,10 +104,10 @@ export const CrossChainSeedService = {
         if (taprootAddress) {
           return taprootAddress
         }
-      } catch (taprootError: any) {
+      } catch (taprootError: unknown) {
         console.error('Taproot generation failed:', taprootError)
         throw new Error(
-          `Taproot address generation failed: ${taprootError.message}`
+          `Taproot address generation failed: ${taprootError instanceof Error ? taprootError.message : 'Unknown error'}`
         )
       }
 

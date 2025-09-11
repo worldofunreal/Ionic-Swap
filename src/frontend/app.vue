@@ -53,7 +53,6 @@
   import { ref, provide, onMounted, nextTick } from 'vue'
   import { useNuxtApp } from '#imports'
   import { useAuthStore } from '@/stores/auth'
-  import { useTheme } from '@/composables/useTheme'
   import SidebarNav from './components/SidebarNav.vue'
   import MobileSidebar from './components/MobileSidebar.vue'
   import Header from './components/Header.vue'
@@ -61,8 +60,9 @@
   import LoginPanel from './components/LoginPanel.vue'
   // Temporarily disabled for performance optimization
   // import DisclaimerModal from './components/DisclaimerModal.vue'
-  import OnboardingTour from './components/onBoardingTour/OnboardingTour.vue'
-  import OnboardingTrigger from './components/onBoardingTour/OnboardingTrigger.vue'
+  // Temporarily disabled onboarding tour until issues are resolved
+  // import OnboardingTour from './components/onBoardingTour/OnboardingTour.vue'
+  // import OnboardingTrigger from './components/onBoardingTour/OnboardingTrigger.vue'
 
   const loginPanelRef = ref<{
     open: () => void

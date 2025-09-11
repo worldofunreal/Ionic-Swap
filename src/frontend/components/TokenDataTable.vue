@@ -119,7 +119,7 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue'
 
-  interface TokenRow extends Record<string, any> {
+  interface TokenRow extends Record<string, unknown> {
     icon: string
     symbol: string
     name: string

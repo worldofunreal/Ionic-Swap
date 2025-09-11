@@ -80,8 +80,20 @@
   import { canisterService } from '@/services/CanisterService'
   import CompactProfile from '@/components/CompactProfile.vue'
 
+  interface User {
+    id: { toText(): string }
+    username: string
+    display_name?: string | string[]
+    bio?: string[]
+    avatar_url?: string[]
+    is_verified?: boolean
+    am_following_them?: boolean
+    is_following_me?: boolean
+    updated_at?: number
+  }
+
   interface Props {
-    targetUser?: any
+    targetUser?: User
     isOwnProfile?: boolean
   }
 
@@ -94,7 +106,7 @@
   const loading = ref(false)
   const loadingMore = ref(false)
   const unfollowingUser = ref<string | null>(null)
-  const following = ref<any[]>([])
+  const following = ref<User[]>([])
   const hasMore = ref(false)
 
   // Get the principal to use for loading following data
@@ -143,7 +155,7 @@
   }
 
   // Unfollow user
-  const unfollowUser = async (user: any) => {
+  const unfollowUser = async (user: User) => {
     unfollowingUser.value = user.id
     try {
       await canisterService.unfollowUser(user.id.toText())
@@ -158,7 +170,7 @@
   }
 
   // View user profile
-  const viewProfile = (user: any) => {
+  const viewProfile = (user: User) => {
     navigateTo(`/@${user.username}`)
   }
 

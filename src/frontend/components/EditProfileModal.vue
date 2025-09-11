@@ -714,10 +714,10 @@
         description: 'Your profile has been updated successfully.',
         color: 'success',
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update profile:', err)
       error.value =
-        err?.message || 'Failed to update profile. Please try again.'
+        err instanceof Error ? err.message : 'Failed to update profile. Please try again.'
     } finally {
       loading.value = false
     }

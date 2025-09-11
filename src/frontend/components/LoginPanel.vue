@@ -141,9 +141,9 @@
       ic?: {
         plug?: {
           isConnected(): Promise<boolean>
-          requestConnect(options?: any): Promise<any>
+          requestConnect(options?: Record<string, unknown>): Promise<{ principal: string }>
           agent: {
-            getPrincipal(): Promise<any>
+            getPrincipal(): Promise<{ toText(): string }>
           }
         }
       }

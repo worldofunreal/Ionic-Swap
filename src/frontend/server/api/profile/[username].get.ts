@@ -26,7 +26,7 @@ export default defineEventHandler(async event => {
       message: 'Client-side fetching required',
       data: null,
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in SSR API:', error)
     return null
   }

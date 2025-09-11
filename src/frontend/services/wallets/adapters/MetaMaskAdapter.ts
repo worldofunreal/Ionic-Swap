@@ -1,9 +1,16 @@
 import type { WalletAdapter, CrossChainAuthResult } from '../types'
 import { CrossChainSeedService } from '../../CrossChainSeedService'
 
+interface EthereumProvider {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>
+  selectedAddress?: string
+  isConnected: () => boolean
+  on: (event: string, callback: (data: unknown) => void) => void
+}
+
 declare global {
   interface Window {
-    ethereum?: any
+    ethereum?: EthereumProvider
   }
 }
 

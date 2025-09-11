@@ -12,7 +12,7 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     authenticated: false,
     registered: false,
-    player: null as unknown as any,
+    player: null as unknown as Record<string, unknown>,
     userProfile: null as User | null,
     principal: '',
     evmAddress: '',
@@ -112,7 +112,7 @@ export const useAuthStore = defineStore('auth', {
           console.log('- Wallet Type:', walletType)
 
           // For Internet Identity, store principal instead of signature
-          const sessionData: any = {
+          const sessionData: Record<string, unknown> = {
             authenticated: true,
             registered: true,
             principal: authResult.principal,

@@ -37,7 +37,7 @@ const handleUserResult = (result: UserResult): User => {
 }
 
 class CanisterService {
-  private agent: HttpAgent | any = null
+  private agent: HttpAgent | null = null
   private backendActor: BackendService | null = null
   private identity: Identity | null = null
 
@@ -227,7 +227,7 @@ class CanisterService {
       }
 
       // Ensure caller is a proper Principal object
-      let principal: any
+      let principal: Principal
 
       console.log('Processing caller principal:', caller)
       console.log('Caller type:', typeof caller)
@@ -300,7 +300,7 @@ class CanisterService {
 
   // Background refresh method
   private async refreshProfileInBackground(
-    principal: any,
+    principal: Principal,
     principalText: string
   ): Promise<void> {
     if (!this.backendActor) return

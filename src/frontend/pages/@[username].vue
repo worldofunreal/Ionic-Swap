@@ -84,9 +84,21 @@
   const router = useRouter()
   const auth = useAuthStore()
 
+  interface UserProfile {
+    id: { toText(): string }
+    username: string
+    display_name?: string | string[]
+    bio?: string[]
+    avatar_url?: string[]
+    is_verified?: boolean
+    am_following_them?: boolean
+    is_following_me?: boolean
+    updated_at?: number
+  }
+
   const loading = ref(true)
   const error = ref(false)
-  const userProfile = ref<any>(null)
+  const userProfile = ref<UserProfile | null>(null)
   const activeTab = ref('Tokens')
 
   // Extract username from route (remove @ symbol)
