@@ -22,6 +22,21 @@
           <span class="font-medium">Filters</span>
         </button>
       </div>
+      <!-- Price Charts Section -->
+      <div class="px-4 pb-6">
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Live Price Charts
+          </h2>
+          <PriceList @token-select="handleTokenSelect" />
+        </div>
+        
+            <!-- Selected Token Chart -->
+            <div v-if="selectedToken" class="mb-6">
+              <SimplePriceChart :token-symbol="selectedToken" :height="400" />
+            </div>
+      </div>
+
       <!-- Token Data Table -->
       <div class="flex-1 px-4 pb-8 overflow-auto">
         <TokenDataTable />
@@ -43,8 +58,11 @@
   import TokenListHeaderControls from '@/components/TokenListHeaderControls.vue'
   import TokenDataTable from '@/components/TokenDataTable.vue'
   import TokensFilterDrawer from '@/components/TokensFilterDrawer.vue'
+  import PriceList from '@/components/PriceList.vue'
+  import SimplePriceChart from '@/components/SimplePriceChart.vue'
 
   const showFilterDrawer = ref(false)
+  const selectedToken = ref<string | null>(null)
 
   interface Filters {
     type: string
@@ -61,5 +79,9 @@
     console.log('Applied filters:', filters)
     // Here you would typically update the table data based on the filters
     // For now, we'll just log the filters
+  }
+
+  function handleTokenSelect(symbol: string) {
+    selectedToken.value = symbol
   }
 </script>

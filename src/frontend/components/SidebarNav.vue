@@ -53,7 +53,7 @@
       hr?: boolean
     }> = [
       { label: 'Swap', icon: 'eos-icons:compass', to: '/' },
-      { label: 'Portfolio', icon: 'icon-park-solid:game-ps', to: '/profile' },
+      { label: 'Portfolio', icon: 'heroicons:chart-bar', to: '/tokens' },
       { label: 'Markets', icon: 'subway:coin', to: '/tokens' },
       { label: 'History', icon: 'tabler:activity', to: '/activity' },
     ]
