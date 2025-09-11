@@ -1,0 +1,19 @@
+[Unit]
+Description=Ionic Swap Node.js Server
+After=network.target
+
+[Service]
+User=bizkit
+WorkingDirectory=/var/www/ionicswap.com
+ExecStart=/usr/bin/node /var/www/ionicswap.com/server/index.mjs
+Environment=NITRO_PORT=3001
+Environment=NODE_ENV=production
+Environment=NUXT_PUBLIC_GA_MEASUREMENT_ID=G-9M4CYZTMME
+Environment=NUXT_PUBLIC_GTM_ID=GTM-MGJCRHQ3
+Environment=NUXT_PUBLIC_CLARITY_PROJECT_ID=stqeko2g9v
+Environment=NUXT_PUBLIC_HF_TOKEN=
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

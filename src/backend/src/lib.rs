@@ -4,6 +4,7 @@ pub mod solana;
 pub mod evm;
 pub mod icp;
 pub mod types;
+pub mod tokens;
 
 use candid::{CandidType, Deserialize};
 use ic_cdk::{init, post_upgrade, update, query};
@@ -190,6 +191,92 @@ pub async fn get_canister_icrc_balances() -> Result<String, String> {
     icp::get_canister_icrc_balances().await
 }
 
+
+// ============================================================================
+// TOKEN REGISTRY OPERATIONS
+// ============================================================================
+
+/// Get all supported tokens with their chain deployments
+#[query]
+pub fn get_all_supported_tokens() -> Result<String, String> {
+    let tokens = tokens::get_all_tokens();
+    serde_json::to_string(&tokens)
+        .map_err(|e| format!("Failed to serialize tokens: {}", e))
+}
+
+/// Get token information by symbol
+#[query]
+pub fn get_token_info(symbol: String) -> Result<String, String> {
+    match tokens::get_token_info(&symbol) {
+        Some(token) => serde_json::to_string(&token)
+            .map_err(|e| format!("Failed to serialize token info: {}", e)),
+        None => Err(format!("Token {} not found", symbol))
+    }
+}
+
+/// Get tokens deployed on specific chain
+#[query]
+pub fn get_tokens_by_chain(chain: String) -> Result<String, String> {
+    let chain_type = match chain.to_lowercase().as_str() {
+        "evm" => tokens::ChainType::EVM,
+        "solana" => tokens::ChainType::Solana,
+        "icp" => tokens::ChainType::ICP,
+        _ => return Err("Invalid chain type. Use: evm, solana, or icp".to_string()),
+    };
+    
+    let tokens = tokens::get_tokens_by_chain(&chain_type);
+    serde_json::to_string(&tokens)
+        .map_err(|e| format!("Failed to serialize tokens: {}", e))
+}
+
+/// Get token address on specific chain
+#[query]
+pub fn get_token_address(symbol: String, chain: String) -> Result<String, String> {
+    let chain_type = match chain.to_lowercase().as_str() {
+        "evm" => tokens::ChainType::EVM,
+        "solana" => tokens::ChainType::Solana,
+        "icp" => tokens::ChainType::ICP,
+        _ => return Err("Invalid chain type. Use: evm, solana, or icp".to_string()),
+    };
+    
+    match tokens::get_token_address(&symbol, &chain_type) {
+        Some(address) => Ok(address),
+        None => Err(format!("Token {} not deployed on {}", symbol, chain))
+    }
+}
+
+/// Check if token is deployed on chain
+#[query]
+pub fn is_token_deployed(symbol: String, chain: String) -> Result<bool, String> {
+    let chain_type = match chain.to_lowercase().as_str() {
+        "evm" => tokens::ChainType::EVM,
+        "solana" => tokens::ChainType::Solana,
+        "icp" => tokens::ChainType::ICP,
+        _ => return Err("Invalid chain type. Use: evm, solana, or icp".to_string()),
+    };
+    
+    Ok(tokens::is_token_deployed(&symbol, &chain_type))
+}
+
+/// Get token registry statistics
+#[query]
+pub fn get_token_registry_stats() -> Result<String, String> {
+    let stats = tokens::get_registry_stats();
+    serde_json::to_string(&stats)
+        .map_err(|e| format!("Failed to serialize stats: {}", e))
+}
+
+/// Export complete token registry (admin function)
+#[query]
+pub fn export_token_registry() -> Result<String, String> {
+    tokens::export_token_registry()
+}
+
+/// Reload token registry from chain definitions (admin function)
+#[update]
+pub fn reload_token_registry() -> Result<String, String> {
+    tokens::reload_token_registry()
+}
 
 // ============================================================================
 // UTILITY FUNCTIONS

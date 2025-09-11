@@ -137,3 +137,12 @@ artifacts/
 
 # Cargo
 target/
+
+# Nuxt
+.nuxt/
+dist/
+node_modules/
+/src/frontend/node_modules/
+/src/frontend/.nuxt/
+/src/frontend/.output/
+/src/frontend/scripts/deploy-production.sh

@@ -1,0 +1,9 @@
+# robots.txt for ionicswap.com
+User-Agent: *
+Disallow:
+
+# Allow all public pages
+Allow: /
+
+# Sitemap
+Sitemap: https://ionicswap.com/api/sitemap.xml
