@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+  <div class="p-4">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Token Prices</h3>
       <UButton
