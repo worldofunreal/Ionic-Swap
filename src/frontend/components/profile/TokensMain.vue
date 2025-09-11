@@ -84,7 +84,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr class="border-b border-gray-200 dark:border-gray-700 h-px"/>
+          <tr class="border-b border-gray-200 dark:border-gray-700 h-px" />
           <tr
             v-for="token in tokens"
             :key="token.id"
@@ -147,7 +147,7 @@
       @click="isDrawerOpen = false"
     >
       <!-- Backdrop -->
-      <div class="absolute inset-0 bg-black/50"/>
+      <div class="absolute inset-0 bg-black/50" />
 
       <!-- Drawer Content -->
       <div
@@ -159,7 +159,7 @@
       >
         <!-- Drawer Handle -->
         <div class="flex justify-center pt-3 pb-2 flex-shrink-0">
-          <div class="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"/>
+          <div class="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
         </div>
 
         <!-- Drawer Header -->

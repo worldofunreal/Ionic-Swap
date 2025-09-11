@@ -2,104 +2,140 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
-export interface EvmSwapRequest {
-  'min_amount_out' : bigint,
-  'deadline' : bigint,
-  'amount_out' : bigint,
-  'user_address' : string,
-  'token_in_mint' : string,
-  'amount_in' : bigint,
-  'token_out_mint' : string,
+export interface CompactProfile {
+  'id' : Principal,
+  'bio' : [] | [string],
+  'username' : string,
+  'avatar_url' : [] | [string],
+  'is_following_me' : boolean,
+  'display_name' : [] | [string],
+  'am_following_them' : boolean,
+  'is_verified' : boolean,
 }
-export interface EvmSwapResult {
-  'token_in_amount' : bigint,
-  'permit_tx_hash' : string,
-  'swap_tx_hash' : string,
-  'token_out_amount' : bigint,
+export type Error = { 'InvalidInput' : string } |
+  { 'UsernameTaken' : null } |
+  { 'Unauthorized' : null } |
+  { 'InternalError' : string } |
+  { 'UserNotFound' : null };
+export interface HttpRequest {
+  'url' : string,
+  'method' : string,
+  'body' : Uint8Array | number[],
+  'headers' : Array<[string, string]>,
 }
-export interface IcpPermitRequest {
-  'r' : string,
-  's' : string,
-  'v' : string,
-  'token' : string,
-  'owner' : string,
-  'deadline' : string,
-  'amount' : string,
-  'spender' : string,
+export interface HttpResponse {
+  'body' : Uint8Array | number[],
+  'headers' : Array<[string, string]>,
+  'status_code' : number,
 }
-export interface InitArg { 'solana_network' : [] | [SolanaNetwork] }
-export interface PermitRequest {
-  'r' : string,
-  's' : string,
-  'v' : string,
-  'token' : string,
-  'value' : string,
-  'owner' : string,
-  'deadline' : string,
-  'spender' : string,
+export interface PersonalUser {
+  'id' : Principal,
+  'bio' : [] | [string],
+  'updated_at' : bigint,
+  'username' : string,
+  'evm_address' : [] | [string],
+  'bitcoin_address' : [] | [string],
+  'banner_url' : [] | [string],
+  'avatar_url' : [] | [string],
+  'following_count' : number,
+  'is_following_me' : boolean,
+  'created_at' : bigint,
+  'website' : [] | [string],
+  'display_name' : [] | [string],
+  'am_following_them' : boolean,
+  'is_verified' : boolean,
+  'solana_address' : [] | [string],
+  'followers_count' : number,
+  'location' : [] | [string],
 }
-export interface PriceUpdateResult {
-  'total_sources' : number,
-  'pairs_updated' : Array<TradingPair>,
-  'successful_sources' : number,
-  'timestamp' : bigint,
+export interface User {
+  'id' : Principal,
+  'bio' : [] | [string],
+  'updated_at' : bigint,
+  'username' : string,
+  'evm_address' : [] | [string],
+  'bitcoin_address' : [] | [string],
+  'banner_url' : [] | [string],
+  'avatar_url' : [] | [string],
+  'following_count' : number,
+  'created_at' : bigint,
+  'website' : [] | [string],
+  'display_name' : [] | [string],
+  'is_verified' : boolean,
+  'solana_address' : [] | [string],
+  'followers_count' : number,
+  'location' : [] | [string],
 }
-export type Result = { 'Ok' : string } |
-  { 'Err' : string };
-export type Result_1 = { 'Ok' : TradingPair } |
-  { 'Err' : string };
-export type Result_2 = { 'Ok' : EvmSwapResult } |
-  { 'Err' : string };
-export type Result_3 = { 'Ok' : SwapResult } |
-  { 'Err' : string };
-export type Result_4 = { 'Ok' : PriceUpdateResult } |
-  { 'Err' : string };
-export type SolanaNetwork = { 'Mainnet' : null } |
-  { 'Testnet' : null } |
-  { 'Devnet' : null };
-export interface SwapRequest {
-  'min_amount_out' : bigint,
-  'deadline' : bigint,
-  'amount_out' : bigint,
-  'user_token_account' : string,
-  'token_out_mint' : string,
-}
-export interface SwapResult {
-  'delegation_tx_hash' : string,
-  'token_in_amount' : bigint,
-  'swap_tx_hash' : string,
-  'token_out_amount' : bigint,
-}
-export interface TradingPair {
-  'base' : string,
-  'quote' : string,
-  'last_updated' : bigint,
-  'sources_count' : number,
-  'price' : number,
+export type UserResult = { 'Ok' : User } |
+  { 'Err' : Error };
+export interface UserUpdate {
+  'bio' : [] | [string],
+  'evm_address' : [] | [string],
+  'bitcoin_address' : [] | [string],
+  'banner_url' : [] | [string],
+  'avatar_url' : [] | [string],
+  'website' : [] | [string],
+  'display_name' : [] | [string],
+  'solana_address' : [] | [string],
+  'location' : [] | [string],
 }
 export interface _SERVICE {
-  'debug_test_external_apis' : ActorMethod<[], Result>,
-  'debug_wallet_verification' : ActorMethod<[], Result>,
-  'get_canister_ethereum_address' : ActorMethod<[], string>,
-  'get_canister_icrc_balances' : ActorMethod<[], Result>,
-  'get_canister_public_key' : ActorMethod<[], string>,
-  'get_current_prices' : ActorMethod<[], Result>,
-  'get_pair_price' : ActorMethod<[string], Result_1>,
-  'get_solana_token_balances' : ActorMethod<[], Result>,
-  'start_price_scheduler' : ActorMethod<[], Result>,
-  'stop_price_scheduler' : ActorMethod<[], Result>,
-  'submit_delegation_transaction' : ActorMethod<
-    [Uint8Array | number[]],
-    Result
+  'delete_account' : ActorMethod<[], { 'Ok' : null } | { 'Err' : Error }>,
+  'finalize_upload' : ActorMethod<
+    [string],
+    { 'Ok' : string } |
+      { 'Err' : Error }
   >,
-  'submit_gasless_permit' : ActorMethod<[PermitRequest], Result>,
-  'submit_icp_gasless_permit' : ActorMethod<[IcpPermitRequest], Result>,
-  'swap_evm' : ActorMethod<[PermitRequest, EvmSwapRequest], Result_2>,
-  'swap_solana' : ActorMethod<[Uint8Array | number[], SwapRequest], Result_3>,
-  'test_ed25519' : ActorMethod<[], Result>,
-  'test_secp256k1' : ActorMethod<[], Result>,
-  'test_simple_evm_transaction' : ActorMethod<[], Result>,
-  'update_prices' : ActorMethod<[], Result_4>,
+  'follow_user' : ActorMethod<[Principal], UserResult>,
+  'get_all_usernames' : ActorMethod<[], Array<string>>,
+  'get_followers' : ActorMethod<[Principal], Array<CompactProfile>>,
+  'get_following' : ActorMethod<[Principal], Array<CompactProfile>>,
+  'get_user' : ActorMethod<[Principal], UserResult>,
+  'get_user_by_username' : ActorMethod<[string], UserResult>,
+  'get_user_count' : ActorMethod<[], bigint>,
+  'get_user_personal' : ActorMethod<
+    [Principal, Principal],
+    { 'Ok' : PersonalUser } |
+      { 'Err' : Error }
+  >,
+  'http_request' : ActorMethod<[HttpRequest], HttpResponse>,
+  'init_upload' : ActorMethod<
+    [string, bigint, [] | [bigint], string],
+    { 'Ok' : null } |
+      { 'Err' : Error }
+  >,
+  'is_following' : ActorMethod<[Principal, Principal], boolean>,
+  'is_username_available' : ActorMethod<[string], boolean>,
+  'search_users' : ActorMethod<
+    [string, number],
+    { 'Ok' : Array<CompactProfile> } |
+      { 'Err' : Error }
+  >,
+  'search_users_personal' : ActorMethod<
+    [string, number, Principal],
+    { 'Ok' : Array<CompactProfile> } |
+      { 'Err' : Error }
+  >,
+  'signup' : ActorMethod<
+    [string, [] | [string], [] | [string], [] | [string]],
+    UserResult
+  >,
+  'store_chunk' : ActorMethod<
+    [bigint, Uint8Array | number[], string],
+    { 'Ok' : null } |
+      { 'Err' : Error }
+  >,
+  'unfollow_user' : ActorMethod<[Principal], UserResult>,
+  'update_avatar' : ActorMethod<[string], UserResult>,
+  'update_banner' : ActorMethod<[string], UserResult>,
+  'update_bio' : ActorMethod<[string], UserResult>,
+  'update_bitcoin_address' : ActorMethod<[string], UserResult>,
+  'update_display_name' : ActorMethod<[string], UserResult>,
+  'update_evm_address' : ActorMethod<[string], UserResult>,
+  'update_location' : ActorMethod<[string], UserResult>,
+  'update_profile' : ActorMethod<[UserUpdate], UserResult>,
+  'update_solana_address' : ActorMethod<[string], UserResult>,
+  'update_website' : ActorMethod<[string], UserResult>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

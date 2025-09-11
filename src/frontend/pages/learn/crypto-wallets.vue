@@ -832,9 +832,9 @@
                   >Security Level</span
                 >
                 <div class="flex space-x-1">
-                  <div class="w-3 h-3 bg-red-400 rounded"/>
-                  <div class="w-3 h-3 bg-yellow-400 rounded"/>
-                  <div class="w-3 h-3 bg-green-400 rounded"/>
+                  <div class="w-3 h-3 bg-red-400 rounded" />
+                  <div class="w-3 h-3 bg-yellow-400 rounded" />
+                  <div class="w-3 h-3 bg-green-400 rounded" />
                 </div>
               </div>
               <div class="flex justify-between items-center">
@@ -842,17 +842,17 @@
                   >Ease of Use</span
                 >
                 <div class="flex space-x-1">
-                  <div class="w-3 h-3 bg-green-400 rounded"/>
-                  <div class="w-3 h-3 bg-green-400 rounded"/>
-                  <div class="w-3 h-3 bg-yellow-400 rounded"/>
+                  <div class="w-3 h-3 bg-green-400 rounded" />
+                  <div class="w-3 h-3 bg-green-400 rounded" />
+                  <div class="w-3 h-3 bg-yellow-400 rounded" />
                 </div>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-gray-600 dark:text-gray-400">Cost</span>
                 <div class="flex space-x-1">
-                  <div class="w-3 h-3 bg-green-400 rounded"/>
-                  <div class="w-3 h-3 bg-green-400 rounded"/>
-                  <div class="w-3 h-3 bg-red-400 rounded"/>
+                  <div class="w-3 h-3 bg-green-400 rounded" />
+                  <div class="w-3 h-3 bg-green-400 rounded" />
+                  <div class="w-3 h-3 bg-red-400 rounded" />
                 </div>
               </div>
               <div class="text-xs text-gray-500 dark:text-gray-400 text-center">

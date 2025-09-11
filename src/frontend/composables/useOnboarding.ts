@@ -25,8 +25,6 @@ export const useOnboarding = () => {
     }
   }
 
-
-
   // Initialize onboarding state
   const initOnboarding = () => {
     if (import.meta.client) {
@@ -65,7 +63,8 @@ export const useOnboarding = () => {
               'Start by connecting your wallet to browse, buy, and sell NFTs securely using Internet Identity, MetaMask, Phantom, Plug, or Google.',
             position: 'bottom',
             onBeforeChange: async (_targetElement, direction) => {
-              if (direction !== 'forward') loginPanelElement.classList.add('hidden')
+              if (direction !== 'forward')
+                loginPanelElement.classList.add('hidden')
               return true
             },
           },
@@ -76,7 +75,8 @@ export const useOnboarding = () => {
             // position: 'bottom',
             disableInteraction: true,
             onBeforeChange: async (_targetElement, direction) => {
-              if (direction === 'forward') loginPanelElement.classList.remove('hidden')
+              if (direction === 'forward')
+                loginPanelElement.classList.remove('hidden')
               return true
             },
           },
@@ -218,7 +218,7 @@ export const useOnboarding = () => {
               helperLayer.addEventListener('mouseleave', forwardEventListeners)
               helperLayer.addEventListener('mousedown', forwardEventListeners)
               helperLayer.addEventListener('mouseup', forwardEventListeners)
-              
+
               // Update tour styles to match current theme
               updateTourStyles()
             }, 100)
@@ -294,13 +294,13 @@ export const useOnboarding = () => {
     if (savedTheme) {
       const themeColors = {
         emerald: '#10b981',
-        pink: '#ec4899', 
+        pink: '#ec4899',
         red: '#ef4444',
         orange: '#f97316',
         sky: '#0ea5e9',
         fuchsia: '#a855f7',
         purple: '#8b5cf6',
-        teal: '#14b8a6'
+        teal: '#14b8a6',
       }
       if (themeColors[savedTheme as keyof typeof themeColors]) {
         primaryColor = themeColors[savedTheme as keyof typeof themeColors]
@@ -319,7 +319,11 @@ export const useOnboarding = () => {
         button.style.setProperty('font-size', '14px', 'important')
         button.style.setProperty('font-weight', '500', 'important')
         button.style.setProperty('cursor', 'pointer', 'important')
-        button.style.setProperty('transition', 'all 0.2s ease-in-out', 'important')
+        button.style.setProperty(
+          'transition',
+          'all 0.2s ease-in-out',
+          'important'
+        )
       }
     })
 
@@ -335,7 +339,11 @@ export const useOnboarding = () => {
         button.style.setProperty('font-size', '12px', 'important')
         button.style.setProperty('font-weight', '500', 'important')
         button.style.setProperty('cursor', 'pointer', 'important')
-        button.style.setProperty('transition', 'all 0.2s ease-in-out', 'important')
+        button.style.setProperty(
+          'transition',
+          'all 0.2s ease-in-out',
+          'important'
+        )
         button.style.setProperty('display', 'flex', 'important')
         button.style.setProperty('align-items', 'center', 'important')
         button.style.setProperty('justify-content', 'center', 'important')
@@ -350,7 +358,7 @@ export const useOnboarding = () => {
       if (indicator instanceof HTMLElement) {
         const currentStep = introInstance.value?.getCurrentStep() || 0
         const isActive = index === currentStep
-        
+
         // Restore original styling
         indicator.style.setProperty('border-radius', '50%', 'important')
         indicator.style.setProperty('width', '12px', 'important')
@@ -358,9 +366,17 @@ export const useOnboarding = () => {
         indicator.style.setProperty('display', 'inline-block', 'important')
         indicator.style.setProperty('margin', '0 4px', 'important')
         indicator.style.setProperty('cursor', 'pointer', 'important')
-        indicator.style.setProperty('transition', 'all 0.2s ease-in-out', 'important')
-        indicator.style.setProperty('border', `2px solid ${primaryColor}`, 'important')
-        
+        indicator.style.setProperty(
+          'transition',
+          'all 0.2s ease-in-out',
+          'important'
+        )
+        indicator.style.setProperty(
+          'border',
+          `2px solid ${primaryColor}`,
+          'important'
+        )
+
         if (isActive) {
           indicator.style.setProperty('background', primaryColor, 'important')
           indicator.style.setProperty('opacity', '1', 'important')
@@ -375,7 +391,11 @@ export const useOnboarding = () => {
     const highlights = document.querySelectorAll('.introjs-helperLayer')
     highlights.forEach(highlight => {
       if (highlight instanceof HTMLElement) {
-        highlight.style.setProperty('box-shadow', `0 0 0 4px ${primaryColor}`, 'important')
+        highlight.style.setProperty(
+          'box-shadow',
+          `0 0 0 4px ${primaryColor}`,
+          'important'
+        )
         highlight.style.setProperty('border-radius', '8px', 'important')
         highlight.style.setProperty('opacity', '0.5', 'important')
       }
@@ -386,8 +406,15 @@ export const useOnboarding = () => {
     tooltips.forEach(tooltip => {
       if (tooltip instanceof HTMLElement) {
         const tooltipClass = tooltip.className
-        if (tooltipClass.includes('welcome-tooltip') || tooltipClass.includes('registration-tooltip')) {
-          tooltip.style.setProperty('background', `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor} 100%)`, 'important')
+        if (
+          tooltipClass.includes('welcome-tooltip') ||
+          tooltipClass.includes('registration-tooltip')
+        ) {
+          tooltip.style.setProperty(
+            'background',
+            `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor} 100%)`,
+            'important'
+          )
           tooltip.style.setProperty('color', 'white', 'important')
         }
       }

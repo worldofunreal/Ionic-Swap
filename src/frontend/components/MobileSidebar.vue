@@ -11,11 +11,7 @@
       class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800"
     >
       <div class="flex items-center gap-2">
-        <img
-          src="/logo.svg"
-          alt="Ionic Swap Logo"
-          class="h-8 w-8"
-        >
+        <img src="/logo.svg" alt="Ionic Swap Logo" class="h-8 w-8" >
         <img
           src="/logo-text.svg"
           alt="Ionic Swap Text Logo"

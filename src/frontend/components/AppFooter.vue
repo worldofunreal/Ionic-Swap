@@ -58,9 +58,7 @@
         </NuxtLink>
         <span class="hidden md:inline">|</span>
         <!-- Socials -->
-        <a
-          href="mailto:support@ionicswap.com"
-          class="hover:text-primary"
+        <a href="mailto:support@ionicswap.com" class="hover:text-primary"
           ><UIcon name="material-symbols:mail-rounded" class="text-lg"
         /></a>
         <a

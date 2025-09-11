@@ -10,7 +10,8 @@
         <p
           class="text-xl text-gray-600 text-center dark:text-gray-500 max-w-3xl mx-auto"
         >
-          Discover the diverse range of tokens available for cross-chain swapping on Ionic Swap.
+          Discover the diverse range of tokens available for cross-chain
+          swapping on Ionic Swap.
         </p>
       </div>
 
@@ -21,7 +22,11 @@
           class="w-full md:w-40 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
         >
           <option value="All">All Categories</option>
-          <option v-for="category in uniqueCategories" :key="category" :value="category">
+          <option
+            v-for="category in uniqueCategories"
+            :key="category"
+            :value="category"
+          >
             {{ category }}
           </option>
         </select>
@@ -82,30 +87,41 @@
                   <h3 class="text-xl font-bold text-gray-900 dark:text-white">
                     {{ token.name }}
                   </h3>
-                  <span class="text-sm text-gray-500 dark:text-gray-400 font-mono">
+                  <span
+                    class="text-sm text-gray-500 dark:text-gray-400 font-mono"
+                  >
                     {{ token.symbol }}
                   </span>
                 </div>
                 <p class="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
                   {{ token.description }}
                 </p>
-                
+
                 <!-- Price Info -->
                 <div class="flex items-center justify-between mb-4">
                   <div>
-                    <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <p
+                      class="text-lg font-semibold text-gray-900 dark:text-white"
+                    >
                       ${{ token.price.toFixed(2) }}
                     </p>
                     <p
                       class="text-sm font-medium"
-                      :class="token.change24h >= 0 ? 'text-green-500' : 'text-red-500'"
+                      :class="
+                        token.change24h >= 0 ? 'text-green-500' : 'text-red-500'
+                      "
                     >
-                      {{ token.change24h >= 0 ? '+' : '' }}{{ token.change24h.toFixed(2) }}%
+                      {{ token.change24h >= 0 ? '+' : ''
+                      }}{{ token.change24h.toFixed(2) }}%
                     </p>
                   </div>
                   <div class="text-right">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Market Cap</p>
-                    <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      Market Cap
+                    </p>
+                    <p
+                      class="text-sm font-semibold text-gray-900 dark:text-white"
+                    >
                       ${{ token.marketCap }}
                     </p>
                   </div>
@@ -123,7 +139,7 @@
                     {{ tech }}
                   </UBadge>
                 </div>
-                
+
                 <!-- Action Button -->
                 <UButton
                   color="primary"
@@ -147,196 +163,215 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useColorTheme } from '@/composables/useColorTheme'
+  import { ref, computed } from 'vue'
+  import { useColorTheme } from '@/composables/useColorTheme'
 
-const { currentTheme } = useColorTheme()
+  const { currentTheme } = useColorTheme()
 
-const selectedCategory = ref('All')
-const selectedChain = ref('All')
-const searchQuery = ref('')
+  const selectedCategory = ref('All')
+  const selectedChain = ref('All')
+  const searchQuery = ref('')
 
-const tokens = [
-  {
-    id: 'bitcoin',
-    name: 'Bitcoin',
-    symbol: 'BTC',
-    category: 'Store of Value',
-    description: 'The original cryptocurrency and digital gold. Bitcoin serves as a decentralized store of value and medium of exchange.',
-    image: '/icons/btc.svg',
-    price: 65000,
-    change24h: 1.25,
-    marketCap: '1.2T',
-    chains: ['EVM', 'ICP'],
-    tech: ['PoW', 'Store of Value', 'Digital Gold']
-  },
-  {
-    id: 'ethereum',
-    name: 'Ethereum',
-    symbol: 'ETH',
-    category: 'Smart Contracts',
-    description: 'The leading smart contract platform enabling decentralized applications, DeFi, and NFT ecosystems.',
-    image: '/icons/eth.svg',
-    price: 3500,
-    change24h: -0.75,
-    marketCap: '420B',
-    chains: ['EVM', 'ICP'],
-    tech: ['Smart Contracts', 'DeFi', 'PoS']
-  },
-  {
-    id: 'solana',
-    name: 'Solana',
-    symbol: 'SOL',
-    category: 'High Performance',
-    description: 'High-speed blockchain platform designed for decentralized apps and crypto-currencies with sub-second finality.',
-    image: '/icons/sol.svg',
-    price: 150,
-    change24h: -1.50,
-    marketCap: '65B',
-    chains: ['Solana', 'ICP'],
-    tech: ['High Speed', 'Low Fees', 'PoH']
-  },
-  {
-    id: 'usdc',
-    name: 'USD Coin',
-    symbol: 'USDC',
-    category: 'Stablecoin',
-    description: 'Fully-backed US dollar stablecoin providing stability and liquidity in the crypto ecosystem.',
-    image: '/icons/usdc.svg',
-    price: 1.0,
-    change24h: 0.00,
-    marketCap: '28B',
-    chains: ['EVM', 'Solana', 'ICP'],
-    tech: ['Stablecoin', 'USD Backed', 'Regulated']
-  },
-  {
-    id: 'usdt',
-    name: 'Tether',
-    symbol: 'USDT',
-    category: 'Stablecoin',
-    description: 'The most widely adopted stablecoin, providing stability and liquidity across multiple blockchain networks.',
-    image: '/icons/usdt.svg',
-    price: 1.0,
-    change24h: 0.01,
-    marketCap: '95B',
-    chains: ['EVM', 'ICP'],
-    tech: ['Stablecoin', 'Liquidity', 'Cross-Chain']
-  },
-  {
-    id: 'icp',
-    name: 'Internet Computer',
-    symbol: 'ICP',
-    category: 'Web3 Infrastructure',
-    description: 'Blockchain computer that extends the internet with smart contract functionality and web speed.',
-    image: '/icons/icp.svg',
-    price: 12.0,
-    change24h: 4.50,
-    marketCap: '5.5B',
-    chains: ['ICP'],
-    tech: ['Web3', 'Smart Contracts', 'Chain Key']
-  },
-  {
-    id: 'bnb',
-    name: 'BNB',
-    symbol: 'BNB',
-    category: 'Exchange Token',
-    description: 'Binance Coin powers the Binance ecosystem and provides utility across multiple blockchain networks.',
-    image: '/icons/bnb.svg',
-    price: 600,
-    change24h: 0.90,
-    marketCap: '90B',
-    chains: ['EVM', 'ICP'],
-    tech: ['Exchange', 'Utility', 'BSC']
-  },
-  {
-    id: 'xrp',
-    name: 'XRP',
-    symbol: 'XRP',
-    category: 'Payment',
-    description: 'Digital asset built for payments, enabling fast and low-cost cross-border transactions.',
-    image: '/icons/xrp.svg',
-    price: 0.5,
-    change24h: 2.10,
-    marketCap: '28B',
-    chains: ['EVM', 'ICP'],
-    tech: ['Payments', 'Cross-Border', 'Fast']
-  },
-  {
-    id: 'doge',
-    name: 'Dogecoin',
-    symbol: 'DOGE',
-    category: 'Meme Coin',
-    description: 'The original meme cryptocurrency with a strong community and growing utility in payments.',
-    image: '/icons/doge.svg',
-    price: 0.15,
-    change24h: 3.40,
-    marketCap: '21B',
-    chains: ['EVM', 'ICP'],
-    tech: ['Meme', 'Community', 'Payments']
-  }
-]
+  const tokens = [
+    {
+      id: 'bitcoin',
+      name: 'Bitcoin',
+      symbol: 'BTC',
+      category: 'Store of Value',
+      description:
+        'The original cryptocurrency and digital gold. Bitcoin serves as a decentralized store of value and medium of exchange.',
+      image: '/icons/btc.svg',
+      price: 65000,
+      change24h: 1.25,
+      marketCap: '1.2T',
+      chains: ['EVM', 'ICP'],
+      tech: ['PoW', 'Store of Value', 'Digital Gold'],
+    },
+    {
+      id: 'ethereum',
+      name: 'Ethereum',
+      symbol: 'ETH',
+      category: 'Smart Contracts',
+      description:
+        'The leading smart contract platform enabling decentralized applications, DeFi, and NFT ecosystems.',
+      image: '/icons/eth.svg',
+      price: 3500,
+      change24h: -0.75,
+      marketCap: '420B',
+      chains: ['EVM', 'ICP'],
+      tech: ['Smart Contracts', 'DeFi', 'PoS'],
+    },
+    {
+      id: 'solana',
+      name: 'Solana',
+      symbol: 'SOL',
+      category: 'High Performance',
+      description:
+        'High-speed blockchain platform designed for decentralized apps and crypto-currencies with sub-second finality.',
+      image: '/icons/sol.svg',
+      price: 150,
+      change24h: -1.5,
+      marketCap: '65B',
+      chains: ['Solana', 'ICP'],
+      tech: ['High Speed', 'Low Fees', 'PoH'],
+    },
+    {
+      id: 'usdc',
+      name: 'USD Coin',
+      symbol: 'USDC',
+      category: 'Stablecoin',
+      description:
+        'Fully-backed US dollar stablecoin providing stability and liquidity in the crypto ecosystem.',
+      image: '/icons/usdc.svg',
+      price: 1.0,
+      change24h: 0.0,
+      marketCap: '28B',
+      chains: ['EVM', 'Solana', 'ICP'],
+      tech: ['Stablecoin', 'USD Backed', 'Regulated'],
+    },
+    {
+      id: 'usdt',
+      name: 'Tether',
+      symbol: 'USDT',
+      category: 'Stablecoin',
+      description:
+        'The most widely adopted stablecoin, providing stability and liquidity across multiple blockchain networks.',
+      image: '/icons/usdt.svg',
+      price: 1.0,
+      change24h: 0.01,
+      marketCap: '95B',
+      chains: ['EVM', 'ICP'],
+      tech: ['Stablecoin', 'Liquidity', 'Cross-Chain'],
+    },
+    {
+      id: 'icp',
+      name: 'Internet Computer',
+      symbol: 'ICP',
+      category: 'Web3 Infrastructure',
+      description:
+        'Blockchain computer that extends the internet with smart contract functionality and web speed.',
+      image: '/icons/icp.svg',
+      price: 12.0,
+      change24h: 4.5,
+      marketCap: '5.5B',
+      chains: ['ICP'],
+      tech: ['Web3', 'Smart Contracts', 'Chain Key'],
+    },
+    {
+      id: 'bnb',
+      name: 'BNB',
+      symbol: 'BNB',
+      category: 'Exchange Token',
+      description:
+        'Binance Coin powers the Binance ecosystem and provides utility across multiple blockchain networks.',
+      image: '/icons/bnb.svg',
+      price: 600,
+      change24h: 0.9,
+      marketCap: '90B',
+      chains: ['EVM', 'ICP'],
+      tech: ['Exchange', 'Utility', 'BSC'],
+    },
+    {
+      id: 'xrp',
+      name: 'XRP',
+      symbol: 'XRP',
+      category: 'Payment',
+      description:
+        'Digital asset built for payments, enabling fast and low-cost cross-border transactions.',
+      image: '/icons/xrp.svg',
+      price: 0.5,
+      change24h: 2.1,
+      marketCap: '28B',
+      chains: ['EVM', 'ICP'],
+      tech: ['Payments', 'Cross-Border', 'Fast'],
+    },
+    {
+      id: 'doge',
+      name: 'Dogecoin',
+      symbol: 'DOGE',
+      category: 'Meme Coin',
+      description:
+        'The original meme cryptocurrency with a strong community and growing utility in payments.',
+      image: '/icons/doge.svg',
+      price: 0.15,
+      change24h: 3.4,
+      marketCap: '21B',
+      chains: ['EVM', 'ICP'],
+      tech: ['Meme', 'Community', 'Payments'],
+    },
+  ]
 
-const uniqueCategories = computed(() => {
-  const categories = new Set(tokens.map(token => token.category))
-  return Array.from(categories).sort()
-})
-
-const uniqueChains = computed(() => {
-  const chains = new Set(tokens.flatMap(token => token.chains))
-  return Array.from(chains).sort()
-})
-
-const filteredTokens = computed(() => {
-  return tokens.filter(token => {
-    const matchesCategory = selectedCategory.value === 'All' || token.category === selectedCategory.value
-    const matchesChain = selectedChain.value === 'All' || token.chains.includes(selectedChain.value)
-    const matchesSearch = searchQuery.value === '' || 
-      token.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      token.symbol.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      token.description.toLowerCase().includes(searchQuery.value.toLowerCase())
-    
-    return matchesCategory && matchesChain && matchesSearch
+  const uniqueCategories = computed(() => {
+    const categories = new Set(tokens.map(token => token.category))
+    return Array.from(categories).sort()
   })
-})
 
-const swapToken = (token: any) => {
-  // Navigate to swap page with pre-selected token
-  navigateTo(`/?from=${token.symbol}`)
-}
+  const uniqueChains = computed(() => {
+    const chains = new Set(tokens.flatMap(token => token.chains))
+    return Array.from(chains).sort()
+  })
 
-useHead({
-  title: 'Token Showcase - Ionic Swap',
-  meta: [
-    {
-      name: 'description',
-      content: 'Discover the diverse range of tokens available for cross-chain swapping on Ionic Swap. Explore Bitcoin, Ethereum, Solana, and more.',
-    },
-    { property: 'og:title', content: 'Token Showcase - Ionic Swap' },
-    {
-      property: 'og:description',
-      content: 'Discover the diverse range of tokens available for cross-chain swapping on Ionic Swap.',
-    },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:url', content: 'https://ionicswap.com/token-showcase' },
-    { property: 'og:image', content: '/logo.svg' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'Token Showcase - Ionic Swap' },
-    {
-      name: 'twitter:description',
-      content: 'Discover the diverse range of tokens available for cross-chain swapping on Ionic Swap.',
-    },
-    { name: 'twitter:image', content: '/logo.svg' },
-  ],
-  link: [{ rel: 'canonical', href: 'https://ionicswap.com/token-showcase' }],
-})
+  const filteredTokens = computed(() => {
+    return tokens.filter(token => {
+      const matchesCategory =
+        selectedCategory.value === 'All' ||
+        token.category === selectedCategory.value
+      const matchesChain =
+        selectedChain.value === 'All' ||
+        token.chains.includes(selectedChain.value)
+      const matchesSearch =
+        searchQuery.value === '' ||
+        token.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        token.symbol.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        token.description
+          .toLowerCase()
+          .includes(searchQuery.value.toLowerCase())
+
+      return matchesCategory && matchesChain && matchesSearch
+    })
+  })
+
+  const swapToken = (token: any) => {
+    // Navigate to swap page with pre-selected token
+    navigateTo(`/?from=${token.symbol}`)
+  }
+
+  useHead({
+    title: 'Token Showcase - Ionic Swap',
+    meta: [
+      {
+        name: 'description',
+        content:
+          'Discover the diverse range of tokens available for cross-chain swapping on Ionic Swap. Explore Bitcoin, Ethereum, Solana, and more.',
+      },
+      { property: 'og:title', content: 'Token Showcase - Ionic Swap' },
+      {
+        property: 'og:description',
+        content:
+          'Discover the diverse range of tokens available for cross-chain swapping on Ionic Swap.',
+      },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:url', content: 'https://ionicswap.com/token-showcase' },
+      { property: 'og:image', content: '/logo.svg' },
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:title', content: 'Token Showcase - Ionic Swap' },
+      {
+        name: 'twitter:description',
+        content:
+          'Discover the diverse range of tokens available for cross-chain swapping on Ionic Swap.',
+      },
+      { name: 'twitter:image', content: '/logo.svg' },
+    ],
+    link: [{ rel: 'canonical', href: 'https://ionicswap.com/token-showcase' }],
+  })
 </script>
 
 <style scoped>
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 </style>

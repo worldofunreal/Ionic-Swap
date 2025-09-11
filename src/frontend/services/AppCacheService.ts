@@ -29,7 +29,7 @@ class AppCacheService {
   // Profile cache storage
   private profileCache = new Map<string, ProfileCache>()
   private sessionCache: SessionCache | null = null
-  
+
   // Cache settings
   private profileCacheExpiryTime = 5 * 60 * 1000 // 5 minutes
   private sessionCacheExpiryTime = 24 * 60 * 60 * 1000 // 24 hours
@@ -47,7 +47,7 @@ class AppCacheService {
   // Save session to localStorage
   private saveSessionToStorage(session: SessionCache): void {
     if (typeof window === 'undefined') return
-    
+
     try {
       localStorage.setItem('nftropoly_session', JSON.stringify(session))
     } catch (error) {
@@ -58,7 +58,7 @@ class AppCacheService {
   // Load session from localStorage
   private loadSessionFromStorage(): void {
     if (typeof window === 'undefined') return
-    
+
     try {
       const stored = localStorage.getItem('nftropoly_session')
       if (stored) {
@@ -96,9 +96,9 @@ class AppCacheService {
       canisterInitialized: false,
       timestamp: now,
       expiresAt: now + this.sessionCacheExpiryTime,
-      ...sessionData
+      ...sessionData,
     }
-    
+
     this.saveSessionToStorage(this.sessionCache)
     console.log('Session saved to cache and localStorage')
   }
@@ -128,7 +128,10 @@ class AppCacheService {
 
   // ===== PROFILE CACHE MANAGEMENT =====
 
-  private getCacheKey(identifier: string, type: 'username' | 'principal' = 'username'): string {
+  private getCacheKey(
+    identifier: string,
+    type: 'username' | 'principal' = 'username'
+  ): string {
     return `${type}:${identifier}`
   }
 
@@ -145,19 +148,19 @@ class AppCacheService {
     this.profileCache.set(key, {
       data,
       timestamp: now,
-      expiresAt: now + this.profileCacheExpiryTime
+      expiresAt: now + this.profileCacheExpiryTime,
     })
   }
 
   private getCache(key: string): ProfileCache | null {
     const cache = this.profileCache.get(key)
     if (!cache) return null
-    
+
     if (!this.isCacheValid(cache)) {
       this.profileCache.delete(key)
       return null
     }
-    
+
     return cache
   }
 
@@ -166,30 +169,40 @@ class AppCacheService {
   }
 
   // Public profile cache methods
-  getCachedProfile(identifier: string, type: 'username' | 'principal' = 'username'): User | null {
+  getCachedProfile(
+    identifier: string,
+    type: 'username' | 'principal' = 'username'
+  ): User | null {
     const cacheKey = this.getCacheKey(identifier, type)
     const cached = this.getCache(cacheKey)
-    
+
     if (cached) {
       console.log(`Returning cached profile for ${type}:`, identifier)
       return cached.data
     }
-    
+
     return null
   }
 
-  setCachedProfile(identifier: string, data: User, type: 'username' | 'principal' = 'username'): void {
+  setCachedProfile(
+    identifier: string,
+    data: User,
+    type: 'username' | 'principal' = 'username'
+  ): void {
     const cacheKey = this.getCacheKey(identifier, type)
     this.setCache(cacheKey, data)
     console.log(`Cached profile for ${type}:`, identifier)
   }
 
-  isProfileStale(identifier: string, type: 'username' | 'principal' = 'username'): boolean {
+  isProfileStale(
+    identifier: string,
+    type: 'username' | 'principal' = 'username'
+  ): boolean {
     const cacheKey = this.getCacheKey(identifier, type)
     const cached = this.getCache(cacheKey)
-    
+
     if (!cached) return true
-    
+
     return this.isCacheStale(cached)
   }
 
@@ -199,13 +212,16 @@ class AppCacheService {
       const principalKey = this.getCacheKey(user.id.toText(), 'principal')
       this.profileCache.delete(principalKey)
     }
-    
+
     if (user.username) {
       const usernameKey = this.getCacheKey(user.username, 'username')
       this.profileCache.delete(usernameKey)
     }
-    
-    console.log('Invalidated cache for user:', user.username || user.id?.toText())
+
+    console.log(
+      'Invalidated cache for user:',
+      user.username || user.id?.toText()
+    )
   }
 
   // ===== GENERAL CACHE MANAGEMENT =====
@@ -216,7 +232,7 @@ class AppCacheService {
     console.log('All app cache cleared')
   }
 
-  getCacheStats(): { 
+  getCacheStats(): {
     profileSize: number
     profileKeys: string[]
     hasSession: boolean
@@ -226,17 +242,20 @@ class AppCacheService {
       profileSize: this.profileCache.size,
       profileKeys: Array.from(this.profileCache.keys()),
       hasSession: this.sessionCache !== null,
-      sessionExpiresAt: this.sessionCache?.expiresAt
+      sessionExpiresAt: this.sessionCache?.expiresAt,
     }
   }
 
   // Get all cached profiles (for debugging)
-  getAllCachedProfiles(): (User)[] {
+  getAllCachedProfiles(): User[] {
     return Array.from(this.profileCache.values()).map(cache => cache.data)
   }
 
   // Check if a profile is cached
-  isProfileCached(identifier: string, type: 'username' | 'principal' = 'username'): boolean {
+  isProfileCached(
+    identifier: string,
+    type: 'username' | 'principal' = 'username'
+  ): boolean {
     const cacheKey = this.getCacheKey(identifier, type)
     return this.getCache(cacheKey) !== null
   }
@@ -264,7 +283,7 @@ class AppCacheService {
       evmAddress: this.sessionCache?.evmAddress || '',
       solAddress: this.sessionCache?.solAddress || '',
       btcAddress: this.sessionCache?.btcAddress || '',
-      nativeWallet: this.sessionCache?.nativeWallet || ''
+      nativeWallet: this.sessionCache?.nativeWallet || '',
     }
   }
 }

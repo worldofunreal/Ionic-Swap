@@ -52,8 +52,9 @@
             Welcome to Decentralized Finance
           </h2>
           <p class="text-lg opacity-90">
-            DeFi represents a new paradigm in finance, where traditional financial services 
-            are recreated on blockchain networks without intermediaries.
+            DeFi represents a new paradigm in finance, where traditional
+            financial services are recreated on blockchain networks without
+            intermediaries.
           </p>
         </div>
       </div>
@@ -65,38 +66,63 @@
           <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             What is Decentralized Finance (DeFi)?
           </h2>
-          
+
           <div class="prose prose-lg dark:prose-invert max-w-none">
             <p class="text-gray-600 dark:text-gray-400 mb-6">
-              DeFi is a financial system built on blockchain technology that operates without 
-              traditional financial intermediaries like banks, brokers, or exchanges. It uses 
-              smart contracts to create financial instruments and services.
+              DeFi is a financial system built on blockchain technology that
+              operates without traditional financial intermediaries like banks,
+              brokers, or exchanges. It uses smart contracts to create financial
+              instruments and services.
             </p>
 
-            <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Key Principles</h3>
+            <h3
+              class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+            >
+              Key Principles
+            </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Decentralization</h4>
+              <div
+                class="p-6 rounded-lg border border-gray-200 dark:border-gray-700"
+              >
+                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">
+                  Decentralization
+                </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
-                  No single entity controls the system. Decisions are made through consensus mechanisms.
+                  No single entity controls the system. Decisions are made
+                  through consensus mechanisms.
                 </p>
               </div>
-              <div class="p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Transparency</h4>
+              <div
+                class="p-6 rounded-lg border border-gray-200 dark:border-gray-700"
+              >
+                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">
+                  Transparency
+                </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
-                  All transactions and smart contract code are publicly verifiable on the blockchain.
+                  All transactions and smart contract code are publicly
+                  verifiable on the blockchain.
                 </p>
               </div>
-              <div class="p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Permissionless</h4>
+              <div
+                class="p-6 rounded-lg border border-gray-200 dark:border-gray-700"
+              >
+                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">
+                  Permissionless
+                </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
-                  Anyone can access DeFi services without approval from centralized authorities.
+                  Anyone can access DeFi services without approval from
+                  centralized authorities.
                 </p>
               </div>
-              <div class="p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Interoperability</h4>
+              <div
+                class="p-6 rounded-lg border border-gray-200 dark:border-gray-700"
+              >
+                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">
+                  Interoperability
+                </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
-                  Different DeFi protocols can work together to create complex financial products.
+                  Different DeFi protocols can work together to create complex
+                  financial products.
                 </p>
               </div>
             </div>
@@ -108,42 +134,78 @@
           <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             Common DeFi Services
           </h2>
-          
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="flex items-start gap-4">
-              <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center flex-shrink-0">
-                <UIcon name="i-heroicons-arrow-path" class="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              <div
+                class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center flex-shrink-0"
+              >
+                <UIcon
+                  name="i-heroicons-arrow-path"
+                  class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                />
               </div>
               <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Decentralized Exchanges (DEXs)</h3>
-                <p class="text-gray-600 dark:text-gray-400">Trade tokens directly with other users without intermediaries</p>
+                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
+                  Decentralized Exchanges (DEXs)
+                </h3>
+                <p class="text-gray-600 dark:text-gray-400">
+                  Trade tokens directly with other users without intermediaries
+                </p>
               </div>
             </div>
             <div class="flex items-start gap-4">
-              <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center flex-shrink-0">
-                <UIcon name="i-heroicons-banknotes" class="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              <div
+                class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center flex-shrink-0"
+              >
+                <UIcon
+                  name="i-heroicons-banknotes"
+                  class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                />
               </div>
               <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Lending & Borrowing</h3>
-                <p class="text-gray-600 dark:text-gray-400">Earn interest on deposits or borrow against collateral</p>
+                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
+                  Lending & Borrowing
+                </h3>
+                <p class="text-gray-600 dark:text-gray-400">
+                  Earn interest on deposits or borrow against collateral
+                </p>
               </div>
             </div>
             <div class="flex items-start gap-4">
-              <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center flex-shrink-0">
-                <UIcon name="i-heroicons-chart-bar" class="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              <div
+                class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center flex-shrink-0"
+              >
+                <UIcon
+                  name="i-heroicons-chart-bar"
+                  class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                />
               </div>
               <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Yield Farming</h3>
-                <p class="text-gray-600 dark:text-gray-400">Provide liquidity to earn rewards and trading fees</p>
+                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
+                  Yield Farming
+                </h3>
+                <p class="text-gray-600 dark:text-gray-400">
+                  Provide liquidity to earn rewards and trading fees
+                </p>
               </div>
             </div>
             <div class="flex items-start gap-4">
-              <div class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center flex-shrink-0">
-                <UIcon name="i-heroicons-shield-check" class="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              <div
+                class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center flex-shrink-0"
+              >
+                <UIcon
+                  name="i-heroicons-shield-check"
+                  class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                />
               </div>
               <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Insurance</h3>
-                <p class="text-gray-600 dark:text-gray-400">Protect against smart contract risks and protocol failures</p>
+                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
+                  Insurance
+                </h3>
+                <p class="text-gray-600 dark:text-gray-400">
+                  Protect against smart contract risks and protocol failures
+                </p>
               </div>
             </div>
           </div>
@@ -154,35 +216,69 @@
           <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             Liquidity and Automated Market Makers (AMMs)
           </h2>
-          
+
           <div class="prose prose-lg dark:prose-invert max-w-none">
             <p class="text-gray-600 dark:text-gray-400 mb-6">
-              Liquidity is the lifeblood of DeFi. Automated Market Makers (AMMs) use mathematical 
-              formulas to determine token prices based on supply and demand in liquidity pools.
+              Liquidity is the lifeblood of DeFi. Automated Market Makers (AMMs)
+              use mathematical formulas to determine token prices based on
+              supply and demand in liquidity pools.
             </p>
 
-            <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">How AMMs Work</h3>
+            <h3
+              class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+            >
+              How AMMs Work
+            </h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div class="text-center">
-                <div class="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center mx-auto mb-4">
-                  <UIcon name="i-heroicons-users" class="w-8 h-8 text-primary-600 dark:text-primary-400" />
+                <div
+                  class="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center mx-auto mb-4"
+                >
+                  <UIcon
+                    name="i-heroicons-users"
+                    class="w-8 h-8 text-primary-600 dark:text-primary-400"
+                  />
                 </div>
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Liquidity Providers</h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Users deposit token pairs into pools to earn trading fees</p>
+                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                  Liquidity Providers
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  Users deposit token pairs into pools to earn trading fees
+                </p>
               </div>
               <div class="text-center">
-                <div class="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center mx-auto mb-4">
-                  <UIcon name="i-heroicons-calculator" class="w-8 h-8 text-primary-600 dark:text-primary-400" />
+                <div
+                  class="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center mx-auto mb-4"
+                >
+                  <UIcon
+                    name="i-heroicons-calculator"
+                    class="w-8 h-8 text-primary-600 dark:text-primary-400"
+                  />
                 </div>
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Price Discovery</h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">AMM algorithms automatically calculate token prices based on pool ratios</p>
+                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                  Price Discovery
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  AMM algorithms automatically calculate token prices based on
+                  pool ratios
+                </p>
               </div>
               <div class="text-center">
-                <div class="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center mx-auto mb-4">
-                  <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 text-primary-600 dark:text-primary-400" />
+                <div
+                  class="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center mx-auto mb-4"
+                >
+                  <UIcon
+                    name="i-heroicons-arrow-path"
+                    class="w-8 h-8 text-primary-600 dark:text-primary-400"
+                  />
                 </div>
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Trading</h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Users swap tokens directly with the pool, paying fees to liquidity providers</p>
+                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                  Trading
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  Users swap tokens directly with the pool, paying fees to
+                  liquidity providers
+                </p>
               </div>
             </div>
           </div>
@@ -193,30 +289,54 @@
           <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             Risks and Considerations
           </h2>
-          
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="p-6 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
-              <h3 class="font-semibold text-red-900 dark:text-red-400 mb-3">Smart Contract Risk</h3>
+            <div
+              class="p-6 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20"
+            >
+              <h3 class="font-semibold text-red-900 dark:text-red-400 mb-3">
+                Smart Contract Risk
+              </h3>
               <p class="text-sm text-red-700 dark:text-red-300">
-                Bugs in smart contracts can lead to loss of funds. Always use audited protocols.
+                Bugs in smart contracts can lead to loss of funds. Always use
+                audited protocols.
               </p>
             </div>
-            <div class="p-6 rounded-lg border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20">
-              <h3 class="font-semibold text-yellow-900 dark:text-yellow-400 mb-3">Impermanent Loss</h3>
+            <div
+              class="p-6 rounded-lg border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20"
+            >
+              <h3
+                class="font-semibold text-yellow-900 dark:text-yellow-400 mb-3"
+              >
+                Impermanent Loss
+              </h3>
               <p class="text-sm text-yellow-700 dark:text-yellow-300">
-                Providing liquidity can result in losses if token prices change significantly.
+                Providing liquidity can result in losses if token prices change
+                significantly.
               </p>
             </div>
-            <div class="p-6 rounded-lg border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20">
-              <h3 class="font-semibold text-orange-900 dark:text-orange-400 mb-3">Market Risk</h3>
+            <div
+              class="p-6 rounded-lg border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20"
+            >
+              <h3
+                class="font-semibold text-orange-900 dark:text-orange-400 mb-3"
+              >
+                Market Risk
+              </h3>
               <p class="text-sm text-orange-700 dark:text-orange-300">
-                Cryptocurrency markets are highly volatile and can experience rapid price changes.
+                Cryptocurrency markets are highly volatile and can experience
+                rapid price changes.
               </p>
             </div>
-            <div class="p-6 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
-              <h3 class="font-semibold text-blue-900 dark:text-blue-400 mb-3">Regulatory Risk</h3>
+            <div
+              class="p-6 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20"
+            >
+              <h3 class="font-semibold text-blue-900 dark:text-blue-400 mb-3">
+                Regulatory Risk
+              </h3>
               <p class="text-sm text-blue-700 dark:text-blue-300">
-                DeFi regulations are still evolving and may impact protocol operations.
+                DeFi regulations are still evolving and may impact protocol
+                operations.
               </p>
             </div>
           </div>
@@ -227,33 +347,41 @@
 </template>
 
 <script setup lang="ts">
-import { useColorTheme } from '@/composables/useColorTheme'
+  import { useColorTheme } from '@/composables/useColorTheme'
 
-const { currentTheme } = useColorTheme()
+  const { currentTheme } = useColorTheme()
 
-useHead({
-  title: 'DeFi Basics - Ionic Swap',
-  meta: [
-    {
-      name: 'description',
-      content: 'Learn the fundamentals of Decentralized Finance, including DEXs, liquidity, and AMMs.',
-    },
-    { property: 'og:title', content: 'DeFi Basics - Ionic Swap' },
-    {
-      property: 'og:description',
-      content: 'Learn the fundamentals of Decentralized Finance, including DEXs, liquidity, and AMMs.',
-    },
-    { property: 'og:type', content: 'article' },
-    { property: 'og:url', content: 'https://ionicswap.com/learn/defi-basics' },
-    { property: 'og:image', content: '/logo.svg' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'DeFi Basics - Ionic Swap' },
-    {
-      name: 'twitter:description',
-      content: 'Learn the fundamentals of Decentralized Finance, including DEXs, liquidity, and AMMs.',
-    },
-    { name: 'twitter:image', content: '/logo.svg' },
-  ],
-  link: [{ rel: 'canonical', href: 'https://ionicswap.com/learn/defi-basics' }],
-})
+  useHead({
+    title: 'DeFi Basics - Ionic Swap',
+    meta: [
+      {
+        name: 'description',
+        content:
+          'Learn the fundamentals of Decentralized Finance, including DEXs, liquidity, and AMMs.',
+      },
+      { property: 'og:title', content: 'DeFi Basics - Ionic Swap' },
+      {
+        property: 'og:description',
+        content:
+          'Learn the fundamentals of Decentralized Finance, including DEXs, liquidity, and AMMs.',
+      },
+      { property: 'og:type', content: 'article' },
+      {
+        property: 'og:url',
+        content: 'https://ionicswap.com/learn/defi-basics',
+      },
+      { property: 'og:image', content: '/logo.svg' },
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:title', content: 'DeFi Basics - Ionic Swap' },
+      {
+        name: 'twitter:description',
+        content:
+          'Learn the fundamentals of Decentralized Finance, including DEXs, liquidity, and AMMs.',
+      },
+      { name: 'twitter:image', content: '/logo.svg' },
+    ],
+    link: [
+      { rel: 'canonical', href: 'https://ionicswap.com/learn/defi-basics' },
+    ],
+  })
 </script>

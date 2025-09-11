@@ -2,7 +2,9 @@
   <div>
     <div class="mb-2">
       <h2 class="text-lg font-bold">DeFi 101</h2>
-      <div class="text-xs text-gray-500">Learn about tokens, standards, and cross-chain swapping</div>
+      <div class="text-xs text-gray-500">
+        Learn about tokens, standards, and cross-chain swapping
+      </div>
     </div>
     <div class="relative">
       <button
@@ -33,12 +35,12 @@
         >
           <!-- Article Icon with dynamic color -->
           <div class="flex items-center gap-3 mb-2">
-            <div 
+            <div
               class="w-10 h-10 rounded-full flex items-center justify-center"
               :class="`bg-${currentTheme}-100 dark:bg-${currentTheme}-900`"
             >
-              <UIcon 
-                :name="article.icon" 
+              <UIcon
+                :name="article.icon"
                 :class="`w-5 h-5 text-${currentTheme}-600 dark:text-${currentTheme}-400`"
               />
             </div>
@@ -47,12 +49,14 @@
               <div class="text-xs text-gray-500">{{ article.subtitle }}</div>
             </div>
           </div>
-          
+
           <!-- Article Description -->
-          <div class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+          <div
+            class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2"
+          >
             {{ article.description }}
           </div>
-          
+
           <!-- Learn More Link -->
           <div
             class="mt-auto text-primary-600 text-xs font-semibold flex items-center gap-1"
@@ -67,78 +71,83 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useColorTheme } from '@/composables/useColorTheme'
+  import { ref } from 'vue'
+  import { useColorTheme } from '@/composables/useColorTheme'
 
-const { currentTheme } = useColorTheme()
+  const { currentTheme } = useColorTheme()
 
-const articles = [
-  {
-    slug: 'what-are-tokens',
-    title: 'What are Tokens?',
-    subtitle: 'Understanding digital assets',
-    description: 'Learn about different types of tokens, their standards, and how they work across blockchains.',
-    icon: 'i-heroicons-currency-dollar'
-  },
-  {
-    slug: 'token-standards',
-    title: 'Token Standards',
-    subtitle: 'ERC-20, SPL, ICRC explained',
-    description: 'Explore the different token standards used on Ethereum, Solana, and Internet Computer.',
-    icon: 'i-heroicons-cog-6-tooth'
-  },
-  {
-    slug: 'cross-chain-swapping',
-    title: 'Cross-Chain Swapping',
-    subtitle: 'Swap tokens across blockchains',
-    description: 'Discover how to swap tokens between different blockchains seamlessly and securely.',
-    icon: 'i-heroicons-arrow-path'
-  },
-  {
-    slug: 'gasless-transactions',
-    title: 'Gasless Transactions',
-    subtitle: 'Swap without gas fees',
-    description: 'Learn about gasless transaction technology and how it makes swapping more accessible.',
-    icon: 'i-heroicons-bolt'
-  },
-  {
-    slug: 'defi-basics',
-    title: 'DeFi Basics',
-    subtitle: 'Decentralized Finance 101',
-    description: 'Get started with DeFi concepts, liquidity, and decentralized trading protocols.',
-    icon: 'i-heroicons-banknotes'
+  const articles = [
+    {
+      slug: 'what-are-tokens',
+      title: 'What are Tokens?',
+      subtitle: 'Understanding digital assets',
+      description:
+        'Learn about different types of tokens, their standards, and how they work across blockchains.',
+      icon: 'i-heroicons-currency-dollar',
+    },
+    {
+      slug: 'token-standards',
+      title: 'Token Standards',
+      subtitle: 'ERC-20, SPL, ICRC explained',
+      description:
+        'Explore the different token standards used on Ethereum, Solana, and Internet Computer.',
+      icon: 'i-heroicons-cog-6-tooth',
+    },
+    {
+      slug: 'cross-chain-swapping',
+      title: 'Cross-Chain Swapping',
+      subtitle: 'Swap tokens across blockchains',
+      description:
+        'Discover how to swap tokens between different blockchains seamlessly and securely.',
+      icon: 'i-heroicons-arrow-path',
+    },
+    {
+      slug: 'gasless-transactions',
+      title: 'Gasless Transactions',
+      subtitle: 'Swap without gas fees',
+      description:
+        'Learn about gasless transaction technology and how it makes swapping more accessible.',
+      icon: 'i-heroicons-bolt',
+    },
+    {
+      slug: 'defi-basics',
+      title: 'DeFi Basics',
+      subtitle: 'Decentralized Finance 101',
+      description:
+        'Get started with DeFi concepts, liquidity, and decentralized trading protocols.',
+      icon: 'i-heroicons-banknotes',
+    },
+  ]
+
+  const scrollRef = ref<HTMLElement>()
+
+  const scrollLeft = () => {
+    if (scrollRef.value) {
+      scrollRef.value.scrollBy({ left: -240, behavior: 'smooth' })
+    }
   }
-]
 
-const scrollRef = ref<HTMLElement>()
-
-const scrollLeft = () => {
-  if (scrollRef.value) {
-    scrollRef.value.scrollBy({ left: -240, behavior: 'smooth' })
+  const scrollRight = () => {
+    if (scrollRef.value) {
+      scrollRef.value.scrollBy({ left: 240, behavior: 'smooth' })
+    }
   }
-}
-
-const scrollRight = () => {
-  if (scrollRef.value) {
-    scrollRef.value.scrollBy({ left: 240, behavior: 'smooth' })
-  }
-}
 </script>
 
 <style scoped>
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 </style>

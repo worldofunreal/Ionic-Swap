@@ -1,108 +1,153 @@
-type EvmSwapRequest = record {
-  min_amount_out : nat64;
-  deadline : nat64;
-  amount_out : nat64;
-  user_address : text;
-  token_in_mint : text;
-  amount_in : nat64;
-  token_out_mint : text;
+type User = record {
+    id: principal;
+    username: text;
+    display_name: opt text;
+    bio: opt text;
+    avatar_url: opt text;
+    banner_url: opt text;
+    location: opt text;
+    website: opt text;
+    created_at: nat64;
+    updated_at: nat64;
+    is_verified: bool;
+    evm_address: opt text;
+    bitcoin_address: opt text;
+    solana_address: opt text;
+    following_count: nat32;
+    followers_count: nat32;
 };
-type EvmSwapResult = record {
-  token_in_amount : nat64;
-  permit_tx_hash : text;
-  swap_tx_hash : text;
-  token_out_amount : nat64;
+
+type CompactProfile = record {
+    id: principal;
+    username: text;
+    display_name: opt text;
+    bio: opt text;
+    avatar_url: opt text;
+    is_verified: bool;
+    is_following_me: bool;
+    am_following_them: bool;
 };
-type IcpPermitRequest = record {
-  r : text;
-  s : text;
-  v : text;
-  token : text;
-  owner : text;
-  deadline : text;
-  amount : text;
-  spender : text;
+
+type PersonalUser = record {
+    id: principal;
+    username: text;
+    display_name: opt text;
+    bio: opt text;
+    avatar_url: opt text;
+    banner_url: opt text;
+    location: opt text;
+    website: opt text;
+    created_at: nat64;
+    updated_at: nat64;
+    is_verified: bool;
+    evm_address: opt text;
+    bitcoin_address: opt text;
+    solana_address: opt text;
+    following_count: nat32;
+    followers_count: nat32;
+    is_following_me: bool;
+    am_following_them: bool;
 };
-type InitArg = record { solana_network : opt SolanaNetwork };
-type PermitRequest = record {
-  r : text;
-  s : text;
-  v : text;
-  token : text;
-  value : text;
-  owner : text;
-  deadline : text;
-  spender : text;
+
+type UserUpdate = record {
+    display_name: opt text;
+    bio: opt text;
+    avatar_url: opt text;
+    banner_url: opt text;
+    location: opt text;
+    website: opt text;
+    evm_address: opt text;
+    bitcoin_address: opt text;
+    solana_address: opt text;
 };
-type PriceUpdateResult = record {
-  total_sources : nat8;
-  pairs_updated : vec TradingPair;
-  successful_sources : nat8;
-  timestamp : nat64;
+
+type Error = variant {
+    UserNotFound;
+    UsernameTaken;
+    InvalidInput: text;
+    Unauthorized;
+    InternalError: text;
 };
-type Result = variant { Ok : text; Err : text };
-type Result_1 = variant { Ok : TradingPair; Err : text };
-type Result_2 = variant { Ok : EvmSwapResult; Err : text };
-type Result_3 = variant { Ok : SwapResult; Err : text };
-type Result_4 = variant { Ok : PriceUpdateResult; Err : text };
-type SolanaNetwork = variant { Mainnet; Testnet; Devnet };
-type SwapRequest = record {
-  min_amount_out : nat64;
-  deadline : nat64;
-  amount_out : nat64;
-  user_token_account : text;
-  token_out_mint : text;
+
+type UserResult = variant {
+    Ok: User;
+    Err: Error;
 };
-type SwapResult = record {
-  delegation_tx_hash : text;
-  token_in_amount : nat64;
-  swap_tx_hash : text;
-  token_out_amount : nat64;
+
+type HttpRequest = record {
+    method: text;
+    url: text;
+    headers: vec record { text; text };
+    body: vec nat8;
 };
-type TradingPair = record {
-  base : text;
-  quote : text;
-  last_updated : nat64;
-  sources_count : nat8;
-  price : float64;
+
+type HttpResponse = record {
+    status_code: nat16;
+    headers: vec record { text; text };
+    body: vec nat8;
 };
-service : (InitArg) -> {
-  // Debug function to test external API calls (for testing only)
-  debug_test_external_apis : () -> (Result);
-  // Debug function to verify wallet address matches signer
-  debug_wallet_verification : () -> (Result);
-  // Get the canister's own Ethereum address (always returns canister's wallet)
-  get_canister_ethereum_address : () -> (text) query;
-  // Get canister's ICRC token balances
-  get_canister_icrc_balances : () -> (Result);
-  // Get the canister's own public key (always returns canister's wallet)
-  get_canister_public_key : () -> (text);
-  // Get current prices from cache
-  get_current_prices : () -> (Result) query;
-  // Get specific trading pair price
-  get_pair_price : (text) -> (Result_1) query;
-  // Get comprehensive Solana token balances for all known tokens
-  get_solana_token_balances : () -> (Result);
-  // Start the price update scheduler (runs every second)
-  start_price_scheduler : () -> (Result);
-  // Stop the price update scheduler
-  stop_price_scheduler : () -> (Result);
-  // Submit atomic delegation + transfer transaction (gasless for user)
-  submit_delegation_transaction : (blob) -> (Result);
-  // Submit gasless permit transaction (user signs permit, canister pays gas)
-  submit_gasless_permit : (PermitRequest) -> (Result);
-  // Submit gasless permit transaction (user signs permit, canister pays gas)
-  submit_icp_gasless_permit : (IcpPermitRequest) -> (Result);
-  // Submit atomic EVM swap transaction (permit + immediate token transfer)
-  swap_evm : (PermitRequest, EvmSwapRequest) -> (Result_2);
-  // Submit atomic swap transaction (delegation + immediate liquidity transfer)
-  swap_solana : (blob, SwapRequest) -> (Result_3);
-  // Test Ed25519 key generation and signing
-  test_ed25519 : () -> (Result);
-  // Test secp256k1 key generation and signing
-  test_secp256k1 : () -> (Result);
-  // Test simple EVM transaction (get nonce, etc.)
-  test_simple_evm_transaction : () -> (Result);
-  // Update all prices from all sources (manual trigger)
-  update_prices : () -> (Result_4);
-}
+
+service : {
+    // User registration (requires signed call)
+    signup: (text, opt text, opt text, opt text) -> (UserResult); // username, evm_address, bitcoin_address, solana_address
+    
+    // Get user by principal
+    get_user: (principal) -> (UserResult);
+    
+    // Get user by username
+    get_user_by_username: (text) -> (UserResult);
+    
+    // Update user profile (requires signed call, owner only)
+    update_profile: (UserUpdate) -> (UserResult);
+    
+    // Individual field updates (requires signed call, owner only)
+    update_display_name: (text) -> (UserResult);
+    update_bio: (text) -> (UserResult);
+    update_avatar: (text) -> (UserResult);
+    update_banner: (text) -> (UserResult);
+    update_location: (text) -> (UserResult);
+    update_website: (text) -> (UserResult);
+    update_evm_address: (text) -> (UserResult);
+    update_bitcoin_address: (text) -> (UserResult);
+    update_solana_address: (text) -> (UserResult);
+    
+    // Search users
+    search_users: (text, nat32) -> (variant { Ok: vec CompactProfile; Err: Error });
+    
+    // Personal search with follow state
+    search_users_personal: (text, nat32, principal) -> (variant { Ok: vec CompactProfile; Err: Error });
+    
+    // Personal user lookup with follow state
+    get_user_personal: (principal, principal) -> (variant { Ok: PersonalUser; Err: Error });
+    
+    // Check if username is available
+    is_username_available: (text) -> (bool);
+    
+    // Get total user count
+    get_user_count: () -> (nat64);
+    
+    // Get all usernames for sitemap generation
+    get_all_usernames: () -> (vec text);
+    
+    // Follow/Unfollow functionality
+    follow_user: (principal) -> (UserResult);
+    unfollow_user: (principal) -> (UserResult);
+    
+    // Get following and followers lists
+    get_following: (principal) -> (vec CompactProfile);
+    get_followers: (principal) -> (vec CompactProfile);
+    
+    // Check if user is following another user
+    is_following: (principal, principal) -> (bool);
+    
+    // Delete account (requires signed call, owner only)
+    delete_account: () -> (variant { Ok; Err: Error });
+    
+    // Asset upload functions (requires signed call, registered users only)
+    init_upload: (text, nat64, opt nat64, text) -> (variant { Ok; Err: Error }); // file_path, file_size, chunk_size, file_hash
+    store_chunk: (nat64, vec nat8, text) -> (variant { Ok; Err: Error }); // chunk_id, chunk_data, file_path
+    finalize_upload: (text) -> (variant { Ok: text; Err: Error }); // file_path -> url
+    
+    // HTTP request handler for serving assets
+    http_request: (HttpRequest) -> (HttpResponse);
+};

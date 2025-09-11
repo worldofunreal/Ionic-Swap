@@ -13,7 +13,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr class="border-b border-gray-200 dark:border-gray-700 h-px"/>
+        <tr class="border-b border-gray-200 dark:border-gray-700 h-px" />
         <tr
           v-for="row in rows"
           :key="row.id"

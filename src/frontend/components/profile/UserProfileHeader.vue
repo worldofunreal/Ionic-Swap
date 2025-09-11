@@ -1,7 +1,12 @@
 <template>
-  <div class="bg-white dark:bg-neutral-950 rounded-lg shadow-lg overflow-hidden mb-8">
+  <div
+    class="bg-white dark:bg-neutral-950 rounded-lg shadow-lg overflow-hidden mb-8"
+  >
     <!-- Banner Section -->
-    <div class="relative bg-gradient-to-r from-blue-500 to-purple-600" style="aspect-ratio: 3/1;">
+    <div
+      class="relative bg-gradient-to-r from-blue-500 to-purple-600"
+      style="aspect-ratio: 3/1"
+    >
       <img
         v-if="bannerUrl"
         :src="bannerUrl"
@@ -9,12 +14,12 @@
         class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
         crossorigin="anonymous"
         @click="openImageModal(bannerUrl, 'Banner')"
-      />
+      >
       <div v-else class="w-full h-full flex items-center justify-center">
         <!-- Empty banner placeholder -->
       </div>
     </div>
-    
+
     <!-- Profile Info Section -->
     <div class="px-6 pb-6">
       <!-- Avatar Section -->
@@ -27,47 +32,72 @@
             class="w-32 h-32 rounded-full border-4 border-white dark:border-gray-900 shadow-lg bg-white object-cover cursor-pointer hover:opacity-90 transition-opacity"
             crossorigin="anonymous"
             @click="openImageModal(avatarUrl, 'Avatar')"
-          />
+          >
           <div
             v-else
             class="w-32 h-32 rounded-full border-4 border-white dark:border-gray-900 shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
           >
-            <span class="text-white font-bold text-5xl">{{ avatarInitial }}</span>
+            <span class="text-white font-bold text-5xl">{{
+              avatarInitial
+            }}</span>
           </div>
         </div>
-        
+
         <!-- Action Buttons -->
         <div class="flex gap-3 mt-4 relative z-10">
           <!-- Follow/Unfollow Button (only for other users) -->
           <UButton
             v-if="!isOwnProfile"
-            :color="!auth.authenticated ? 'primary' : (isFollowing ? 'neutral' : 'primary')"
-            :variant="!auth.authenticated ? 'solid' : (isFollowing ? 'soft' : 'solid')"
+            :color="
+              !auth.authenticated
+                ? 'primary'
+                : isFollowing
+                  ? 'neutral'
+                  : 'primary'
+            "
+            :variant="
+              !auth.authenticated ? 'solid' : isFollowing ? 'soft' : 'solid'
+            "
             :loading="followLoading"
-            @click="toggleFollow"
             class="follow-btn"
+            @click="toggleFollow"
           >
-            <UIcon 
-              :name="!auth.authenticated ? 'i-heroicons-arrow-right-on-rectangle-20-solid' : (isFollowing ? 'i-heroicons-user-minus-20-solid' : 'i-heroicons-user-plus-20-solid')" 
-              class="w-4 h-4 mr-2" 
+            <UIcon
+              :name="
+                !auth.authenticated
+                  ? 'i-heroicons-arrow-right-on-rectangle-20-solid'
+                  : isFollowing
+                    ? 'i-heroicons-user-minus-20-solid'
+                    : 'i-heroicons-user-plus-20-solid'
+              "
+              class="w-4 h-4 mr-2"
             />
-            {{ !auth.authenticated ? 'Sign in to Follow' : (isFollowing ? 'Unfollow' : 'Follow') }}
+            {{
+              !auth.authenticated
+                ? 'Sign in to Follow'
+                : isFollowing
+                  ? 'Unfollow'
+                  : 'Follow'
+            }}
           </UButton>
-          
-                      <!-- Edit Profile Button (own profile only) -->
-            <UButton
-              v-if="isOwnProfile"
-              color="primary"
-              variant="solid"
-              @click="editProfile"
-              class="edit-profile-btn"
-            >
-              <UIcon name="i-heroicons-pencil-square-20-solid" class="w-4 h-4 mr-2" />
-              Edit Profile
-            </UButton>
+
+          <!-- Edit Profile Button (own profile only) -->
+          <UButton
+            v-if="isOwnProfile"
+            color="primary"
+            variant="solid"
+            class="edit-profile-btn"
+            @click="editProfile"
+          >
+            <UIcon
+              name="i-heroicons-pencil-square-20-solid"
+              class="w-4 h-4 mr-2"
+            />
+            Edit Profile
+          </UButton>
         </div>
       </div>
-      
+
       <!-- User Info -->
       <div class="space-y-6">
         <!-- Row 1: Name/Username/Bio + Wallet Addresses -->
@@ -80,67 +110,112 @@
                   {{ displayName }}
                 </h1>
                 <span v-if="userProfile?.is_verified" class="text-blue-500">
-                  <UIcon name="i-heroicons-check-badge-20-solid" class="w-5 h-5" />
+                  <UIcon
+                    name="i-heroicons-check-badge-20-solid"
+                    class="w-5 h-5"
+                  />
                 </span>
               </div>
               <div
-                v-if="userProfile?.username && displayName !== userProfile.username"
+                v-if="
+                  userProfile?.username && displayName !== userProfile.username
+                "
                 class="text-gray-600 dark:text-gray-400"
               >
                 @{{ userProfile.username }}
               </div>
             </div>
-            
+
             <!-- Bio -->
-            <div v-if="bio" class="text-gray-900 dark:text-white" @click="handleMentionClick">
-              <span v-html="formattedBio"></span>
+            <div
+              v-if="bio"
+              class="text-gray-900 dark:text-white"
+              @click="handleMentionClick"
+            >
+              <span v-html="formattedBio"/>
             </div>
           </div>
 
           <!-- Wallet Addresses -->
           <div class="grid grid-cols-2 gap-3 justify-self-end">
             <!-- EVM Address -->
-            <div v-if="userProfile?.evm_address?.[0]" class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded-full">EVM</span>
-              <span class="truncate flex-1">{{ formatAddress(userProfile.evm_address[0]) }}</span>
-                              <UIcon
-                  name="i-heroicons-document-duplicate-20-solid"
-                  class="cursor-pointer hover:text-gray-900 dark:hover:text-white transition flex-shrink-0"
-                  @click="copyToClipboard(userProfile.evm_address[0], 'EVM')"
-                />
+            <div
+              v-if="userProfile?.evm_address?.[0]"
+              class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
+            >
+              <span
+                class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded-full"
+                >EVM</span
+              >
+              <span class="truncate flex-1">{{
+                formatAddress(userProfile.evm_address[0])
+              }}</span>
+              <UIcon
+                name="i-heroicons-document-duplicate-20-solid"
+                class="cursor-pointer hover:text-gray-900 dark:hover:text-white transition flex-shrink-0"
+                @click="copyToClipboard(userProfile.evm_address[0], 'EVM')"
+              />
             </div>
 
             <!-- Bitcoin Address -->
-            <div v-if="userProfile?.bitcoin_address?.[0]" class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <span class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs font-semibold px-2 py-1 rounded-full">BTC</span>
-              <span class="truncate flex-1">{{ formatAddress(userProfile.bitcoin_address[0]) }}</span>
-                              <UIcon
-                  name="i-heroicons-document-duplicate-20-solid"
-                  class="cursor-pointer hover:text-gray-900 dark:hover:text-white transition flex-shrink-0"
-                  @click="copyToClipboard(userProfile.bitcoin_address[0], 'Bitcoin')"
-                />
+            <div
+              v-if="userProfile?.bitcoin_address?.[0]"
+              class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
+            >
+              <span
+                class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs font-semibold px-2 py-1 rounded-full"
+                >BTC</span
+              >
+              <span class="truncate flex-1">{{
+                formatAddress(userProfile.bitcoin_address[0])
+              }}</span>
+              <UIcon
+                name="i-heroicons-document-duplicate-20-solid"
+                class="cursor-pointer hover:text-gray-900 dark:hover:text-white transition flex-shrink-0"
+                @click="
+                  copyToClipboard(userProfile.bitcoin_address[0], 'Bitcoin')
+                "
+              />
             </div>
 
             <!-- Solana Address -->
-            <div v-if="userProfile?.solana_address?.[0]" class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs font-semibold px-2 py-1 rounded-full">SOL</span>
-              <span class="truncate flex-1">{{ formatAddress(userProfile.solana_address[0]) }}</span>
-                              <UIcon
-                  name="i-heroicons-document-duplicate-20-solid"
-                  class="cursor-pointer hover:text-gray-900 dark:hover:text-white transition flex-shrink-0"
-                  @click="copyToClipboard(userProfile.solana_address[0], 'Solana')"
-                />
+            <div
+              v-if="userProfile?.solana_address?.[0]"
+              class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
+            >
+              <span
+                class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs font-semibold px-2 py-1 rounded-full"
+                >SOL</span
+              >
+              <span class="truncate flex-1">{{
+                formatAddress(userProfile.solana_address[0])
+              }}</span>
+              <UIcon
+                name="i-heroicons-document-duplicate-20-solid"
+                class="cursor-pointer hover:text-gray-900 dark:hover:text-white transition flex-shrink-0"
+                @click="
+                  copyToClipboard(userProfile.solana_address[0], 'Solana')
+                "
+              />
             </div>
 
             <!-- ICP Principal -->
-            <div v-if="userProfile?.id" class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <span class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-semibold px-2 py-1 rounded-full">ICP</span>
-              <span class="truncate flex-1">{{ formatAddress(userProfile.id.toText()) }}</span>
-                              <UIcon
-                  name="i-heroicons-document-duplicate-20-solid"
-                  class="cursor-pointer hover:text-gray-900 dark:hover:text-white transition flex-shrink-0"
-                  @click="copyToClipboard(userProfile.id.toText(), 'ICP')"
-                />
+            <div
+              v-if="userProfile?.id"
+              class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
+            >
+              <span
+                class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-semibold px-2 py-1 rounded-full"
+                >ICP</span
+              >
+              <span class="truncate flex-1">{{
+                formatAddress(userProfile.id.toText())
+              }}</span>
+              <UIcon
+                name="i-heroicons-document-duplicate-20-solid"
+                class="cursor-pointer hover:text-gray-900 dark:hover:text-white transition flex-shrink-0"
+                @click="copyToClipboard(userProfile.id.toText(), 'ICP')"
+              />
             </div>
           </div>
         </div>
@@ -150,65 +225,88 @@
           <!-- Location, Website, Follow Stats -->
           <div class="space-y-4 text-left justify-self-start">
             <!-- Location & Website -->
-            <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+            <div
+              class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400"
+            >
               <div v-if="location" class="flex items-center gap-1">
                 <UIcon name="i-heroicons-map-pin-20-solid" class="w-4 h-4" />
                 <span>{{ location }}</span>
               </div>
               <div v-if="website" class="flex items-center gap-1">
                 <UIcon name="i-heroicons-link-20-solid" class="w-4 h-4" />
-                <a :href="website" target="_blank" class="hover:text-blue-500 transition">
+                <a
+                  :href="website"
+                  target="_blank"
+                  class="hover:text-blue-500 transition"
+                >
                   {{ formatWebsite(website) }}
                 </a>
               </div>
               <div class="flex items-center gap-1">
                 <UIcon name="i-heroicons-calendar-20-solid" class="w-4 h-4" />
-                <span>Joined {{ userProfile?.created_at ? formatDate(userProfile.created_at) : '' }}</span>
+                <span
+                  >Joined
+                  {{
+                    userProfile?.created_at
+                      ? formatDate(userProfile.created_at)
+                      : ''
+                  }}</span
+                >
               </div>
             </div>
 
             <!-- Follow Stats -->
             <div class="flex items-center gap-6 text-sm">
-              <button 
+              <button
                 class="flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer"
                 @click="$emit('tabChange', 'Following')"
               >
-                <span class="font-semibold text-gray-900 dark:text-white">{{ userProfile?.following_count || 0 }}</span>
+                <span class="font-semibold text-gray-900 dark:text-white">{{
+                  userProfile?.following_count || 0
+                }}</span>
                 <span class="text-gray-600 dark:text-gray-400">Following</span>
               </button>
-              <button 
+              <button
                 class="flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer"
                 @click="$emit('tabChange', 'Followers')"
               >
-                <span class="font-semibold text-gray-900 dark:text-white">{{ userProfile?.followers_count || 0 }}</span>
+                <span class="font-semibold text-gray-900 dark:text-white">{{
+                  userProfile?.followers_count || 0
+                }}</span>
                 <span class="text-gray-600 dark:text-gray-400">Followers</span>
               </button>
             </div>
           </div>
 
           <!-- Portfolio Overview -->
-          <div class="flex items-center gap-6 text-sm justify-self-end self-end">
+          <div
+            class="flex items-center gap-6 text-sm justify-self-end self-end"
+          >
             <div class="flex items-center gap-1">
               <span class="text-gray-600 dark:text-gray-400">Portfolio:</span>
-              <span class="font-semibold text-gray-900 dark:text-white">{{ portfolioValueEth }} ETH</span>
+              <span class="font-semibold text-gray-900 dark:text-white"
+                >{{ portfolioValueEth }} ETH</span
+              >
             </div>
             <div class="flex items-center gap-1">
               <span class="text-gray-600 dark:text-gray-400">Tokens:</span>
-              <span class="font-semibold text-gray-900 dark:text-white">{{ tokenPercentage }}%</span>
+              <span class="font-semibold text-gray-900 dark:text-white"
+                >{{ tokenPercentage }}%</span
+              >
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  
+
   <!-- Image Modal -->
-  <div 
+  <div
     v-if="imageModalOpen"
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
     @click="imageModalOpen = false"
   >
-    <div 
+    <div
       class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-4xl mx-4"
       @click.stop
     >
@@ -219,14 +317,14 @@
           :alt="selectedImageTitle"
           class="max-w-full max-h-[80vh] object-contain rounded-lg"
           crossorigin="anonymous"
-        />
+        >
         <div class="mt-4 text-sm text-gray-600 dark:text-gray-400">
           {{ selectedImageTitle }}
         </div>
       </div>
     </div>
   </div>
-  
+
   <!-- Edit Profile Modal -->
   <EditProfileModal ref="editProfileModalRef" />
 </template>
@@ -254,7 +352,7 @@
 
   const props = withDefaults(defineProps<Props>(), {
     userProfile: undefined,
-    isOwnProfile: undefined
+    isOwnProfile: undefined,
   })
 
   const auth = useAuthStore()
@@ -265,7 +363,7 @@
 
   // User profile data - use props if provided, otherwise use auth store
   const userProfile = computed(() => props.userProfile || auth.userProfile)
-  
+
   // Force recomputation of avatar/banner URLs when profile updates
   const profileUpdateTrigger = ref(0)
 
@@ -282,15 +380,18 @@
   // Check if current user is following this profile
   const checkFollowingStatus = async () => {
     if (!userProfile.value?.id || isOwnProfile.value) return
-    
+
     // Only check following status if user is authenticated
     if (!auth.authenticated || !auth.principal) {
       console.log('User not authenticated, skipping follow status check')
       return
     }
-    
+
     try {
-      const personalProfile = await canisterService.getUserPersonal(userProfile.value.id.toText(), auth.principal)
+      const personalProfile = await canisterService.getUserPersonal(
+        userProfile.value.id.toText(),
+        auth.principal
+      )
       if (personalProfile) {
         isFollowing.value = personalProfile.am_following_them
       }
@@ -300,14 +401,21 @@
   }
 
   // Watch for profile changes to update following status
-  watch(() => userProfile.value?.id, () => {
-    checkFollowingStatus()
-  })
+  watch(
+    () => userProfile.value?.id,
+    () => {
+      checkFollowingStatus()
+    }
+  )
 
   // Watch for profile changes to force recomputation of avatar/banner URLs
-  watch(() => userProfile.value, () => {
-    profileUpdateTrigger.value++
-  }, { deep: true })
+  watch(
+    () => userProfile.value,
+    () => {
+      profileUpdateTrigger.value++
+    },
+    { deep: true }
+  )
 
   onMounted(() => {
     checkFollowingStatus()
@@ -358,20 +466,22 @@
   const avatarUrl = computed(() => {
     // Force recomputation when profile updates
     profileUpdateTrigger.value
-    
+
     const avatarPath = userProfile.value?.avatar_url?.[0]
     if (!avatarPath) return null
-    
+
     // If it's already a full URL, return as is
     if (avatarPath.startsWith('http')) {
       return avatarPath
     }
-    
+
     // Convert file path to full URL with cache busting
     const baseUrl = canisterService.getAssetUrl(avatarPath)
     const timestamp = Date.now()
     // Use a combination of timestamp and profile update trigger for better cache busting
-    const cacheBuster = userProfile.value?.updated_at ? Number(userProfile.value.updated_at) : timestamp
+    const cacheBuster = userProfile.value?.updated_at
+      ? Number(userProfile.value.updated_at)
+      : timestamp
     return `${baseUrl}?t=${timestamp}&v=${cacheBuster}&trigger=${profileUpdateTrigger.value}`
   })
 
@@ -379,20 +489,22 @@
   const bannerUrl = computed(() => {
     // Force recomputation when profile updates
     profileUpdateTrigger.value
-    
+
     const bannerPath = userProfile.value?.banner_url?.[0]
     if (!bannerPath) return null
-    
+
     // If it's already a full URL, return as is
     if (bannerPath.startsWith('http')) {
       return bannerPath
     }
-    
+
     // Convert file path to full URL with cache busting
     const baseUrl = canisterService.getAssetUrl(bannerPath)
     const timestamp = Date.now()
     // Use a combination of timestamp and profile update trigger for better cache busting
-    const cacheBuster = userProfile.value?.updated_at ? Number(userProfile.value.updated_at) : timestamp
+    const cacheBuster = userProfile.value?.updated_at
+      ? Number(userProfile.value.updated_at)
+      : timestamp
     return `${baseUrl}?t=${timestamp}&v=${cacheBuster}&trigger=${profileUpdateTrigger.value}`
   })
 
@@ -408,8 +520,6 @@
   const tokenPercentage = computed(() => {
     return '0' // Portfolio data not available in current backend User type
   })
-
-
 
   // Format address for display
   const formatAddress = (address: string) => {
@@ -442,31 +552,34 @@
   // Format date for display
   const formatDate = (timestamp: bigint) => {
     const date = new Date(Number(timestamp) / 1000000) // Convert from nanoseconds
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
     })
   }
 
   // Computed property for formatted bio with clickable @mentions
   const formattedBio = computed(() => {
     if (!bio.value) return ''
-    
+
     // Regular expression to match @username patterns
     // Matches @ followed by alphanumeric characters, underscores, and hyphens
     // Also handles edge cases like @username. or @username, or @username!
     const mentionRegex = /@([a-zA-Z0-9_-]+)(?=[\s.,!?]|$)/g
-    
+
     // Replace @mentions with clickable links
-    return bio.value.replace(mentionRegex, (match: string, username: string) => {
-      // Basic validation: username should be at least 1 character and not too long
-      if (username.length < 1 || username.length > 20) {
-        return match // Return original text if username is invalid
+    return bio.value.replace(
+      mentionRegex,
+      (match: string, username: string) => {
+        // Basic validation: username should be at least 1 character and not too long
+        if (username.length < 1 || username.length > 20) {
+          return match // Return original text if username is invalid
+        }
+
+        // Create a clickable link that navigates to the user's profile
+        return `<a href="/@${username}" class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline cursor-pointer transition-colors duration-200" data-username="${username}">@${username}</a>`
       }
-      
-      // Create a clickable link that navigates to the user's profile
-      return `<a href="/@${username}" class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline cursor-pointer transition-colors duration-200" data-username="${username}">@${username}</a>`
-    })
+    )
   })
 
   // Handle mention clicks
@@ -481,7 +594,7 @@
         setTimeout(() => {
           target.style.transform = ''
         }, 150)
-        
+
         // Use Vue Router to navigate
         navigateTo(`/@${username}`)
       }
@@ -512,19 +625,19 @@
   // Follow/Unfollow functionality
   const toggleFollow = async () => {
     if (!userProfile.value || isOwnProfile.value) return
-    
+
     // Check if user is authenticated
     if (!auth.authenticated) {
       console.log('User not authenticated, showing login panel')
-      
+
       // Show login panel
       if (loginPanelRef?.value) {
         loginPanelRef.value.open()
       }
-      
+
       return
     }
-    
+
     followLoading.value = true
     try {
       if (isFollowing.value) {

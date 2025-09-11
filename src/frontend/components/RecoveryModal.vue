@@ -1,10 +1,15 @@
 <template>
-  <div v-if="show" class="fixed inset-0 z-[9999] flex items-center justify-center">
+  <div
+    v-if="show"
+    class="fixed inset-0 z-[9999] flex items-center justify-center"
+  >
     <!-- Backdrop -->
     <div class="absolute inset-0 bg-white/80 dark:bg-black/90" @click="close" />
-    
+
     <!-- Modal Content -->
-    <div class="relative bg-white dark:bg-neutral-900 rounded-lg shadow-xl max-w-md w-full mx-4">
+    <div
+      class="relative bg-white dark:bg-neutral-900 rounded-lg shadow-xl max-w-md w-full mx-4"
+    >
       <div class="p-8">
         <!-- Header -->
         <div class="flex flex-col items-center mb-8">
@@ -54,7 +59,8 @@
 
         <!-- Info -->
         <div class="mt-6 text-xs text-gray-500 dark:text-gray-400 text-center">
-          Enter the 12 or 24-word recovery phrase you received when you first created your account.
+          Enter the 12 or 24-word recovery phrase you received when you first
+          created your account.
         </div>
       </div>
     </div>
@@ -62,67 +68,68 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+  import { ref } from 'vue'
+  import { useAuthStore } from '@/stores/auth'
 
-const show = ref(false)
-const loading = ref(false)
-const error = ref('')
-const mnemonic = ref('')
+  const show = ref(false)
+  const loading = ref(false)
+  const error = ref('')
+  const mnemonic = ref('')
 
-const auth = useAuthStore()
-const toast = useToast()
+  const auth = useAuthStore()
+  const toast = useToast()
 
-defineExpose({
-  open: () => {
-    show.value = true
+  defineExpose({
+    open: () => {
+      show.value = true
+      error.value = ''
+      mnemonic.value = ''
+    },
+    close: () => {
+      show.value = false
+    },
+  })
+
+  async function recover() {
+    if (!mnemonic.value.trim()) {
+      error.value = 'Please enter your recovery phrase'
+      return
+    }
+
+    loading.value = true
+    error.value = ''
+
+    try {
+      const result = await auth.recover(mnemonic.value.trim())
+
+      if (result.existing) {
+        show.value = false
+
+        toast.add({
+          title: 'Account Recovered!',
+          description: `Welcome back, ${result.profile?.username || 'user'}!`,
+          color: 'success',
+        })
+
+        await navigateTo('/profile')
+      }
+    } catch (err: any) {
+      error.value =
+        err?.message || 'Recovery failed. Please check your recovery phrase.'
+
+      toast.add({
+        title: 'Recovery Failed',
+        description: error.value,
+        color: 'error',
+      })
+    } finally {
+      loading.value = false
+    }
+  }
+
+  function close() {
+    show.value = false
     error.value = ''
     mnemonic.value = ''
-  },
-  close: () => {
-    show.value = false
   }
-})
-
-async function recover() {
-  if (!mnemonic.value.trim()) {
-    error.value = 'Please enter your recovery phrase'
-    return
-  }
-
-  loading.value = true
-  error.value = ''
-
-  try {
-    const result = await auth.recover(mnemonic.value.trim())
-    
-    if (result.existing) {
-      show.value = false
-      
-      toast.add({
-        title: 'Account Recovered!',
-        description: `Welcome back, ${result.profile?.username || 'user'}!`,
-        color: 'success',
-      })
-
-      await navigateTo('/profile')
-    }
-  } catch (err: any) {
-    error.value = err?.message || 'Recovery failed. Please check your recovery phrase.'
-    
-    toast.add({
-      title: 'Recovery Failed',
-      description: error.value,
-      color: 'error',
-    })
-  } finally {
-    loading.value = false
-  }
-}
-
-function close() {
-  show.value = false
-  error.value = ''
-  mnemonic.value = ''
-}
 </script>

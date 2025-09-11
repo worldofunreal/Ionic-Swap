@@ -1,12 +1,12 @@
 // Dynamic sitemap generation for SEO
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async event => {
   try {
     // Set XML content type
     setHeader(event, 'Content-Type', 'application/xml')
-    
+
     const baseUrl = 'https://nftropoly.com'
     const currentDate = new Date().toISOString()
-    
+
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
@@ -41,12 +41,11 @@ export default defineEventHandler(async (event) => {
   </url>
   <!-- Profile URLs will be added dynamically when we implement the getAllUsernames endpoint -->
 </urlset>`
-    
+
     return xml
-    
   } catch (error: any) {
     console.error('Error generating sitemap:', error)
-    
+
     // Return basic sitemap on error
     const baseUrl = 'https://nftropoly.com'
     return `<?xml version="1.0" encoding="UTF-8"?>

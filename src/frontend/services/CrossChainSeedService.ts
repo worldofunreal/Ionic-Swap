@@ -65,46 +65,56 @@ export const CrossChainSeedService = {
       console.log('Starting Bitcoin address generation...')
       const mnemonic = this.seedToMnemonic(seed)
       console.log('Generated mnemonic:', mnemonic)
-      
+
       const hdNode = ethers.HDNodeWallet.fromPhrase(mnemonic)
       const account = hdNode.derivePath("44'/0'/0'/0/0")
       console.log('Derived Bitcoin account:', account.address)
-      
+
       // Convert private key to Bitcoin format
-      const privateKeyBuffer = Buffer.from(ethers.getBytes(account.privateKey) as Uint8Array)
+      const privateKeyBuffer = Buffer.from(
+        ethers.getBytes(account.privateKey) as Uint8Array
+      )
       console.log('Private key buffer length:', privateKeyBuffer.length)
-      
+
       // Generate Bitcoin keypair
       const keyPair = ECPair.fromPrivateKey(privateKeyBuffer)
-      console.log('Generated Bitcoin keypair, public key length:', keyPair.publicKey.length)
-      
+      console.log(
+        'Generated Bitcoin keypair, public key length:',
+        keyPair.publicKey.length
+      )
+
       // For Taproot, we need the internal public key (32 bytes)
       // Taproot uses the x-only public key (removes the y-coordinate)
       const internalPubkey = Buffer.from(keyPair.publicKey.slice(1)) // Remove the first byte (compression flag)
-      console.log('Internal public key for Taproot, length:', internalPubkey.length)
-      
+      console.log(
+        'Internal public key for Taproot, length:',
+        internalPubkey.length
+      )
+
       // Try Taproot address (modern Bitcoin address format)
       try {
         console.log('Attempting Taproot address generation...')
         const { address: taprootAddress } = bitcoin.payments.p2tr({
           pubkey: internalPubkey,
-          network: bitcoin.networks.bitcoin
+          network: bitcoin.networks.bitcoin,
         })
-        
+
         console.log('Taproot address result:', taprootAddress)
-        
+
         if (taprootAddress) {
           return taprootAddress
         }
       } catch (taprootError: any) {
         console.error('Taproot generation failed:', taprootError)
-        throw new Error(`Taproot address generation failed: ${taprootError.message}`)
+        throw new Error(
+          `Taproot address generation failed: ${taprootError.message}`
+        )
       }
-      
+
       throw new Error('Taproot address generation failed')
     } catch (error) {
       console.error('Bitcoin address generation error:', error)
-            // No fallback - only Taproot addresses
+      // No fallback - only Taproot addresses
       const mnemonic = this.seedToMnemonic(seed)
       const hdNode = ethers.HDNodeWallet.fromPhrase(mnemonic)
       const errorAccount = hdNode.derivePath("44'/0'/0'/0/0")
@@ -128,19 +138,20 @@ export const CrossChainSeedService = {
     }
     const seedBuffer = bip39.mnemonicToSeedSync(mnemonic)
     const seed = new Uint8Array(seedBuffer.slice(0, 32))
-    const [principal, evmAddress, solAddress, btcAddress, identity] = await Promise.all([
-      this.toIcpPrincipal(seed),
-      this.toEvmAddress(seed),
-      this.toSolAddress(seed),
-      this.toBtcAddress(seed),
-      this.toIdentity(seed)
-    ])
+    const [principal, evmAddress, solAddress, btcAddress, identity] =
+      await Promise.all([
+        this.toIcpPrincipal(seed),
+        this.toEvmAddress(seed),
+        this.toSolAddress(seed),
+        this.toBtcAddress(seed),
+        this.toIdentity(seed),
+      ])
     return {
       principal,
       evmAddress,
       solAddress,
       btcAddress,
-      identity
+      identity,
     }
-  }
+  },
 }

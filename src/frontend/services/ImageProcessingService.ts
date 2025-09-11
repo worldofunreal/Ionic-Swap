@@ -33,7 +33,7 @@ export class ImageProcessingService {
       height: 384,
       quality: 0.75,
       format: 'webp',
-      fit: 'cover'
+      fit: 'cover',
     })
   }
 
@@ -46,14 +46,17 @@ export class ImageProcessingService {
       height: 500,
       quality: 0.75,
       format: 'webp',
-      fit: 'cover'
+      fit: 'cover',
     })
   }
 
   /**
    * Generic image processing with custom options
    */
-  async processImage(file: File, options: ImageProcessingOptions): Promise<ProcessedImage> {
+  async processImage(
+    file: File,
+    options: ImageProcessingOptions
+  ): Promise<ProcessedImage> {
     return new Promise((resolve, reject) => {
       // Create image element
       const img = new Image()
@@ -67,20 +70,21 @@ export class ImageProcessingService {
           this.ctx.clearRect(0, 0, options.width, options.height)
 
           // Calculate dimensions based on fit mode
-          const { drawWidth, drawHeight, offsetX, offsetY } = this.calculateDimensions(
-            img.width,
-            img.height,
-            options.width,
-            options.height,
-            options.fit || 'cover'
-          )
+          const { drawWidth, drawHeight, offsetX, offsetY } =
+            this.calculateDimensions(
+              img.width,
+              img.height,
+              options.width,
+              options.height,
+              options.fit || 'cover'
+            )
 
           // Draw image with proper scaling and positioning
           this.ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight)
 
           // Convert to blob with specified format and quality
           this.canvas.toBlob(
-            (blob) => {
+            blob => {
               if (blob) {
                 const url = URL.createObjectURL(blob)
                 resolve({
@@ -89,7 +93,7 @@ export class ImageProcessingService {
                   size: blob.size,
                   width: options.width,
                   height: options.height,
-                  format: options.format
+                  format: options.format,
                 })
               } else {
                 reject(new Error('Failed to create blob'))
@@ -121,7 +125,12 @@ export class ImageProcessingService {
     targetWidth: number,
     targetHeight: number,
     fit: string
-  ): { drawWidth: number; drawHeight: number; offsetX: number; offsetY: number } {
+  ): {
+    drawWidth: number
+    drawHeight: number
+    offsetX: number
+    offsetY: number
+  } {
     const imgAspect = imgWidth / imgHeight
     const targetAspect = targetWidth / targetHeight
 
@@ -236,7 +245,7 @@ export class ImageProcessingService {
       'image/png',
       'image/gif',
       'image/webp',
-      'image/svg+xml'
+      'image/svg+xml',
     ]
     return validTypes.includes(file.type)
   }

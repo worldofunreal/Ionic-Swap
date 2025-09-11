@@ -1,4 +1,12 @@
-export type WalletType = 'metamask' | 'phantom' | 'internet-identity' | 'plug' | 'unisat' | 'xverse' | 'hiro' | 'leather'
+export type WalletType =
+  | 'metamask'
+  | 'phantom'
+  | 'internet-identity'
+  | 'plug'
+  | 'unisat'
+  | 'xverse'
+  | 'hiro'
+  | 'leather'
 
 export interface WalletCapabilities {
   icp: boolean

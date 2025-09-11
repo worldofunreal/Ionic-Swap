@@ -32,7 +32,9 @@
 
         <div class="space-y-4">
           <!-- Register Tour -->
-          <div class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+          <div
+            class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
+          >
             <div class="flex items-center space-x-3">
               <div class="flex-shrink-0">
                 <UIcon
@@ -60,7 +62,9 @@
           </div>
 
           <!-- Marketplace Tour (Disabled) -->
-          <div class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg opacity-50">
+          <div
+            class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg opacity-50"
+          >
             <div class="flex items-center space-x-3">
               <div class="flex-shrink-0">
                 <UIcon
@@ -69,7 +73,9 @@
                 />
               </div>
               <div>
-                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                <h4
+                  class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                >
                   Marketplace Tour
                 </h4>
                 <p class="text-xs text-gray-400 dark:text-gray-500">
@@ -77,18 +83,15 @@
                 </p>
               </div>
             </div>
-            <UButton
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              disabled
-            >
+            <UButton color="neutral" variant="ghost" size="sm" disabled>
               Coming Soon
             </UButton>
           </div>
 
           <!-- Portfolio Tour (Disabled) -->
-          <div class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg opacity-50">
+          <div
+            class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg opacity-50"
+          >
             <div class="flex items-center space-x-3">
               <div class="flex-shrink-0">
                 <UIcon
@@ -97,7 +100,9 @@
                 />
               </div>
               <div>
-                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                <h4
+                  class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                >
                   Portfolio Tour
                 </h4>
                 <p class="text-xs text-gray-400 dark:text-gray-500">
@@ -105,18 +110,15 @@
                 </p>
               </div>
             </div>
-            <UButton
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              disabled
-            >
+            <UButton color="neutral" variant="ghost" size="sm" disabled>
               Coming Soon
             </UButton>
           </div>
 
           <!-- Trading Tour (Disabled) -->
-          <div class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg opacity-50">
+          <div
+            class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg opacity-50"
+          >
             <div class="flex items-center space-x-3">
               <div class="flex-shrink-0">
                 <UIcon
@@ -125,7 +127,9 @@
                 />
               </div>
               <div>
-                <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                <h4
+                  class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                >
                   Trading Tour
                 </h4>
                 <p class="text-xs text-gray-400 dark:text-gray-500">
@@ -133,12 +137,7 @@
                 </p>
               </div>
             </div>
-            <UButton
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              disabled
-            >
+            <UButton color="neutral" variant="ghost" size="sm" disabled>
               Coming Soon
             </UButton>
           </div>

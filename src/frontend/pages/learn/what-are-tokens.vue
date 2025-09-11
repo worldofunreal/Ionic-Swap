@@ -48,12 +48,11 @@
         :class="`bg-gradient-to-r from-${currentTheme}-600 to-${currentTheme}-800`"
       >
         <div class="max-w-3xl">
-          <h2 class="text-2xl font-bold mb-4">
-            Understanding Digital Tokens
-          </h2>
+          <h2 class="text-2xl font-bold mb-4">Understanding Digital Tokens</h2>
           <p class="text-lg opacity-90">
-            Tokens are digital assets that represent value or utility on blockchain networks. 
-            They enable decentralized applications, cross-chain interoperability, and new forms of digital economy.
+            Tokens are digital assets that represent value or utility on
+            blockchain networks. They enable decentralized applications,
+            cross-chain interoperability, and new forms of digital economy.
           </p>
         </div>
       </div>
@@ -66,51 +65,91 @@
             <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
               What are Digital Tokens?
             </h2>
-            
+
             <div class="prose prose-lg dark:prose-invert max-w-none">
               <p class="text-gray-600 dark:text-gray-400 mb-6">
-                Digital tokens are programmable digital assets that exist on blockchain networks. 
-                They can represent various forms of value, from currencies and commodities to 
-                access rights and governance power.
+                Digital tokens are programmable digital assets that exist on
+                blockchain networks. They can represent various forms of value,
+                from currencies and commodities to access rights and governance
+                power.
               </p>
 
-              <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+              <h3
+                class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+              >
                 Key Characteristics
               </h3>
-              <ul class="list-disc pl-6 space-y-2 text-gray-600 dark:text-gray-400 mb-6">
-                <li><strong>Fungible:</strong> Each token is identical and interchangeable</li>
-                <li><strong>Programmable:</strong> Smart contracts define token behavior</li>
-                <li><strong>Decentralized:</strong> No single entity controls the network</li>
-                <li><strong>Transparent:</strong> All transactions are publicly verifiable</li>
-                <li><strong>Borderless:</strong> Global accessibility without intermediaries</li>
+              <ul
+                class="list-disc pl-6 space-y-2 text-gray-600 dark:text-gray-400 mb-6"
+              >
+                <li>
+                  <strong>Fungible:</strong> Each token is identical and
+                  interchangeable
+                </li>
+                <li>
+                  <strong>Programmable:</strong> Smart contracts define token
+                  behavior
+                </li>
+                <li>
+                  <strong>Decentralized:</strong> No single entity controls the
+                  network
+                </li>
+                <li>
+                  <strong>Transparent:</strong> All transactions are publicly
+                  verifiable
+                </li>
+                <li>
+                  <strong>Borderless:</strong> Global accessibility without
+                  intermediaries
+                </li>
               </ul>
 
-              <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+              <h3
+                class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+              >
                 Types of Tokens
               </h3>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Utility Tokens</h4>
+                <div
+                  class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
+                >
+                  <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                    Utility Tokens
+                  </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
-                    Provide access to services or products within a specific ecosystem
+                    Provide access to services or products within a specific
+                    ecosystem
                   </p>
                 </div>
-                <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Payment Tokens</h4>
+                <div
+                  class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
+                >
+                  <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                    Payment Tokens
+                  </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
                     Used as digital currency for transactions and value transfer
                   </p>
                 </div>
-                <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Governance Tokens</h4>
+                <div
+                  class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
+                >
+                  <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                    Governance Tokens
+                  </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
                     Enable holders to participate in protocol decision-making
                   </p>
                 </div>
-                <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Stablecoins</h4>
+                <div
+                  class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
+                >
+                  <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                    Stablecoins
+                  </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
-                    Maintain stable value pegged to fiat currencies or commodities
+                    Maintain stable value pegged to fiat currencies or
+                    commodities
                   </p>
                 </div>
               </div>
@@ -122,35 +161,62 @@
         <div class="space-y-6">
           <!-- Token Standards -->
           <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-6">
-            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+            <h3
+              class="text-lg font-semibold mb-4 text-gray-900 dark:text-white"
+            >
               Token Standards
             </h3>
             <div class="space-y-4">
               <div class="flex items-start gap-3">
-                <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center flex-shrink-0">
-                  <UIcon name="i-heroicons-cog-6-tooth" class="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <div
+                  class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center flex-shrink-0"
+                >
+                  <UIcon
+                    name="i-heroicons-cog-6-tooth"
+                    class="w-4 h-4 text-blue-600 dark:text-blue-400"
+                  />
                 </div>
                 <div>
-                  <h4 class="font-medium text-gray-900 dark:text-white">ERC-20</h4>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">Ethereum standard for fungible tokens</p>
+                  <h4 class="font-medium text-gray-900 dark:text-white">
+                    ERC-20
+                  </h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                    Ethereum standard for fungible tokens
+                  </p>
                 </div>
               </div>
               <div class="flex items-start gap-3">
-                <div class="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center flex-shrink-0">
-                  <UIcon name="i-heroicons-cog-6-tooth" class="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <div
+                  class="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center flex-shrink-0"
+                >
+                  <UIcon
+                    name="i-heroicons-cog-6-tooth"
+                    class="w-4 h-4 text-purple-600 dark:text-purple-400"
+                  />
                 </div>
                 <div>
                   <h4 class="font-medium text-gray-900 dark:text-white">SPL</h4>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">Solana Program Library tokens</p>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                    Solana Program Library tokens
+                  </p>
                 </div>
               </div>
               <div class="flex items-start gap-3">
-                <div class="w-8 h-8 rounded-full bg-cyan-100 dark:bg-cyan-900 flex items-center justify-center flex-shrink-0">
-                  <UIcon name="i-heroicons-cog-6-tooth" class="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                <div
+                  class="w-8 h-8 rounded-full bg-cyan-100 dark:bg-cyan-900 flex items-center justify-center flex-shrink-0"
+                >
+                  <UIcon
+                    name="i-heroicons-cog-6-tooth"
+                    class="w-4 h-4 text-cyan-600 dark:text-cyan-400"
+                  />
                 </div>
                 <div>
-                  <h4 class="font-medium text-gray-900 dark:text-white">ICRC</h4>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">Internet Computer token standard</p>
+                  <h4 class="font-medium text-gray-900 dark:text-white">
+                    ICRC
+                  </h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                    Internet Computer token standard
+                  </p>
                 </div>
               </div>
             </div>
@@ -158,7 +224,9 @@
 
           <!-- Quick Links -->
           <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-6">
-            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+            <h3
+              class="text-lg font-semibold mb-4 text-gray-900 dark:text-white"
+            >
               Learn More
             </h3>
             <div class="space-y-3">
@@ -166,22 +234,37 @@
                 to="/learn/token-standards"
                 class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
-                <UIcon name="i-heroicons-cog-6-tooth" class="w-5 h-5 text-primary-600 dark:text-primary-400" />
-                <span class="text-gray-700 dark:text-gray-300">Token Standards</span>
+                <UIcon
+                  name="i-heroicons-cog-6-tooth"
+                  class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                />
+                <span class="text-gray-700 dark:text-gray-300"
+                  >Token Standards</span
+                >
               </NuxtLink>
               <NuxtLink
                 to="/learn/cross-chain-swapping"
                 class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
-                <UIcon name="i-heroicons-arrow-path" class="w-5 h-5 text-primary-600 dark:text-primary-400" />
-                <span class="text-gray-700 dark:text-gray-300">Cross-Chain Swapping</span>
+                <UIcon
+                  name="i-heroicons-arrow-path"
+                  class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                />
+                <span class="text-gray-700 dark:text-gray-300"
+                  >Cross-Chain Swapping</span
+                >
               </NuxtLink>
               <NuxtLink
                 to="/learn/gasless-transactions"
                 class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
-                <UIcon name="i-heroicons-bolt" class="w-5 h-5 text-primary-600 dark:text-primary-400" />
-                <span class="text-gray-700 dark:text-gray-300">Gasless Transactions</span>
+                <UIcon
+                  name="i-heroicons-bolt"
+                  class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                />
+                <span class="text-gray-700 dark:text-gray-300"
+                  >Gasless Transactions</span
+                >
               </NuxtLink>
             </div>
           </div>
@@ -192,33 +275,41 @@
 </template>
 
 <script setup lang="ts">
-import { useColorTheme } from '@/composables/useColorTheme'
+  import { useColorTheme } from '@/composables/useColorTheme'
 
-const { currentTheme } = useColorTheme()
+  const { currentTheme } = useColorTheme()
 
-useHead({
-  title: 'What are Tokens? - Ionic Swap',
-  meta: [
-    {
-      name: 'description',
-      content: 'Learn about digital tokens, blockchain standards, and how they work across different networks.',
-    },
-    { property: 'og:title', content: 'What are Tokens? - Ionic Swap' },
-    {
-      property: 'og:description',
-      content: 'Learn about digital tokens, blockchain standards, and how they work across different networks.',
-    },
-    { property: 'og:type', content: 'article' },
-    { property: 'og:url', content: 'https://ionicswap.com/learn/what-are-tokens' },
-    { property: 'og:image', content: '/logo.svg' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'What are Tokens? - Ionic Swap' },
-    {
-      name: 'twitter:description',
-      content: 'Learn about digital tokens, blockchain standards, and how they work across different networks.',
-    },
-    { name: 'twitter:image', content: '/logo.svg' },
-  ],
-  link: [{ rel: 'canonical', href: 'https://ionicswap.com/learn/what-are-tokens' }],
-})
+  useHead({
+    title: 'What are Tokens? - Ionic Swap',
+    meta: [
+      {
+        name: 'description',
+        content:
+          'Learn about digital tokens, blockchain standards, and how they work across different networks.',
+      },
+      { property: 'og:title', content: 'What are Tokens? - Ionic Swap' },
+      {
+        property: 'og:description',
+        content:
+          'Learn about digital tokens, blockchain standards, and how they work across different networks.',
+      },
+      { property: 'og:type', content: 'article' },
+      {
+        property: 'og:url',
+        content: 'https://ionicswap.com/learn/what-are-tokens',
+      },
+      { property: 'og:image', content: '/logo.svg' },
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:title', content: 'What are Tokens? - Ionic Swap' },
+      {
+        name: 'twitter:description',
+        content:
+          'Learn about digital tokens, blockchain standards, and how they work across different networks.',
+      },
+      { name: 'twitter:image', content: '/logo.svg' },
+    ],
+    link: [
+      { rel: 'canonical', href: 'https://ionicswap.com/learn/what-are-tokens' },
+    ],
+  })
 </script>

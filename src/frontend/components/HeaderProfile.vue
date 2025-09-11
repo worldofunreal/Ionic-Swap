@@ -1,9 +1,6 @@
 <template>
   <div class="relative profile-settings-icon">
-    <div
-      class="flex items-center gap-2 cursor-pointer"
-      @click="toggleUserMenu"
-    >
+    <div class="flex items-center gap-2 cursor-pointer" @click="toggleUserMenu">
       <!-- Avatar with Wallet Icon Overlay -->
       <div class="relative">
         <UAvatar
@@ -16,7 +13,9 @@
             <div
               class="w-full h-full rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-sm"
             >
-              {{ authStore.userProfile?.username?.charAt(0).toUpperCase() || 'U' }}
+              {{
+                authStore.userProfile?.username?.charAt(0).toUpperCase() || 'U'
+              }}
             </div>
           </template>
         </UAvatar>
@@ -60,14 +59,15 @@
               <div
                 class="w-full h-full rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-lg"
               >
-                {{ authStore.userProfile?.username?.charAt(0).toUpperCase() || 'U' }}
+                {{
+                  authStore.userProfile?.username?.charAt(0).toUpperCase() ||
+                  'U'
+                }}
               </div>
             </template>
           </UAvatar>
           <div class="flex-1 min-w-0">
-            <div
-              class="font-semibold text-gray-900 dark:text-white truncate"
-            >
+            <div class="font-semibold text-gray-900 dark:text-white truncate">
               {{ authStore.userProfile?.username || 'User' }}
             </div>
             <div class="text-sm text-gray-500 dark:text-gray-400">
@@ -82,14 +82,18 @@
             :color="isFollowing ? 'neutral' : 'primary'"
             :variant="isFollowing ? 'soft' : 'solid'"
             :loading="followLoading"
+            class="w-full"
             @click="toggleFollow"
             @mouseenter="handleFollowHover"
             @mouseleave="handleFollowLeave"
-            class="w-full"
           >
-            <UIcon 
-              :name="isFollowing ? 'i-heroicons-user-minus-20-solid' : 'i-heroicons-user-plus-20-solid'" 
-              class="w-4 h-4 mr-2" 
+            <UIcon
+              :name="
+                isFollowing
+                  ? 'i-heroicons-user-minus-20-solid'
+                  : 'i-heroicons-user-plus-20-solid'
+              "
+              class="w-4 h-4 mr-2"
             />
             {{ followButtonText }}
           </UButton>
@@ -97,15 +101,19 @@
 
         <!-- Cross-Chain Addresses Section -->
         <div class="mb-4">
-          <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+          <div
+            class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2"
+          >
             Cross-Chain Addresses
           </div>
-          
+
           <!-- ICP Principal -->
           <div v-if="authStore.principal" class="mb-3">
             <div class="flex items-center gap-2 mb-1">
               <UIcon name="token-branded:icp" class="w-4 h-4 text-orange-500" />
-              <span class="text-xs font-medium text-gray-600 dark:text-gray-400">ICP</span>
+              <span class="text-xs font-medium text-gray-600 dark:text-gray-400"
+                >ICP</span
+              >
             </div>
             <div
               class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-neutral-800 rounded-md"
@@ -127,7 +135,9 @@
           <div v-if="authStore.evmAddress" class="mb-3">
             <div class="flex items-center gap-2 mb-1">
               <UIcon name="cryptocurrency:eth" class="w-4 h-4 text-blue-500" />
-              <span class="text-xs font-medium text-gray-600 dark:text-gray-400">EVM</span>
+              <span class="text-xs font-medium text-gray-600 dark:text-gray-400"
+                >EVM</span
+              >
             </div>
             <div
               class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-neutral-800 rounded-md"
@@ -148,8 +158,13 @@
           <!-- Solana Address -->
           <div v-if="authStore.solAddress" class="mb-3">
             <div class="flex items-center gap-2 mb-1">
-              <UIcon name="cryptocurrency:sol" class="w-4 h-4 text-purple-500" />
-              <span class="text-xs font-medium text-gray-600 dark:text-gray-400">SOL</span>
+              <UIcon
+                name="cryptocurrency:sol"
+                class="w-4 h-4 text-purple-500"
+              />
+              <span class="text-xs font-medium text-gray-600 dark:text-gray-400"
+                >SOL</span
+              >
             </div>
             <div
               class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-neutral-800 rounded-md"
@@ -170,8 +185,13 @@
           <!-- Bitcoin Address -->
           <div v-if="authStore.btcAddress" class="mb-3">
             <div class="flex items-center gap-2 mb-1">
-              <UIcon name="cryptocurrency:btc" class="w-4 h-4 text-orange-400" />
-              <span class="text-xs font-medium text-gray-600 dark:text-gray-400">BTC</span>
+              <UIcon
+                name="cryptocurrency:btc"
+                class="w-4 h-4 text-orange-400"
+              />
+              <span class="text-xs font-medium text-gray-600 dark:text-gray-400"
+                >BTC</span
+              >
             </div>
             <div
               class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-neutral-800 rounded-md"
@@ -191,18 +211,24 @@
         </div>
 
         <!-- Actions -->
-        <div class="border-t border-gray-200 dark:border-gray-700 pt-3 space-y-2">
+        <div
+          class="border-t border-gray-200 dark:border-gray-700 pt-3 space-y-2"
+        >
           <!-- Profile Button -->
           <UButton
             block
             color="primary"
             variant="soft"
             icon="iconamoon:profile-fill"
-            :to="authStore.userProfile?.username ? `/@${authStore.userProfile.username}` : '/profile'"
+            :to="
+              authStore.userProfile?.username
+                ? `/@${authStore.userProfile.username}`
+                : '/profile'
+            "
           >
             View Profile
           </UButton>
-          
+
           <!-- Logout Button -->
           <UButton
             block
@@ -238,17 +264,19 @@
   const userAvatar = computed(() => {
     const avatarPath = authStore.userProfile?.avatar_url?.[0]
     if (!avatarPath) return ''
-    
+
     // If it's already a full URL, return as is
     if (avatarPath.startsWith('http')) {
       return avatarPath
     }
-    
+
     // Convert file path to full URL with cache busting
     const baseUrl = canisterService.getAssetUrl(avatarPath)
     const timestamp = Date.now()
     // Use a combination of timestamp and profile update trigger for better cache busting
-    const cacheBuster = authStore.userProfile?.updated_at ? Number(authStore.userProfile.updated_at) : timestamp
+    const cacheBuster = authStore.userProfile?.updated_at
+      ? Number(authStore.userProfile.updated_at)
+      : timestamp
     return `${baseUrl}?t=${timestamp}&v=${cacheBuster}&trigger=${Date.now()}`
   })
   const showUserMenu = ref(false)
@@ -260,13 +288,15 @@
   const showFollowButton = computed(() => {
     const isProfilePage = route.path.startsWith('/@')
     if (!isProfilePage) return false
-    
+
     const routeUsername = route.params.username as string
     if (!routeUsername) return false
-    
+
     // Remove @ symbol if present
-    const cleanUsername = routeUsername.startsWith('@') ? routeUsername.slice(1) : routeUsername
-    
+    const cleanUsername = routeUsername.startsWith('@')
+      ? routeUsername.slice(1)
+      : routeUsername
+
     // Don't show follow button for own profile
     return cleanUsername !== authStore.userProfile?.username
   })
@@ -275,7 +305,9 @@
   const viewedProfileUsername = computed(() => {
     const routeUsername = route.params.username as string
     if (!routeUsername) return null
-    return routeUsername.startsWith('@') ? routeUsername.slice(1) : routeUsername
+    return routeUsername.startsWith('@')
+      ? routeUsername.slice(1)
+      : routeUsername
   })
 
   // Follow button text
@@ -300,14 +332,19 @@
   // Check if current user is following this profile using the efficient method
   const checkFollowingStatus = async () => {
     if (!viewedProfileUsername.value) return
-    
+
     try {
       // Get the viewed profile to get their principal
-      const viewedProfile = await canisterService.getPublicProfile(viewedProfileUsername.value)
+      const viewedProfile = await canisterService.getPublicProfile(
+        viewedProfileUsername.value
+      )
       if (!viewedProfile?.id) return
-      
+
       // Use personal endpoint to get follow state
-      const personalProfile = await canisterService.getUserPersonal(viewedProfile.id.toText(), authStore.principal)
+      const personalProfile = await canisterService.getUserPersonal(
+        viewedProfile.id.toText(),
+        authStore.principal
+      )
       if (personalProfile) {
         isFollowing.value = personalProfile.am_following_them
       }
@@ -317,18 +354,24 @@
   }
 
   // Watch for route changes to update following status
-  watch(() => route.params.username, () => {
-    if (showUserMenu.value) {
-      checkFollowingStatus()
+  watch(
+    () => route.params.username,
+    () => {
+      if (showUserMenu.value) {
+        checkFollowingStatus()
+      }
     }
-  })
+  )
 
   // Watch for menu open to check following status
-  watch(() => showUserMenu.value, (isOpen) => {
-    if (isOpen) {
-      checkFollowingStatus()
+  watch(
+    () => showUserMenu.value,
+    isOpen => {
+      if (isOpen) {
+        checkFollowingStatus()
+      }
     }
-  })
+  )
 
   function toggleUserMenu() {
     showUserMenu.value = !showUserMenu.value
@@ -355,15 +398,17 @@
 
   async function toggleFollow() {
     if (!viewedProfileUsername.value || followLoading.value) return
-    
+
     followLoading.value = true
     try {
       // Get the viewed profile to get their principal
-      const viewedProfile = await canisterService.getPublicProfile(viewedProfileUsername.value)
+      const viewedProfile = await canisterService.getPublicProfile(
+        viewedProfileUsername.value
+      )
       if (!viewedProfile?.id) {
         throw new Error('Profile not found')
       }
-      
+
       if (isFollowing.value) {
         await canisterService.unfollowUser(viewedProfile.id.toText())
         isFollowing.value = false
@@ -398,7 +443,7 @@
           throw error
         }
       }
-      
+
       $trackButtonClick('Toggle Follow', {
         action: isFollowing.value ? 'follow' : 'unfollow',
         targetUsername: viewedProfileUsername.value,
@@ -462,7 +507,7 @@
 
   function getWalletIcon(walletType?: string) {
     if (!walletType) return 'solar:wallet-bold'
-    
+
     switch (walletType.toLowerCase()) {
       case 'metamask':
         return 'token-branded:metamask'

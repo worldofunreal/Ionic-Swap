@@ -19,7 +19,7 @@ export default defineNuxtConfig({
   colorMode: {
     preference: 'system',
     fallback: 'dark',
-    storageKey: 'ionic-swap-theme'
+    storageKey: 'ionic-swap-theme',
   },
 
   fonts: {
@@ -40,7 +40,8 @@ export default defineNuxtConfig({
         { name: 'theme-color', content: '#0a0c1b' },
         {
           name: 'description',
-          content: 'Ionic Swap - Cross-Chain Token Swapping with Gasless Transactions',
+          content:
+            'Ionic Swap - Cross-Chain Token Swapping with Gasless Transactions',
         },
         {
           name: 'keywords',
@@ -50,11 +51,13 @@ export default defineNuxtConfig({
         { name: 'robots', content: 'index, follow' },
         {
           property: 'og:title',
-          content: 'Ionic Swap - Cross-Chain Token Swapping with Gasless Transactions',
+          content:
+            'Ionic Swap - Cross-Chain Token Swapping with Gasless Transactions',
         },
         {
           property: 'og:description',
-          content: 'Ionic Swap - Cross-Chain Token Swapping with Gasless Transactions',
+          content:
+            'Ionic Swap - Cross-Chain Token Swapping with Gasless Transactions',
         },
         { property: 'og:type', content: 'website' },
         { property: 'og:url', content: 'https://ionicswap.com/' },
@@ -62,11 +65,13 @@ export default defineNuxtConfig({
         { name: 'twitter:card', content: 'summary_large_image' },
         {
           name: 'twitter:title',
-          content: 'Ionic Swap - Cross-Chain Token Swapping with Gasless Transactions',
+          content:
+            'Ionic Swap - Cross-Chain Token Swapping with Gasless Transactions',
         },
         {
           name: 'twitter:description',
-          content: 'Ionic Swap - Cross-Chain Token Swapping with Gasless Transactions',
+          content:
+            'Ionic Swap - Cross-Chain Token Swapping with Gasless Transactions',
         },
         { name: 'twitter:image', content: '/logo.svg' },
       ],
@@ -90,25 +95,28 @@ export default defineNuxtConfig({
         crypto: 'crypto-browserify',
         stream: 'stream-browserify',
         // Backend declarations (currently using client-side only)
-        'declarations/backend': require('path').resolve(__dirname, '../../declarations/backend'),
+        'declarations/backend': require('path').resolve(
+          __dirname,
+          '../../declarations/backend'
+        ),
       },
     },
     optimizeDeps: {
       include: [
-        'buffer', 
-        'process', 
-        'util', 
-        'bitcoinjs-lib', 
-        'ecpair', 
-        'tiny-secp256k1', 
-        'crypto-browserify', 
+        'buffer',
+        'process',
+        'util',
+        'bitcoinjs-lib',
+        'ecpair',
+        'tiny-secp256k1',
+        'crypto-browserify',
         'stream-browserify',
         '@dfinity/principal',
         '@dfinity/agent',
         '@dfinity/candid',
-        '@solana/web3.js'
+        '@solana/web3.js',
       ],
-      exclude: ['@microsoft/clarity']
+      exclude: ['@microsoft/clarity'],
     },
     build: {
       chunkSizeWarningLimit: 1000,
@@ -116,17 +124,21 @@ export default defineNuxtConfig({
         output: {
           manualChunks: {
             // Split vendor chunks for better caching
-            'bitcoin': ['bitcoinjs-lib', 'ecpair', 'tiny-secp256k1'],
-            'crypto': ['crypto-browserify', 'stream-browserify', 'buffer', 'process', 'util'],
-            'chart': ['chart.js', 'vue-chartjs'],
-            'ethers': ['ethers']
+            bitcoin: ['bitcoinjs-lib', 'ecpair', 'tiny-secp256k1'],
+            crypto: [
+              'crypto-browserify',
+              'stream-browserify',
+              'buffer',
+              'process',
+              'util',
+            ],
+            chart: ['chart.js', 'vue-chartjs'],
+            ethers: ['ethers'],
           },
         },
       },
     },
-    plugins: [
-      require('vite-plugin-wasm')(),
-    ],
+    plugins: [require('vite-plugin-wasm')()],
     // Ensure WASM files are properly handled
     assetsInclude: ['**/*.wasm'],
   },
@@ -139,10 +151,10 @@ export default defineNuxtConfig({
         '@dfinity/agent',
         '@dfinity/principal',
         '@dfinity/candid',
-        '@dfinity/identity', 
+        '@dfinity/identity',
         '@dfinity/auth-client',
         '@solana/web3.js',
-        '@microsoft/clarity'
+        '@microsoft/clarity',
       ],
     },
     nodeModulesDirs: ['../../node_modules'],
@@ -151,7 +163,10 @@ export default defineNuxtConfig({
       process: 'process',
       util: 'util',
       // Backend declarations (currently using client-side only)
-      'declarations/backend': require('path').resolve(__dirname, '../../declarations/backend'),
+      'declarations/backend': require('path').resolve(
+        __dirname,
+        '../../declarations/backend'
+      ),
     },
     // Add @dfinity packages to server dependencies
     externals: {
@@ -176,8 +191,8 @@ export default defineNuxtConfig({
       '@dfinity/principal',
       '@dfinity/candid',
       '@dfinity/identity',
-      '@dfinity/auth-client'
-    ]
+      '@dfinity/auth-client',
+    ],
   },
   // Disable source maps in production for better performance
   sourcemap: process.env.NODE_ENV === 'development',

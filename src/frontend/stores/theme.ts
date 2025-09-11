@@ -5,8 +5,11 @@ export const useThemeStore = defineStore('theme', () => {
 
   // Initialize theme from localStorage
   const initTheme = () => {
-    if (process.client) {
-      const savedTheme = localStorage.getItem('ionic-swap-theme') as 'light' | 'dark' | null
+    if (import.meta.client) {
+      const savedTheme = localStorage.getItem('ionic-swap-theme') as
+        | 'light'
+        | 'dark'
+        | null
       if (savedTheme) {
         theme.value = savedTheme
       }
@@ -16,7 +19,7 @@ export const useThemeStore = defineStore('theme', () => {
   // Toggle theme
   const toggleTheme = () => {
     theme.value = theme.value === 'dark' ? 'light' : 'dark'
-    if (process.client) {
+    if (import.meta.client) {
       localStorage.setItem('ionic-swap-theme', theme.value)
     }
   }
@@ -24,7 +27,7 @@ export const useThemeStore = defineStore('theme', () => {
   // Set specific theme
   const setTheme = (newTheme: 'light' | 'dark') => {
     theme.value = newTheme
-    if (process.client) {
+    if (import.meta.client) {
       localStorage.setItem('ionic-swap-theme', newTheme)
     }
   }
@@ -33,6 +36,6 @@ export const useThemeStore = defineStore('theme', () => {
     theme: readonly(theme),
     initTheme,
     toggleTheme,
-    setTheme
+    setTheme,
   }
 })

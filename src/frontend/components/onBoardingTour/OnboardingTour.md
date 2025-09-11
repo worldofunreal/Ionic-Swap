@@ -32,6 +32,7 @@ The onboarding tour system uses **Intro.js** to create interactive guided tours 
 **Purpose**: Core logic for tour management and state
 
 **Key Functions**:
+
 - `shouldShowOnboarding` - Checks if user should see tour (first-time visitor)
 - `startTour(tourName)` - Initializes and starts a specific tour
 - `stopTour()` - Stops the current tour
@@ -39,6 +40,7 @@ The onboarding tour system uses **Intro.js** to create interactive guided tours 
 - `initOnboarding()` - Initializes onboarding state
 
 **State Management**:
+
 - Uses localStorage key: `'nftropoly-onboarding-completed'`
 - Tracks completion status to avoid showing tour repeatedly
 
@@ -49,12 +51,14 @@ The onboarding tour system uses **Intro.js** to create interactive guided tours 
 **Purpose**: Container for Intro.js tour overlay
 
 **Features**:
+
 - Minimal wrapper component
 - Exposes `stopTour` and `startTour` methods
 - Handles cleanup on component unmount
 - No visible UI - just manages tour lifecycle
 
 **Exposed Methods**:
+
 ```typescript
 defineExpose({
   stopTour,
@@ -69,6 +73,7 @@ defineExpose({
 **Purpose**: Manual tour trigger UI
 
 **Features**:
+
 - "Start Tour" button in bottom-right corner
 - Modal with available tour options
 - Currently only "Registration Tour" is active
@@ -77,6 +82,7 @@ defineExpose({
 ### 4. Integration in `app.vue`
 
 **Auto-start Logic**:
+
 ```typescript
 // Auto-start onboarding tour for new users
 if (shouldShowOnboarding.value) {
@@ -87,6 +93,7 @@ if (shouldShowOnboarding.value) {
 ```
 
 **Component Mounting**:
+
 ```vue
 <ClientOnly>
   <OnboardingTour ref="onboardingTourRef" />
@@ -101,6 +108,7 @@ if (shouldShowOnboarding.value) {
 ### Current Tour: "registration"
 
 **Steps Defined**:
+
 1. **Welcome Message** - General introduction
 2. **Connect Wallet Button** - `.connect-wallet-btn` in Header
 3. **Wallet Options** - Individual wallet buttons (Internet Identity, MetaMask, Phantom, Plug)
@@ -110,6 +118,7 @@ if (shouldShowOnboarding.value) {
 7. **Completion** - Final congratulations message
 
 **Target Elements**:
+
 - `.connect-wallet-btn` - Header connect wallet button
 - `#internet-identity-btn` - Internet Identity wallet button
 - `#metamask-btn` - MetaMask wallet button
@@ -122,6 +131,7 @@ if (shouldShowOnboarding.value) {
 ### Tour Configuration
 
 **Intro.js Options**:
+
 ```typescript
 intro.setOptions({
   steps: tourSteps,
@@ -143,6 +153,7 @@ intro.setOptions({
 ## User Flow
 
 ### Automatic Flow (New Users)
+
 1. User visits site for first time
 2. After 2 seconds, tour automatically starts
 3. User progresses through registration steps
@@ -150,6 +161,7 @@ intro.setOptions({
 5. Tour won't show again unless localStorage is cleared
 
 ### Manual Flow (Any User)
+
 1. User clicks "Start Tour" button in bottom-right corner
 2. Tour selection modal opens
 3. User selects "Registration Tour"
@@ -161,6 +173,7 @@ intro.setOptions({
 The tour targets specific CSS classes that must exist in the application:
 
 **Required Classes**:
+
 - `.connect-wallet-btn` - Connect wallet button in Header
 - `.registration-modal` - Registration modal container
 - `.create-profile-btn` - Create profile button
@@ -172,10 +185,12 @@ The tour targets specific CSS classes that must exist in the application:
 **localStorage Key**: `'nftropoly-onboarding-completed'`
 
 **Values**:
+
 - `'true'` - User has completed onboarding
 - `null` or not set - User hasn't completed onboarding
 
 **Behavior**:
+
 - New users (no localStorage entry) see tour automatically
 - Returning users (localStorage = 'true') don't see tour
 - Manual trigger works regardless of completion status
@@ -183,11 +198,13 @@ The tour targets specific CSS classes that must exist in the application:
 ## Error Handling
 
 **Known Issues Fixed**:
+
 - Removed infinite loop in `checkLoginStatus` function
 - Fixed stack overflow from undefined window properties
 - Cleaned up unused reset functionality
 
 **Current Error Prevention**:
+
 - Server-side checks prevent Intro.js initialization
 - Element existence checks before targeting
 - Graceful fallbacks for missing elements
@@ -202,12 +219,14 @@ The tour targets specific CSS classes that must exist in the application:
 ## Testing
 
 ### Manual Testing
+
 1. **New User**: Clear localStorage and refresh page
 2. **Manual Trigger**: Click "Start Tour" button
 3. **Completion**: Complete tour and verify localStorage is set
 4. **Returning User**: Verify tour doesn't auto-start
 
 ### Development Testing
+
 - Use browser dev tools to clear localStorage
 - Test different screen sizes and themes
 - Verify all target elements exist in DOM
@@ -215,6 +234,7 @@ The tour targets specific CSS classes that must exist in the application:
 ## Future Enhancements
 
 **Potential Improvements**:
+
 - Add more tour types (marketplace, portfolio, etc.)
 - Custom styling for different themes
 - A/B testing for different tour flows
@@ -222,6 +242,7 @@ The tour targets specific CSS classes that must exist in the application:
 - Mobile-specific tour optimizations
 
 **Planned Features**:
+
 - Marketplace tour for browsing and trading
 - Portfolio tour for managing collections
 - Advanced features tour for power users

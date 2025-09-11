@@ -64,7 +64,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr class="border-b border-gray-700 h-px"/>
+          <tr class="border-b border-gray-700 h-px" />
           <tr
             v-for="act in activities"
             :key="act.id"

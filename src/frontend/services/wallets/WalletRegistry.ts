@@ -38,12 +38,16 @@ export const WalletRegistry = {
     return adapters.has(type)
   },
 
-  getWalletsByCapability(capability: keyof WalletCapabilities): WalletAdapter[] {
-    return this.getAvailableWallets().filter(adapter => adapter.capabilities[capability])
+  getWalletsByCapability(
+    capability: keyof WalletCapabilities
+  ): WalletAdapter[] {
+    return this.getAvailableWallets().filter(
+      adapter => adapter.capabilities[capability]
+    )
   },
 
   // Get wallets that can sign on a specific chain
   getWalletsForChain(chain: 'icp' | 'evm' | 'sol'): WalletAdapter[] {
     return this.getWalletsByCapability(chain)
-  }
+  },
 }

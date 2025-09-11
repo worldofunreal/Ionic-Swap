@@ -5,10 +5,16 @@ declare global {
   interface Window {
     ic?: {
       plug?: {
-        requestConnect: (options?: { whitelist?: string[], host?: string }) => Promise<{ principal: string }>
+        requestConnect: (options?: {
+          whitelist?: string[]
+          host?: string
+        }) => Promise<{ principal: string }>
         isConnected: () => Promise<boolean>
         getPrincipal: () => Promise<string>
-        createActor: (options: { canisterId: string, interfaceFactory: any }) => Promise<any>
+        createActor: (options: {
+          canisterId: string
+          interfaceFactory: any
+        }) => Promise<any>
         agent?: any
         principalId?: string
         accountId?: string
@@ -25,10 +31,10 @@ export class PlugAdapter implements WalletAdapter {
 
   private async isPlugInstalled(): Promise<boolean> {
     const hasPlug = !!(window.ic && window.ic.plug)
-    console.log('Plug detection:', { 
-      hasWindowIc: !!window.ic, 
-      hasPlug: !!window.ic?.plug, 
-      plugMethods: window.ic?.plug ? Object.keys(window.ic.plug) : []
+    console.log('Plug detection:', {
+      hasWindowIc: !!window.ic,
+      hasPlug: !!window.ic?.plug,
+      plugMethods: window.ic?.plug ? Object.keys(window.ic.plug) : [],
     })
     return hasPlug
   }
@@ -41,21 +47,22 @@ export class PlugAdapter implements WalletAdapter {
     try {
       // First check if already connected
       const isConnected = await window.ic?.plug?.isConnected()
-      
+
       if (!isConnected) {
         // Get database canister ID for whitelist
-        const databaseCanisterId = process.env.CANISTER_ID_DATABASE || 'bhhab-xyaaa-aaaap-qqchq-cai'
-        
+        const databaseCanisterId =
+          process.env.CANISTER_ID_DATABASE || 'bhhab-xyaaa-aaaap-qqchq-cai'
+
         // Request connection with whitelist and correct host
         console.log('Requesting Plug connection to mainnet...')
         await window.ic?.plug?.requestConnect({
           whitelist: [databaseCanisterId],
-          host: 'https://ic0.app'  // Always use mainnet
+          host: 'https://ic0.app', // Always use mainnet
         })
-        
+
         // Wait a bit for the connection to be established
         await new Promise(resolve => setTimeout(resolve, 2000))
-        
+
         // Force Plug to use mainnet by setting the agent host
         if (window.ic?.plug?.agent) {
           console.log('Configuring Plug agent for mainnet...')
@@ -68,13 +75,13 @@ export class PlugAdapter implements WalletAdapter {
           window.ic.plug.agent._host = 'https://ic0.app'
         }
       }
-      
+
       // Get the principal from the connected session
       const principal = await window.ic?.plug?.getPrincipal()
       if (!principal) {
         throw new Error('Could not get Plug principal after connection')
       }
-      
+
       console.log('Plug connected successfully, principal:', principal)
       return principal
     } catch (error) {
@@ -87,14 +94,15 @@ export class PlugAdapter implements WalletAdapter {
     try {
       // Plug doesn't have direct message signing, but we can create a secure signature
       // using Plug's agent and principal in a way that only Plug can generate
-      
+
       const principal = await window.ic?.plug?.getPrincipal()
-      if (!principal) throw new Error('Could not get Plug principal for signing')
-      
+      if (!principal)
+        throw new Error('Could not get Plug principal for signing')
+
       // Get the agent to create a unique signature
       if (window.ic?.plug?.agent) {
         console.log('Using Plug agent to create secure signature')
-        
+
         // Create a unique signature using Plug's agent capabilities
         // This creates a deterministic signature that only Plug can generate
         const signatureData = {
@@ -102,9 +110,11 @@ export class PlugAdapter implements WalletAdapter {
           message,
           agent: 'plug',
           // Use agent's identity to create uniqueness
-          identity: window.ic.plug.agent.identity ? 'has_identity' : 'no_identity'
+          identity: window.ic.plug.agent.identity
+            ? 'has_identity'
+            : 'no_identity',
         }
-        
+
         // Create a deterministic hash from the signature data
         const encoder = new TextEncoder()
         const data = encoder.encode(JSON.stringify(signatureData))
@@ -112,10 +122,10 @@ export class PlugAdapter implements WalletAdapter {
         const signature = Array.from(new Uint8Array(hashBuffer))
           .map(b => b.toString(16).padStart(2, '0'))
           .join('')
-        
+
         return `plug_signature_${signature}`
       }
-      
+
       // Fallback: create a signature using principal + message
       console.log('Using fallback signature method')
       const signatureData = `${principal}_${message}_plug_only`
@@ -125,7 +135,7 @@ export class PlugAdapter implements WalletAdapter {
       const signature = Array.from(new Uint8Array(hashBuffer))
         .map(b => b.toString(16).padStart(2, '0'))
         .join('')
-      
+
       return `plug_signature_${signature}`
     } catch (error) {
       console.error('Plug signing error:', error)
@@ -136,7 +146,7 @@ export class PlugAdapter implements WalletAdapter {
   async authenticate(): Promise<CrossChainAuthResult> {
     try {
       console.log('Starting Plug authentication...')
-      
+
       // 1. Get ICP principal (native) via Plug connection
       const principal = await this.connectPlug()
       console.log('Got Plug principal:', principal)
@@ -154,13 +164,13 @@ export class PlugAdapter implements WalletAdapter {
       const [evmAddress, solAddress, btcAddress] = await Promise.all([
         CrossChainSeedService.toEvmAddress(seed),
         CrossChainSeedService.toSolAddress(seed),
-        CrossChainSeedService.toBtcAddress(seed)
+        CrossChainSeedService.toBtcAddress(seed),
       ])
-      console.log('Generated cross-chain addresses from signature:', { 
+      console.log('Generated cross-chain addresses from signature:', {
         originalPrincipal: principal,
-        evmAddress, 
+        evmAddress,
         solAddress,
-        btcAddress
+        btcAddress,
       })
 
       return {
@@ -169,7 +179,7 @@ export class PlugAdapter implements WalletAdapter {
         solAddress, // Generated from signature (secure)
         btcAddress, // Generated from signature (secure)
         nativeWallet: 'plug',
-        signature // The secret signature
+        signature, // The secret signature
       }
     } catch (error) {
       console.error('Plug authentication error:', error)

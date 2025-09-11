@@ -48,7 +48,12 @@
   const collapsed = ref(true)
 
   const menuItems = computed(() => {
-    const items: Array<{ label?: string; icon?: string; to?: string; hr?: boolean }> = [
+    const items: Array<{
+      label?: string
+      icon?: string
+      to?: string
+      hr?: boolean
+    }> = [
       { label: 'Swap', icon: 'eos-icons:compass', to: '/' },
       { label: 'Portfolio', icon: 'icon-park-solid:game-ps', to: '/profile' },
       { label: 'Markets', icon: 'subway:coin', to: '/tokens' },
@@ -57,13 +62,19 @@
 
     // Only show profile and settings if user is logged in
     if (auth.userProfile) {
-      items.push({ 
-        label: 'Profile', 
-        icon: 'iconamoon:profile-fill', 
-        to: auth.userProfile.username ? `/@${auth.userProfile.username}` : '/profile' 
+      items.push({
+        label: 'Profile',
+        icon: 'iconamoon:profile-fill',
+        to: auth.userProfile.username
+          ? `/@${auth.userProfile.username}`
+          : '/profile',
       })
       items.push({ hr: true })
-      items.push({ label: 'Settings', icon: 'iconamoon:settings-fill', to: '/settings' })
+      items.push({
+        label: 'Settings',
+        icon: 'iconamoon:settings-fill',
+        to: '/settings',
+      })
     }
 
     items.push({ label: 'Support', icon: 'ix:support', to: '/support' })

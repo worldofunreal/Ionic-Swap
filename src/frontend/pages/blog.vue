@@ -10,8 +10,9 @@
             DeFi Insights & Token Analysis: Ionic Swap Blog
           </h1>
           <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Stay informed with the latest insights on DeFi, cross-chain swapping, token standards, 
-            gasless transactions, and the future of decentralized finance.
+            Stay informed with the latest insights on DeFi, cross-chain
+            swapping, token standards, gasless transactions, and the future of
+            decentralized finance.
           </p>
         </div>
       </UContainer>
@@ -87,106 +88,115 @@
 </template>
 
 <script setup lang="ts">
-import { useColorTheme } from '@/composables/useColorTheme'
+  import { useColorTheme } from '@/composables/useColorTheme'
 
-const { currentTheme } = useColorTheme()
+  const { currentTheme } = useColorTheme()
 
-const blogPosts = [
-  {
-    _path: '/blog/cross-chain-swapping-guide',
-    title: 'Complete Guide to Cross-Chain Token Swapping',
-    description: 'Learn how to swap tokens across different blockchain networks seamlessly with Ionic Swap\'s innovative cross-chain technology.',
-    category: 'Tutorial',
-    date: '2024-01-15',
-    readTime: '8 min read',
-    image: '/blog/cross-chain-swapping.jpg',
-    tags: ['Cross-Chain', 'Tutorial', 'DeFi']
-  },
-  {
-    _path: '/blog/gasless-transactions-explained',
-    title: 'Gasless Transactions: The Future of DeFi',
-    description: 'Discover how gasless transactions work and why they\'re revolutionizing the DeFi space by eliminating gas fees.',
-    category: 'Technology',
-    date: '2024-01-10',
-    readTime: '6 min read',
-    image: '/blog/gasless-transactions.jpg',
-    tags: ['Gasless', 'Technology', 'DeFi']
-  },
-  {
-    _path: '/blog/token-standards-comparison',
-    title: 'ERC-20 vs SPL vs ICRC: Token Standards Compared',
-    description: 'A comprehensive comparison of token standards across Ethereum, Solana, and Internet Computer networks.',
-    category: 'Analysis',
-    date: '2024-01-05',
-    readTime: '10 min read',
-    image: '/blog/token-standards.jpg',
-    tags: ['Token Standards', 'Analysis', 'Blockchain']
-  },
-  {
-    _path: '/blog/defi-liquidity-pools',
-    title: 'Understanding Liquidity Pools in DeFi',
-    description: 'Learn how liquidity pools work, their role in automated market makers, and how they enable token swapping.',
-    category: 'Education',
-    date: '2024-01-01',
-    readTime: '7 min read',
-    image: '/blog/liquidity-pools.jpg',
-    tags: ['Liquidity', 'Education', 'AMM']
-  },
-  {
-    _path: '/blog/security-best-practices',
-    title: 'DeFi Security: Best Practices for Safe Trading',
-    description: 'Essential security tips and best practices to keep your tokens safe while trading in the DeFi ecosystem.',
-    category: 'Security',
-    date: '2023-12-28',
-    readTime: '9 min read',
-    image: '/blog/security.jpg',
-    tags: ['Security', 'Best Practices', 'DeFi']
-  },
-  {
-    _path: '/blog/ionic-swap-roadmap',
-    title: 'Ionic Swap Roadmap: What\'s Coming Next',
-    description: 'Get an exclusive look at Ionic Swap\'s development roadmap and upcoming features for 2024.',
-    category: 'Updates',
-    date: '2023-12-25',
-    readTime: '5 min read',
-    image: '/blog/roadmap.jpg',
-    tags: ['Roadmap', 'Updates', 'Ionic Swap']
-  }
-]
+  const blogPosts = [
+    {
+      _path: '/blog/cross-chain-swapping-guide',
+      title: 'Complete Guide to Cross-Chain Token Swapping',
+      description:
+        "Learn how to swap tokens across different blockchain networks seamlessly with Ionic Swap's innovative cross-chain technology.",
+      category: 'Tutorial',
+      date: '2024-01-15',
+      readTime: '8 min read',
+      image: '/blog/cross-chain-swapping.jpg',
+      tags: ['Cross-Chain', 'Tutorial', 'DeFi'],
+    },
+    {
+      _path: '/blog/gasless-transactions-explained',
+      title: 'Gasless Transactions: The Future of DeFi',
+      description:
+        "Discover how gasless transactions work and why they're revolutionizing the DeFi space by eliminating gas fees.",
+      category: 'Technology',
+      date: '2024-01-10',
+      readTime: '6 min read',
+      image: '/blog/gasless-transactions.jpg',
+      tags: ['Gasless', 'Technology', 'DeFi'],
+    },
+    {
+      _path: '/blog/token-standards-comparison',
+      title: 'ERC-20 vs SPL vs ICRC: Token Standards Compared',
+      description:
+        'A comprehensive comparison of token standards across Ethereum, Solana, and Internet Computer networks.',
+      category: 'Analysis',
+      date: '2024-01-05',
+      readTime: '10 min read',
+      image: '/blog/token-standards.jpg',
+      tags: ['Token Standards', 'Analysis', 'Blockchain'],
+    },
+    {
+      _path: '/blog/defi-liquidity-pools',
+      title: 'Understanding Liquidity Pools in DeFi',
+      description:
+        'Learn how liquidity pools work, their role in automated market makers, and how they enable token swapping.',
+      category: 'Education',
+      date: '2024-01-01',
+      readTime: '7 min read',
+      image: '/blog/liquidity-pools.jpg',
+      tags: ['Liquidity', 'Education', 'AMM'],
+    },
+    {
+      _path: '/blog/security-best-practices',
+      title: 'DeFi Security: Best Practices for Safe Trading',
+      description:
+        'Essential security tips and best practices to keep your tokens safe while trading in the DeFi ecosystem.',
+      category: 'Security',
+      date: '2023-12-28',
+      readTime: '9 min read',
+      image: '/blog/security.jpg',
+      tags: ['Security', 'Best Practices', 'DeFi'],
+    },
+    {
+      _path: '/blog/ionic-swap-roadmap',
+      title: "Ionic Swap Roadmap: What's Coming Next",
+      description:
+        "Get an exclusive look at Ionic Swap's development roadmap and upcoming features for 2024.",
+      category: 'Updates',
+      date: '2023-12-25',
+      readTime: '5 min read',
+      image: '/blog/roadmap.jpg',
+      tags: ['Roadmap', 'Updates', 'Ionic Swap'],
+    },
+  ]
 
-useHead({
-  title: 'DeFi Blog - Ionic Swap',
-  meta: [
-    {
-      name: 'description',
-      content: 'Stay informed with the latest insights on DeFi, cross-chain swapping, token standards, and gasless transactions.',
-    },
-    { property: 'og:title', content: 'DeFi Blog - Ionic Swap' },
-    {
-      property: 'og:description',
-      content: 'Stay informed with the latest insights on DeFi, cross-chain swapping, token standards, and gasless transactions.',
-    },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:url', content: 'https://ionicswap.com/blog' },
-    { property: 'og:image', content: '/logo.svg' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: 'DeFi Blog - Ionic Swap' },
-    {
-      name: 'twitter:description',
-      content: 'Stay informed with the latest insights on DeFi, cross-chain swapping, token standards, and gasless transactions.',
-    },
-    { name: 'twitter:image', content: '/logo.svg' },
-  ],
-  link: [{ rel: 'canonical', href: 'https://ionicswap.com/blog' }],
-})
+  useHead({
+    title: 'DeFi Blog - Ionic Swap',
+    meta: [
+      {
+        name: 'description',
+        content:
+          'Stay informed with the latest insights on DeFi, cross-chain swapping, token standards, and gasless transactions.',
+      },
+      { property: 'og:title', content: 'DeFi Blog - Ionic Swap' },
+      {
+        property: 'og:description',
+        content:
+          'Stay informed with the latest insights on DeFi, cross-chain swapping, token standards, and gasless transactions.',
+      },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:url', content: 'https://ionicswap.com/blog' },
+      { property: 'og:image', content: '/logo.svg' },
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:title', content: 'DeFi Blog - Ionic Swap' },
+      {
+        name: 'twitter:description',
+        content:
+          'Stay informed with the latest insights on DeFi, cross-chain swapping, token standards, and gasless transactions.',
+      },
+      { name: 'twitter:image', content: '/logo.svg' },
+    ],
+    link: [{ rel: 'canonical', href: 'https://ionicswap.com/blog' }],
+  })
 </script>
 
 <style scoped>
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 </style>

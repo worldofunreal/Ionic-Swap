@@ -2,7 +2,14 @@ import { Actor, HttpAgent } from '@dfinity/agent'
 import type { Identity } from '@dfinity/agent'
 import { Principal } from '@dfinity/principal'
 import { idlFactory } from '../../declarations/backend'
-import type { _SERVICE as BackendService, User, UserResult, UserUpdate, CompactProfile, PersonalUser } from '../../declarations/backend/backend.did'
+import type {
+  _SERVICE as BackendService,
+  User,
+  UserResult,
+  UserUpdate,
+  CompactProfile,
+  PersonalUser,
+} from '../../declarations/backend/backend.did'
 import { appCacheService } from './AppCacheService'
 
 // Get canister ID from runtime config
@@ -12,7 +19,13 @@ const getBackendCanisterId = () => {
 }
 
 // Export types from the backend canister
-export type { User, UserResult, UserUpdate, CompactProfile, PersonalUser } from '../../declarations/backend/backend.did'
+export type {
+  User,
+  UserResult,
+  UserUpdate,
+  CompactProfile,
+  PersonalUser,
+} from '../../declarations/backend/backend.did'
 
 // Helper function to handle UserResult
 const handleUserResult = (result: UserResult): User => {
@@ -35,7 +48,7 @@ class CanisterService {
 
       // Create HTTP agent with proper configuration
       this.agent = new HttpAgent({
-        host: 'https://icp0.io',  // Use mainnet
+        host: 'https://icp0.io', // Use mainnet
         identity: this.identity || undefined,
       })
 
@@ -62,7 +75,7 @@ class CanisterService {
     try {
       // Create HTTP agent without identity for anonymous access
       this.agent = new HttpAgent({
-        host: 'https://icp0.io',  // Use mainnet
+        host: 'https://icp0.io', // Use mainnet
       })
 
       // Fetch root key for mainnet
@@ -148,10 +161,10 @@ class CanisterService {
       }
       const result = await this.backendActor.get_user_by_username(username)
       const user = handleUserResult(result)
-      
+
       // Cache the result
       appCacheService.setCachedProfile(username, user, 'username')
-      
+
       return user
     } catch (error) {
       console.error('Error getting public profile:', error)
@@ -215,11 +228,14 @@ class CanisterService {
 
       // Ensure caller is a proper Principal object
       let principal: any
-      
+
       console.log('Processing caller principal:', caller)
       console.log('Caller type:', typeof caller)
-      console.log('Caller has toText:', caller && typeof caller.toText === 'function')
-      
+      console.log(
+        'Caller has toText:',
+        caller && typeof caller.toText === 'function'
+      )
+
       if (caller && typeof caller.toText === 'function') {
         principal = caller
       } else if (typeof caller === 'string') {
@@ -240,17 +256,20 @@ class CanisterService {
       }
 
       const principalText = principal.toText()
-      
+
       // Check cache first
-      const cached = appCacheService.getCachedProfile(principalText, 'principal')
+      const cached = appCacheService.getCachedProfile(
+        principalText,
+        'principal'
+      )
       if (cached) {
         console.log('Returning cached profile for principal:', principalText)
-        
+
         // If cache is stale, refresh in background
         if (appCacheService.isProfileStale(principalText, 'principal')) {
           this.refreshProfileInBackground(principal, principalText)
         }
-        
+
         return cached
       }
 
@@ -258,17 +277,21 @@ class CanisterService {
       console.log('Fetching fresh profile for principal:', principalText)
       const result = await this.backendActor.get_user(principal)
       const user = handleUserResult(result)
-      
+
       // Cache the result
       appCacheService.setCachedProfile(principalText, user, 'principal')
-      
+
       return user
     } catch (error) {
       // If user not found, return null (this is expected for new users)
-      if (error instanceof Error && (error.message.includes('UserNotFound') || error.message.includes('{"UserNotFound":null}'))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes('UserNotFound') ||
+          error.message.includes('{"UserNotFound":null}'))
+      ) {
         return null
       }
-      
+
       // Only log actual errors
       console.error('Error getting user profile:', error)
       throw error
@@ -276,9 +299,12 @@ class CanisterService {
   }
 
   // Background refresh method
-  private async refreshProfileInBackground(principal: any, principalText: string): Promise<void> {
+  private async refreshProfileInBackground(
+    principal: any,
+    principalText: string
+  ): Promise<void> {
     if (!this.backendActor) return
-    
+
     try {
       console.log('Refreshing profile in background for:', principalText)
       const result = await this.backendActor.get_user(principal)
@@ -309,10 +335,10 @@ class CanisterService {
         solanaAddress ? [solanaAddress] : []
       )
       const user = handleUserResult(result)
-      
+
       // Invalidate cache for this user
       appCacheService.invalidateUserCache(user)
-      
+
       return user
     } catch (error) {
       console.error('Error signing up user:', error)
@@ -331,7 +357,12 @@ class CanisterService {
   }
 
   // Public method to get cache stats (for debugging)
-  getCacheStats(): { profileSize: number; profileKeys: string[]; hasSession: boolean; sessionExpiresAt?: number } {
+  getCacheStats(): {
+    profileSize: number
+    profileKeys: string[]
+    hasSession: boolean
+    sessionExpiresAt?: number
+  } {
     return appCacheService.getCacheStats()
   }
 
@@ -359,10 +390,10 @@ class CanisterService {
     try {
       const result = await this.backendActor.update_profile(update)
       const user = handleUserResult(result)
-      
+
       // Invalidate cache for this user
       appCacheService.invalidateUserCache(user)
-      
+
       return user
     } catch (error) {
       console.error('Error updating profile:', error)
@@ -379,10 +410,10 @@ class CanisterService {
     try {
       const result = await this.backendActor.update_display_name(displayName)
       const user = handleUserResult(result)
-      
+
       // Invalidate cache for this user
       appCacheService.invalidateUserCache(user)
-      
+
       return user
     } catch (error) {
       console.error('Error updating display name:', error)
@@ -480,7 +511,8 @@ class CanisterService {
     }
 
     try {
-      const result = await this.backendActor.update_bitcoin_address(bitcoinAddress)
+      const result =
+        await this.backendActor.update_bitcoin_address(bitcoinAddress)
       return handleUserResult(result)
     } catch (error) {
       console.error('Error updating Bitcoin address:', error)
@@ -494,7 +526,8 @@ class CanisterService {
     }
 
     try {
-      const result = await this.backendActor.update_solana_address(solanaAddress)
+      const result =
+        await this.backendActor.update_solana_address(solanaAddress)
       return handleUserResult(result)
     } catch (error) {
       console.error('Error updating Solana address:', error)
@@ -526,7 +559,7 @@ class CanisterService {
     try {
       const targetPrincipalObj = Principal.fromText(targetPrincipal)
       const result = await this.backendActor.follow_user(targetPrincipalObj)
-      
+
       if ('Ok' in result) {
         // Clear cache for both users since follow state changed
         appCacheService.invalidateUserCache(result.Ok)
@@ -548,7 +581,7 @@ class CanisterService {
     try {
       const targetPrincipalObj = Principal.fromText(targetPrincipal)
       const result = await this.backendActor.unfollow_user(targetPrincipalObj)
-      
+
       if ('Ok' in result) {
         // Clear cache for both users since follow state changed
         appCacheService.invalidateUserCache(result.Ok)
@@ -600,7 +633,10 @@ class CanisterService {
     try {
       const followerPrincipal = Principal.fromText(follower)
       const followingPrincipal = Principal.fromText(following)
-      const result = await this.backendActor.is_following(followerPrincipal, followingPrincipal)
+      const result = await this.backendActor.is_following(
+        followerPrincipal,
+        followingPrincipal
+      )
       return result
     } catch (error) {
       console.error('Error checking following status:', error)
@@ -609,7 +645,10 @@ class CanisterService {
   }
 
   // Search users (public - returns CompactProfile)
-  async searchUsers(searchTerm: string, limit: number = 10): Promise<CompactProfile[]> {
+  async searchUsers(
+    searchTerm: string,
+    limit: number = 10
+  ): Promise<CompactProfile[]> {
     if (!this.backendActor) {
       throw new Error('CanisterService not initialized')
     }
@@ -628,15 +667,23 @@ class CanisterService {
   }
 
   // Personal search with follow state (don't cache this data)
-  async searchUsersPersonal(searchTerm: string, limit: number, callerPrincipal: string): Promise<CompactProfile[]> {
+  async searchUsersPersonal(
+    searchTerm: string,
+    limit: number,
+    callerPrincipal: string
+  ): Promise<CompactProfile[]> {
     if (!this.backendActor) {
       throw new Error('CanisterService not initialized')
     }
 
     try {
       const callerPrincipalObj = Principal.fromText(callerPrincipal)
-      const result = await this.backendActor.search_users_personal(searchTerm, limit, callerPrincipalObj)
-      
+      const result = await this.backendActor.search_users_personal(
+        searchTerm,
+        limit,
+        callerPrincipalObj
+      )
+
       if ('Ok' in result) {
         return result.Ok
       } else {
@@ -649,7 +696,10 @@ class CanisterService {
   }
 
   // Personal user lookup with follow state (don't cache this data)
-  async getUserPersonal(targetPrincipal: string, callerPrincipal: string): Promise<PersonalUser | null> {
+  async getUserPersonal(
+    targetPrincipal: string,
+    callerPrincipal: string
+  ): Promise<PersonalUser | null> {
     if (!this.backendActor) {
       throw new Error('CanisterService not initialized')
     }
@@ -657,8 +707,11 @@ class CanisterService {
     try {
       const targetPrincipalObj = Principal.fromText(targetPrincipal)
       const callerPrincipalObj = Principal.fromText(callerPrincipal)
-      const result = await this.backendActor.get_user_personal(targetPrincipalObj, callerPrincipalObj)
-      
+      const result = await this.backendActor.get_user_personal(
+        targetPrincipalObj,
+        callerPrincipalObj
+      )
+
       if ('Ok' in result) {
         return result.Ok
       } else {
@@ -683,12 +736,12 @@ class CanisterService {
     const cached = appCacheService.getCachedProfile(username, 'username')
     if (cached) {
       console.log('Returning cached profile for username:', username)
-      
+
       // If cache is stale, refresh in background
       if (appCacheService.isProfileStale(username, 'username')) {
         this.refreshUserByUsernameInBackground(username)
       }
-      
+
       return cached
     }
 
@@ -697,10 +750,10 @@ class CanisterService {
       console.log('Fetching fresh profile for username:', username)
       const result = await this.backendActor.get_user_by_username(username)
       const user = handleUserResult(result)
-      
+
       // Cache the result
       appCacheService.setCachedProfile(username, user, 'username')
-      
+
       return user
     } catch (error) {
       console.error('Error getting user by username:', error)
@@ -713,9 +766,11 @@ class CanisterService {
   }
 
   // Background refresh method for username lookup
-  private async refreshUserByUsernameInBackground(username: string): Promise<void> {
+  private async refreshUserByUsernameInBackground(
+    username: string
+  ): Promise<void> {
     if (!this.backendActor) return
-    
+
     try {
       console.log('Refreshing profile in background for username:', username)
       const result = await this.backendActor.get_user_by_username(username)
@@ -737,12 +792,12 @@ class CanisterService {
     const cached = appCacheService.getCachedProfile(principal, 'principal')
     if (cached) {
       console.log('Returning cached profile for principal:', principal)
-      
+
       // If cache is stale, refresh in background
       if (appCacheService.isProfileStale(principal, 'principal')) {
         this.refreshUserByPrincipalInBackground(principal)
       }
-      
+
       return cached
     }
 
@@ -752,10 +807,10 @@ class CanisterService {
       const userPrincipal = Principal.fromText(principal)
       const result = await this.backendActor.get_user(userPrincipal)
       const user = handleUserResult(result)
-      
+
       // Cache the result
       appCacheService.setCachedProfile(principal, user, 'principal')
-      
+
       return user
     } catch (error) {
       console.error('Error getting user:', error)
@@ -768,9 +823,11 @@ class CanisterService {
   }
 
   // Background refresh method for principal lookup
-  private async refreshUserByPrincipalInBackground(principal: string): Promise<void> {
+  private async refreshUserByPrincipalInBackground(
+    principal: string
+  ): Promise<void> {
     if (!this.backendActor) return
-    
+
     try {
       console.log('Refreshing profile in background for principal:', principal)
       const userPrincipal = Principal.fromText(principal)
@@ -805,7 +862,12 @@ class CanisterService {
   }
 
   // Asset upload methods - upload to backend canister
-  async initUpload(filePath: string, fileSize: bigint, chunkSize: bigint | null, fileHash: string): Promise<void> {
+  async initUpload(
+    filePath: string,
+    fileSize: bigint,
+    chunkSize: bigint | null,
+    fileHash: string
+  ): Promise<void> {
     if (!this.backendActor) {
       throw new Error('CanisterService not initialized')
     }
@@ -817,9 +879,11 @@ class CanisterService {
         chunkSize ? [chunkSize] : [],
         fileHash
       )
-      
+
       if ('Err' in result) {
-        throw new Error(`Upload initialization failed: ${JSON.stringify(result.Err)}`)
+        throw new Error(
+          `Upload initialization failed: ${JSON.stringify(result.Err)}`
+        )
       }
     } catch (error) {
       console.error('Error initializing upload:', error)
@@ -827,14 +891,22 @@ class CanisterService {
     }
   }
 
-  async storeChunk(chunkId: bigint, chunkData: number[], filePath: string): Promise<void> {
+  async storeChunk(
+    chunkId: bigint,
+    chunkData: number[],
+    filePath: string
+  ): Promise<void> {
     if (!this.backendActor) {
       throw new Error('CanisterService not initialized')
     }
 
     try {
-      const result = await this.backendActor.store_chunk(chunkId, chunkData, filePath)
-      
+      const result = await this.backendActor.store_chunk(
+        chunkId,
+        chunkData,
+        filePath
+      )
+
       if ('Err' in result) {
         throw new Error(`Chunk upload failed: ${JSON.stringify(result.Err)}`)
       }
@@ -851,11 +923,13 @@ class CanisterService {
 
     try {
       const result = await this.backendActor.finalize_upload(filePath)
-      
+
       if ('Err' in result) {
-        throw new Error(`Upload finalization failed: ${JSON.stringify(result.Err)}`)
+        throw new Error(
+          `Upload finalization failed: ${JSON.stringify(result.Err)}`
+        )
       }
-      
+
       return result.Ok
     } catch (error) {
       console.error('Error finalizing upload:', error)

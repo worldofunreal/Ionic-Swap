@@ -5,7 +5,7 @@
     class="fixed inset-0 z-[9999] flex items-center justify-center"
   >
     <!-- Backdrop -->
-    <div class="absolute inset-0 bg-black/50" @click="closeModal"/>
+    <div class="absolute inset-0 bg-black/50" @click="closeModal" />
     <!-- Modal Content -->
     <div
       class="relative bg-white dark:bg-neutral-900 rounded-lg shadow-xl max-w-md w-full mx-4"
