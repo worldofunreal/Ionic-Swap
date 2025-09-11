@@ -1,0 +1,31 @@
+
+
+
+Prices to fetch
+Bitcoin
+Ethereum
+XRP
+Tether
+BNB
+SOL
+USDC
+Dogecoin
+Cardano
+TRON
+ICP
+
+Create tokens on Sepolia ERC20, Solana SPL, and ICP ICRCs
+
+Fund canister with all tokens from all chains
+Update prices every 10 seconds
+Allow to create limit orders on all chains
+Allow to cancel limit orders on all chains
+Allow to create market orders on all chains
+Allow to create close position orders on all chains
+
+Websockets to fetch prices and update orders
+ICP will fetch prices from Websocket on ICP chain
+
+Frontend displays prices from Websocket
+if limit order hit target price, it will be executed on canister
+if limit order hit target price, it will check if close position order is hit

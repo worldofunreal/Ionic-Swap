@@ -1,0 +1,64 @@
+{
+  "network": "sepolia",
+  "chainId": "11155111",
+  "deployer": "0xf0d056015Bdd86C0EFD07000F75Ea10873A1d0A7",
+  "timestamp": "2025-09-11T02:59:51.502Z",
+  "tokens": {
+    "BTC": {
+      "name": "BitcoinToken",
+      "symbol": "BTC",
+      "decimals": 8,
+      "address": "0x2A6736bC108F6a7eaA007DEce56d98fDdCAFfA11",
+      "deployerBalance": "1000.0"
+    },
+    "XRP": {
+      "name": "XRPToken",
+      "symbol": "XRP",
+      "decimals": 6,
+      "address": "0x29f2A9eb954774B5951B2178EFAd9c7F80BF7c13",
+      "deployerBalance": "10000.0"
+    },
+    "USDT": {
+      "name": "TetherToken",
+      "symbol": "USDT",
+      "decimals": 6,
+      "address": "0x02c32a72566dE763a7B150B941e770882eF3aCE2",
+      "deployerBalance": "10000.0"
+    },
+    "BNB": {
+      "name": "BNBToken",
+      "symbol": "BNB",
+      "decimals": 18,
+      "address": "0x2ecc44a0f01BA5668BF28F07219e421BD8B6D77b",
+      "deployerBalance": "1000.0"
+    },
+    "USDC": {
+      "name": "USDCToken",
+      "symbol": "USDC",
+      "decimals": 6,
+      "address": "0xC5c64a90712c0858cF9FD26ACf9662deDA980FE2",
+      "deployerBalance": "10000.0"
+    },
+    "DOGE": {
+      "name": "DogecoinToken",
+      "symbol": "DOGE",
+      "decimals": 8,
+      "address": "0x9Ef8B792bF5B74b77765316000621865fDdABa88",
+      "deployerBalance": "10000.0"
+    },
+    "ADA": {
+      "name": "CardanoToken",
+      "symbol": "ADA",
+      "decimals": 6,
+      "address": "0x7fc5cf0F29D7F54589FaEE98f15C6EdD7F16911a",
+      "deployerBalance": "10000.0"
+    },
+    "TRX": {
+      "name": "TronToken",
+      "symbol": "TRX",
+      "decimals": 6,
+      "address": "0x061882b3DeDe2dD9Be136592534915a016395F70",
+      "deployerBalance": "10000.0"
+    }
+  }
+}
