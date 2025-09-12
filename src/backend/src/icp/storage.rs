@@ -8,7 +8,7 @@ use std::sync::OnceLock;
 use candid::Principal;
 use ic_cdk::api::canister_self;
 
-use crate::icp_tokens::types::{InternalToken, FaucetClaim};
+use crate::icp::types::{InternalToken, FaucetClaim};
 
 /// Global storage for internal tokens
 static INTERNAL_TOKENS: OnceLock<Mutex<HashMap<String, InternalToken>>> = OnceLock::new();
@@ -31,8 +31,8 @@ pub fn init_storage() {
     let mut tokens_guard = tokens.lock().unwrap();
     let mut balances_guard = balances.lock().unwrap();
 
-    for (symbol, name, decimals) in crate::icp_tokens::config::SUPPORTED_TOKENS {
-        let total_supply = crate::icp_tokens::config::get_token_supply(symbol);
+    for (symbol, name, decimals) in crate::icp::config::SUPPORTED_TOKENS {
+        let total_supply = crate::icp::config::get_token_supply(symbol);
 
         let token = InternalToken {
             symbol: symbol.to_string(),
@@ -51,7 +51,7 @@ pub fn init_storage() {
     }
 
     ic_cdk::println!("✅ Initialized {} internal tokens with supply minted to canister", 
-                     crate::icp_tokens::config::SUPPORTED_TOKENS.len());
+                     crate::icp::config::SUPPORTED_TOKENS.len());
 }
 
 /// Get the tokens storage

@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 
-use crate::icp_tokens::{
+use crate::icp::{
     types::InternalToken,
     storage::get_tokens_storage,
 };
@@ -26,7 +26,7 @@ pub fn get_token_statistics(symbol: &str) -> Result<HashMap<String, u64>, String
         .ok_or("Token not found")?;
     
     let total_supply = token.total_supply;
-    let circulating_supply = crate::icp_tokens::balances::get_token_circulating_supply(symbol)
+    let circulating_supply = crate::icp::balances::get_token_circulating_supply(symbol)
         .unwrap_or(0);
     
     let mut stats = HashMap::new();

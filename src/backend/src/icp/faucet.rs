@@ -5,7 +5,7 @@
 use candid::Principal;
 use ic_cdk::api::{msg_caller, time, canister_self};
 
-use crate::icp_tokens::{
+use crate::icp::{
     types::FaucetClaim,
     config::FAUCET_CLAIM_AMOUNT,
     storage::{get_tokens_storage, get_balances_storage, get_claims_storage},

@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 use candid::Principal;
 
-use crate::icp_tokens::storage::get_balances_storage;
+use crate::icp::storage::get_balances_storage;
 
 /// Get balance of a token for a user
 pub fn get_balance(user: Principal, symbol: &str) -> u64 {

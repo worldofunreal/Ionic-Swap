@@ -4,7 +4,7 @@ pub mod solana;
 pub mod evm;
 pub mod types;
 pub mod tokens;
-pub mod icp_tokens;
+pub mod icp;
 
 use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::{init, post_upgrade, update, query};
@@ -25,7 +25,7 @@ pub fn init(init_arg: InitArg) {
     }
     
     // Initialize internal token system
-    icp_tokens::storage::init_storage();
+    icp::storage::init_storage();
     
     ic_cdk::println!("Backend initialized with network: {:?}", solana::get_solana_network());
 }
@@ -186,46 +186,46 @@ pub async fn swap_evm(
 /// Claim 2M USDT from faucet (one-time only per principal)
 #[update]
 pub async fn claim_faucet() -> Result<String, String> {
-    icp_tokens::faucet::claim_faucet().await
+    icp::faucet::claim_faucet().await
 }
 
 
 /// Get faucet claim info for a principal
 #[query]
-pub fn get_faucet_claim(user: Principal) -> Option<icp_tokens::types::FaucetClaim> {
-    icp_tokens::faucet::get_faucet_claim(user)
+pub fn get_faucet_claim(user: Principal) -> Option<icp::types::FaucetClaim> {
+    icp::faucet::get_faucet_claim(user)
 }
 
 /// Get balance of a token for a user
 #[query]
 pub fn get_token_balance(user: Principal, symbol: String) -> u64 {
-    icp_tokens::balances::get_balance(user, &symbol)
+    icp::balances::get_balance(user, &symbol)
 }
 
 /// Get all token balances for a user
 #[query]
 pub fn get_user_balances(user: Principal) -> std::collections::HashMap<String, u64> {
-    icp_tokens::balances::get_user_balances(user)
+    icp::balances::get_user_balances(user)
 }
 
 /// Transfer tokens between users
 #[update]
 pub fn transfer_tokens(from: Principal, to: Principal, symbol: String, amount: u64) -> Result<(), String> {
-    icp_tokens::balances::transfer_tokens(from, to, &symbol, amount)
+    icp::balances::transfer_tokens(from, to, &symbol, amount)
 }
 
 
 /// Get all internal tokens
 #[query]
-pub fn get_all_internal_tokens() -> Vec<icp_tokens::types::InternalToken> {
-    icp_tokens::queries::get_all_tokens()
+pub fn get_all_internal_tokens() -> Vec<icp::types::InternalToken> {
+    icp::queries::get_all_tokens()
 }
 
 
 /// Get faucet statistics
 #[query]
 pub fn get_faucet_stats() -> (u64, u64) {
-    icp_tokens::faucet::get_faucet_stats()
+    icp::faucet::get_faucet_stats()
 }
 
 // ============================================================================
