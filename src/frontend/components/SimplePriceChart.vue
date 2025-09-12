@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+  <div class="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700 w-full h-full flex flex-col">
     <div class="flex justify-between items-center mb-4">
       <div class="flex flex-col">
         <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ tokenSymbol }}</div>
@@ -27,14 +27,23 @@
       </div>
     </div>
 
-    <!-- Simple SVG Chart -->
-    <div class="relative w-full" :style="{ height: height + 'px' }">
-      <svg 
-        v-if="chartData.length > 0" 
-        class="w-full h-full"
-        :viewBox="`0 0 ${chartWidth} ${chartHeight}`"
-        preserveAspectRatio="none"
-      >
+    <!-- Chart Grid Layout -->
+    <div class="grid grid-cols-[80px_1fr] grid-rows-[1fr_40px] gap-0 w-full flex-1" :style="{ minHeight: (height + 40) + 'px' }">
+      <!-- Y-axis labels area -->
+      <div class="flex flex-col justify-between py-2 pr-2">
+        <div v-for="(label, index) in priceLabels" :key="index" class="text-right text-xs text-gray-500 dark:text-gray-400" :style="{ height: (height / (priceLabels.length - 1)) + 'px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }">
+          ${{ label.text }}
+        </div>
+      </div>
+      
+      <!-- Chart area -->
+      <div class="relative">
+        <svg 
+          v-if="chartData.length > 0" 
+          class="w-full h-full"
+          :viewBox="`0 0 ${chartWidth} ${chartHeight}`"
+          preserveAspectRatio="none"
+        >
         <!-- Grid lines -->
         <defs>
           <pattern id="grid" width="80" height="20" patternUnits="userSpaceOnUse">
@@ -68,25 +77,34 @@
         
         <!-- Current price point -->
         <circle
-          v-if="currentPrice > 0"
-          :cx="chartWidth - 20"
-          :cy="getYPosition(currentPrice)"
+          v-if="currentPrice > 0 && chartData.length > 0"
+          :cx="lastPointPosition.x"
+          :cy="lastPointPosition.y"
           r="4"
           fill="#3b82f6"
         />
+        
       </svg>
-
-      <!-- Loading state -->
-      <div v-if="loading" class="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400" :style="{ height: height + 'px' }">
-        <div class="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
-        <span>Loading chart data...</span>
       </div>
-
-      <!-- Error state -->
-      <div v-if="error" class="flex items-center justify-center gap-2 text-red-500" :style="{ height: height + 'px' }">
-        <span>Failed to load chart data</span>
-        <button class="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors" @click="refreshChart">Retry</button>
+      
+      <!-- X-axis labels area -->
+      <div class="col-span-2 flex justify-between items-center px-2 py-1">
+        <div v-for="(label, index) in timeLabels" :key="index" class="text-xs text-gray-500 dark:text-gray-400 text-center" :style="{ width: (100 / timeLabels.length) + '%' }">
+          {{ label.text }}
+        </div>
       </div>
+    </div>
+
+    <!-- Loading state -->
+    <div v-if="loading" class="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400" :style="{ height: height + 'px' }">
+      <div class="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+      <span>Loading chart data...</span>
+    </div>
+
+    <!-- Error state -->
+    <div v-if="error" class="flex items-center justify-center gap-2 text-red-500" :style="{ height: height + 'px' }">
+      <span>Failed to load chart data</span>
+      <button class="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors" @click="refreshChart">Retry</button>
     </div>
   </div>
 </template>
@@ -154,6 +172,70 @@ const areaPoints = computed(() => {
   return `0,${chartHeight} ${linePoints} ${chartWidth},${chartHeight}`
 })
 
+const lastPointPosition = computed(() => {
+  if (chartData.value.length === 0) return { x: 0, y: 0 }
+  
+  const lastIndex = chartData.value.length - 1
+  const x = (lastIndex / (chartData.value.length - 1)) * chartWidth
+  const y = getYPosition(chartData.value[lastIndex]?.price || 0)
+  
+  return { x, y }
+})
+
+const timeLabels = computed(() => {
+  if (chartData.value.length === 0) return []
+  
+  const labels = []
+  const numLabels = 5 // Reduce to 5 labels to prevent overlap
+  const usedTexts = new Set()
+  
+  for (let i = 0; i < numLabels; i++) {
+    const index = Math.floor((i / (numLabels - 1)) * (chartData.value.length - 1))
+    const dataPoint = chartData.value[index]
+    if (dataPoint) {
+      const x = (index / (chartData.value.length - 1)) * chartWidth
+      const date = new Date(dataPoint.timestamp)
+      let text = formatTimeLabel(date, selectedPeriod.value)
+      
+      // Ensure unique labels by adding index if duplicate
+      let counter = 1
+      let originalText = text
+      while (usedTexts.has(text)) {
+        text = `${originalText} (${counter})`
+        counter++
+      }
+      usedTexts.add(text)
+      
+      labels.push({ x, text })
+    }
+  }
+  
+  return labels
+})
+
+const priceLabels = computed(() => {
+  if (chartData.value.length === 0) return []
+  
+  const prices = chartData.value.map(p => p.price)
+  const minPrice = Math.min(...prices)
+  const maxPrice = Math.max(...prices)
+  const priceRange = maxPrice - minPrice
+  
+  if (priceRange === 0) return []
+  
+  const labels = []
+  const numLabels = 4 // Reduce to 4 price labels to prevent cutoff
+  
+  for (let i = 0; i < numLabels; i++) {
+    const price = minPrice + (i / (numLabels - 1)) * priceRange
+    const y = getYPosition(price)
+    const text = formatPrice(price)
+    labels.push({ y, text })
+  }
+  
+  return labels
+})
+
 // Helper functions
 const getYPosition = (price: number) => {
   if (chartData.value.length === 0) return chartHeight / 2
@@ -177,6 +259,72 @@ const formatPrice = (price: number) => {
   return price.toLocaleString('en-US', { maximumFractionDigits: 2 })
 }
 
+const formatTimeLabel = (date: Date, period: string) => {
+  // Round time to cleaner periods
+  const roundedDate = new Date(date)
+  
+  switch (period) {
+    case '1h':
+      // Round to 15-minute intervals
+      const minutes = roundedDate.getMinutes()
+      const roundedMinutes = Math.round(minutes / 15) * 15
+      roundedDate.setMinutes(roundedMinutes, 0, 0)
+      
+      const now = new Date()
+      const isToday = roundedDate.toDateString() === now.toDateString()
+      
+      if (isToday) {
+        return roundedDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+      } else {
+        return roundedDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      }
+    case '4h':
+      // Round to 1-hour intervals
+      roundedDate.setMinutes(0, 0, 0)
+      
+      const now4h = new Date()
+      const isToday4h = roundedDate.toDateString() === now4h.toDateString()
+      
+      if (isToday4h) {
+        return roundedDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+      } else {
+        return roundedDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      }
+    case '1d':
+      // Round to day start
+      roundedDate.setHours(0, 0, 0, 0)
+      
+      const now1d = new Date()
+      const isToday1d = roundedDate.toDateString() === now1d.toDateString()
+      const isYesterday1d = new Date(now1d.getTime() - 24 * 60 * 60 * 1000).toDateString() === roundedDate.toDateString()
+      
+      if (isToday1d) {
+        return 'Today'
+      } else if (isYesterday1d) {
+        return 'Yesterday'
+      } else {
+        return roundedDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+      }
+    case '1w':
+      // Round to day start
+      roundedDate.setHours(0, 0, 0, 0)
+      
+      const now1w = new Date()
+      const isToday1w = roundedDate.toDateString() === now1w.toDateString()
+      const isYesterday1w = new Date(now1w.getTime() - 24 * 60 * 60 * 1000).toDateString() === roundedDate.toDateString()
+      
+      if (isToday1w) {
+        return 'Today'
+      } else if (isYesterday1w) {
+        return 'Yesterday'
+      } else {
+        return roundedDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+      }
+    default:
+      return roundedDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+  }
+}
+
 // Fetch historical data
 const fetchHistoricalData = async () => {
   const binanceSymbol = getBinanceSymbol(props.tokenSymbol)
@@ -191,8 +339,8 @@ const fetchHistoricalData = async () => {
       }
     })
 
-    if (response.success && Array.isArray(response.data)) {
-      return response.data.map((kline: unknown[]) => ({
+    if (response.success && Array.isArray((response as any).data)) {
+      return (response as any).data.map((kline: unknown[]) => ({
         timestamp: kline[0] as number,
         price: parseFloat(kline[4] as string) // Close price
       }))
@@ -293,8 +441,8 @@ onMounted(async () => {
   try {
     subscribeToPriceUpdates()
     await loadChartData()
-  } catch (error) {
-    console.error('Error initializing chart:', error)
+  } catch (err) {
+    console.error('Error initializing chart:', err)
     error.value = true
   }
 })

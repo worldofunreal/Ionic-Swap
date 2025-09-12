@@ -69,9 +69,9 @@
       <!-- Main Content Area -->
       <div class="flex-1 p-6 overflow-auto">
             <!-- Selected Token Chart -->
-            <div v-if="selectedToken" class="mb-6">
-        <div class="bg-white dark:bg-neutral-900 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-          <div class="flex items-center justify-between mb-4">
+            <div v-if="selectedToken" class="mb-6 flex-1 flex flex-col">
+        <div class="bg-white dark:bg-neutral-900 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700 flex-1 flex flex-col">
+          <div class="flex items-center justify-between mb-4 flex-shrink-0">
             <div class="flex items-center space-x-3">
               <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
                 <UIcon :name="getTokenIcon(selectedToken)" class="w-6 h-6" />
@@ -88,7 +88,7 @@
               Trade {{ selectedToken }}
             </NuxtLink>
           </div>
-              <SimplePriceChart :key="selectedToken" :token-symbol="selectedToken" :height="400" />
+              <SimplePriceChart :key="selectedToken" :token-symbol="selectedToken" :height="400" class="flex-1" />
             </div>
       </div>
 
@@ -239,7 +239,7 @@ const selectToken = (symbol: string) => {
 onMounted(() => {
   // Select first token by default
   if (tokens.value.length > 0 && !selectedToken.value) {
-    selectedToken.value = tokens.value[0]?.symbol
+    selectedToken.value = tokens.value[0]?.symbol || null
   }
   
   // Check if we're using mock data (prices are exactly the mock values)
