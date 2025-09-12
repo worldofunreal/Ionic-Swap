@@ -76,7 +76,7 @@
             </NuxtLink>
           </div>
           <div class="flex-1 px-6 pb-6 overflow-hidden">
-            <SimplePriceChart :key="selectedToken" :token-symbol="selectedToken" :no-container="true" class="h-full" />
+            <LightweightPriceChart :key="selectedToken" :token-symbol="selectedToken" :no-container="true" class="h-full" />
           </div>
         </div>
       </div>
@@ -87,7 +87,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { priceService } from '@/services/PriceService'
-  import SimplePriceChart from '@/components/SimplePriceChart.vue'
+import LightweightPriceChart from '@/components/LightweightPriceChart.vue'
 
 // Reactive data
   const selectedToken = ref<string | null>(null)

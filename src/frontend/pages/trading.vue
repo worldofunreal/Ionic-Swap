@@ -80,13 +80,13 @@
 
         <!-- Chart Area -->
         <div class="flex-1 bg-white dark:bg-neutral-900 p-4 overflow-hidden">
-          <SimplePriceChart 
-            v-if="selectedTokenSymbol"
-            :token-symbol="selectedTokenSymbol" 
-            :default-chart-type="'candlestick'"
-            :no-container="true"
-            class="h-full"
-          />
+               <LightweightPriceChart
+                 v-if="selectedTokenSymbol"
+                 :token-symbol="selectedTokenSymbol"
+                 :default-chart-type="'candlesticks'"
+                 :no-container="true"
+                 class="h-full"
+               />
         </div>
       </div>
 
@@ -271,7 +271,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { priceService } from '@/services/PriceService'
-import SimplePriceChart from '@/components/SimplePriceChart.vue'
+import LightweightPriceChart from '@/components/LightweightPriceChart.vue'
 
 // Reactive data
 const selectedTokenSymbol = ref('BTC')

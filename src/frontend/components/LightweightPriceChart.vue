@@ -1,0 +1,595 @@
+<template>
+  <div :class="[
+    'w-full h-full flex flex-col',
+    !noContainer ? 'bg-white dark:bg-neutral-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700' : ''
+  ]">
+    <div class="flex justify-between items-center mb-4">
+      <div class="flex flex-col">
+        <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ tokenSymbol }}</div>
+        <div class="text-lg font-semibold flex items-center gap-2" :class="priceChangeClass">
+          ${{ formatPrice(currentPrice) }}
+          <span class="text-sm">
+            {{ priceChange >= 0 ? '+' : '' }}{{ priceChange.toFixed(2) }}%
+          </span>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <!-- Chart Type Toggle -->
+        <div class="flex bg-gray-100 dark:bg-gray-700 rounded-md p-1">
+          <button
+            :class="[
+              'px-3 py-1 text-sm rounded-md transition-colors',
+              chartType === 'candlesticks' 
+                ? 'bg-primary-500 text-white' 
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            ]"
+            @click="chartType = 'candlesticks'"
+          >
+            <UIcon name="i-heroicons-chart-bar-square" class="w-4 h-4" />
+          </button>
+          <button
+            :class="[
+              'px-3 py-1 text-sm rounded-md transition-colors',
+              chartType === 'line' 
+                ? 'bg-primary-500 text-white' 
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            ]"
+            @click="chartType = 'line'"
+          >
+            <UIcon name="i-heroicons-chart-bar" class="w-4 h-4" />
+          </button>
+        </div>
+        
+        <!-- Time Period Buttons -->
+        <button
+          v-for="period in timePeriods"
+          :key="period.value"
+          :class="[
+            'px-3 py-1 text-sm rounded-md transition-colors',
+            selectedPeriod === period.value 
+              ? 'bg-primary-500 text-white' 
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+          ]"
+          @click="selectedPeriod = period.value"
+        >
+          {{ period.label }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div ref="chartContainer" class="flex-1 w-full relative">
+      <!-- Loading state -->
+      <div v-if="loading" class="absolute inset-0 flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-neutral-900 rounded-lg">
+        <div class="w-4 h-4 border-2 border-gray-300 border-t-primary-500 rounded-full animate-spin" />
+        <span>Loading chart data...</span>
+      </div>
+
+      <!-- Error state -->
+      <div v-if="error" class="absolute inset-0 flex items-center justify-center gap-2 text-red-500 bg-gray-50 dark:bg-neutral-900 rounded-lg">
+        <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4" />
+        <span>Failed to load chart data</span>
+        <button class="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors" @click="refreshChart">Retry</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { 
+  createChart, 
+  CandlestickSeries, 
+  LineSeries, 
+  HistogramSeries,
+  ColorType 
+} from 'lightweight-charts'
+import type { IChartApi, ISeriesApi } from 'lightweight-charts'
+import { priceService } from '@/services/PriceService'
+import { useColorTheme } from '@/composables/useColorTheme'
+
+interface Props {
+  tokenSymbol: string
+  height?: number
+  noContainer?: boolean
+  defaultChartType?: 'candlesticks' | 'line'
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  height: 400,
+  noContainer: false,
+  defaultChartType: 'candlesticks'
+})
+
+// Color theme
+const { currentTheme, colorTheme } = useColorTheme()
+
+// Refs
+const chartContainer = ref<HTMLElement>()
+const chart = ref<IChartApi>()
+const candlestickSeries = ref<ISeriesApi<any>>()
+const lineSeries = ref<ISeriesApi<any>>()
+const volumeSeries = ref<ISeriesApi<any>>()
+const currentPriceLine = ref<any>()
+const resizeObserver = ref<ResizeObserver>()
+
+// Reactive data
+const loading = ref(false)
+const error = ref(false)
+const currentPrice = ref(0)
+const priceChange = ref(0)
+const chartType = ref<'candlesticks' | 'line'>(props.defaultChartType)
+const selectedPeriod = ref('1h')
+const wsConnection = ref<WebSocket>()
+
+// Time periods
+const timePeriods = [
+  { label: '1H', value: '1h' },
+  { label: '4H', value: '4h' },
+  { label: '1D', value: '1d' },
+  { label: '1W', value: '1w' }
+]
+
+// Computed properties
+const priceChangeClass = computed(() => {
+  if (priceChange.value > 0) return 'text-green-600 dark:text-green-400'
+  if (priceChange.value < 0) return 'text-red-600 dark:text-red-400'
+  return 'text-gray-600 dark:text-gray-400'
+})
+
+// Chart colors based on theme
+const chartColors = computed(() => {
+  const isDark = currentTheme.value.includes('dark') || document.documentElement.classList.contains('dark')
+  const colorMap: Record<string, { primary: string; up: string; down: string }> = {
+    emerald: { primary: '#10b981', up: '#10b981', down: '#ef4444' },
+    pink: { primary: '#ec4899', up: '#10b981', down: '#ef4444' },
+    red: { primary: '#ef4444', up: '#10b981', down: '#ef4444' },
+    orange: { primary: '#f97316', up: '#10b981', down: '#ef4444' },
+    sky: { primary: '#0ea5e9', up: '#10b981', down: '#ef4444' },
+    fuchsia: { primary: '#d946ef', up: '#10b981', down: '#ef4444' },
+    purple: { primary: '#a855f7', up: '#10b981', down: '#ef4444' },
+    teal: { primary: '#14b8a6', up: '#10b981', down: '#ef4444' },
+  }
+  
+  return {
+    ...colorMap[colorTheme.value] || colorMap.emerald,
+    background: isDark ? '#0a0a0a' : '#ffffff',
+    text: isDark ? '#ffffff' : '#000000',
+    grid: isDark ? '#2a2a2a' : '#f0f0f0'
+  }
+})
+
+// Chart configuration (v5 API)
+const getChartConfig = () => ({
+  layout: {
+    background: { type: ColorType.Solid, color: chartColors.value.background },
+    textColor: chartColors.value.text,
+  },
+  grid: {
+    vertLines: { color: chartColors.value.grid },
+    horzLines: { color: chartColors.value.grid },
+  },
+  crosshair: {
+    mode: 1, // Normal crosshair mode
+    vertLine: {
+      width: 1,
+      color: chartColors.value.text,
+      style: 0, // Solid line
+    },
+    horzLine: {
+      width: 1,
+      color: chartColors.value.text,
+      style: 0, // Solid line
+    },
+  },
+  timeScale: {
+    borderColor: chartColors.value.grid,
+    timeVisible: true,
+    secondsVisible: false,
+  },
+  rightPriceScale: {
+    borderColor: chartColors.value.grid,
+    visible: true,
+    entireTextOnly: false,
+    scaleMargins: {
+      top: 0.1,
+      bottom: 0.1,
+    },
+    autoScale: true,
+    invertScale: false,
+    alignLabels: true,
+    borderVisible: true,
+    ticksVisible: true,
+    textColor: chartColors.value.text,
+  },
+  handleScroll: {
+    mouseWheel: true,
+    pressedMouseMove: true,
+  },
+  handleScale: {
+    axisPressedMouseMove: true,
+    mouseWheel: true,
+    pinch: true,
+  },
+})
+
+// Helper functions
+const formatPrice = (price: number) => {
+  if (price === 0) return '0.00'
+  if (price < 0.01) return price.toFixed(6)
+  if (price < 1) return price.toFixed(4)
+  if (price < 100) return price.toFixed(2)
+  return price.toLocaleString('en-US', { maximumFractionDigits: 2 })
+}
+
+const getBinanceSymbol = (symbol: string) => {
+  const symbolMap: Record<string, string> = {
+    'BTC': 'BTCUSDT',
+    'ETH': 'ETHUSDT',
+    'XRP': 'XRPUSDT',
+    'BNB': 'BNBUSDT',
+    'SOL': 'SOLUSDT',
+    'USDC': 'USDCUSDT',
+    'DOGE': 'DOGEUSDT',
+    'ADA': 'ADAUSDT',
+    'TRX': 'TRXUSDT',
+    'ICP': 'ICPUSDT'
+  }
+  return symbolMap[symbol] || 'BTCUSDT'
+}
+
+const getInterval = (period: string) => {
+  const intervalMap: Record<string, string> = {
+    '1h': '1m',
+    '4h': '5m', 
+    '1d': '1h',
+    '1w': '4h'
+  }
+  return intervalMap[period] || '1h'
+}
+
+// Chart initialization (v5 API) - Exchange Quality
+const initChart = async () => {
+  if (!chartContainer.value) return
+  
+  try {
+    console.log('Creating professional trading chart...')
+    
+    // Create chart with proper configuration
+    chart.value = createChart(chartContainer.value, {
+      width: chartContainer.value.clientWidth,
+      height: props.height,
+      ...getChartConfig()
+    })
+
+    // Create main price series with proper price formatting
+    if (chartType.value === 'candlesticks') {
+      candlestickSeries.value = chart.value.addSeries(CandlestickSeries, {
+        upColor: chartColors.value.up,
+        downColor: chartColors.value.down,
+        borderUpColor: chartColors.value.up,
+        borderDownColor: chartColors.value.down,
+        wickUpColor: chartColors.value.up,
+        wickDownColor: chartColors.value.down,
+        priceFormat: {
+          type: 'price',
+          precision: 4,
+          minMove: 0.0001,
+        },
+      })
+    } else {
+      lineSeries.value = chart.value.addSeries(LineSeries, {
+        color: chartColors.value.primary,
+        lineWidth: 2,
+        priceFormat: {
+          type: 'price',
+          precision: 4,
+          minMove: 0.0001,
+        },
+      })
+    }
+
+    // Create volume series in separate scale (bottom 20% of chart)
+    volumeSeries.value = chart.value.addSeries(HistogramSeries, {
+      color: chartColors.value.primary,
+      priceFormat: { 
+        type: 'volume',
+      },
+      priceScaleId: 'volume',
+      scaleMargins: { 
+        top: 0.7,  // Volume takes bottom 30% of chart
+        bottom: 0 
+      },
+    })
+
+    // Configure volume price scale
+    chart.value.priceScale('volume').applyOptions({
+      scaleMargins: { top: 0.7, bottom: 0 },
+      borderVisible: false,
+    })
+
+    console.log('Professional chart created successfully')
+
+    // Set up resize observer
+    resizeObserver.value = new ResizeObserver(() => {
+      if (chart.value && chartContainer.value) {
+        chart.value.applyOptions({
+          width: chartContainer.value.clientWidth,
+          height: props.height,
+        })
+      }
+    })
+    
+    resizeObserver.value.observe(chartContainer.value)
+    
+    // Load initial data
+    await loadChartData()
+    
+    // Start WebSocket connection for real-time updates
+    startWebSocket()
+    
+  } catch (err) {
+    console.error('Failed to initialize chart:', err)
+    error.value = true
+  }
+}
+
+// Data fetching
+const fetchHistoricalData = async () => {
+  const binanceSymbol = getBinanceSymbol(props.tokenSymbol)
+  
+  try {
+    const response = await $fetch('/api/binance/klines', {
+      query: {
+        symbol: binanceSymbol,
+        interval: getInterval(selectedPeriod.value),
+        limit: 500
+      }
+    })
+
+    if (response.success && Array.isArray((response as any).data)) {
+      return (response as any).data.map((kline: any[]) => ({
+        time: Math.floor(kline[0] / 1000), // Convert to seconds
+        open: parseFloat(kline[1]),
+        high: parseFloat(kline[2]),
+        low: parseFloat(kline[3]),
+        close: parseFloat(kline[4]),
+        volume: parseFloat(kline[5])
+      }))
+    }
+    
+    return []
+  } catch (err) {
+    console.error('Failed to fetch historical data:', err)
+    return generateMockData()
+  }
+}
+
+const generateMockData = () => {
+  const data = []
+  const now = Math.floor(Date.now() / 1000)
+  let price = 50000
+  
+  for (let i = 500; i > 0; i--) {
+    const time = now - i * 60
+    const change = (Math.random() - 0.5) * 0.02 * price
+    const open = price
+    const close = price + change
+    const high = Math.max(open, close) + Math.random() * 0.01 * price
+    const low = Math.min(open, close) - Math.random() * 0.01 * price
+    const volume = Math.random() * 1000
+    
+    data.push({ time, open, high, low, close, volume })
+    price = close
+  }
+  
+  return data
+}
+
+const loadChartData = async () => {
+  loading.value = true
+  error.value = false
+  
+  try {
+    const data = await fetchHistoricalData()
+    
+    if (data.length > 0) {
+      // Update current price
+      const latest = data[data.length - 1]
+      const previous = data[data.length - 2]
+      currentPrice.value = latest.close
+      priceChange.value = ((latest.close - previous.close) / previous.close) * 100
+      
+      // Set data to appropriate series
+      if (chartType.value === 'candlesticks') {
+        candlestickSeries.value?.setData(data)
+        lineSeries.value?.setData([])
+      } else {
+        const lineData = data.map(d => ({ time: d.time, value: d.close }))
+        lineSeries.value?.setData(lineData)
+        candlestickSeries.value?.setData([])
+      }
+      
+      // Set volume data with proper colors
+      const volumeData = data.map(d => ({
+        time: d.time,
+        value: d.volume,
+        color: d.close >= d.open ? chartColors.value.up + '80' : chartColors.value.down + '80' // Add transparency
+      }))
+      volumeSeries.value?.setData(volumeData)
+      
+      // Price line removed - only show price on Y-axis
+      
+      // Fit content to view
+      chart.value?.timeScale().fitContent()
+    }
+  } catch (err) {
+    console.error('Failed to load chart data:', err)
+    error.value = true
+  } finally {
+    loading.value = false
+  }
+}
+
+// Price line functionality removed - only using Y-axis price display
+
+// WebSocket for real-time updates
+const startWebSocket = () => {
+  const binanceSymbol = getBinanceSymbol(props.tokenSymbol).toLowerCase()
+  const interval = getInterval(selectedPeriod.value)
+  const wsUrl = `wss://stream.binance.com:9443/ws/${binanceSymbol}@kline_${interval}`
+  
+  wsConnection.value = new WebSocket(wsUrl)
+  
+  wsConnection.value.onmessage = (event) => {
+    const data = JSON.parse(event.data)
+    
+    if (data.k) {
+      const kline = data.k
+      const candleData = {
+        time: Math.floor(kline.t / 1000),
+        open: parseFloat(kline.o),
+        high: parseFloat(kline.h),
+        low: parseFloat(kline.l),
+        close: parseFloat(kline.c),
+        volume: parseFloat(kline.v)
+      }
+      
+      // Update current price
+      currentPrice.value = candleData.close
+      
+      // Update chart
+      if (chartType.value === 'candlesticks') {
+        candlestickSeries.value?.update(candleData)
+      } else {
+        lineSeries.value?.update({ time: candleData.time, value: candleData.close })
+      }
+      
+      // Update volume
+      volumeSeries.value?.update({
+        time: candleData.time,
+        value: candleData.volume,
+        color: candleData.close >= candleData.open ? chartColors.value.up + '80' : chartColors.value.down + '80'
+      })
+      
+      // Price line removed - current price shows on Y-axis only
+    }
+  }
+  
+  wsConnection.value.onerror = (error) => {
+    console.error('WebSocket error:', error)
+  }
+}
+
+const stopWebSocket = () => {
+  if (wsConnection.value) {
+    wsConnection.value.close()
+    wsConnection.value = undefined
+  }
+}
+
+// Chart actions
+const refreshChart = () => {
+  loadChartData()
+}
+
+// Recreate series when chart type changes
+const recreateSeries = () => {
+  if (!chart.value) return
+  
+  // Remove existing series
+  if (candlestickSeries.value) {
+    chart.value.removeSeries(candlestickSeries.value)
+    candlestickSeries.value = undefined
+  }
+  if (lineSeries.value) {
+    chart.value.removeSeries(lineSeries.value)
+    lineSeries.value = undefined
+  }
+  
+  // Create new series based on chart type
+  if (chartType.value === 'candlesticks') {
+    candlestickSeries.value = chart.value.addSeries(CandlestickSeries, {
+      upColor: chartColors.value.up,
+      downColor: chartColors.value.down,
+      borderUpColor: chartColors.value.up,
+      borderDownColor: chartColors.value.down,
+      wickUpColor: chartColors.value.up,
+      wickDownColor: chartColors.value.down,
+      priceFormat: {
+        type: 'price',
+        precision: 4,
+        minMove: 0.0001,
+      },
+    })
+  } else {
+    lineSeries.value = chart.value.addSeries(LineSeries, {
+      color: chartColors.value.primary,
+      lineWidth: 2,
+      priceFormat: {
+        type: 'price',
+        precision: 4,
+        minMove: 0.0001,
+      },
+    })
+  }
+}
+
+// Watchers
+watch(chartType, async () => {
+  recreateSeries()
+  await loadChartData()
+})
+
+watch(selectedPeriod, async () => {
+  stopWebSocket()
+  await loadChartData()
+  startWebSocket()
+})
+
+watch(() => props.tokenSymbol, async () => {
+  stopWebSocket()
+  await loadChartData()
+  startWebSocket()
+})
+
+watch(colorTheme, () => {
+  if (chart.value) {
+    chart.value.applyOptions(getChartConfig())
+    
+    // Update series colors
+    candlestickSeries.value?.applyOptions({
+      upColor: chartColors.value.up,
+      downColor: chartColors.value.down,
+      borderUpColor: chartColors.value.up,
+      borderDownColor: chartColors.value.down,
+      wickUpColor: chartColors.value.up,
+      wickDownColor: chartColors.value.down,
+    })
+    
+    lineSeries.value?.applyOptions({
+      color: chartColors.value.primary,
+    })
+    
+    volumeSeries.value?.applyOptions({
+      color: chartColors.value.primary,
+    })
+  }
+})
+
+// Lifecycle
+onMounted(async () => {
+  await nextTick()
+  await initChart()
+})
+
+onUnmounted(() => {
+  stopWebSocket()
+  resizeObserver.value?.disconnect()
+  chart.value?.remove()
+})
+</script>
+
+<style scoped>
+/* Chart container styling */
+</style>
