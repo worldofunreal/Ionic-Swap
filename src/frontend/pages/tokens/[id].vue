@@ -74,10 +74,12 @@
 
         <!-- Chart Area -->
         <div class="flex-1 bg-white dark:bg-neutral-900 p-4">
-          <SimplePriceChart 
+          <LightweightPriceChart 
             v-if="tokenSymbol"
             :token-symbol="tokenSymbol" 
             :height="400"
+            :default-chart-type="'candlesticks'"
+            :no-container="true"
           />
         </div>
       </div>
@@ -264,7 +266,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { priceService } from '@/services/PriceService'
-import SimplePriceChart from '@/components/SimplePriceChart.vue'
+import LightweightPriceChart from '@/components/LightweightPriceChart.vue'
 
 const route = useRoute()
 

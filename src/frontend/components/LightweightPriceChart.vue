@@ -87,6 +87,7 @@ import {
 import type { IChartApi, ISeriesApi } from 'lightweight-charts'
 import { priceService } from '@/services/PriceService'
 import { useColorTheme } from '@/composables/useColorTheme'
+import { useTheme } from '@/composables/useTheme'
 
 interface Props {
   tokenSymbol: string
@@ -101,8 +102,9 @@ const props = withDefaults(defineProps<Props>(), {
   defaultChartType: 'candlesticks'
 })
 
-// Color theme
+// Color theme and dark/light mode
 const { currentTheme, colorTheme } = useColorTheme()
+const { theme: themeMode } = useTheme()
 
 // Refs
 const chartContainer = ref<HTMLElement>()
@@ -119,11 +121,14 @@ const error = ref(false)
 const currentPrice = ref(0)
 const priceChange = ref(0)
 const chartType = ref<'candlesticks' | 'line'>(props.defaultChartType)
-const selectedPeriod = ref('1h')
+const selectedPeriod = ref('15m')
 const wsConnection = ref<WebSocket>()
 
 // Time periods
 const timePeriods = [
+  { label: '1m', value: '1m' },
+  { label: '5m', value: '5m' },
+  { label: '15m', value: '15m' },
   { label: '1H', value: '1h' },
   { label: '4H', value: '4h' },
   { label: '1D', value: '1d' },
@@ -137,9 +142,11 @@ const priceChangeClass = computed(() => {
   return 'text-gray-600 dark:text-gray-400'
 })
 
-// Chart colors based on theme
+// Chart colors based on theme (reactive to both color theme and dark/light mode)
 const chartColors = computed(() => {
-  const isDark = currentTheme.value.includes('dark') || document.documentElement.classList.contains('dark')
+  const isDark = themeMode.value === 'dark'
+  
+  // Color theme mapping
   const colorMap: Record<string, { primary: string; up: string; down: string }> = {
     emerald: { primary: '#10b981', up: '#10b981', down: '#ef4444' },
     pink: { primary: '#ec4899', up: '#10b981', down: '#ef4444' },
@@ -151,11 +158,15 @@ const chartColors = computed(() => {
     teal: { primary: '#14b8a6', up: '#10b981', down: '#ef4444' },
   }
   
+  const colors = colorMap[colorTheme.value] || colorMap.emerald
+  
   return {
-    ...colorMap[colorTheme.value] || colorMap.emerald,
+    ...colors,
+    // Theme-reactive backgrounds and text
     background: isDark ? '#0a0a0a' : '#ffffff',
     text: isDark ? '#ffffff' : '#000000',
-    grid: isDark ? '#2a2a2a' : '#f0f0f0'
+    grid: isDark ? '#2a2a2a' : '#e5e7eb',
+    border: isDark ? '#374151' : '#d1d5db',
   }
 })
 
@@ -183,12 +194,12 @@ const getChartConfig = () => ({
     },
   },
   timeScale: {
-    borderColor: chartColors.value.grid,
+    borderColor: chartColors.value.border,
     timeVisible: true,
     secondsVisible: false,
   },
   rightPriceScale: {
-    borderColor: chartColors.value.grid,
+    borderColor: chartColors.value.border,
     visible: true,
     entireTextOnly: false,
     scaleMargins: {
@@ -240,10 +251,13 @@ const getBinanceSymbol = (symbol: string) => {
 
 const getInterval = (period: string) => {
   const intervalMap: Record<string, string> = {
-    '1h': '1m',
-    '4h': '5m', 
-    '1d': '1h',
-    '1w': '4h'
+    '1m': '1m',
+    '5m': '5m',
+    '15m': '15m',
+    '1h': '1h',
+    '4h': '4h', 
+    '1d': '1d',
+    '1w': '1w'
   }
   return intervalMap[period] || '1h'
 }
@@ -553,29 +567,47 @@ watch(() => props.tokenSymbol, async () => {
   startWebSocket()
 })
 
+// Update chart colors when color theme changes
 watch(colorTheme, () => {
-  if (chart.value) {
-    chart.value.applyOptions(getChartConfig())
-    
-    // Update series colors
-    candlestickSeries.value?.applyOptions({
-      upColor: chartColors.value.up,
-      downColor: chartColors.value.down,
-      borderUpColor: chartColors.value.up,
-      borderDownColor: chartColors.value.down,
-      wickUpColor: chartColors.value.up,
-      wickDownColor: chartColors.value.down,
-    })
-    
-    lineSeries.value?.applyOptions({
-      color: chartColors.value.primary,
-    })
-    
-    volumeSeries.value?.applyOptions({
-      color: chartColors.value.primary,
-    })
-  }
+  updateChartTheme()
 })
+
+// Update chart colors when light/dark mode changes  
+watch(themeMode, () => {
+  updateChartTheme()
+})
+
+// Function to update chart theme colors
+const updateChartTheme = () => {
+  if (!chart.value) return
+  
+  // Update chart configuration
+  chart.value.applyOptions(getChartConfig())
+  
+  // Update series colors
+  candlestickSeries.value?.applyOptions({
+    upColor: chartColors.value.up,
+    downColor: chartColors.value.down,
+    borderUpColor: chartColors.value.up,
+    borderDownColor: chartColors.value.down,
+    wickUpColor: chartColors.value.up,
+    wickDownColor: chartColors.value.down,
+  })
+  
+  lineSeries.value?.applyOptions({
+    color: chartColors.value.primary,
+  })
+  
+  volumeSeries.value?.applyOptions({
+    color: chartColors.value.primary,
+  })
+  
+  // Update volume price scale
+  chart.value.priceScale('volume').applyOptions({
+    scaleMargins: { top: 0.7, bottom: 0 },
+    borderVisible: false,
+  })
+}
 
 // Lifecycle
 onMounted(async () => {
