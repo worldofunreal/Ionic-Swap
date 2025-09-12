@@ -20,7 +20,7 @@
           :class="[
             'px-3 py-1 text-sm rounded-md transition-colors',
             selectedPeriod === period.value 
-              ? 'bg-blue-500 text-white' 
+              ? 'bg-primary-500 text-white' 
               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
           ]"
           @click="selectedPeriod = period.value"
@@ -59,7 +59,7 @@
         <polyline
           :points="priceLinePoints"
           fill="none"
-          stroke="#3b82f6"
+          :stroke="chartColors.primary"
           stroke-width="2"
         />
         
@@ -71,12 +71,12 @@
         />
         
         <!-- Gradient definition -->
-        <defs>
-          <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.3" />
-            <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0" />
-          </linearGradient>
-        </defs>
+          <defs>
+            <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" :style="`stop-color:${chartColors.primary};stop-opacity:0.3`" />
+              <stop offset="100%" :style="`stop-color:${chartColors.primary};stop-opacity:0`" />
+            </linearGradient>
+          </defs>
         
         <!-- Current price point -->
         <circle
@@ -84,7 +84,7 @@
           :cx="lastPointPosition.x"
           :cy="lastPointPosition.y"
           r="4"
-          fill="#3b82f6"
+          :fill="chartColors.primary"
         />
         
       </svg>
@@ -100,7 +100,7 @@
 
     <!-- Loading state -->
     <div v-if="loading" class="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400" :style="{ height: height + 'px' }">
-      <div class="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+      <div class="w-4 h-4 border-2 border-gray-300 border-t-primary-500 rounded-full animate-spin" />
       <span>Loading chart data...</span>
     </div>
 
@@ -115,6 +115,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { priceService } from '@/services/PriceService'
+import { useColorTheme } from '@/composables/useColorTheme'
 
 interface Props {
   tokenSymbol: string
@@ -125,6 +126,24 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   height: 300,
   noContainer: false
+})
+
+// Color theme
+const { currentTheme } = useColorTheme()
+
+// Color mapping for chart elements
+const chartColors = computed(() => {
+  const colorMap: Record<string, { primary: string; light: string; dark: string }> = {
+    emerald: { primary: '#10b981', light: '#10b981', dark: '#059669' },
+    pink: { primary: '#ec4899', light: '#ec4899', dark: '#db2777' },
+    red: { primary: '#ef4444', light: '#ef4444', dark: '#dc2626' },
+    orange: { primary: '#f97316', light: '#f97316', dark: '#ea580c' },
+    sky: { primary: '#0ea5e9', light: '#0ea5e9', dark: '#0284c7' },
+    fuchsia: { primary: '#d946ef', light: '#d946ef', dark: '#c026d3' },
+    purple: { primary: '#a855f7', light: '#a855f7', dark: '#9333ea' },
+    teal: { primary: '#14b8a6', light: '#14b8a6', dark: '#0d9488' },
+  }
+  return colorMap[currentTheme.value] || colorMap.emerald
 })
 
 // Reactive data

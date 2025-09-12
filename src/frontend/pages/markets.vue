@@ -70,7 +70,7 @@
             </div>
             <NuxtLink
               :to="`/tokens/${selectedToken}`"
-              class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+              class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium transition-colors"
             >
               Trade {{ selectedToken }}
             </NuxtLink>
