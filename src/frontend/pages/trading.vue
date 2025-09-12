@@ -6,14 +6,14 @@
         <div class="flex items-center space-x-4">
           <div class="flex items-center space-x-2">
             <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-              {{ tokenSymbol?.charAt(0) || 'B' }}
+              {{ selectedToken?.symbol?.charAt(0) || 'B' }}
             </div>
             <div>
               <div class="font-semibold text-gray-900 dark:text-white">
-                {{ tokenSymbol }}/USDT
+                {{ selectedToken?.symbol || 'BTC' }}/USDT
               </div>
               <div class="text-sm text-gray-500 dark:text-gray-400">
-                {{ getTokenName(tokenSymbol) }}
+                {{ selectedToken?.name || 'Bitcoin' }}
               </div>
             </div>
           </div>
@@ -21,7 +21,7 @@
           <!-- Price Display -->
           <div class="flex items-center space-x-4">
             <div class="text-2xl font-bold text-gray-900 dark:text-white">
-              ${{ formatPrice(tokenData?.price || 0) }}
+              ${{ formatPrice(selectedToken?.price || 0) }}
             </div>
             <div class="flex items-center space-x-1" :class="priceChangeClass">
               <UIcon :name="priceChange >= 0 ? 'i-heroicons-arrow-trending-up' : 'i-heroicons-arrow-trending-down'" class="w-4 h-4" />
@@ -32,10 +32,16 @@
           </div>
         </div>
 
-        <!-- Back to Trading -->
-        <NuxtLink to="/trading" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium">
-          ← Back to Trading
-        </NuxtLink>
+        <!-- Token Selector -->
+        <div class="flex items-center space-x-2">
+          <USelect
+            v-model="selectedTokenSymbol"
+            :options="tokenOptions"
+            option-attribute="label"
+            value-attribute="value"
+            class="w-32"
+          />
+        </div>
       </div>
     </div>
 
@@ -75,8 +81,8 @@
         <!-- Chart Area -->
         <div class="flex-1 bg-white dark:bg-neutral-900 p-4">
           <SimplePriceChart 
-            v-if="tokenSymbol"
-            :token-symbol="tokenSymbol" 
+            v-if="selectedTokenSymbol"
+            :token-symbol="selectedTokenSymbol" 
             :height="400"
           />
         </div>
@@ -108,7 +114,7 @@
             <!-- Buy Section -->
             <div class="space-y-3">
               <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Buy {{ tokenSymbol }}</span>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Buy {{ selectedToken?.symbol || 'BTC' }}</span>
                 <span class="text-xs text-gray-500 dark:text-gray-400">Balance: 0.00 USDT</span>
               </div>
               
@@ -136,15 +142,15 @@
               </div>
               
               <button class="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-md transition-colors">
-                Buy {{ tokenSymbol }}
+                Buy {{ selectedToken?.symbol || 'BTC' }}
               </button>
             </div>
 
             <!-- Sell Section -->
             <div class="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
               <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Sell {{ tokenSymbol }}</span>
-                <span class="text-xs text-gray-500 dark:text-gray-400">Balance: 0.00 {{ tokenSymbol }}</span>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Sell {{ selectedToken?.symbol || 'BTC' }}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">Balance: 0.00 {{ selectedToken?.symbol || 'BTC' }}</span>
               </div>
               
               <div class="space-y-2">
@@ -155,7 +161,7 @@
                     placeholder="0.00"
                     class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                  <div class="absolute left-3 top-2 text-sm text-gray-500 dark:text-gray-400">{{ tokenSymbol }}</div>
+                  <div class="absolute left-3 top-2 text-sm text-gray-500 dark:text-gray-400">{{ selectedToken?.symbol || 'BTC' }}</div>
                 </div>
                 
                 <div class="flex space-x-1">
@@ -171,7 +177,7 @@
               </div>
               
               <button class="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-md transition-colors">
-                Sell {{ tokenSymbol }}
+                Sell {{ selectedToken?.symbol || 'BTC' }}
               </button>
             </div>
           </div>
@@ -181,7 +187,7 @@
             <!-- Buy Section -->
             <div class="space-y-3">
               <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Buy {{ tokenSymbol }}</span>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Buy {{ selectedToken?.symbol || 'BTC' }}</span>
                 <span class="text-xs text-gray-500 dark:text-gray-400">Balance: 0.00 USDT</span>
               </div>
               
@@ -197,7 +203,7 @@
                 </div>
                 
                 <div>
-                  <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Amount ({{ tokenSymbol }})</label>
+                  <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Amount ({{ selectedToken?.symbol || 'BTC' }})</label>
                   <input
                     v-model="limitBuyAmount"
                     type="number"
@@ -212,15 +218,15 @@
               </div>
               
               <button class="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-md transition-colors">
-                Buy {{ tokenSymbol }}
+                Buy {{ selectedToken?.symbol || 'BTC' }}
               </button>
             </div>
 
             <!-- Sell Section -->
             <div class="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700">
               <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Sell {{ tokenSymbol }}</span>
-                <span class="text-xs text-gray-500 dark:text-gray-400">Balance: 0.00 {{ tokenSymbol }}</span>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Sell {{ selectedToken?.symbol || 'BTC' }}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">Balance: 0.00 {{ selectedToken?.symbol || 'BTC' }}</span>
               </div>
               
               <div class="space-y-2">
@@ -235,7 +241,7 @@
                 </div>
                 
                 <div>
-                  <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Amount ({{ tokenSymbol }})</label>
+                  <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Amount ({{ selectedToken?.symbol || 'BTC' }})</label>
                   <input
                     v-model="limitSellAmount"
                     type="number"
@@ -250,7 +256,7 @@
               </div>
               
               <button class="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-md transition-colors">
-                Sell {{ tokenSymbol }}
+                Sell {{ selectedToken?.symbol || 'BTC' }}
               </button>
             </div>
           </div>
@@ -262,19 +268,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
 import { priceService } from '@/services/PriceService'
 import SimplePriceChart from '@/components/SimplePriceChart.vue'
 
-const route = useRoute()
-
-// Get token symbol from route parameter
-const tokenSymbol = computed(() => {
-  const id = route.params.id as string
-  return id?.toUpperCase() || 'BTC'
-})
-
 // Reactive data
+const selectedTokenSymbol = ref('BTC')
 const selectedPeriod = ref('1h')
 const activeTab = ref('market')
 
@@ -302,14 +300,27 @@ const tradingTabs = [
   { label: 'Limit', value: 'limit' }
 ]
 
+// Token options
+const tokenOptions = [
+  { label: 'BTC/USDT', value: 'BTC' },
+  { label: 'ETH/USDT', value: 'ETH' },
+  { label: 'SOL/USDT', value: 'SOL' },
+  { label: 'XRP/USDT', value: 'XRP' },
+  { label: 'BNB/USDT', value: 'BNB' },
+  { label: 'ADA/USDT', value: 'ADA' },
+  { label: 'DOGE/USDT', value: 'DOGE' },
+  { label: 'TRX/USDT', value: 'TRX' },
+  { label: 'ICP/USDT', value: 'ICP' }
+]
+
 // Computed properties
-const tokenData = computed(() => {
+const selectedToken = computed(() => {
   const prices = priceService.getPrices()
-  return prices.get(tokenSymbol.value)
+  return prices.get(selectedTokenSymbol.value)
 })
 
 const priceChange = computed(() => {
-  return tokenData.value?.change24h || 0
+  return selectedToken.value?.change24h || 0
 })
 
 const priceChangeClass = computed(() => {
@@ -325,21 +336,6 @@ const formatPrice = (price: number) => {
   if (price < 1) return price.toFixed(4)
   if (price < 100) return price.toFixed(2)
   return price.toLocaleString('en-US', { maximumFractionDigits: 2 })
-}
-
-const getTokenName = (symbol: string) => {
-  const names: Record<string, string> = {
-    'BTC': 'Bitcoin',
-    'ETH': 'Ethereum',
-    'SOL': 'Solana',
-    'XRP': 'XRP',
-    'BNB': 'BNB',
-    'ADA': 'Cardano',
-    'DOGE': 'Dogecoin',
-    'TRX': 'TRON',
-    'ICP': 'Internet Computer'
-  }
-  return names[symbol] || symbol
 }
 
 const setBuyAmount = (percent: number) => {
@@ -361,6 +357,10 @@ onMounted(() => {
 
 // Page title
 useHead({
-  title: `Trading ${tokenSymbol.value} - Ionic Swap`
+  title: 'Trading - Ionic Swap'
 })
 </script>
+
+<style scoped>
+/* All styles are inline classes */
+</style>

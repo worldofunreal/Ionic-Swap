@@ -13,8 +13,7 @@
       <div
         v-for="token in tokens"
         :key="token.symbol"
-        class="bg-gray-50 dark:bg-neutral-700 rounded-lg p-4 cursor-pointer transition-all hover:bg-gray-100 dark:hover:bg-neutral-600 hover:shadow-md border border-gray-200 dark:border-gray-600"
-        @click="selectToken(token.symbol)"
+        class="bg-gray-50 dark:bg-neutral-700 rounded-lg p-4 transition-all hover:bg-gray-100 dark:hover:bg-neutral-600 hover:shadow-md border border-gray-200 dark:border-gray-600"
       >
         <div class="flex justify-between items-start mb-3">
           <div class="flex flex-col">
@@ -35,9 +34,25 @@
           </div>
         </div>
         
-        <div class="flex justify-between items-center text-sm">
+        <div class="flex justify-between items-center text-sm mb-3">
           <div class="text-gray-500 dark:text-gray-400">24h Volume</div>
           <div class="font-medium text-gray-700 dark:text-gray-300">${{ formatVolume(token.volume24h) }}</div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-2">
+          <button
+            class="flex-1 px-3 py-2 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+            @click="selectToken(token.symbol)"
+          >
+            Chart
+          </button>
+          <NuxtLink
+            :to="`/tokens/${token.symbol}`"
+            class="flex-1 px-3 py-2 text-xs bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors text-center"
+          >
+            Trade
+          </NuxtLink>
         </div>
       </div>
     </div>
@@ -78,16 +93,16 @@ const lastUpdated = ref('')
 // Token configuration
 const tokenConfig = {
   'BTC': { name: 'Bitcoin', icon: 'logos:bitcoin' },
-  'ETH': { name: 'Ethereum', icon: 'logos:ethereum' },
-  'XRP': { name: 'XRP', icon: 'logos:xrp' },
-  'USDT': { name: 'Tether', icon: 'logos:tether' },
-  'BNB': { name: 'BNB', icon: 'logos:binance' },
-  'SOL': { name: 'Solana', icon: 'logos:solana' },
-  'USDC': { name: 'USD Coin', icon: 'logos:usdc' },
-  'DOGE': { name: 'Dogecoin', icon: 'logos:dogecoin' },
-  'ADA': { name: 'Cardano', icon: 'logos:cardano' },
-  'TRX': { name: 'TRON', icon: 'logos:tron' },
-  'ICP': { name: 'Internet Computer', icon: 'logos:internet-computer' },
+  'ETH': { name: 'Ethereum', icon: 'token-branded:ethereum' },
+  'XRP': { name: 'XRP', icon: 'cryptocurrency-color:xrp' },
+  'USDT': { name: 'Tether', icon: 'cryptocurrency-color:usdt' },
+  'BNB': { name: 'BNB', icon: 'token-branded:binance' },
+  'SOL': { name: 'Solana', icon: 'token-branded:solana' },
+  'USDC': { name: 'USD Coin', icon: 'cryptocurrency-color:usdc' },
+  'DOGE': { name: 'Dogecoin', icon: 'simple-icons:dogecoin' },
+  'ADA': { name: 'Cardano', icon: 'logos:cardano-icon' },
+  'TRX': { name: 'TRON', icon: 'token-branded:tron' },
+  'ICP': { name: 'Internet Computer', icon: 'token-branded:icp' },
 }
 
 // Computed properties

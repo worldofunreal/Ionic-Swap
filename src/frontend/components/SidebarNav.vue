@@ -52,9 +52,9 @@
       to?: string
       hr?: boolean
     }> = [
-      { label: 'Swap', icon: 'eos-icons:compass', to: '/' },
-      { label: 'Portfolio', icon: 'heroicons:chart-bar', to: '/tokens' },
-      { label: 'Markets', icon: 'subway:coin', to: '/tokens' },
+      { label: 'Discover', icon: 'eos-icons:compass', to: '/' },
+      { label: 'Markets', icon: 'icon-park-solid:stock-market', to: '/markets' },
+      { label: 'Trading', icon: 'hugeicons:coins-swap', to: '/trading' },
       { label: 'History', icon: 'tabler:activity', to: '/activity' },
     ]
 

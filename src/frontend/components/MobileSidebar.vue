@@ -71,9 +71,9 @@
   const route = useRoute()
 
   const menuItems = [
-    { label: 'Swap', icon: 'eos-icons:compass', to: '/' },
-    { label: 'Tokens', icon: 'icon-park-solid:game-ps', to: '/profile' },
-    { label: 'Markets', icon: 'subway:coin', to: '/tokens' },
+    { label: 'Discover', icon: 'eos-icons:compass', to: '/' },
+    { label: 'Markets', icon: 'icon-park-solid:stock-market', to: '/markets' },
+    { label: 'Trading', icon: 'heroicons:chart-bar', to: '/trading' },
     { label: 'History', icon: 'tabler:activity', to: '/activity' },
     { label: 'Profile', icon: 'iconamoon:profile-fill', to: '/profile' },
     { label: 'Settings', icon: 'iconamoon:settings-fill', to: '/settings' },

@@ -28,18 +28,17 @@
     </div>
 
     <!-- Simple SVG Chart -->
-    <div class="relative" :style="{ height: height + 'px' }">
+    <div class="relative w-full" :style="{ height: height + 'px' }">
       <svg 
         v-if="chartData.length > 0" 
-        :width="chartWidth" 
-        :height="height" 
         class="w-full h-full"
-        viewBox="0 0 400 200"
+        :viewBox="`0 0 ${chartWidth} ${chartHeight}`"
+        preserveAspectRatio="none"
       >
         <!-- Grid lines -->
         <defs>
-          <pattern id="grid" width="40" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 20" fill="none" stroke="#e5e7eb" stroke-width="0.5" opacity="0.3"/>
+          <pattern id="grid" width="80" height="20" patternUnits="userSpaceOnUse">
+            <path d="M 80 0 L 0 0 0 20" fill="none" stroke="#e5e7eb" stroke-width="0.5" opacity="0.3"/>
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#grid)" />
@@ -70,7 +69,7 @@
         <!-- Current price point -->
         <circle
           v-if="currentPrice > 0"
-          :cx="chartWidth - 10"
+          :cx="chartWidth - 20"
           :cy="getYPosition(currentPrice)"
           r="4"
           fill="#3b82f6"
@@ -114,7 +113,7 @@ const chartData = ref<Array<{ timestamp: number; price: number }>>([])
 const selectedPeriod = ref('1h')
 
 // Chart dimensions
-const chartWidth = 400
+const chartWidth = 800
 const chartHeight = 200
 
 // Time periods
@@ -277,6 +276,17 @@ const subscribeToPriceUpdates = () => {
 watch(selectedPeriod, () => {
   loadChartData()
 })
+
+// Watch for token symbol changes
+watch(() => props.tokenSymbol, () => {
+  // Unsubscribe from previous token updates
+  if (unsubscribe) {
+    unsubscribe()
+  }
+  // Load new chart data and subscribe to new token updates
+  loadChartData()
+  subscribeToPriceUpdates()
+}, { immediate: false })
 
 // Lifecycle
 onMounted(async () => {
