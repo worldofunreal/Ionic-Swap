@@ -92,7 +92,7 @@
         :src="post.image"
         :alt="`${post.title} – ${post.category} | AI, Web3, Open Source, Blockchain, NFTs, CGI, AI Art`"
         class="mb-8 rounded-lg w-full max-h-96 object-cover"
-      >
+      />
       <div class="prose dark:prose-invert max-w-none">
         <p class="text-lg text-gray-700 dark:text-gray-300 mb-6">
           {{ post.description }}

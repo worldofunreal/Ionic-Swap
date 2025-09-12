@@ -116,16 +116,26 @@ export default defineNuxtPlugin(nuxtApp => {
       trackPageView: (pageName: string, data?: Record<string, unknown>) => {
         trackInteraction('Page View', { pageName, ...data })
       },
-      trackButtonClick: (buttonName: string, data?: Record<string, unknown>) => {
+      trackButtonClick: (
+        buttonName: string,
+        data?: Record<string, unknown>
+      ) => {
         trackInteraction('Button Click', { buttonName, ...data })
       },
       trackFormSubmit: (formName: string, data?: Record<string, unknown>) => {
         trackInteraction('Form Submit', { formName, ...data })
       },
-      trackWalletConnect: (walletType: string, data?: Record<string, unknown>) => {
+      trackWalletConnect: (
+        walletType: string,
+        data?: Record<string, unknown>
+      ) => {
         trackInteraction('Wallet Connect', { walletType, ...data })
       },
-      trackNavigation: (from: string, to: string, data?: Record<string, unknown>) => {
+      trackNavigation: (
+        from: string,
+        to: string,
+        data?: Record<string, unknown>
+      ) => {
         trackInteraction('Navigation', { from, to, ...data })
       },
       trackError: (error: string, data?: Record<string, unknown>) => {

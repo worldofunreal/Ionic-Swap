@@ -1,4 +1,4 @@
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async event => {
   try {
     const query = getQuery(event)
     const symbol = query.symbol as string
@@ -9,18 +9,17 @@ export default defineEventHandler(async (event) => {
     if (!symbol || !interval || !limit) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Symbol, interval, and limit parameters are required'
+        statusMessage: 'Symbol, interval, and limit parameters are required',
       })
     }
 
     // Build Binance API URL with optional endTime parameter
     let binanceUrl = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
-    
+
     // Add endTime parameter if provided (for fetching historical data)
     if (endTime) {
       binanceUrl += `&endTime=${endTime}`
     }
-
 
     // Make request to Binance API
     const response = await fetch(binanceUrl)
@@ -28,7 +27,7 @@ export default defineEventHandler(async (event) => {
     if (!response.ok) {
       throw createError({
         statusCode: response.status,
-        statusMessage: `Binance API error: ${response.statusText}`
+        statusMessage: `Binance API error: ${response.statusText}`,
       })
     }
 
@@ -36,14 +35,14 @@ export default defineEventHandler(async (event) => {
 
     return {
       success: true,
-      data
+      data,
     }
   } catch (error) {
     console.error('Binance klines API error:', error)
-    
+
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to fetch klines data'
+      statusMessage: 'Failed to fetch klines data',
     })
   }
 })

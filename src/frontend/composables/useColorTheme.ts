@@ -13,7 +13,10 @@ export type ColorTheme =
 
 export const useColorTheme = () => {
   // Use a shared global state so all components observe the same ref
-  const colorTheme = useState<ColorTheme>('ionic-swap-color-theme-state', () => 'emerald')
+  const colorTheme = useState<ColorTheme>(
+    'ionic-swap-color-theme-state',
+    () => 'emerald'
+  )
   const isClient = ref(false)
   const appConfig = useAppConfig()
 

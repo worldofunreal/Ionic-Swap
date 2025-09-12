@@ -1,4 +1,4 @@
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async event => {
   try {
     const query = getQuery(event)
     const symbols = query.symbols as string
@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     if (!symbols) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Symbols parameter is required'
+        statusMessage: 'Symbols parameter is required',
       })
     }
 
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
       console.error('Binance API error:', response.status, errorText)
       throw createError({
         statusCode: response.status,
-        statusMessage: `Binance API error: ${response.statusText} - ${errorText}`
+        statusMessage: `Binance API error: ${response.statusText} - ${errorText}`,
       })
     }
 
@@ -32,18 +32,18 @@ export default defineEventHandler(async (event) => {
 
     return {
       success: true,
-      data
+      data,
     }
   } catch (error) {
     console.error('Binance ticker API error:', error)
-    
+
     if (error.statusCode) {
       throw error
     }
-    
+
     throw createError({
       statusCode: 500,
-      statusMessage: `Failed to fetch ticker data: ${error.message}`
+      statusMessage: `Failed to fetch ticker data: ${error.message}`,
     })
   }
 })

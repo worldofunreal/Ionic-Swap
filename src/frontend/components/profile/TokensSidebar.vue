@@ -11,7 +11,7 @@
         type="text"
         placeholder="Search for chains"
         class="w-full px-3 py-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-950 mb-2 mt-2"
-      >
+      />
       <div class="flex flex-wrap gap-2">
         <button
           v-for="chain in chains"
@@ -49,7 +49,7 @@
             v-model="hasNFT"
             type="checkbox"
             class="form-checkbox rounded"
-          >
+          />
           Has NFT
         </label>
         <label class="flex items-center gap-2">
@@ -57,7 +57,7 @@
             v-model="brandedTokenPage"
             type="checkbox"
             class="form-checkbox rounded"
-          >
+          />
           Branded Token Page
         </label>
       </div>

@@ -39,7 +39,7 @@
             type="checkbox"
             :value="mp"
             class="form-checkbox rounded"
-          >
+          />
           {{ mp }}
         </label>
       </div>
@@ -53,7 +53,7 @@
         type="text"
         placeholder="Search for chains"
         class="w-full px-3 py-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-950 mb-2 mt-2"
-      >
+      />
       <div class="flex flex-wrap gap-2">
         <button
           v-for="chain in chains"
@@ -74,7 +74,7 @@
         type="text"
         placeholder="Search for collections"
         class="w-full px-3 py-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-950 mb-2 mt-2"
-      >
+      />
       <div class="text-gray-400 text-xs">[Collection filter pills here]</div>
     </SidebarSection>
   </div>

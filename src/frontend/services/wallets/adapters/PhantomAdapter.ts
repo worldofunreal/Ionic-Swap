@@ -22,7 +22,10 @@ interface PhantomBitcoinProvider {
     address: string,
     message: Uint8Array
   ) => Promise<{ signature: Uint8Array }>
-  signPSBT: (psbt: Uint8Array, options: Record<string, unknown>) => Promise<Uint8Array>
+  signPSBT: (
+    psbt: Uint8Array,
+    options: Record<string, unknown>
+  ) => Promise<Uint8Array>
   on: (event: string, callback: (data: unknown) => void) => void
 }
 

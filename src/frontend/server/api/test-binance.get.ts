@@ -1,4 +1,4 @@
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (_event) => {
   try {
     // Test with a simple single symbol first
     const testUrl = 'https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT"]'

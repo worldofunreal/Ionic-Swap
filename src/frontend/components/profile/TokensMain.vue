@@ -22,7 +22,7 @@
         type="text"
         placeholder="Search for tokens"
         class="flex-1 px-3 py-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-950"
-      >
+      />
       <div class="flex gap-2">
         <button class="px-2 py-1 rounded bg-primary-600 text-white">
           List
@@ -40,7 +40,7 @@
         src="https://placehold.co/96x96?text=Token"
         alt="Token"
         class="w-24 h-24 rounded-lg shadow mb-4"
-      >
+      />
       <div class="text-xl font-bold mb-2">No results found</div>
       <div class="text-gray-400 mb-4">We've been searching the blockchain.</div>
       <button class="px-4 py-2 rounded bg-primary-600 text-white font-semibold">
@@ -96,7 +96,7 @@
                   :src="token.logo"
                   alt="Token"
                   class="w-10 h-10 rounded-full border border-gray-300 dark:border-gray-700 flex-shrink-0"
-                >
+                />
                 <span class="font-semibold text-gray-900 dark:text-white">{{
                   token.name
                 }}</span>
@@ -191,7 +191,7 @@
               type="text"
               placeholder="Search for tokens"
               class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-950"
-            >
+            />
           </div>
 
           <!-- Chains Filter -->
@@ -203,7 +203,7 @@
               type="text"
               placeholder="Search chains..."
               class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-950 mb-3"
-            >
+            />
             <div class="flex flex-wrap gap-2">
               <button
                 v-for="chain in chains"
@@ -249,7 +249,7 @@
                 <input
                   type="checkbox"
                   class="rounded border-gray-300 dark:border-gray-600"
-                >
+                />
                 <span class="text-sm text-gray-700 dark:text-gray-300"
                   >Has NFT</span
                 >
@@ -258,7 +258,7 @@
                 <input
                   type="checkbox"
                   class="rounded border-gray-300 dark:border-gray-600"
-                >
+                />
                 <span class="text-sm text-gray-700 dark:text-gray-300"
                   >Branded Token Page</span
                 >

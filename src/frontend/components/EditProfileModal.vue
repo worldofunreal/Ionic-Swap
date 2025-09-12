@@ -50,7 +50,7 @@
                 alt="Banner"
                 class="w-full h-full object-cover"
                 crossorigin="anonymous"
-              >
+              />
               <div
                 v-else
                 class="w-full h-full flex items-center justify-center"
@@ -86,7 +86,7 @@
                   alt="Avatar"
                   class="w-full h-full object-cover"
                   crossorigin="anonymous"
-                >
+                />
                 <div
                   v-else
                   class="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
@@ -120,14 +120,14 @@
           accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
           class="hidden"
           @change="handleAvatarFileSelect"
-        >
+        />
         <input
           ref="bannerFileInput"
           type="file"
           accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
           class="hidden"
           @change="handleBannerFileSelect"
-        >
+        />
 
         <!-- Profile Fields -->
         <div class="space-y-4 mt-8">
@@ -144,7 +144,7 @@
               placeholder="Enter your display name"
               maxlength="50"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            >
+            />
           </div>
 
           <!-- Bio -->
@@ -181,7 +181,7 @@
               placeholder="Where are you based?"
               maxlength="30"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            >
+            />
           </div>
 
           <!-- Website -->
@@ -197,7 +197,7 @@
               placeholder="https://yourwebsite.com"
               maxlength="100"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            >
+            />
           </div>
         </div>
 
@@ -717,7 +717,9 @@
     } catch (err: unknown) {
       console.error('Failed to update profile:', err)
       error.value =
-        err instanceof Error ? err.message : 'Failed to update profile. Please try again.'
+        err instanceof Error
+          ? err.message
+          : 'Failed to update profile. Please try again.'
     } finally {
       loading.value = false
     }

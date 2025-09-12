@@ -8,7 +8,7 @@
           type="text"
           placeholder="Search chains..."
           class="w-full px-3 py-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-950"
-        >
+        />
         <UIcon
           name="ri:search-line"
           class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -80,12 +80,12 @@
     </SidebarSection>
     <!-- Has NFT Toggle -->
     <div class="flex items-center gap-2">
-      <input id="has-nft" type="checkbox" >
+      <input id="has-nft" type="checkbox" />
       <label for="has-nft">Has NFT</label>
     </div>
     <!-- Branded Token Page Toggle -->
     <div class="flex items-center gap-2">
-      <input id="branded-token" type="checkbox" >
+      <input id="branded-token" type="checkbox" />
       <label for="branded-token">Branded Token Page</label>
     </div>
   </div>

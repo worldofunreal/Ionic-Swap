@@ -66,13 +66,13 @@
               type="number"
               placeholder="Min"
               class="flex-1 min-w-0 px-3 py-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"
-            >
+            />
             <span class="text-gray-500 dark:text-gray-400">to</span>
             <input
               type="number"
               placeholder="Max"
               class="flex-1 min-w-0 px-3 py-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"
-            >
+            />
           </div>
           <button
             class="w-full px-3 py-2 rounded bg-primary-600 text-white font-medium"
@@ -96,7 +96,7 @@
               type="checkbox"
               :value="m"
               class="accent-primary-600 w-5 h-5"
-            >
+            />
             <span class="text-gray-700 dark:text-gray-200 font-medium">{{
               m
             }}</span>
@@ -111,7 +111,7 @@
           type="text"
           placeholder="Search chains..."
           class="w-full px-3 py-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 mb-2"
-        >
+        />
         <div class="flex flex-wrap gap-2">
           <button
             v-for="chain in chains"
@@ -136,7 +136,7 @@
           type="text"
           placeholder="Search for collections"
           class="w-full px-3 py-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 mb-2"
-        >
+        />
         <div class="flex flex-col gap-1 max-h-40 overflow-y-auto">
           <label
             v-for="col in collections"
@@ -148,7 +148,7 @@
               type="checkbox"
               :value="col.name"
               class="accent-primary-600 w-5 h-5"
-            >
+            />
             <span>{{ col.name }}</span>
             <UIcon
               v-if="col.verified"

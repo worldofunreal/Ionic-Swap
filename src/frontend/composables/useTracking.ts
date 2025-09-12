@@ -11,7 +11,10 @@ export const useTracking = () => {
   } = useNuxtApp()
 
   // Hackathon-specific tracking functions
-  const trackHackathonEvent = (eventName: string, data?: Record<string, unknown>) => {
+  const trackHackathonEvent = (
+    eventName: string,
+    data?: Record<string, unknown>
+  ) => {
     $trackInteraction(`Hackathon: ${eventName}`, {
       ...data,
       hackathonPhase: 'development',
@@ -27,7 +30,11 @@ export const useTracking = () => {
     })
   }
 
-  const trackFeatureUsage = (feature: string, action: string, data?: Record<string, unknown>) => {
+  const trackFeatureUsage = (
+    feature: string,
+    action: string,
+    data?: Record<string, unknown>
+  ) => {
     $trackInteraction('Feature Usage', {
       feature,
       action,
@@ -36,7 +43,11 @@ export const useTracking = () => {
     })
   }
 
-  const trackPerformance = (metric: string, value: number, data?: Record<string, unknown>) => {
+  const trackPerformance = (
+    metric: string,
+    value: number,
+    data?: Record<string, unknown>
+  ) => {
     $trackInteraction('Performance', {
       metric,
       value,
@@ -127,7 +138,11 @@ export const useTracking = () => {
   }
 
   // Conversion tracking
-  const trackConversion = (goal: string, value?: number, data?: Record<string, unknown>) => {
+  const trackConversion = (
+    goal: string,
+    value?: number,
+    data?: Record<string, unknown>
+  ) => {
     $trackInteraction('Conversion', {
       goal,
       value,

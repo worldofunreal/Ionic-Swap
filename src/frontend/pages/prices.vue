@@ -33,13 +33,9 @@
             All Token Charts
           </h2>
         </div>
-        
+
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div
-            v-for="token in availableTokens"
-            :key="token"
-            class="chart-card"
-          >
+          <div v-for="token in availableTokens" :key="token" class="chart-card">
             <PriceChart :token-symbol="token" :height="300" />
           </div>
         </div>
@@ -52,7 +48,7 @@
             Market Overview
           </h2>
         </div>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="overview-card">
             <div class="overview-icon">
@@ -63,7 +59,7 @@
               <div class="overview-value">$2.1T</div>
             </div>
           </div>
-          
+
           <div class="overview-card">
             <div class="overview-icon">
               <UIcon name="heroicons:arrow-trending-up" class="w-8 h-8" />
@@ -73,7 +69,7 @@
               <div class="overview-value">$45.2B</div>
             </div>
           </div>
-          
+
           <div class="overview-card">
             <div class="overview-icon">
               <UIcon name="heroicons:currency-dollar" class="w-8 h-8" />
@@ -90,59 +86,69 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import PriceList from '@/components/PriceList.vue'
-import PriceChart from '@/components/PriceChart.vue'
+  import { ref } from 'vue'
+  import PriceList from '@/components/PriceList.vue'
+  import PriceChart from '@/components/PriceChart.vue'
 
-// Available tokens
-const availableTokens = [
-  'BTC', 'ETH', 'XRP', 'USDT', 'BNB', 'SOL', 
-  'USDC', 'DOGE', 'ADA', 'TRX', 'ICP'
-]
+  // Available tokens
+  const availableTokens = [
+    'BTC',
+    'ETH',
+    'XRP',
+    'USDT',
+    'BNB',
+    'SOL',
+    'USDC',
+    'DOGE',
+    'ADA',
+    'TRX',
+    'ICP',
+  ]
 
-const selectedToken = ref<string | null>(null)
+  const selectedToken = ref<string | null>(null)
 
-// Handle token selection
-const handleTokenSelect = (symbol: string) => {
-  selectedToken.value = symbol
-}
+  // Handle token selection
+  const handleTokenSelect = (symbol: string) => {
+    selectedToken.value = symbol
+  }
 
-// Page meta
-useHead({
-  title: 'Live Prices - Ionic Swap',
-  meta: [
-    {
-      name: 'description',
-      content: 'Real-time cryptocurrency prices and charts for Bitcoin, Ethereum, Solana, and more.',
-    },
-  ],
-})
+  // Page meta
+  useHead({
+    title: 'Live Prices - Ionic Swap',
+    meta: [
+      {
+        name: 'description',
+        content:
+          'Real-time cryptocurrency prices and charts for Bitcoin, Ethereum, Solana, and more.',
+      },
+    ],
+  })
 </script>
 
 <style scoped>
-.chart-card {
-  @apply bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700;
-}
+  .chart-card {
+    @apply bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700;
+  }
 
-.overview-card {
-  @apply bg-neutral-50 dark:bg-neutral-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700;
-  @apply flex items-center gap-4;
-}
+  .overview-card {
+    @apply bg-neutral-50 dark:bg-neutral-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700;
+    @apply flex items-center gap-4;
+  }
 
-.overview-icon {
-  @apply w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center;
-  @apply text-blue-600 dark:text-blue-400;
-}
+  .overview-icon {
+    @apply w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center;
+    @apply text-blue-600 dark:text-blue-400;
+  }
 
-.overview-content {
-  @apply flex flex-col;
-}
+  .overview-content {
+    @apply flex flex-col;
+  }
 
-.overview-label {
-  @apply text-sm text-gray-500 dark:text-gray-400;
-}
+  .overview-label {
+    @apply text-sm text-gray-500 dark:text-gray-400;
+  }
 
-.overview-value {
-  @apply text-2xl font-bold text-gray-900 dark:text-white;
-}
+  .overview-value {
+    @apply text-2xl font-bold text-gray-900 dark:text-white;
+  }
 </style>

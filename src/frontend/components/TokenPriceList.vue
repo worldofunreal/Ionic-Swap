@@ -21,11 +21,13 @@
         @click="selectToken(token)"
       >
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
+          <div
+            class="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center"
+          >
             <UIcon :name="getTokenIcon(token.symbol)" class="w-5 h-5" />
           </div>
           <div>
-            <div class="font-medium text-gray-900 dark:text-white">
+            <div class="font-bold text-black dark:text-white">
               {{ token.symbol }}
             </div>
             <div class="text-xs text-gray-500 dark:text-gray-400">
@@ -35,8 +37,8 @@
         </div>
 
         <div class="text-right">
-          <div class="font-semibold text-gray-900 dark:text-white">
-            ${{ token.price.toFixed(4) }}
+          <div class="font-normal text-gray-900 dark:text-white">
+            ${{ formatPrice(token.price) }}
           </div>
           <div
             class="text-xs flex items-center gap-1"
@@ -85,17 +87,17 @@
 
   // Token configuration (same as markets page)
   const tokenConfig = {
-    'BTC': { name: 'Bitcoin', icon: 'logos:bitcoin' },
-    'ETH': { name: 'Ethereum', icon: 'token-branded:ethereum' },
-    'XRP': { name: 'XRP', icon: 'cryptocurrency-color:xrp' },
-    'USDT': { name: 'Tether', icon: 'cryptocurrency-color:usdt' },
-    'BNB': { name: 'BNB', icon: 'token-branded:binance' },
-    'SOL': { name: 'Solana', icon: 'token-branded:solana' },
-    'USDC': { name: 'USD Coin', icon: 'cryptocurrency-color:usdc' },
-    'DOGE': { name: 'Dogecoin', icon: 'simple-icons:dogecoin' },
-    'ADA': { name: 'Cardano', icon: 'logos:cardano-icon' },
-    'TRX': { name: 'TRON', icon: 'token-branded:tron' },
-    'ICP': { name: 'Internet Computer', icon: 'token-branded:icp' },
+    BTC: { name: 'Bitcoin', icon: 'logos:bitcoin' },
+    ETH: { name: 'Ethereum', icon: 'token-branded:ethereum' },
+    XRP: { name: 'XRP', icon: 'cryptocurrency-color:xrp' },
+    USDT: { name: 'Tether', icon: 'cryptocurrency-color:usdt' },
+    BNB: { name: 'BNB', icon: 'token-branded:binance' },
+    SOL: { name: 'Solana', icon: 'token-branded:solana' },
+    USDC: { name: 'USD Coin', icon: 'cryptocurrency-color:usdc' },
+    DOGE: { name: 'Dogecoin', icon: 'simple-icons:dogecoin' },
+    ADA: { name: 'Cardano', icon: 'logos:cardano-icon' },
+    TRX: { name: 'TRON', icon: 'token-branded:tron' },
+    ICP: { name: 'Internet Computer', icon: 'token-branded:icp' },
   }
 
   // Token list from todo - these will be the tokens we support
@@ -173,7 +175,22 @@
   }
 
   const getTokenIcon = (symbol: string) => {
-    return tokenConfig[symbol as keyof typeof tokenConfig]?.icon || 'cryptocurrency-color:generic'
+    return (
+      tokenConfig[symbol as keyof typeof tokenConfig]?.icon ||
+      'cryptocurrency-color:generic'
+    )
+  }
+
+  const formatPrice = (price: number) => {
+    if (price === 0) return '0.00'
+    if (price < 0.01) return price.toFixed(6)
+    if (price < 1) return price.toFixed(4)
+    if (price < 100) return price.toFixed(2)
+    // For prices >= 100, use thousands separators
+    return price.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
   }
 
   // Get tokens with real-time prices from PriceService
@@ -208,17 +225,16 @@
   }
 
   const selectToken = (token: Token) => {
-    // Emit event or navigate to token details
-    console.log('Selected token:', token)
-    // TODO: Implement token selection logic
+    // Navigate to markets page with the selected token
+    navigateTo(`/markets?token=${token.symbol}`)
   }
 
   onMounted(() => {
     // Subscribe to price updates
-    unsubscribe = priceService.subscribe((prices) => {
+    unsubscribe = priceService.subscribe(_prices => {
       lastUpdated.value = new Date().toLocaleTimeString()
     })
-    
+
     // Initial refresh
     refreshPrices()
   })

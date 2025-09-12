@@ -11,7 +11,7 @@
         :alt="user.username || 'User avatar'"
         class="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
         crossorigin="anonymous"
-      >
+      />
       <div
         v-else
         class="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm border-2 border-gray-200 dark:border-gray-700"
@@ -193,7 +193,10 @@
       console.error('Follow failed:', error)
 
       // Handle "Already following" error gracefully
-      if (error instanceof Error && error.message?.includes('Already following this user')) {
+      if (
+        error instanceof Error &&
+        error.message?.includes('Already following this user')
+      ) {
         const toast = useToast()
         toast.add({
           title: 'Already Following',

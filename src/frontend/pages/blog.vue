@@ -34,7 +34,7 @@
                 :src="post.image"
                 :alt="`${post.title} – ${post.category} | DeFi, Cross-Chain, Token Swapping, Gasless Transactions`"
                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-              >
+              />
               <div class="absolute top-4 left-4">
                 <span
                   class="bg-primary-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase"
@@ -88,7 +88,6 @@
 </template>
 
 <script setup lang="ts">
-
   const blogPosts = [
     {
       _path: '/blog/cross-chain-swapping-guide',

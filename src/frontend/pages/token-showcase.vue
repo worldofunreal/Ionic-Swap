@@ -44,7 +44,7 @@
           type="text"
           placeholder="Search tokens..."
           class="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-primary-500"
-        >
+        />
       </div>
       <div class="py-8">
         <main>
@@ -60,7 +60,7 @@
                   :src="token.image"
                   :alt="`${token.name} (${token.symbol}) - ${token.category} token on ${token.chains.join(', ')}`"
                   class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                >
+                />
                 <div class="absolute bottom-4 left-4">
                   <span
                     class="bg-primary-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase"

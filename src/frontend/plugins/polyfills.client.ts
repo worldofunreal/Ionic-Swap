@@ -18,16 +18,26 @@ if (typeof window !== 'undefined') {
   // Configure crypto for Solana Web3.js
   if (typeof window.crypto === 'undefined') {
     // Use the browser's crypto API
-    ;(window as Window & { crypto: Crypto; msCrypto?: Crypto }).crypto = window.crypto || (window as Window & { msCrypto?: Crypto }).msCrypto
+    ;(window as Window & { crypto: Crypto; msCrypto?: Crypto }).crypto =
+      window.crypto || (window as Window & { msCrypto?: Crypto }).msCrypto
   }
 
   // Configure other Node.js globals that might be needed
-  if (typeof (window as Window & { setImmediate: typeof setTimeout }).setImmediate === 'undefined') {
-    ;(window as Window & { setImmediate: typeof setTimeout }).setImmediate = setTimeout
+  if (
+    typeof (window as Window & { setImmediate: typeof setTimeout })
+      .setImmediate === 'undefined'
+  ) {
+    ;(window as Window & { setImmediate: typeof setTimeout }).setImmediate =
+      setTimeout
   }
 
-  if (typeof (window as Window & { clearImmediate: typeof clearTimeout }).clearImmediate === 'undefined') {
-    ;(window as Window & { clearImmediate: typeof clearTimeout }).clearImmediate = clearTimeout
+  if (
+    typeof (window as Window & { clearImmediate: typeof clearTimeout })
+      .clearImmediate === 'undefined'
+  ) {
+    ;(
+      window as Window & { clearImmediate: typeof clearTimeout }
+    ).clearImmediate = clearTimeout
   }
 }
 

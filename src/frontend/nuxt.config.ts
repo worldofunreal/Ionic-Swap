@@ -29,8 +29,9 @@ export default defineNuxtConfig({
   fonts: {
     families: [
       {
-        name: 'Montserrat',
-        provider: 'google',
+        name: 'Helvetica Neue',
+        provider: 'none', // System font, no need to load from external provider
+        fallbacks: ['Helvetica', 'Arial', 'sans-serif'],
       },
     ],
   },
@@ -167,10 +168,7 @@ export default defineNuxtConfig({
       process: 'process',
       util: 'util',
       // Backend declarations (currently using client-side only)
-      'declarations/backend': resolve(
-        __dirname,
-        '../../declarations/backend'
-      ),
+      'declarations/backend': resolve(__dirname, '../../declarations/backend'),
     },
     // Add @dfinity packages to server dependencies
     externals: {

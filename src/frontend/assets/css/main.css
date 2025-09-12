@@ -1,6 +1,11 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
 
+/* Global font family override */
+* {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
 :root {
   --ui-primary: var(--ui-color-primary-500);
   --color-primary: var(--emerald-500);
