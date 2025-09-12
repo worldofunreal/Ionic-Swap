@@ -21,10 +21,8 @@
         @click="selectToken(token)"
       >
         <div class="flex items-center gap-3">
-          <div
-            class="w-8 h-8 rounded-full bg-gradient-to-br flex items-center justify-center text-white font-bold text-sm"
-          >
-            {{ token.symbol.charAt(0) }}
+          <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
+            <UIcon :name="getTokenIcon(token.symbol)" class="w-5 h-5" />
           </div>
           <div>
             <div class="font-medium text-gray-900 dark:text-white">
@@ -71,7 +69,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, onUnmounted, computed } from 'vue'
+  import { priceService } from '@/services/PriceService'
 
   interface Token {
     symbol: string
@@ -84,8 +83,23 @@
   const loading = ref(false)
   const lastUpdated = ref('')
 
+  // Token configuration (same as markets page)
+  const tokenConfig = {
+    'BTC': { name: 'Bitcoin', icon: 'logos:bitcoin' },
+    'ETH': { name: 'Ethereum', icon: 'token-branded:ethereum' },
+    'XRP': { name: 'XRP', icon: 'cryptocurrency-color:xrp' },
+    'USDT': { name: 'Tether', icon: 'cryptocurrency-color:usdt' },
+    'BNB': { name: 'BNB', icon: 'token-branded:binance' },
+    'SOL': { name: 'Solana', icon: 'token-branded:solana' },
+    'USDC': { name: 'USD Coin', icon: 'cryptocurrency-color:usdc' },
+    'DOGE': { name: 'Dogecoin', icon: 'simple-icons:dogecoin' },
+    'ADA': { name: 'Cardano', icon: 'logos:cardano-icon' },
+    'TRX': { name: 'TRON', icon: 'token-branded:tron' },
+    'ICP': { name: 'Internet Computer', icon: 'token-branded:icp' },
+  }
+
   // Token list from todo - these will be the tokens we support
-  const tokens = ref<Token[]>([
+  const tokenList = [
     {
       symbol: 'BTC',
       name: 'Bitcoin',
@@ -151,46 +165,43 @@
       change: 0,
       chains: ['ICP'],
     },
-  ])
+  ]
 
-  // Mock price data for now - will be replaced with real API calls
-  const mockPrices = {
-    BTC: { price: 43250.5, change: 2.45 },
-    ETH: { price: 2650.75, change: -1.23 },
-    XRP: { price: 0.6234, change: 3.67 },
-    USDT: { price: 1.0001, change: 0.01 },
-    BNB: { price: 315.8, change: 1.89 },
-    SOL: { price: 98.45, change: -2.34 },
-    USDC: { price: 1.0, change: 0.0 },
-    DOGE: { price: 0.08234, change: 5.67 },
-    ADA: { price: 0.4567, change: -0.89 },
-    TRX: { price: 0.1234, change: 1.23 },
-    ICP: { price: 12.45, change: 2.34 },
+  // Helper functions
+  const getTokenName = (symbol: string) => {
+    return tokenConfig[symbol as keyof typeof tokenConfig]?.name || symbol
   }
+
+  const getTokenIcon = (symbol: string) => {
+    return tokenConfig[symbol as keyof typeof tokenConfig]?.icon || 'cryptocurrency-color:generic'
+  }
+
+  // Get tokens with real-time prices from PriceService
+  const tokens = computed(() => {
+    const prices = priceService.getPrices()
+    return tokenList.map(token => {
+      const priceData = prices.get(token.symbol)
+      return {
+        ...token,
+        name: getTokenName(token.symbol),
+        price: priceData?.price || 0,
+        change: priceData?.change24h || 0,
+      }
+    })
+  })
+
+  // Price service subscription
+  let unsubscribe: (() => void) | null = null
 
   const refreshPrices = async () => {
     loading.value = true
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      // Update prices with mock data
-      tokens.value = tokens.value.map(token => {
-        const mockData = mockPrices[token.symbol as keyof typeof mockPrices]
-        if (mockData) {
-          return {
-            ...token,
-            price: mockData.price,
-            change: mockData.change,
-          }
-        }
-        return token
-      })
-
+      // Force refresh from PriceService
+      // The PriceService will automatically fetch new data
       lastUpdated.value = new Date().toLocaleTimeString()
     } catch (error) {
-      console.error('Failed to fetch prices:', error)
+      console.error('Failed to refresh prices:', error)
     } finally {
       loading.value = false
     }
@@ -202,9 +213,20 @@
     // TODO: Implement token selection logic
   }
 
-  // Initialize with mock data
   onMounted(() => {
+    // Subscribe to price updates
+    unsubscribe = priceService.subscribe((prices) => {
+      lastUpdated.value = new Date().toLocaleTimeString()
+    })
+    
+    // Initial refresh
     refreshPrices()
+  })
+
+  onUnmounted(() => {
+    if (unsubscribe) {
+      unsubscribe()
+    }
   })
 </script>
 

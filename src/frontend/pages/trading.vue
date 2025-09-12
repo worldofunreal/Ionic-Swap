@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-neutral-950">
+  <div class="h-full bg-gray-50 dark:bg-neutral-950 overflow-hidden">
     <!-- Trading Header -->
-    <div class="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3">
+    <div class="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex-shrink-0">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
           <div class="flex items-center space-x-2">
-            <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+            <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
               {{ selectedToken?.symbol?.charAt(0) || 'B' }}
             </div>
             <div>
@@ -45,11 +45,11 @@
       </div>
     </div>
 
-    <div class="flex h-[calc(100vh-80px)]">
+    <div class="flex h-full">
       <!-- Left Column - Chart -->
       <div class="flex-1 flex flex-col">
         <!-- Chart Controls -->
-        <div class="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 px-4 py-2">
+        <div class="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 px-4 py-2 flex-shrink-0">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
               <button
@@ -58,7 +58,7 @@
                 :class="[
                   'px-3 py-1 text-sm rounded-md transition-colors',
                   selectedPeriod === period.value
-                    ? 'bg-blue-500 text-white'
+                    ? 'bg-primary-500 text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 ]"
                 @click="selectedPeriod = period.value"
@@ -79,11 +79,13 @@
         </div>
 
         <!-- Chart Area -->
-        <div class="flex-1 bg-white dark:bg-neutral-900 p-4">
+        <div class="flex-1 bg-white dark:bg-neutral-900 p-4 overflow-hidden">
           <SimplePriceChart 
             v-if="selectedTokenSymbol"
             :token-symbol="selectedTokenSymbol" 
-            :height="400"
+            :default-chart-type="'candlestick'"
+            :no-container="true"
+            class="h-full"
           />
         </div>
       </div>

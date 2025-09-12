@@ -186,11 +186,13 @@ interface Props {
   tokenSymbol: string
   height?: number
   noContainer?: boolean
+  defaultChartType?: 'line' | 'candlestick'
 }
 
 const props = withDefaults(defineProps<Props>(), {
   height: 300,
-  noContainer: false
+  noContainer: false,
+  defaultChartType: 'line'
 })
 
 // Color theme
@@ -220,7 +222,7 @@ const loading = ref(false)
 const error = ref(false)
 const currentPrice = ref(0)
 const priceChange = ref(0)
-const chartType = ref<'line' | 'candlestick'>('line')
+const chartType = ref<'line' | 'candlestick'>(props.defaultChartType)
 const chartData = ref<Array<{ timestamp: number; price: number; open?: number; high?: number; low?: number; close?: number }>>([])
 const selectedPeriod = ref('1h')
 

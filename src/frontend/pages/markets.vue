@@ -85,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { priceService } from '@/services/PriceService'
   import SimplePriceChart from '@/components/SimplePriceChart.vue'
 
@@ -157,8 +157,20 @@ const selectToken = (symbol: string) => {
     selectedToken.value = symbol
 }
 
+// Price service subscription
+let unsubscribe: (() => void) | null = null
+
 // Lifecycle
 onMounted(() => {
+  // Subscribe to price updates
+  unsubscribe = priceService.subscribe((prices) => {
+    // Force reactivity update
+    const currentPrices = priceService.getPrices()
+    if (currentPrices.size > 0) {
+      isUsingMockData.value = false
+    }
+  })
+  
   // Select first token by default
   if (tokens.value.length > 0 && !selectedToken.value) {
     selectedToken.value = tokens.value[0]?.symbol || null
@@ -168,6 +180,12 @@ onMounted(() => {
   const btcPrice = tokens.value.find(t => t.symbol === 'BTC')?.price
   if (btcPrice === 45000) {
     isUsingMockData.value = true
+  }
+})
+
+onUnmounted(() => {
+  if (unsubscribe) {
+    unsubscribe()
   }
 })
 
