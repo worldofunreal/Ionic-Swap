@@ -1,5 +1,8 @@
 <template>
-  <div class="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700 w-full h-full flex flex-col">
+  <div :class="[
+    'w-full h-full flex flex-col',
+    !noContainer ? 'bg-white dark:bg-neutral-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700' : ''
+  ]">
     <div class="flex justify-between items-center mb-4">
       <div class="flex flex-col">
         <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ tokenSymbol }}</div>
@@ -32,7 +35,7 @@
       <!-- Y-axis labels area -->
       <div class="flex flex-col justify-between py-2 pr-2">
         <div v-for="(label, index) in priceLabels" :key="index" class="text-right text-xs text-gray-500 dark:text-gray-400" :style="{ height: (height / (priceLabels.length - 1)) + 'px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }">
-          ${{ label.text }}
+          ${{ priceLabels[priceLabels.length - 1 - index].text }}
         </div>
       </div>
       
@@ -116,10 +119,12 @@ import { priceService } from '@/services/PriceService'
 interface Props {
   tokenSymbol: string
   height?: number
+  noContainer?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  height: 300
+  height: 300,
+  noContainer: false
 })
 
 // Reactive data
