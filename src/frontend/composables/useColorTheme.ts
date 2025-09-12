@@ -1,5 +1,5 @@
 import { ref, watch, onMounted, computed } from 'vue'
-import { useAppConfig } from '#imports'
+import { useAppConfig, useState } from '#imports'
 
 export type ColorTheme =
   | 'emerald'
@@ -12,7 +12,8 @@ export type ColorTheme =
   | 'teal'
 
 export const useColorTheme = () => {
-  const colorTheme = ref<ColorTheme>('emerald')
+  // Use a shared global state so all components observe the same ref
+  const colorTheme = useState<ColorTheme>('ionic-swap-color-theme-state', () => 'emerald')
   const isClient = ref(false)
   const appConfig = useAppConfig()
 

@@ -219,6 +219,12 @@
 
   const toggleColorTheme = (): void => {
     nextColorTheme()
+    
+    // Dispatch custom event for chart components to listen to
+    window.dispatchEvent(new CustomEvent('color-theme-changed', {
+      detail: { newTheme: colorTheme.value }
+    }))
+    
     $trackButtonClick('Color Theme Toggle', {
       newColorTheme: colorTheme.value,
       location: 'header',

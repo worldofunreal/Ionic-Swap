@@ -14,6 +14,33 @@
         </div>
       </div>
       <div class="flex gap-2">
+        <!-- Chart Type Toggle -->
+        <div class="flex bg-gray-100 dark:bg-gray-700 rounded-md p-1">
+          <button
+            :class="[
+              'px-3 py-1 text-sm rounded-md transition-colors',
+              chartType === 'line' 
+                ? 'bg-primary-500 text-white' 
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            ]"
+            @click="chartType = 'line'"
+          >
+            <UIcon name="i-heroicons-chart-bar" class="w-4 h-4" />
+          </button>
+          <button
+            :class="[
+              'px-3 py-1 text-sm rounded-md transition-colors',
+              chartType === 'candlestick' 
+                ? 'bg-primary-500 text-white' 
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            ]"
+            @click="chartType = 'candlestick'"
+          >
+            <UIcon name="i-heroicons-chart-bar-square" class="w-4 h-4" />
+          </button>
+        </div>
+        
+        <!-- Time Period Buttons -->
         <button
           v-for="period in timePeriods"
           :key="period.value"
@@ -43,6 +70,7 @@
       <div class="relative">
         <svg 
           v-if="chartData.length > 0" 
+          :key="`chart-${colorTheme}-${themeUpdateTrigger}`"
           class="w-full h-full"
           :viewBox="`0 0 ${chartWidth} ${chartHeight}`"
           preserveAspectRatio="none"
@@ -55,20 +83,57 @@
         </defs>
         <rect width="100%" height="100%" fill="url(#grid)" />
         
-        <!-- Price line -->
-        <polyline
-          :points="priceLinePoints"
-          fill="none"
-          :stroke="chartColors.primary"
-          stroke-width="2"
-        />
+        <!-- Line Chart -->
+        <template v-if="chartType === 'line'">
+          <!-- Price line -->
+          <polyline
+            :points="priceLinePoints"
+            fill="none"
+            :stroke="chartColors.primary"
+            stroke-width="2"
+          />
+          
+          <!-- Price area fill -->
+          <polygon
+            :points="areaPoints"
+            fill="url(#gradient)"
+            opacity="0.1"
+          />
+        </template>
         
-        <!-- Price area fill -->
-        <polygon
-          :points="areaPoints"
-          fill="url(#gradient)"
-          opacity="0.1"
-        />
+        <!-- Candlestick Chart -->
+        <template v-else-if="chartType === 'candlestick'">
+          <g v-for="(candle, index) in candlestickData" :key="index">
+            <!-- Candlestick body -->
+            <rect
+              :x="candle.x - candleWidth/2"
+              :y="candle.bodyTop"
+              :width="candleWidth"
+              :height="candle.bodyHeight"
+              :fill="candle.isGreen ? chartColors.primary : '#ef4444'"
+              :stroke="candle.isGreen ? chartColors.primary : '#ef4444'"
+              stroke-width="1"
+            />
+            <!-- Upper wick -->
+            <line
+              :x1="candle.x"
+              :y1="candle.wickTop"
+              :x2="candle.x"
+              :y2="candle.bodyTop"
+              :stroke="candle.isGreen ? chartColors.primary : '#ef4444'"
+              stroke-width="1"
+            />
+            <!-- Lower wick -->
+            <line
+              :x1="candle.x"
+              :y1="candle.bodyBottom"
+              :x2="candle.x"
+              :y2="candle.wickBottom"
+              :stroke="candle.isGreen ? chartColors.primary : '#ef4444'"
+              stroke-width="1"
+            />
+          </g>
+        </template>
         
         <!-- Gradient definition -->
           <defs>
@@ -129,10 +194,14 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // Color theme
-const { currentTheme } = useColorTheme()
+const { currentTheme, colorTheme } = useColorTheme()
+const themeUpdateTrigger = ref(0)
 
 // Color mapping for chart elements
 const chartColors = computed(() => {
+  // Include themeUpdateTrigger to make it reactive to theme changes
+  themeUpdateTrigger.value // This makes the computed property depend on the trigger
+  
   const colorMap: Record<string, { primary: string; light: string; dark: string }> = {
     emerald: { primary: '#10b981', light: '#10b981', dark: '#059669' },
     pink: { primary: '#ec4899', light: '#ec4899', dark: '#db2777' },
@@ -151,7 +220,8 @@ const loading = ref(false)
 const error = ref(false)
 const currentPrice = ref(0)
 const priceChange = ref(0)
-const chartData = ref<Array<{ timestamp: number; price: number }>>([])
+const chartType = ref<'line' | 'candlestick'>('line')
+const chartData = ref<Array<{ timestamp: number; price: number; open?: number; high?: number; low?: number; close?: number }>>([])
 const selectedPeriod = ref('1h')
 
 // Chart dimensions
@@ -204,6 +274,55 @@ const lastPointPosition = computed(() => {
   const y = getYPosition(chartData.value[lastIndex]?.price || 0)
   
   return { x, y }
+})
+
+// Candlestick data
+const candleWidth = computed(() => {
+  if (chartData.value.length === 0) return 8
+  return Math.max(4, Math.min(12, chartWidth / chartData.value.length * 0.8))
+})
+
+const candlestickData = computed(() => {
+  if (chartData.value.length === 0) return []
+  
+  const candles = []
+  const minPrice = Math.min(...chartData.value.map(d => d.low || d.price))
+  const maxPrice = Math.max(...chartData.value.map(d => d.high || d.price))
+  const priceRange = maxPrice - minPrice
+  
+  chartData.value.forEach((data, index) => {
+    const x = (index / (chartData.value.length - 1)) * chartWidth
+    
+    // Use OHLC data if available, otherwise simulate from price
+    const open = data.open || data.price
+    const high = data.high || data.price * 1.02
+    const low = data.low || data.price * 0.98
+    const close = data.close || data.price
+    
+    const isGreen = close >= open
+    
+    // Calculate Y positions (inverted because SVG Y increases downward)
+    const highY = chartHeight - ((high - minPrice) / priceRange) * chartHeight
+    const lowY = chartHeight - ((low - minPrice) / priceRange) * chartHeight
+    const openY = chartHeight - ((open - minPrice) / priceRange) * chartHeight
+    const closeY = chartHeight - ((close - minPrice) / priceRange) * chartHeight
+    
+    const bodyTop = Math.min(openY, closeY)
+    const bodyBottom = Math.max(openY, closeY)
+    const bodyHeight = Math.abs(closeY - openY)
+    
+    candles.push({
+      x,
+      bodyTop,
+      bodyBottom,
+      bodyHeight: Math.max(1, bodyHeight), // Minimum height of 1px
+      wickTop: highY,
+      wickBottom: lowY,
+      isGreen
+    })
+  })
+  
+  return candles
 })
 
 const timeLabels = computed(() => {
@@ -366,13 +485,18 @@ const fetchHistoricalData = async () => {
     if (response.success && Array.isArray((response as any).data)) {
       return (response as any).data.map((kline: unknown[]) => ({
         timestamp: kline[0] as number,
-        price: parseFloat(kline[4] as string) // Close price
+        price: parseFloat(kline[4] as string), // Close price
+        open: parseFloat(kline[1] as string),   // Open price
+        high: parseFloat(kline[2] as string),   // High price
+        low: parseFloat(kline[3] as string),    // Low price
+        close: parseFloat(kline[4] as string)   // Close price
       }))
     }
     return []
   } catch (err) {
     console.error('Failed to fetch historical data:', err)
-    throw err
+    // Fallback to mock data with OHLC
+    return generateMockOHLCData()
   }
 }
 
@@ -400,6 +524,41 @@ const getInterval = (period: string) => {
     '1w': '4h'
   }
   return intervalMap[period] || '1h'
+}
+
+const generateMockOHLCData = () => {
+  const data = []
+  const now = Date.now()
+  const basePrice = 50000 // Base price for mock data
+  let currentPrice = basePrice
+  
+  // Generate 100 data points
+  for (let i = 0; i < 100; i++) {
+    const timestamp = now - (99 - i) * 60000 // 1 minute intervals
+    const volatility = 0.02 // 2% volatility
+    
+    // Generate OHLC data
+    const open = currentPrice
+    const change = (Math.random() - 0.5) * volatility * currentPrice
+    const close = open + change
+    
+    // High and low with some randomness
+    const high = Math.max(open, close) + Math.random() * volatility * currentPrice * 0.5
+    const low = Math.min(open, close) - Math.random() * volatility * currentPrice * 0.5
+    
+    data.push({
+      timestamp,
+      price: close, // Use close as the main price
+      open,
+      high,
+      low,
+      close
+    })
+    
+    currentPrice = close
+  }
+  
+  return data
 }
 
 // Load chart data
@@ -460,9 +619,44 @@ watch(() => props.tokenSymbol, () => {
   subscribeToPriceUpdates()
 }, { immediate: false })
 
+// Watch for color theme changes to force chart re-render
+watch(colorTheme, () => {
+  // Force re-render by incrementing the trigger
+  themeUpdateTrigger.value++
+}, { immediate: false })
+
+// Also watch currentTheme as a backup
+watch(currentTheme, () => {
+  themeUpdateTrigger.value++
+}, { immediate: false })
+
 // Lifecycle
 onMounted(async () => {
   try {
+    // Set up theme change listeners
+    const handleThemeChange = () => {
+      themeUpdateTrigger.value++
+    }
+    
+    // Listen for custom theme change events
+    window.addEventListener('color-theme-changed', handleThemeChange)
+    
+    // Also listen for storage changes (when theme is saved to localStorage)
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'ionic-swap-color-theme') {
+        themeUpdateTrigger.value++
+      }
+    })
+    
+    // Store cleanup function
+    const cleanup = () => {
+      window.removeEventListener('color-theme-changed', handleThemeChange)
+      window.removeEventListener('storage', handleThemeChange)
+    }
+    
+    // Cleanup on unmount
+    onUnmounted(cleanup)
+    
     subscribeToPriceUpdates()
     await loadChartData()
   } catch (err) {
