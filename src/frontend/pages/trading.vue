@@ -151,7 +151,7 @@
                     type="number"
                     placeholder="0.00"
                     class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
                   <div
                     class="absolute left-3 top-2 text-sm text-gray-500 dark:text-gray-400"
                   >
@@ -199,7 +199,7 @@
                     type="number"
                     placeholder="0.00"
                     class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
                   <div
                     class="absolute left-3 top-2 text-sm text-gray-500 dark:text-gray-400"
                   >
@@ -252,7 +252,7 @@
                     type="number"
                     placeholder="0.00"
                     class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
                 </div>
 
                 <div>
@@ -265,7 +265,7 @@
                     type="number"
                     placeholder="0.00"
                     class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
                 </div>
 
                 <div class="text-xs text-gray-500 dark:text-gray-400">
@@ -312,7 +312,7 @@
                     type="number"
                     placeholder="0.00"
                     class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
                 </div>
 
                 <div>
@@ -325,7 +325,7 @@
                     type="number"
                     placeholder="0.00"
                     class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
                 </div>
 
                 <div class="text-xs text-gray-500 dark:text-gray-400">

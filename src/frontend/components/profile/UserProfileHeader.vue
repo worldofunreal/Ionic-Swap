@@ -14,7 +14,7 @@
         class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
         crossorigin="anonymous"
         @click="openImageModal(bannerUrl, 'Banner')"
-      />
+      >
       <div v-else class="w-full h-full flex items-center justify-center">
         <!-- Empty banner placeholder -->
       </div>
@@ -32,7 +32,7 @@
             class="w-32 h-32 rounded-full border-4 border-white dark:border-gray-900 shadow-lg bg-white object-cover cursor-pointer hover:opacity-90 transition-opacity"
             crossorigin="anonymous"
             @click="openImageModal(avatarUrl, 'Avatar')"
-          />
+          >
           <div
             v-else
             class="w-32 h-32 rounded-full border-4 border-white dark:border-gray-900 shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
@@ -318,7 +318,7 @@
           :alt="selectedImageTitle"
           class="max-w-full max-h-[80vh] object-contain rounded-lg"
           crossorigin="anonymous"
-        />
+        >
         <div class="mt-4 text-sm text-gray-600 dark:text-gray-400">
           {{ selectedImageTitle }}
         </div>

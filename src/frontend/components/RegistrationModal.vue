@@ -11,7 +11,7 @@
         class="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800"
       >
         <div class="flex items-center gap-3">
-          <img src="/logo.svg" alt="Ionic Swap" class="w-8 h-8" />
+          <img src="/logo.svg" alt="Ionic Swap" class="w-8 h-8" >
         </div>
         <button
           class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
@@ -60,7 +60,7 @@
             :disabled="loading"
             class="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm transition-colors"
             @input="checkUsernameAvailability"
-          />
+          >
 
           <!-- Status Messages -->
           <div class="mt-2 space-y-1">

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <hr v-if="hr" class="my-2 border-gray-200 dark:border-gray-800" />
+    <hr v-if="hr" class="my-2 border-gray-200 dark:border-gray-800" >
     <NuxtLink
       v-else
       :to="to"

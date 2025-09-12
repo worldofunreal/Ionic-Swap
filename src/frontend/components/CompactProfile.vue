@@ -11,7 +11,7 @@
         :alt="user.username || 'User avatar'"
         class="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
         crossorigin="anonymous"
-      />
+      >
       <div
         v-else
         class="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm border-2 border-gray-200 dark:border-gray-700"

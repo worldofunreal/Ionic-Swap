@@ -13,7 +13,7 @@
       <div class="p-8">
         <!-- Header -->
         <div class="flex flex-col items-center mb-8">
-          <img src="/logo.svg" alt="NFTropoly Logo" class="w-12 h-12 mb-2" />
+          <img src="/logo.svg" alt="NFTropoly Logo" class="w-12 h-12 mb-2" >
           <h2 class="text-2xl font-bold text-center">Recover Account</h2>
         </div>
 

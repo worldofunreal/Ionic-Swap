@@ -16,7 +16,7 @@
             src="/logo.svg"
             alt="Ionic Swap Logo"
             class="h-12 md:h-16 w-auto mx-auto md:mx-0"
-          />
+          >
           <div class="w-full">
             <p
               class="uppercase tracking-widest text-xs text-gray-500 dark:text-gray-400 font-semibold mb-2"

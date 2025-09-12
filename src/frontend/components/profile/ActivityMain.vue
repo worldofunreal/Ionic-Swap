@@ -8,7 +8,7 @@
         src="https://placehold.co/96x96?text=NFT"
         alt="NFT"
         class="w-24 h-24 rounded-lg shadow mb-4"
-      />
+      >
       <div class="text-xl font-bold mb-2">No results found</div>
       <div class="text-gray-400 mb-4">
         Try removing some filters to view more results
@@ -88,7 +88,7 @@
                   :src="act.image"
                   alt="NFT"
                   class="w-12 h-12 rounded-lg border border-gray-700 flex-shrink-0"
-                />
+                >
                 <div class="flex flex-col">
                   <span class="font-semibold text-white">{{ act.name }}</span>
                   <span class="text-sm text-gray-400">#{{ act.id }}</span>

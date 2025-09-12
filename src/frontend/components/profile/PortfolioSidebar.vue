@@ -32,7 +32,7 @@
         type="text"
         placeholder="Search for chains"
         class="w-full px-3 py-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-950 mb-2 mt-2"
-      />
+      >
       <div class="flex flex-wrap gap-2">
         <button
           v-for="chain in chains"
@@ -63,14 +63,14 @@
             type="number"
             placeholder="Min"
             class="w-14 px-2 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-950 text-xs"
-          />
+          >
           <span>to</span>
           <input
             v-model="floorMax"
             type="number"
             placeholder="Max"
             class="w-14 px-2 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-950 text-xs"
-          />
+          >
         </div>
         <button
           class="w-full px-2 py-1 rounded bg-primary-600 text-white text-xs"
@@ -98,14 +98,14 @@
             type="number"
             placeholder="Min"
             class="w-14 px-2 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-950 text-xs"
-          />
+          >
           <span>to</span>
           <input
             v-model="offerMax"
             type="number"
             placeholder="Max"
             class="w-14 px-2 py-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-950 text-xs"
-          />
+          >
         </div>
         <button
           class="w-full px-2 py-1 rounded bg-primary-600 text-white text-xs"
@@ -125,7 +125,7 @@
             v-model="isVerified"
             type="checkbox"
             class="form-checkbox rounded"
-          />
+          >
           <span class="text-xs">Is Verified</span>
         </label>
       </div>

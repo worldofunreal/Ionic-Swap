@@ -110,7 +110,7 @@
             type="text"
             placeholder="Search chains..."
             class="w-full px-3 py-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"
-          />
+          >
           <UIcon
             name="ri:search-line"
             class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -188,7 +188,7 @@
               v-model="hasNft"
               type="checkbox"
               class="accent-primary-600 w-5 h-5"
-            />
+            >
             <label
               for="mobile-has-nft"
               class="text-gray-700 dark:text-gray-200 font-medium"
@@ -201,7 +201,7 @@
               v-model="brandedToken"
               type="checkbox"
               class="accent-primary-600 w-5 h-5"
-            />
+            >
             <label
               for="mobile-branded-token"
               class="text-gray-700 dark:text-gray-200 font-medium"
