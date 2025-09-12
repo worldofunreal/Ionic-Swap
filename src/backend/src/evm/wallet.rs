@@ -135,7 +135,7 @@ pub async fn send_raw_transaction(raw_tx: &str) -> Result<String, String> {
 }
 
 // For compatibility with existing code that expects send_transaction
-pub async fn send_transaction(tx: alloy::rpc::types::TransactionRequest) -> Result<String, String> {
+pub async fn send_transaction(_tx: alloy::rpc::types::TransactionRequest) -> Result<String, String> {
     // Convert TransactionRequest to raw transaction and send via HTTP outcalls
     // This is a simplified implementation - in practice you'd need to properly encode the transaction
     Ok("transaction_sent_via_http_outcall".to_string())

@@ -5,66 +5,6 @@
       "package": "backend",
       "candid": "src/backend/backend.did",
       "init_arg": "(record { solana_network = opt variant { Devnet }; solana_commitment_level = opt variant { finalized }; ed25519_key_name = opt variant { MainnetProdKey1 }; sol_rpc_canister_id = opt principal \"tghme-zyaaa-aaaar-qarca-cai\" })"
-    },
-    "spiral_token": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/615045e039c57ed842c689e49a07ab3de3a8a781/rs/ledger_suite/icrc1/ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/615045e039c57ed842c689e49a07ab3de3a8a781/canisters/ic-icrc1-ledger.wasm.gz"
-    },
-    "stardust_token": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/615045e039c57ed842c689e49a07ab3de3a8a781/rs/ledger_suite/icrc1/ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/615045e039c57ed842c689e49a07ab3de3a8a781/canisters/ic-icrc1-ledger.wasm.gz"
-    },
-    "bitcoin_token": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/615045e039c57ed842c689e49a07ab3de3a8a781/rs/ledger_suite/icrc1/ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/615045e039c57ed842c689e49a07ab3de3a8a781/canisters/ic-icrc1-ledger.wasm.gz"
-    },
-    "ethereum_token": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/615045e039c57ed842c689e49a07ab3de3a8a781/rs/ledger_suite/icrc1/ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/615045e039c57ed842c689e49a07ab3de3a8a781/canisters/ic-icrc1-ledger.wasm.gz"
-    },
-    "xrp_token": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/615045e039c57ed842c689e49a07ab3de3a8a781/rs/ledger_suite/icrc1/ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/615045e039c57ed842c689e49a07ab3de3a8a781/canisters/ic-icrc1-ledger.wasm.gz"
-    },
-    "tether_token": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/615045e039c57ed842c689e49a07ab3de3a8a781/rs/ledger_suite/icrc1/ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/615045e039c57ed842c689e49a07ab3de3a8a781/canisters/ic-icrc1-ledger.wasm.gz"
-    },
-    "bnb_token": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/615045e039c57ed842c689e49a07ab3de3a8a781/rs/ledger_suite/icrc1/ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/615045e039c57ed842c689e49a07ab3de3a8a781/canisters/ic-icrc1-ledger.wasm.gz"
-    },
-    "solana_token": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/615045e039c57ed842c689e49a07ab3de3a8a781/rs/ledger_suite/icrc1/ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/615045e039c57ed842c689e49a07ab3de3a8a781/canisters/ic-icrc1-ledger.wasm.gz"
-    },
-    "usdc_token": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/615045e039c57ed842c689e49a07ab3de3a8a781/rs/ledger_suite/icrc1/ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/615045e039c57ed842c689e49a07ab3de3a8a781/canisters/ic-icrc1-ledger.wasm.gz"
-    },
-    "dogecoin_token": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/615045e039c57ed842c689e49a07ab3de3a8a781/rs/ledger_suite/icrc1/ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/615045e039c57ed842c689e49a07ab3de3a8a781/canisters/ic-icrc1-ledger.wasm.gz"
-    },
-    "cardano_token": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/615045e039c57ed842c689e49a07ab3de3a8a781/rs/ledger_suite/icrc1/ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/615045e039c57ed842c689e49a07ab3de3a8a781/canisters/ic-icrc1-ledger.wasm.gz"
-    },
-    "tron_token": {
-      "type": "custom",
-      "candid": "https://raw.githubusercontent.com/dfinity/ic/615045e039c57ed842c689e49a07ab3de3a8a781/rs/ledger_suite/icrc1/ledger/ledger.did",
-      "wasm": "https://download.dfinity.systems/ic/615045e039c57ed842c689e49a07ab3de3a8a781/canisters/ic-icrc1-ledger.wasm.gz"
     }
   },
   "defaults": {

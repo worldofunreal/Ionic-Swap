@@ -66,7 +66,7 @@ pub async fn submit_gasless_permit(permit_request: PermitRequest) -> Result<Stri
     let block_response = crate::http_client::get_latest_block().await?;
     let block_json: serde_json::Value = serde_json::from_str(&block_response)
         .map_err(|e| format!("Failed to parse block response: {}", e))?;
-    let base_fee_per_gas = block_json["result"]["baseFeePerGas"]
+    let _base_fee_per_gas = block_json["result"]["baseFeePerGas"]
         .as_str()
         .unwrap_or("0x3b9aca00") // 1 gwei default
         .trim_start_matches("0x");
@@ -173,7 +173,7 @@ pub async fn execute_gasless_approval(request: GaslessApprovalRequest) -> Result
     let block_response = crate::http_client::get_latest_block().await?;
     let block_json: serde_json::Value = serde_json::from_str(&block_response)
         .map_err(|e| format!("Failed to parse block response: {}", e))?;
-    let base_fee_per_gas = block_json["result"]["baseFeePerGas"]
+    let _base_fee_per_gas = block_json["result"]["baseFeePerGas"]
         .as_str()
         .unwrap_or("0x3b9aca00") // 1 gwei default
         .trim_start_matches("0x");

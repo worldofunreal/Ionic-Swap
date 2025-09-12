@@ -34,8 +34,4 @@ dfx deploy backend
 echo "✅ Backend canister deployed successfully!"
 echo "🌐 Candid UI: http://127.0.0.1:4943/?canisterId=$(dfx canister id backend)"
 
-# Test the Ed25519 functionality
-echo "🧪 Testing Ed25519 functionality..."
-dfx canister call backend test_ed25519
-
-echo "🎉 Deployment and testing complete!"
+echo "Deployment complete!"

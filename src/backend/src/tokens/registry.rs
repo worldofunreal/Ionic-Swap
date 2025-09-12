@@ -162,12 +162,7 @@ fn add_chain_deployments(token: &mut TokenInfo, symbol: &str) {
         }
     }
 
-    // Add ICP deployment (if not ICP native)
-    if symbol != "ICP" {
-        if let Some(chain_token) = crate::tokens::icp_tokens::get_icp_token(symbol) {
-            token.add_chain(chain_token);
-        }
-    }
+    // ICP deployment removed - using internal token system instead
 }
 
 // ============================================================================

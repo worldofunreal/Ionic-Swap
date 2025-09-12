@@ -2,11 +2,11 @@ pub mod http_client;
 pub mod oracle;
 pub mod solana;
 pub mod evm;
-pub mod icp;
 pub mod types;
 pub mod tokens;
+pub mod icp_tokens;
 
-use candid::{CandidType, Deserialize};
+use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::{init, post_upgrade, update, query};
 
 // ============================================================================
@@ -23,6 +23,10 @@ pub fn init(init_arg: InitArg) {
     if let Some(network) = init_arg.solana_network {
         solana::set_solana_network(network);
     }
+    
+    // Initialize internal token system
+    icp_tokens::storage::init_storage();
+    
     ic_cdk::println!("Backend initialized with network: {:?}", solana::get_solana_network());
 }
 
@@ -174,23 +178,55 @@ pub async fn swap_evm(
     evm::swap_evm(permit_request, swap_request).await
 }
 
+
 // ============================================================================
-// ICP OPERATIONS
+// ICP INTERNAL TOKEN FAUCET OPERATIONS
 // ============================================================================
 
-/// Submit gasless permit transaction (user signs permit, canister pays gas)
+/// Claim 2M USDT from faucet (one-time only per principal)
 #[update]
-pub async fn submit_icp_gasless_permit(permit_request: icp::IcpPermitRequest) -> Result<String, String> {
-    icp::submit_icp_gasless_permit(permit_request).await
+pub async fn claim_faucet() -> Result<String, String> {
+    icp_tokens::faucet::claim_faucet().await
 }
 
 
-/// Get canister's ICRC token balances
-#[update]
-pub async fn get_canister_icrc_balances() -> Result<String, String> {
-    icp::get_canister_icrc_balances().await
+/// Get faucet claim info for a principal
+#[query]
+pub fn get_faucet_claim(user: Principal) -> Option<icp_tokens::types::FaucetClaim> {
+    icp_tokens::faucet::get_faucet_claim(user)
 }
 
+/// Get balance of a token for a user
+#[query]
+pub fn get_token_balance(user: Principal, symbol: String) -> u64 {
+    icp_tokens::balances::get_balance(user, &symbol)
+}
+
+/// Get all token balances for a user
+#[query]
+pub fn get_user_balances(user: Principal) -> std::collections::HashMap<String, u64> {
+    icp_tokens::balances::get_user_balances(user)
+}
+
+/// Transfer tokens between users
+#[update]
+pub fn transfer_tokens(from: Principal, to: Principal, symbol: String, amount: u64) -> Result<(), String> {
+    icp_tokens::balances::transfer_tokens(from, to, &symbol, amount)
+}
+
+
+/// Get all internal tokens
+#[query]
+pub fn get_all_internal_tokens() -> Vec<icp_tokens::types::InternalToken> {
+    icp_tokens::queries::get_all_tokens()
+}
+
+
+/// Get faucet statistics
+#[query]
+pub fn get_faucet_stats() -> (u64, u64) {
+    icp_tokens::faucet::get_faucet_stats()
+}
 
 // ============================================================================
 // TOKEN REGISTRY OPERATIONS
