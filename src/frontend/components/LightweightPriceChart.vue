@@ -123,6 +123,9 @@ const priceChange = ref(0)
 const chartType = ref<'candlesticks' | 'line'>(props.defaultChartType)
 const selectedPeriod = ref('15m')
 const wsConnection = ref<WebSocket>()
+const isLoadingHistory = ref(false)
+const earliestTimestamp = ref<number>(0)
+const cachedData = ref<any[]>([])
 
 // Time periods
 const timePeriods = [
@@ -267,7 +270,6 @@ const initChart = async () => {
   if (!chartContainer.value) return
   
   try {
-    console.log('Creating professional trading chart...')
     
     // Create chart with proper configuration
     chart.value = createChart(chartContainer.value, {
@@ -322,7 +324,6 @@ const initChart = async () => {
       borderVisible: false,
     })
 
-    console.log('Professional chart created successfully')
 
     // Set up resize observer
     resizeObserver.value = new ResizeObserver(() => {
@@ -349,17 +350,22 @@ const initChart = async () => {
 }
 
 // Data fetching
-const fetchHistoricalData = async () => {
+const fetchHistoricalData = async (limit: number = 500, endTime?: number) => {
   const binanceSymbol = getBinanceSymbol(props.tokenSymbol)
   
   try {
-    const response = await $fetch('/api/binance/klines', {
-      query: {
-        symbol: binanceSymbol,
-        interval: getInterval(selectedPeriod.value),
-        limit: 500
-      }
-    })
+    const query: any = {
+      symbol: binanceSymbol,
+      interval: getInterval(selectedPeriod.value),
+      limit: limit
+    }
+    
+    // If endTime is provided, fetch data before that time
+    if (endTime) {
+      query.endTime = endTime * 1000 // Convert to milliseconds for Binance API
+    }
+
+    const response = await $fetch('/api/binance/klines', { query })
 
     if (response.success && Array.isArray((response as any).data)) {
       return (response as any).data.map((kline: any[]) => ({
@@ -375,7 +381,34 @@ const fetchHistoricalData = async () => {
     return []
   } catch (err) {
     console.error('Failed to fetch historical data:', err)
-    return generateMockData()
+    return endTime ? [] : generateMockData()
+  }
+}
+
+// Fetch older historical data for infinite scroll
+const fetchOlderData = async () => {
+  if (isLoadingHistory.value || !earliestTimestamp.value) return []
+  
+  isLoadingHistory.value = true
+  
+  
+  try {
+    // Fetch data before the earliest timestamp we have
+    const olderData = await fetchHistoricalData(500, earliestTimestamp.value)
+    
+    if (olderData.length > 0) {
+      
+      // Update earliest timestamp to the oldest data we just received
+      earliestTimestamp.value = olderData[0].time
+      return olderData
+    }
+    
+    return []
+  } catch (err) {
+    console.error('Failed to fetch older data:', err)
+    return []
+  } finally {
+    isLoadingHistory.value = false
   }
 }
 
@@ -408,31 +441,40 @@ const loadChartData = async () => {
     const data = await fetchHistoricalData()
     
     if (data.length > 0) {
-      // Update current price
-      const latest = data[data.length - 1]
-      const previous = data[data.length - 2]
+      // Ensure initial data is sorted in ascending order (oldest first)
+      const sortedData = data.sort((a, b) => a.time - b.time)
+      
+      // Cache the sorted data and set earliest timestamp
+      cachedData.value = [...sortedData]
+      earliestTimestamp.value = sortedData[0].time
+      
+      
+      // Update current price (use latest from sorted data)
+      const latest = sortedData[sortedData.length - 1]
+      const previous = sortedData[sortedData.length - 2]
       currentPrice.value = latest.close
       priceChange.value = ((latest.close - previous.close) / previous.close) * 100
       
-      // Set data to appropriate series
+      // Set data to appropriate series (using sorted data)
       if (chartType.value === 'candlesticks') {
-        candlestickSeries.value?.setData(data)
+        candlestickSeries.value?.setData(sortedData)
         lineSeries.value?.setData([])
       } else {
-        const lineData = data.map(d => ({ time: d.time, value: d.close }))
+        const lineData = sortedData.map(d => ({ time: d.time, value: d.close }))
         lineSeries.value?.setData(lineData)
         candlestickSeries.value?.setData([])
       }
       
-      // Set volume data with proper colors
-      const volumeData = data.map(d => ({
+      // Set volume data with proper colors (using sorted data)
+      const volumeData = sortedData.map(d => ({
         time: d.time,
         value: d.volume,
         color: d.close >= d.open ? chartColors.value.up + '80' : chartColors.value.down + '80' // Add transparency
       }))
       volumeSeries.value?.setData(volumeData)
       
-      // Price line removed - only show price on Y-axis
+      // Set up infinite scroll for historical data
+      setupInfiniteScroll()
       
       // Fit content to view
       chart.value?.timeScale().fitContent()
@@ -443,6 +485,57 @@ const loadChartData = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// Set up infinite scroll for loading historical data
+const setupInfiniteScroll = () => {
+  if (!chart.value) return
+  
+  chart.value.timeScale().subscribeVisibleLogicalRangeChange(async (logicalRange) => {
+    // Check if user scrolled close to the beginning (left side)
+    if (logicalRange && logicalRange.from < 20 && !isLoadingHistory.value) {
+      
+      try {
+        const olderData = await fetchOlderData()
+        
+        if (olderData.length > 0) {
+          // Prepend older data to cached data
+          cachedData.value = [...olderData, ...cachedData.value]
+          
+          // CRITICAL: Sort all data by time in ascending order (oldest first)
+          const allData = cachedData.value.sort((a, b) => a.time - b.time)
+          
+          // Remove any duplicate timestamps to prevent ordering issues
+          const uniqueData = allData.filter((item, index, arr) => 
+            index === 0 || item.time !== arr[index - 1].time
+          )
+          
+          // Update cached data with unique, sorted data
+          cachedData.value = uniqueData
+          
+          
+          if (chartType.value === 'candlesticks') {
+            candlestickSeries.value?.setData(uniqueData)
+          } else {
+            const lineData = uniqueData.map(d => ({ time: d.time, value: d.close }))
+            lineSeries.value?.setData(lineData)
+          }
+          
+          // Update volume data (also sorted and deduplicated)
+          const volumeData = uniqueData.map(d => ({
+            time: d.time,
+            value: d.volume,
+            color: d.close >= d.open ? chartColors.value.up + '80' : chartColors.value.down + '80'
+          }))
+          volumeSeries.value?.setData(volumeData)
+          
+        }
+      } catch (error) {
+        console.error('Error in infinite scroll:', error)
+        isLoadingHistory.value = false
+      }
+    }
+  })
 }
 
 // Price line functionality removed - only using Y-axis price display

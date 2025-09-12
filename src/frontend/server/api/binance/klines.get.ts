@@ -4,6 +4,7 @@ export default defineEventHandler(async (event) => {
     const symbol = query.symbol as string
     const interval = query.interval as string
     const limit = query.limit as string
+    const endTime = query.endTime as string
 
     if (!symbol || !interval || !limit) {
       throw createError({
@@ -12,10 +13,17 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Build Binance API URL with optional endTime parameter
+    let binanceUrl = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
+    
+    // Add endTime parameter if provided (for fetching historical data)
+    if (endTime) {
+      binanceUrl += `&endTime=${endTime}`
+    }
+
+
     // Make request to Binance API
-    const response = await fetch(
-      `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
-    )
+    const response = await fetch(binanceUrl)
 
     if (!response.ok) {
       throw createError({
