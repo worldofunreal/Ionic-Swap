@@ -34,7 +34,8 @@ pub async fn get_coincap_prices() -> Result<Vec<PriceData>, String> {
         for asset in assets {
             if let (Some(symbol), Some(price_str)) = (asset["symbol"].as_str(), asset["priceUsd"].as_str()) {
                 if let Ok(price) = price_str.parse::<f64>() {
-                    if symbol == "BTC" || symbol == "ETH" || symbol == "SOL" || symbol == "ICP" {
+                    if symbol == "BTC" || symbol == "ETH" || symbol == "SOL" || symbol == "ICP" || 
+                       symbol == "ADA" || symbol == "XRP" || symbol == "BNB" || symbol == "DOGE" || symbol == "TRX" {
                         prices.push(PriceData { 
                             symbol: symbol.to_string(), 
                             price, 

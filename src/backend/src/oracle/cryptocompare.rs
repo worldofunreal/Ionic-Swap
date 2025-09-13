@@ -2,7 +2,7 @@ use crate::oracle::types::PriceData;
 
 /// Fetch prices from CryptoCompare API
 pub async fn get_cryptocompare_prices() -> Result<Vec<PriceData>, String> {
-    let url = "https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC,ETH,SOL,ICP&tsyms=USDT";
+    let url = "https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC,ETH,SOL,ICP,ADA,XRP,BNB,DOGE,TRX&tsyms=USDT";
     
     let request = ic_http_certification::HttpRequest::get(url)
         .with_headers(vec![
@@ -21,7 +21,7 @@ pub async fn get_cryptocompare_prices() -> Result<Vec<PriceData>, String> {
     let timestamp = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
     
     // Parse CryptoCompare response
-    for symbol in ["BTC", "ETH", "SOL", "ICP"] {
+    for symbol in ["BTC", "ETH", "SOL", "ICP", "ADA", "XRP", "BNB", "DOGE", "TRX"] {
         if let Some(price) = json[symbol]["USDT"].as_f64() {
             prices.push(PriceData { 
                 symbol: symbol.to_string(), 

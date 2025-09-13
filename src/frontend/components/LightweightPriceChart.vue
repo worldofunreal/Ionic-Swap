@@ -478,6 +478,9 @@ const loadChartData = async () => {
       
       // Fit content to view
       chart.value?.timeScale().fitContent()
+      
+      // Add current price line
+      addCurrentPriceLine()
     }
   } catch (err) {
     console.error('Failed to load chart data:', err)
@@ -538,7 +541,32 @@ const setupInfiniteScroll = () => {
   })
 }
 
-// Price line functionality removed - only using Y-axis price display
+// Add current price line
+const addCurrentPriceLine = () => {
+  if (!chart.value || !candlestickSeries.value && !lineSeries.value) return
+  
+  // Remove existing price line if it exists
+  if (currentPriceLine.value) {
+    candlestickSeries.value?.removePriceLine(currentPriceLine.value)
+    lineSeries.value?.removePriceLine(currentPriceLine.value)
+  }
+  
+  // Add new price line
+  const priceLine = {
+    price: currentPrice.value,
+    color: chartColors.value.primary,
+    lineWidth: 1,
+    lineStyle: 0, // Solid line
+    axisLabelVisible: true,
+    title: `$${formatPrice(currentPrice.value)}`,
+  }
+  
+  if (chartType.value === 'candlesticks') {
+    currentPriceLine.value = candlestickSeries.value?.createPriceLine(priceLine)
+  } else {
+    currentPriceLine.value = lineSeries.value?.createPriceLine(priceLine)
+  }
+}
 
 // WebSocket for real-time updates
 const startWebSocket = () => {
@@ -571,6 +599,9 @@ const startWebSocket = () => {
       } else {
         lineSeries.value?.update({ time: candleData.time, value: candleData.close })
       }
+      
+      // Update current price line
+      addCurrentPriceLine()
       
       // Update volume
       volumeSeries.value?.update({
@@ -640,6 +671,9 @@ const recreateSeries = () => {
       },
     })
   }
+  
+  // Add current price line to the new series
+  addCurrentPriceLine()
 }
 
 // Watchers
@@ -700,6 +734,9 @@ const updateChartTheme = () => {
     scaleMargins: { top: 0.7, bottom: 0 },
     borderVisible: false,
   })
+  
+  // Update current price line
+  addCurrentPriceLine()
 }
 
 // Lifecycle

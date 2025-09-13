@@ -236,6 +236,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'http_request' : IDL.Func([HttpRequest], [HttpResponse], ['query']),
+    'init_all_tokens' : IDL.Func([], [Result], []),
     'init_canister_balances' : IDL.Func([], [Result], []),
     'init_upload' : IDL.Func(
         [IDL.Text, IDL.Nat64, IDL.Opt(IDL.Nat64), IDL.Text],

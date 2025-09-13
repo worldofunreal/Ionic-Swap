@@ -61,22 +61,62 @@ pub async fn update_all_prices() -> Result<PriceUpdateResult, String> {
         }
     }
     
-    // If no sources succeeded, fall back to mock data for testing
+    // If no sources succeeded, fall back to cached prices
     if successful_sources == 0 {
-        ic_cdk::println!("   🧪 All sources failed, using mock data for testing...");
-        let timestamp = ic_cdk::api::time() / 1_000_000_000;
+        ic_cdk::println!("   ⚠️  All sources failed, attempting to use cached prices...");
         
-        // Mock data for all supported tokens
-        all_prices.push(PriceData { symbol: "BTC".to_string(), price: 45000.0, timestamp, source: "Mock".to_string() });
-        all_prices.push(PriceData { symbol: "ETH".to_string(), price: 3000.0, timestamp, source: "Mock".to_string() });
-        all_prices.push(PriceData { symbol: "SOL".to_string(), price: 100.0, timestamp, source: "Mock".to_string() });
-        all_prices.push(PriceData { symbol: "ICP".to_string(), price: 5.0, timestamp, source: "Mock".to_string() });
-        all_prices.push(PriceData { symbol: "ADA".to_string(), price: 0.45, timestamp, source: "Mock".to_string() });
-        all_prices.push(PriceData { symbol: "XRP".to_string(), price: 0.60, timestamp, source: "Mock".to_string() });
-        all_prices.push(PriceData { symbol: "BNB".to_string(), price: 300.0, timestamp, source: "Mock".to_string() });
-        all_prices.push(PriceData { symbol: "DOGE".to_string(), price: 0.08, timestamp, source: "Mock".to_string() });
-        all_prices.push(PriceData { symbol: "TRX".to_string(), price: 0.12, timestamp, source: "Mock".to_string() });
-        successful_sources = 1;
+        // Get cached prices from storage
+        match get_current_prices().await {
+            Ok(cached_prices) => {
+                if !cached_prices.is_empty() {
+                    ic_cdk::println!("   📦 Using {} cached prices as fallback", cached_prices.len());
+                    let timestamp = ic_cdk::api::time() / 1_000_000_000;
+                    
+                    // Convert cached prices to PriceData format
+                    for (symbol, cached_pair) in cached_prices {
+                        all_prices.push(PriceData { 
+                            symbol: symbol.clone(), 
+                            price: cached_pair.price, 
+                            timestamp,
+                            source: "Cached".to_string() 
+                        });
+                    }
+                    successful_sources = 1;
+                } else {
+                    ic_cdk::println!("   🧪 No cached prices available, using mock data for testing...");
+                    let timestamp = ic_cdk::api::time() / 1_000_000_000;
+                    
+                    // Mock data for all supported tokens (only when no cache exists)
+                    all_prices.push(PriceData { symbol: "BTC".to_string(), price: 45000.0, timestamp, source: "Mock".to_string() });
+                    all_prices.push(PriceData { symbol: "ETH".to_string(), price: 3000.0, timestamp, source: "Mock".to_string() });
+                    all_prices.push(PriceData { symbol: "SOL".to_string(), price: 100.0, timestamp, source: "Mock".to_string() });
+                    all_prices.push(PriceData { symbol: "ICP".to_string(), price: 5.0, timestamp, source: "Mock".to_string() });
+                    all_prices.push(PriceData { symbol: "ADA".to_string(), price: 0.45, timestamp, source: "Mock".to_string() });
+                    all_prices.push(PriceData { symbol: "XRP".to_string(), price: 0.60, timestamp, source: "Mock".to_string() });
+                    all_prices.push(PriceData { symbol: "BNB".to_string(), price: 300.0, timestamp, source: "Mock".to_string() });
+                    all_prices.push(PriceData { symbol: "DOGE".to_string(), price: 0.08, timestamp, source: "Mock".to_string() });
+                    all_prices.push(PriceData { symbol: "TRX".to_string(), price: 0.12, timestamp, source: "Mock".to_string() });
+                    successful_sources = 1;
+                }
+            }
+            Err(e) => {
+                ic_cdk::println!("   ❌ Failed to retrieve cached prices: {}", e);
+                ic_cdk::println!("   🧪 Using mock data as last resort...");
+                let timestamp = ic_cdk::api::time() / 1_000_000_000;
+                
+                // Mock data as absolute last resort
+                all_prices.push(PriceData { symbol: "BTC".to_string(), price: 45000.0, timestamp, source: "Mock".to_string() });
+                all_prices.push(PriceData { symbol: "ETH".to_string(), price: 3000.0, timestamp, source: "Mock".to_string() });
+                all_prices.push(PriceData { symbol: "SOL".to_string(), price: 100.0, timestamp, source: "Mock".to_string() });
+                all_prices.push(PriceData { symbol: "ICP".to_string(), price: 5.0, timestamp, source: "Mock".to_string() });
+                all_prices.push(PriceData { symbol: "ADA".to_string(), price: 0.45, timestamp, source: "Mock".to_string() });
+                all_prices.push(PriceData { symbol: "XRP".to_string(), price: 0.60, timestamp, source: "Mock".to_string() });
+                all_prices.push(PriceData { symbol: "BNB".to_string(), price: 300.0, timestamp, source: "Mock".to_string() });
+                all_prices.push(PriceData { symbol: "DOGE".to_string(), price: 0.08, timestamp, source: "Mock".to_string() });
+                all_prices.push(PriceData { symbol: "TRX".to_string(), price: 0.12, timestamp, source: "Mock".to_string() });
+                successful_sources = 1;
+            }
+        }
     }
     
     ic_cdk::println!("   📊 Total prices collected: {} from {} sources", all_prices.len(), successful_sources);

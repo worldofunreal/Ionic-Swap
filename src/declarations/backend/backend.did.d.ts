@@ -217,6 +217,7 @@ export interface _SERVICE {
   'get_user_count' : ActorMethod<[], bigint>,
   'get_user_personal' : ActorMethod<[Principal, Principal], Result_5>,
   'http_request' : ActorMethod<[HttpRequest], HttpResponse>,
+  'init_all_tokens' : ActorMethod<[], Result>,
   'init_canister_balances' : ActorMethod<[], Result>,
   'init_upload' : ActorMethod<
     [string, bigint, [] | [bigint], string],
