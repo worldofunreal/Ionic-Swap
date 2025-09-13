@@ -9,7 +9,7 @@ pub const SUPPORTED_TOKENS: &[(&str, &str, u8)] = &[
     ("ETH", "Ethereum", 18),
     ("XRP", "XRP", 6),
     ("USDT", "Tether USD", 6),
-    ("BNB", "BNB", 18),
+    ("BNB", "BNB", 8),
     ("SOL", "Solana", 9),
     ("DOGE", "Dogecoin", 8),
     ("ADA", "Cardano", 6),
@@ -25,7 +25,7 @@ pub fn get_token_supply(symbol: &str) -> u64 {
         "ETH" => 1_000_000_000_000_000_000, // 1000 ETH (18 decimals)
         "SOL" => 1_000_000_000,      // 1000 SOL (9 decimals)
         "XRP" => 1_000_000_000_000,  // 1M XRP (6 decimals)
-        "BNB" => 1_000_000_000_000_000_000, // 1000 BNB (18 decimals)
+        "BNB" => 200_000_000_000_000_00, // 200M BNB (8 decimals)
         "DOGE" => 10_000_000_000_000, // 10M DOGE (8 decimals)
         "ADA" => 1_000_000_000_000,  // 1M ADA (6 decimals)
         "TRX" => 1_000_000_000_000,  // 1M TRX (6 decimals)

@@ -153,7 +153,8 @@ pub async fn market_swap(
 fn get_decimal_divisor(symbol: &str) -> f64 {
     match symbol {
         "BTC" | "DOGE" | "ICP" => 100_000_000.0,      // 8 decimals
-        "ETH" | "BNB" => 1_000_000_000_000_000_000.0, // 18 decimals
+        "ETH" => 1_000_000_000_000_000_000.0, // 18 decimals
+        "BNB" => 100_000_000.0, // 8 decimals
         "SOL" => 1_000_000_000.0,                      // 9 decimals
         "XRP" | "USDT" | "ADA" | "TRX" => 1_000_000.0, // 6 decimals
         _ => 1_000_000.0,                               // Default 6 decimals

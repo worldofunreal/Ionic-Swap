@@ -10,7 +10,7 @@ pub fn get_evm_token(symbol: &str) -> Option<ChainToken> {
         "BTC" => ("0x2A6736bC108F6a7eaA007DEce56d98fDdCAFfA11", 8),
         "XRP" => ("0x29f2A9eb954774B5951B2178EFAd9c7F80BF7c13", 6),
         "USDT" => ("0x02c32a72566dE763a7B150B941e770882eF3aCE2", 6),
-        "BNB" => ("0x2ecc44a0f01BA5668BF28F07219e421BD8B6D77b", 18),
+        "BNB" => ("0x2ecc44a0f01BA5668BF28F07219e421BD8B6D77b", 8),
         "DOGE" => ("0x9Ef8B792bF5B74b77765316000621865fDdABa88", 8),
         "ADA" => ("0x7fc5cf0F29D7F54589FaEE98f15C6EdD7F16911a", 6),
         "TRX" => ("0x061882b3DeDe2dD9Be136592534915a016395F70", 6),

@@ -282,8 +282,8 @@ impl TokenStorage {
                             InternalToken {
                                 symbol: "BNB".to_string(),
                                 name: "BNB".to_string(),
-                                decimals: 18,
-                                total_supply: 200_000_000_000_000_000, // 200M BNB
+                                decimals: 8,
+                                total_supply: 200_000_000_000_000_00, // 200M BNB
                                 owner: canister_id,
                             },
                             InternalToken {

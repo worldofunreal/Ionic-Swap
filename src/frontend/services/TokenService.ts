@@ -65,7 +65,7 @@ export const TOKEN_CONFIGS: Record<string, TokenConfig> = {
   BNB: { 
     symbol: 'BNB', 
     name: 'BNB', 
-    decimals: 18, 
+    decimals: 8, 
     displayDecimals: 2, 
     formatType: 'crypto',
     minDisplayValue: 0.01

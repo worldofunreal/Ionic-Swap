@@ -127,49 +127,6 @@ fn convert_to_trading_pairs(prices: Vec<PriceData>) -> HashMap<String, TradingPa
     final_prices
 }
 
-/// Calculate weighted averages from all price sources (legacy function - not used in Binance-only mode)
-async fn calculate_weighted_averages(prices: Vec<PriceData>) -> Result<HashMap<String, TradingPair>, String> {
-    let mut grouped: HashMap<String, Vec<PriceData>> = HashMap::new();
-    
-    // Group by symbol
-    for price in prices {
-        grouped.entry(price.symbol.clone()).or_insert_with(Vec::new).push(price);
-    }
-    
-    let mut final_prices = HashMap::new();
-    
-    for (symbol, price_list) in grouped {
-        if price_list.len() < 2 {
-            ic_cdk::println!("   ⚠️  Only {} source(s) for {}, skipping", price_list.len(), symbol);
-            continue; // Need at least 2 sources for reliability
-        }
-        
-        // Calculate weighted average (you can add weights based on source reliability)
-        let total_weight = price_list.len() as f64;
-        let weighted_sum: f64 = price_list.iter().map(|p| p.price).sum();
-        let average_price = weighted_sum / total_weight;
-        
-        // Calculate price variance for quality assessment
-        let variance: f64 = price_list.iter()
-            .map(|p| (p.price - average_price).powi(2))
-            .sum::<f64>() / total_weight;
-        let standard_deviation = variance.sqrt();
-        
-        ic_cdk::println!("   📊 {}: ${:.2} (avg from {} sources, σ=${:.2})", 
-            symbol, average_price, price_list.len(), standard_deviation);
-        
-        final_prices.insert(symbol.clone(), TradingPair {
-            base: symbol,
-            quote: "USDT".to_string(),
-            price: average_price,
-            last_updated: ic_cdk::api::time() / 1_000_000_000, // Convert nanoseconds to seconds
-            sources_count: price_list.len() as u8,
-        });
-    }
-    
-    Ok(final_prices)
-}
-
 /// Update the price cache
 async fn update_price_cache(prices: HashMap<String, TradingPair>) -> Result<(), String> {
     let cache = super::types::init_price_cache();

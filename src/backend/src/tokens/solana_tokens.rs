@@ -11,7 +11,7 @@ pub fn get_solana_token(symbol: &str) -> Option<ChainToken> {
         "ETH" => ("DS7AvCcMJoCVkHrH1CFFiFqDZuuT6cqbMbj1RZAPM9C8", "E8SVnXf9e2VydayRpBgQBNckdsjsLVQmB5Fo9rybCSUb", 18),
         "XRP" => ("2pfQs3r123nU5TRzuoTGmdX4qZymJQS29jFACQHT67aY", "CpDEPtBPgq9QTGJJGgMC7UfXU7tSBw89siZRGEkwLJWv", 6),
         "USDT" => ("DPBmipSAHhpUd3ZPTVAbLfaWPVEvp77V13hG1B5nrHKv", "FNKRx7MZS2REkWMeCojN5t6ZySaq4zS1KAAPPebav1ZH", 6),
-        "BNB" => ("L48YhNzBgxeWPrVXSZ8M39jrpNs8BJ1dpMbaQP47VXG", "HAtBFWqzEW9UxbGHZZ8nfacsgATa5dhVfqeKJpZEwV92", 18),
+        "BNB" => ("L48YhNzBgxeWPrVXSZ8M39jrpNs8BJ1dpMbaQP47VXG", "HAtBFWqzEW9UxbGHZZ8nfacsgATa5dhVfqeKJpZEwV92", 8),
         "DOGE" => ("DV5JDdMg55KE8bJKDnCHpYWKhdFZDsoimJFME9AoYDQh", "ANw6vCmkNdMjsaQRZhu8TeFm18usEveqtC6Mb29hmLKz", 8),
         "ADA" => ("BzqvJ1AVL7TSYvugPDr9xqQKeNDyK6QTcouBspRv9Jvp", "3mFWRYqapmvViDk2vM4Z9FaUxnjk2uphht81fgCNWL8q", 6),
         "TRX" => ("4WRoSSeCcGPzXzgFKfZcB4viHau8pZXhdvVG3fKPCrXL", "BU7bJMXGcyQSPGgj1gKocLJYf8wF1aEtK2hReJj1Cru4", 6),
