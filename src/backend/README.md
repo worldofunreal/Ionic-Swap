@@ -96,7 +96,7 @@ Result: BTC gets average from 2 sources (CoinCap + CryptoCompare)
 ❌ CoinCap: Failed
 ❌ CryptoCompare: Failed
 
-Result: Falls back to mock data for testing
+Result: Returns error - trading temporarily unavailable
 ```
 
 #### Benefits of This Approach
@@ -106,6 +106,30 @@ Result: Falls back to mock data for testing
 3. **🛡️ Quality Control**: Minimum 2 sources required for reliability
 4. **📊 Transparency**: Source count shows data quality
 5. **⚡ Graceful Degradation**: System continues working with partial data
+6. **💾 Smart Fallback**: Uses cached prices during complete API outages
+7. **🛡️ Safe Trading**: Prevents trading with unreliable data by returning errors
+
+### Improved Fallback Strategy
+
+The system now implements a sophisticated fallback mechanism for critical failures:
+
+#### **Fallback Hierarchy:**
+1. **Primary**: Use prices from available APIs (1-4 sources)
+2. **Secondary**: Use cached prices from last successful update
+3. **Tertiary**: Return error - trading temporarily unavailable
+
+#### **Cached Price Fallback Benefits:**
+- **Real Market Data**: Uses actual prices from recent successful updates
+- **Continuity**: Maintains price history and trends during outages
+- **User Trust**: Shows real data with clear "last updated" timestamps
+- **Graceful Recovery**: Automatically resumes normal operation when APIs recover
+
+#### **Implementation Details:**
+- Cached prices are marked with source: "Cached"
+- Timestamp reflects when fallback was activated
+- System automatically switches back to live data when APIs recover
+- **No mock data in production** - system returns errors when no reliable data is available
+- Trading is temporarily disabled during critical failures to protect users
 
 ### API Endpoints
 

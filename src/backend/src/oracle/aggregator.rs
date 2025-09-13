@@ -83,38 +83,14 @@ pub async fn update_all_prices() -> Result<PriceUpdateResult, String> {
                     }
                     successful_sources = 1;
                 } else {
-                    ic_cdk::println!("   🧪 No cached prices available, using mock data for testing...");
-                    let timestamp = ic_cdk::api::time() / 1_000_000_000;
-                    
-                    // Mock data for all supported tokens (only when no cache exists)
-                    all_prices.push(PriceData { symbol: "BTC".to_string(), price: 45000.0, timestamp, source: "Mock".to_string() });
-                    all_prices.push(PriceData { symbol: "ETH".to_string(), price: 3000.0, timestamp, source: "Mock".to_string() });
-                    all_prices.push(PriceData { symbol: "SOL".to_string(), price: 100.0, timestamp, source: "Mock".to_string() });
-                    all_prices.push(PriceData { symbol: "ICP".to_string(), price: 5.0, timestamp, source: "Mock".to_string() });
-                    all_prices.push(PriceData { symbol: "ADA".to_string(), price: 0.45, timestamp, source: "Mock".to_string() });
-                    all_prices.push(PriceData { symbol: "XRP".to_string(), price: 0.60, timestamp, source: "Mock".to_string() });
-                    all_prices.push(PriceData { symbol: "BNB".to_string(), price: 300.0, timestamp, source: "Mock".to_string() });
-                    all_prices.push(PriceData { symbol: "DOGE".to_string(), price: 0.08, timestamp, source: "Mock".to_string() });
-                    all_prices.push(PriceData { symbol: "TRX".to_string(), price: 0.12, timestamp, source: "Mock".to_string() });
-                    successful_sources = 1;
+                    ic_cdk::println!("   ❌ No cached prices available - cannot provide reliable pricing data");
+                    return Err("All price sources failed and no cached prices available. Trading temporarily unavailable.".to_string());
                 }
             }
             Err(e) => {
                 ic_cdk::println!("   ❌ Failed to retrieve cached prices: {}", e);
-                ic_cdk::println!("   🧪 Using mock data as last resort...");
-                let timestamp = ic_cdk::api::time() / 1_000_000_000;
-                
-                // Mock data as absolute last resort
-                all_prices.push(PriceData { symbol: "BTC".to_string(), price: 45000.0, timestamp, source: "Mock".to_string() });
-                all_prices.push(PriceData { symbol: "ETH".to_string(), price: 3000.0, timestamp, source: "Mock".to_string() });
-                all_prices.push(PriceData { symbol: "SOL".to_string(), price: 100.0, timestamp, source: "Mock".to_string() });
-                all_prices.push(PriceData { symbol: "ICP".to_string(), price: 5.0, timestamp, source: "Mock".to_string() });
-                all_prices.push(PriceData { symbol: "ADA".to_string(), price: 0.45, timestamp, source: "Mock".to_string() });
-                all_prices.push(PriceData { symbol: "XRP".to_string(), price: 0.60, timestamp, source: "Mock".to_string() });
-                all_prices.push(PriceData { symbol: "BNB".to_string(), price: 300.0, timestamp, source: "Mock".to_string() });
-                all_prices.push(PriceData { symbol: "DOGE".to_string(), price: 0.08, timestamp, source: "Mock".to_string() });
-                all_prices.push(PriceData { symbol: "TRX".to_string(), price: 0.12, timestamp, source: "Mock".to_string() });
-                successful_sources = 1;
+                ic_cdk::println!("   ❌ Cannot provide reliable pricing data - trading unavailable");
+                return Err(format!("All price sources failed and cache retrieval failed: {}. Trading temporarily unavailable.", e));
             }
         }
     }
