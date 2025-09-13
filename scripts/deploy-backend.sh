@@ -36,6 +36,10 @@ echo "💰 Initializing canister token balances..."
 BALANCE_RESULT=$(dfx canister call backend init_canister_balances)
 echo "Balance initialization result: $BALANCE_RESULT"
 
+echo "🔄 Starting price scheduler..."
+SCHEDULER_RESULT=$(dfx canister call backend start_price_scheduler)
+echo "Scheduler initialization result: $SCHEDULER_RESULT"
+
 echo "✅ Backend canister deployed successfully!"
 echo "🌐 Candid UI: http://127.0.0.1:4943/?canisterId=$(dfx canister id backend)"
 

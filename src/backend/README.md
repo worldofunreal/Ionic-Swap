@@ -139,13 +139,24 @@ The system now implements a sophisticated fallback mechanism for critical failur
 - `get_pair_price(symbol)` - Gets specific token price
 
 #### Scheduler Control
-- `start_price_scheduler()` - Starts automatic price updates (every second)
+- `start_price_scheduler()` - Starts automatic price updates (every 30 seconds)
 - `stop_price_scheduler()` - Stops automatic price updates
 
 #### Debug & Testing
 - `debug_test_external_apis()` - Tests all external API connections
 
 ### Usage Examples
+
+#### Starting Automatic Price Updates
+```bash
+# Start the automatic price scheduler (updates every 30 seconds)
+dfx canister call backend start_price_scheduler
+# Returns: "Price scheduler started successfully - updates every 30 seconds"
+
+# Stop the automatic price scheduler
+dfx canister call backend stop_price_scheduler
+# Returns: "Price scheduler stopped successfully"
+```
 
 #### Testing API Connectivity
 ```bash

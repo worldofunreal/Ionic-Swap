@@ -29,7 +29,6 @@ pub fn init(init_arg: InitArg) {
     // Initialize internal token system
     icp::storage::init_storage();
     
-    ic_cdk::println!("Backend initialized with network: {:?}", solana::get_solana_network());
 }
 
 #[post_upgrade]
