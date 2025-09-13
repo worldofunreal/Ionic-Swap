@@ -8,49 +8,40 @@ use ic_cdk::api::{msg_caller, time, canister_self};
 use crate::icp::{
     types::FaucetClaim,
     config::FAUCET_CLAIM_AMOUNT,
-    storage::{get_tokens_storage, get_balances_storage, get_claims_storage},
+    storage::IcpTokenDatabase,
 };
 
 /// Claim 2M USDT from faucet (one-time only per principal)
 pub async fn claim_faucet() -> Result<String, String> {
     let caller = msg_caller();
-    let claims = get_claims_storage();
-    let balances = get_balances_storage();
 
     // Check if user already claimed
-    let mut claims_guard = claims.lock().unwrap();
-    if claims_guard.contains_key(&caller) {
+    if IcpTokenDatabase::get_faucet_claim(caller).is_some() {
         return Err("Faucet already claimed by this principal".to_string());
     }
 
     // Check if USDT token exists
-    let tokens = get_tokens_storage();
-    let tokens_guard = tokens.lock().unwrap();
-    let _usdt_token = tokens_guard.get("USDT")
+    let _usdt_token = IcpTokenDatabase::get_token("USDT")
         .ok_or("USDT token not found")?;
 
     // Check if canister has enough USDT
-    let mut balances_guard = balances.lock().unwrap();
-    let usdt_balances = balances_guard.get_mut("USDT")
-        .ok_or("USDT balances not found")?;
-    
     let canister_id = canister_self();
-    let canister_balance = usdt_balances.get(&canister_id).unwrap_or(&0);
+    let canister_balance = IcpTokenDatabase::get_balance(canister_id, "USDT");
     
-    if *canister_balance < FAUCET_CLAIM_AMOUNT {
+    if canister_balance < FAUCET_CLAIM_AMOUNT {
         return Err("Insufficient USDT in faucet".to_string());
     }
 
     // Transfer USDT from canister to user
-    *usdt_balances.get_mut(&canister_id).unwrap() -= FAUCET_CLAIM_AMOUNT;
-    *usdt_balances.entry(caller).or_insert(0) += FAUCET_CLAIM_AMOUNT;
+    IcpTokenDatabase::transfer_tokens(canister_id, caller, "USDT", FAUCET_CLAIM_AMOUNT)?;
 
     // Record the claim
-    claims_guard.insert(caller, FaucetClaim {
+    let claim = FaucetClaim {
         user: caller,
         timestamp: time(),
         amount: FAUCET_CLAIM_AMOUNT,
-    });
+    };
+    IcpTokenDatabase::store_faucet_claim(claim);
 
     ic_cdk::println!("✅ Faucet claim: {} received 2M USDT", caller);
     Ok(format!("Successfully claimed 2,000,000 USDT"))
@@ -59,18 +50,15 @@ pub async fn claim_faucet() -> Result<String, String> {
 
 /// Get faucet claim info for a principal
 pub fn get_faucet_claim(user: Principal) -> Option<FaucetClaim> {
-    let claims = get_claims_storage();
-    let claims_guard = claims.lock().unwrap();
-    claims_guard.get(&user).cloned()
+    IcpTokenDatabase::get_faucet_claim(user)
 }
 
 /// Get faucet statistics
 pub fn get_faucet_stats() -> (u64, u64) {
-    let claims = get_claims_storage();
-    let claims_guard = claims.lock().unwrap();
+    let claims = IcpTokenDatabase::get_all_faucet_claims();
     
-    let total_claims = claims_guard.len() as u64;
-    let total_distributed = claims_guard.values().map(|c| c.amount).sum();
+    let total_claims = claims.len() as u64;
+    let total_distributed = claims.iter().map(|c| c.amount).sum();
     
     (total_claims, total_distributed)
 }

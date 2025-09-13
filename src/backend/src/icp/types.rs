@@ -4,6 +4,8 @@
 
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
+use ic_stable_structures::{storable::Bound, Storable};
+use std::borrow::Cow;
 
 /// Represents an internal token in the ICP token system
 #[derive(Debug, Clone, CandidType, Deserialize, Serialize)]
@@ -18,6 +20,22 @@ pub struct InternalToken {
     pub total_supply: u64,
     /// Principal that owns the token (usually the canister)
     pub owner: Principal,
+}
+
+impl Storable for InternalToken {
+    const BOUND: Bound = Bound::Unbounded;
+    
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+    
+    fn into_bytes(self) -> Vec<u8> {
+        candid::encode_one(&self).unwrap()
+    }
+    
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
 }
 
 /// Represents a user's balance for a specific token
@@ -42,6 +60,22 @@ pub struct FaucetClaim {
     pub amount: u64,
 }
 
+impl Storable for FaucetClaim {
+    const BOUND: Bound = Bound::Unbounded;
+    
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+    
+    fn into_bytes(self) -> Vec<u8> {
+        candid::encode_one(&self).unwrap()
+    }
+    
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+}
+
 /// Represents faucet statistics
 #[derive(Debug, Clone, CandidType, Deserialize, Serialize)]
 pub struct FaucetStats {
@@ -58,4 +92,30 @@ pub struct UserBalances {
     pub user: Principal,
     /// Map of token symbol to balance
     pub balances: std::collections::HashMap<String, u64>,
+}
+
+/// Key for storing balances in stable storage
+/// Combines user principal and token symbol for unique identification
+#[derive(Debug, Clone, CandidType, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+pub struct BalanceKey {
+    /// User's principal
+    pub user: Principal,
+    /// Token symbol
+    pub symbol: String,
+}
+
+impl Storable for BalanceKey {
+    const BOUND: Bound = Bound::Unbounded;
+    
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+    
+    fn into_bytes(self) -> Vec<u8> {
+        candid::encode_one(&self).unwrap()
+    }
+    
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
 }

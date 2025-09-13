@@ -1,12 +1,12 @@
 use crate::oracle::aggregator::update_all_prices;
 
-/// Start the price update scheduler (runs every second)
+/// Start the price update scheduler (runs every 3 seconds)
 pub async fn start_price_scheduler() -> Result<String, String> {
-    ic_cdk::println!("🚀 Starting price update scheduler...");
+    ic_cdk::println!("🚀 Starting price update scheduler (3 second intervals)...");
     
     // Spawn the scheduler task
     tokio::spawn(async {
-        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(1));
+        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(3));
         loop {
             interval.tick().await;
             
@@ -22,7 +22,7 @@ pub async fn start_price_scheduler() -> Result<String, String> {
         }
     });
     
-    Ok("Price scheduler started successfully".to_string())
+    Ok("Price scheduler started successfully (3 second intervals)".to_string())
 }
 
 /// Stop the price update scheduler (placeholder for future implementation)

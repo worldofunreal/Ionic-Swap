@@ -995,6 +995,25 @@ class CanisterService {
     }
   }
 
+  // Execute market swap
+  async marketSwap(request: {
+    from_token: string
+    to_token: string
+    amount: bigint
+  }): Promise<{ Ok?: any; Err?: string }> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.market_swap(request)
+      return result
+    } catch (error) {
+      console.error('Error executing market swap:', error)
+      throw error
+    }
+  }
+
   // Get asset URL
   getAssetUrl(filePath: string): string {
     const backendCanisterId = getBackendCanisterId()

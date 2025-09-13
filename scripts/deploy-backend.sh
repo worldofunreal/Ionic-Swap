@@ -30,7 +30,7 @@ cat src/backend/backend.did
 
 echo "🚀 Deploying backend canister..."
 dfx deploy backend
-
+dfx generate
 echo "✅ Backend canister deployed successfully!"
 echo "🌐 Candid UI: http://127.0.0.1:4943/?canisterId=$(dfx canister id backend)"
 

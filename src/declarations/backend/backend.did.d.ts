@@ -93,9 +93,11 @@ export type Result = { 'Ok' : string } |
   { 'Err' : string };
 export type Result_1 = { 'Ok' : null } |
   { 'Err' : UserError };
-export type Result_10 = { 'Ok' : null } |
+export type Result_10 = { 'Ok' : SwapResult_1 } |
   { 'Err' : string };
-export type Result_11 = { 'Ok' : PriceUpdateResult } |
+export type Result_11 = { 'Ok' : null } |
+  { 'Err' : string };
+export type Result_12 = { 'Ok' : PriceUpdateResult } |
   { 'Err' : string };
 export type Result_2 = { 'Ok' : string } |
   { 'Err' : UserError };
@@ -107,16 +109,21 @@ export type Result_5 = { 'Ok' : PersonalUser } |
   { 'Err' : UserError };
 export type Result_6 = { 'Ok' : boolean } |
   { 'Err' : string };
-export type Result_7 = { 'Ok' : Array<CompactProfile> } |
-  { 'Err' : UserError };
-export type Result_8 = { 'Ok' : EvmSwapResult } |
+export type Result_7 = { 'Ok' : SwapResult } |
   { 'Err' : string };
-export type Result_9 = { 'Ok' : SwapResult } |
+export type Result_8 = { 'Ok' : Array<CompactProfile> } |
+  { 'Err' : UserError };
+export type Result_9 = { 'Ok' : EvmSwapResult } |
   { 'Err' : string };
 export type SolanaNetwork = { 'Mainnet' : null } |
   { 'Testnet' : null } |
   { 'Devnet' : null };
 export interface SwapRequest {
+  'to_token' : string,
+  'from_token' : string,
+  'amount' : bigint,
+}
+export interface SwapRequest_1 {
   'min_amount_out' : bigint,
   'deadline' : bigint,
   'amount_out' : bigint,
@@ -124,6 +131,15 @@ export interface SwapRequest {
   'token_out_mint' : string,
 }
 export interface SwapResult {
+  'to_token' : string,
+  'from_amount' : bigint,
+  'from_token' : string,
+  'to_amount' : bigint,
+  'timestamp' : bigint,
+  'to_price' : number,
+  'from_price' : number,
+}
+export interface SwapResult_1 {
   'delegation_tx_hash' : string,
   'token_in_amount' : bigint,
   'swap_tx_hash' : string,
@@ -208,9 +224,10 @@ export interface _SERVICE {
   'is_following' : ActorMethod<[Principal, Principal], boolean>,
   'is_token_deployed' : ActorMethod<[string, string], Result_6>,
   'is_username_available' : ActorMethod<[string], boolean>,
+  'market_swap' : ActorMethod<[SwapRequest], Result_7>,
   'reload_token_registry' : ActorMethod<[], Result>,
-  'search_users' : ActorMethod<[string, number], Result_7>,
-  'search_users_personal' : ActorMethod<[string, number, Principal], Result_7>,
+  'search_users' : ActorMethod<[string, number], Result_8>,
+  'search_users_personal' : ActorMethod<[string, number, Principal], Result_8>,
   'signup' : ActorMethod<
     [string, [] | [string], [] | [string], [] | [string]],
     Result_3
@@ -226,14 +243,17 @@ export interface _SERVICE {
     Result
   >,
   'submit_gasless_permit' : ActorMethod<[PermitRequest], Result>,
-  'swap_evm' : ActorMethod<[PermitRequest, EvmSwapRequest], Result_8>,
-  'swap_solana' : ActorMethod<[Uint8Array | number[], SwapRequest], Result_9>,
+  'swap_evm' : ActorMethod<[PermitRequest, EvmSwapRequest], Result_9>,
+  'swap_solana' : ActorMethod<
+    [Uint8Array | number[], SwapRequest_1],
+    Result_10
+  >,
   'test_ed25519' : ActorMethod<[], Result>,
   'test_secp256k1' : ActorMethod<[], Result>,
   'test_simple_evm_transaction' : ActorMethod<[], Result>,
   'transfer_tokens' : ActorMethod<
     [Principal, Principal, string, bigint],
-    Result_10
+    Result_11
   >,
   'unfollow_user' : ActorMethod<[Principal], Result_3>,
   'update_avatar' : ActorMethod<[string], Result_3>,
@@ -243,7 +263,7 @@ export interface _SERVICE {
   'update_display_name' : ActorMethod<[string], Result_3>,
   'update_evm_address' : ActorMethod<[string], Result_3>,
   'update_location' : ActorMethod<[string], Result_3>,
-  'update_prices' : ActorMethod<[], Result_11>,
+  'update_prices' : ActorMethod<[], Result_12>,
   'update_profile' : ActorMethod<[UserUpdate], Result_3>,
   'update_solana_address' : ActorMethod<[string], Result_3>,
   'update_website' : ActorMethod<[string], Result_3>,

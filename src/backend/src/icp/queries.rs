@@ -6,27 +6,21 @@ use std::collections::HashMap;
 
 use crate::icp::{
     types::InternalToken,
-    storage::get_tokens_storage,
+    storage::IcpTokenDatabase,
 };
 
 /// Get all internal tokens
 pub fn get_all_tokens() -> Vec<InternalToken> {
-    let tokens = get_tokens_storage();
-    let tokens_guard = tokens.lock().unwrap();
-    tokens_guard.values().cloned().collect()
+    IcpTokenDatabase::get_all_tokens()
 }
-
 
 /// Get token statistics (total supply, circulating supply, etc.)
 pub fn get_token_statistics(symbol: &str) -> Result<HashMap<String, u64>, String> {
-    let tokens = get_tokens_storage();
-    let tokens_guard = tokens.lock().unwrap();
-    
-    let token = tokens_guard.get(symbol)
+    let token = IcpTokenDatabase::get_token(symbol)
         .ok_or("Token not found")?;
     
     let total_supply = token.total_supply;
-    let circulating_supply = crate::icp::balances::get_token_circulating_supply(symbol)
+    let circulating_supply = IcpTokenDatabase::get_token_circulating_supply(symbol)
         .unwrap_or(0);
     
     let mut stats = HashMap::new();

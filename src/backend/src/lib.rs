@@ -201,8 +201,9 @@ pub fn get_token_balance(user: Principal, symbol: String) -> u64 {
 
 /// Get all token balances for a user
 #[query]
-pub fn get_user_balances(user: Principal) -> std::collections::HashMap<String, u64> {
-    icp::balances::get_user_balances(user)
+pub fn get_user_balances(user: Principal) -> Vec<(String, u64)> {
+    let balances = icp::balances::get_user_balances(user);
+    balances.into_iter().collect()
 }
 
 /// Transfer tokens between users
@@ -625,6 +626,17 @@ pub fn export_token_registry() -> Result<String, String> {
 #[update]
 pub fn reload_token_registry() -> Result<String, String> {
     tokens::reload_token_registry()
+}
+
+// ============================================================================
+// TRADING OPERATIONS
+// ============================================================================
+
+/// Execute a market swap between internal tokens
+#[update]
+pub async fn market_swap(request: icp::swap::SwapRequest) -> Result<icp::swap::SwapResult, String> {
+    let caller = ic_cdk::api::msg_caller();
+    icp::swap::market_swap(caller, request).await
 }
 
 // ============================================================================

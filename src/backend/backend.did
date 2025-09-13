@@ -87,18 +87,24 @@ type PriceUpdateResult = record {
 };
 type Result = variant { Ok : text; Err : text };
 type Result_1 = variant { Ok; Err : UserError };
-type Result_10 = variant { Ok; Err : text };
-type Result_11 = variant { Ok : PriceUpdateResult; Err : text };
+type Result_10 = variant { Ok : SwapResult_1; Err : text };
+type Result_11 = variant { Ok; Err : text };
+type Result_12 = variant { Ok : PriceUpdateResult; Err : text };
 type Result_2 = variant { Ok : text; Err : UserError };
 type Result_3 = variant { Ok : User; Err : UserError };
 type Result_4 = variant { Ok : TradingPair; Err : text };
 type Result_5 = variant { Ok : PersonalUser; Err : UserError };
 type Result_6 = variant { Ok : bool; Err : text };
-type Result_7 = variant { Ok : vec CompactProfile; Err : UserError };
-type Result_8 = variant { Ok : EvmSwapResult; Err : text };
-type Result_9 = variant { Ok : SwapResult; Err : text };
+type Result_7 = variant { Ok : SwapResult; Err : text };
+type Result_8 = variant { Ok : vec CompactProfile; Err : UserError };
+type Result_9 = variant { Ok : EvmSwapResult; Err : text };
 type SolanaNetwork = variant { Mainnet; Testnet; Devnet };
 type SwapRequest = record {
+  to_token : text;
+  from_token : text;
+  amount : nat64;
+};
+type SwapRequest_1 = record {
   min_amount_out : nat64;
   deadline : nat64;
   amount_out : nat64;
@@ -106,6 +112,15 @@ type SwapRequest = record {
   token_out_mint : text;
 };
 type SwapResult = record {
+  to_token : text;
+  from_amount : nat64;
+  from_token : text;
+  to_amount : nat64;
+  timestamp : nat64;
+  to_price : float64;
+  from_price : float64;
+};
+type SwapResult_1 = record {
   delegation_tx_hash : text;
   token_in_amount : nat64;
   swap_tx_hash : text;
@@ -221,12 +236,14 @@ service : (InitArg) -> {
   is_token_deployed : (text, text) -> (Result_6) query;
   // Check if username is available
   is_username_available : (text) -> (bool) query;
+  // Execute a market swap between internal tokens
+  market_swap : (SwapRequest) -> (Result_7);
   // Reload token registry from chain definitions (admin function)
   reload_token_registry : () -> (Result);
   // Search users
-  search_users : (text, nat32) -> (Result_7) query;
+  search_users : (text, nat32) -> (Result_8) query;
   // Personal search with follow state
-  search_users_personal : (text, nat32, principal) -> (Result_7) query;
+  search_users_personal : (text, nat32, principal) -> (Result_8) query;
   // User registration (requires signed call)
   signup : (text, opt text, opt text, opt text) -> (Result_3);
   // Start the price update scheduler (runs every second)
@@ -239,9 +256,9 @@ service : (InitArg) -> {
   // Submit gasless permit transaction (user signs permit, canister pays gas)
   submit_gasless_permit : (PermitRequest) -> (Result);
   // Submit atomic EVM swap transaction (permit + immediate token transfer)
-  swap_evm : (PermitRequest, EvmSwapRequest) -> (Result_8);
+  swap_evm : (PermitRequest, EvmSwapRequest) -> (Result_9);
   // Submit atomic swap transaction (delegation + immediate liquidity transfer)
-  swap_solana : (blob, SwapRequest) -> (Result_9);
+  swap_solana : (blob, SwapRequest_1) -> (Result_10);
   // Test Ed25519 key generation and signing
   test_ed25519 : () -> (Result);
   // Test secp256k1 key generation and signing
@@ -249,7 +266,7 @@ service : (InitArg) -> {
   // Test simple EVM transaction (get nonce, etc.)
   test_simple_evm_transaction : () -> (Result);
   // Transfer tokens between users
-  transfer_tokens : (principal, principal, text, nat64) -> (Result_10);
+  transfer_tokens : (principal, principal, text, nat64) -> (Result_11);
   unfollow_user : (principal) -> (Result_3);
   update_avatar : (text) -> (Result_3);
   update_banner : (text) -> (Result_3);
@@ -260,7 +277,7 @@ service : (InitArg) -> {
   update_evm_address : (text) -> (Result_3);
   update_location : (text) -> (Result_3);
   // Update all prices from all sources (manual trigger)
-  update_prices : () -> (Result_11);
+  update_prices : () -> (Result_12);
   // Update user profile (requires signed call, owner only)
   update_profile : (UserUpdate) -> (Result_3);
   update_solana_address : (text) -> (Result_3);

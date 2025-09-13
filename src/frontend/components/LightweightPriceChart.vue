@@ -106,7 +106,13 @@
     HistogramSeries,
     ColorType,
   } from 'lightweight-charts'
-  import type { IChartApi, ISeriesApi } from 'lightweight-charts'
+  import type { 
+    IChartApi, 
+    ISeriesApi, 
+    CandlestickData, 
+    LineData, 
+    HistogramData 
+  } from 'lightweight-charts'
   // import { priceService } from '@/services/PriceService'
   import { useColorTheme } from '@/composables/useColorTheme'
   import { useTheme } from '@/composables/useTheme'
@@ -131,11 +137,12 @@
   // Refs
   const chartContainer = ref<HTMLElement>()
   const chart = ref<IChartApi>()
-  const candlestickSeries = ref<ISeriesApi<CandlestickData>>()
-  const lineSeries = ref<ISeriesApi<LineData>>()
-  const volumeSeries = ref<ISeriesApi<HistogramData>>()
+  const candlestickSeries = ref<ISeriesApi<'Candlestick'>>()
+  const lineSeries = ref<ISeriesApi<'Line'>>()
+  const volumeSeries = ref<ISeriesApi<'Histogram'>>()
   const _currentPriceLine = ref<unknown>()
   const resizeObserver = ref<ResizeObserver>()
+  const isDisposed = ref(false)
 
   // Reactive data
   const loading = ref(false)
@@ -147,7 +154,9 @@
   const wsConnection = ref<WebSocket>()
   const isLoadingHistory = ref(false)
   const earliestTimestamp = ref<number>(0)
-  const cachedData = ref<CandlestickData[]>([])
+  const cachedData = ref<any[]>([])
+  const wsConnecting = ref(false)
+  const wsReconnectTimeout = ref<ReturnType<typeof setTimeout>>()
 
   // Time periods
   const timePeriods = [
@@ -214,12 +223,12 @@
     crosshair: {
       mode: 1, // Normal crosshair mode
       vertLine: {
-        width: 1,
+        width: 1 as const,
         color: chartColors.value.text,
         style: 0, // Solid line
       },
       horzLine: {
-        width: 1,
+        width: 1 as const,
         color: chartColors.value.text,
         style: 0, // Solid line
       },
@@ -295,9 +304,12 @@
 
   // Chart initialization (v5 API) - Exchange Quality
   const initChart = async () => {
-    if (!chartContainer.value) return
+    if (!chartContainer.value || isDisposed.value) return
 
     try {
+      // Reset disposal state
+      isDisposed.value = false
+      
       // Create chart with proper configuration
       chart.value = createChart(chartContainer.value, {
         width: chartContainer.value.clientWidth,
@@ -339,10 +351,6 @@
           type: 'volume',
         },
         priceScaleId: 'volume',
-        scaleMargins: {
-          top: 0.7, // Volume takes bottom 30% of chart
-          bottom: 0,
-        },
       })
 
       // Configure volume price scale
@@ -398,11 +406,11 @@
         query.endTime = endTime * 1000 // Convert to milliseconds for Binance API
       }
 
-      const response = await $fetch('/api/binance/klines', { query })
+      const response = await $fetch('/api/binance/klines', { query }) as { success: boolean; data?: unknown[] }
 
       if (response.success && Array.isArray(response.data)) {
-        return response.data.map((kline: unknown[]) => ({
-          time: Math.floor(Number(kline[0]) / 1000), // Convert to seconds
+        return response.data.map((kline: any) => ({
+          time: Math.floor(Number(kline[0]) / 1000) as any, // Convert to seconds
           open: parseFloat(String(kline[1])),
           high: parseFloat(String(kline[2])),
           low: parseFloat(String(kline[3])),
@@ -430,7 +438,7 @@
 
       if (olderData.length > 0) {
         // Update earliest timestamp to the oldest data we just received
-        earliestTimestamp.value = olderData[0].time
+        earliestTimestamp.value = olderData[0]?.time || 0
         return olderData
       }
 
@@ -473,48 +481,54 @@
 
       if (data.length > 0) {
         // Ensure initial data is sorted in ascending order (oldest first)
-        const sortedData = data.sort((a, b) => a.time - b.time)
+        const sortedData = data.sort((a: any, b: any) => a.time - b.time)
 
         // Cache the sorted data and set earliest timestamp
         cachedData.value = [...sortedData]
-        earliestTimestamp.value = sortedData[0].time
+        earliestTimestamp.value = sortedData[0]?.time || 0
 
         // Update current price (use latest from sorted data)
         const latest = sortedData[sortedData.length - 1]
         const previous = sortedData[sortedData.length - 2]
-        currentPrice.value = latest.close
-        priceChange.value =
-          ((latest.close - previous.close) / previous.close) * 100
+        if (latest && previous) {
+          currentPrice.value = latest.close
+          priceChange.value =
+            ((latest.close - previous.close) / previous.close) * 100
+        }
 
         // Set data to appropriate series (using sorted data)
-        if (chartType.value === 'candlesticks') {
-          candlestickSeries.value?.setData(sortedData)
-          lineSeries.value?.setData([])
-        } else {
-          const lineData = sortedData.map(d => ({
-            time: d.time,
-            value: d.close,
-          }))
-          lineSeries.value?.setData(lineData)
-          candlestickSeries.value?.setData([])
+        if (!isDisposed.value) {
+          if (chartType.value === 'candlesticks') {
+            candlestickSeries.value?.setData(sortedData)
+            lineSeries.value?.setData([])
+          } else {
+            const lineData = sortedData.map((d: any) => ({
+              time: d.time,
+              value: d.close,
+            }))
+            lineSeries.value?.setData(lineData)
+            candlestickSeries.value?.setData([])
+          }
         }
 
         // Set volume data with proper colors (using sorted data)
-        const volumeData = sortedData.map(d => ({
-          time: d.time,
-          value: d.volume,
-          color:
-            d.close >= d.open
-              ? chartColors.value.up + '80'
-              : chartColors.value.down + '80', // Add transparency
-        }))
-        volumeSeries.value?.setData(volumeData)
+        if (!isDisposed.value) {
+          const volumeData = sortedData.map((d: any) => ({
+            time: d.time,
+            value: d.volume,
+            color:
+              d.close >= d.open
+                ? chartColors.value.up + '80'
+                : chartColors.value.down + '80', // Add transparency
+          }))
+          volumeSeries.value?.setData(volumeData)
 
-        // Set up infinite scroll for historical data
-        setupInfiniteScroll()
+          // Set up infinite scroll for historical data
+          setupInfiniteScroll()
 
-        // Fit content to view
-        chart.value?.timeScale().fitContent()
+          // Fit content to view
+          chart.value?.timeScale().fitContent()
+        }
       }
     } catch (err) {
       console.error('Failed to load chart data:', err)
@@ -541,37 +555,41 @@
               cachedData.value = [...olderData, ...cachedData.value]
 
               // CRITICAL: Sort all data by time in ascending order (oldest first)
-              const allData = cachedData.value.sort((a, b) => a.time - b.time)
+              const allData = cachedData.value.sort((a: any, b: any) => a.time - b.time)
 
               // Remove any duplicate timestamps to prevent ordering issues
               const uniqueData = allData.filter(
-                (item, index, arr) =>
+                (item: any, index: number, arr: any[]) =>
                   index === 0 || item.time !== arr[index - 1].time
               )
 
               // Update cached data with unique, sorted data
               cachedData.value = uniqueData
 
-              if (chartType.value === 'candlesticks') {
-                candlestickSeries.value?.setData(uniqueData)
-              } else {
-                const lineData = uniqueData.map(d => ({
-                  time: d.time,
-                  value: d.close,
-                }))
-                lineSeries.value?.setData(lineData)
+              if (!isDisposed.value) {
+                if (chartType.value === 'candlesticks') {
+                  candlestickSeries.value?.setData(uniqueData)
+                } else {
+                  const lineData = uniqueData.map((d: any) => ({
+                    time: d.time,
+                    value: d.close,
+                  }))
+                  lineSeries.value?.setData(lineData)
+                }
               }
 
               // Update volume data (also sorted and deduplicated)
-              const volumeData = uniqueData.map(d => ({
-                time: d.time,
-                value: d.volume,
-                color:
-                  d.close >= d.open
-                    ? chartColors.value.up + '80'
-                    : chartColors.value.down + '80',
-              }))
-              volumeSeries.value?.setData(volumeData)
+              if (!isDisposed.value) {
+                const volumeData = uniqueData.map((d: any) => ({
+                  time: d.time,
+                  value: d.volume,
+                  color:
+                    d.close >= d.open
+                      ? chartColors.value.up + '80'
+                      : chartColors.value.down + '80',
+                }))
+                volumeSeries.value?.setData(volumeData)
+              }
             }
           } catch (error) {
             console.error('Error in infinite scroll:', error)
@@ -583,61 +601,154 @@
 
   // WebSocket for real-time updates
   const startWebSocket = () => {
+    // Prevent multiple simultaneous connections
+    if (wsConnecting.value || wsConnection.value?.readyState === WebSocket.CONNECTING) {
+      console.log('WebSocket connection already in progress, skipping...')
+      return
+    }
+
+    // Don't start if component is disposed
+    if (isDisposed.value) {
+      console.log('Component disposed, not starting WebSocket')
+      return
+    }
+
+    // Close existing connection properly with a delay
+    if (wsConnection.value) {
+      console.log('Closing existing WebSocket connection...')
+      wsConnection.value.close(1000, 'Starting new connection')
+      wsConnection.value = undefined
+      
+      // Wait a bit before starting new connection
+      setTimeout(() => {
+        if (!isDisposed.value) {
+          startWebSocketInternal()
+        }
+      }, 500)
+      return
+    }
+
+    startWebSocketInternal()
+  }
+
+  const startWebSocketInternal = () => {
+    if (isDisposed.value) {
+      console.log('Component disposed during WebSocket setup, aborting')
+      return
+    }
+
+    // Clear any pending reconnection
+    if (wsReconnectTimeout.value) {
+      clearTimeout(wsReconnectTimeout.value)
+      wsReconnectTimeout.value = undefined
+    }
+
+    wsConnecting.value = true
+
     const binanceSymbol = getBinanceSymbol(props.tokenSymbol).toLowerCase()
     const interval = getInterval(selectedPeriod.value)
     const wsUrl = `wss://stream.binance.com:9443/ws/${binanceSymbol}@kline_${interval}`
 
-    wsConnection.value = new WebSocket(wsUrl)
+    console.log('Starting WebSocket connection to:', wsUrl)
 
-    wsConnection.value.onmessage = event => {
-      const data = JSON.parse(event.data)
+    try {
+      wsConnection.value = new WebSocket(wsUrl)
 
-      if (data.k) {
-        const kline = data.k
-        const candleData = {
-          time: Math.floor(kline.t / 1000),
-          open: parseFloat(kline.o),
-          high: parseFloat(kline.h),
-          low: parseFloat(kline.l),
-          close: parseFloat(kline.c),
-          volume: parseFloat(kline.v),
-        }
-
-        // Update current price
-        currentPrice.value = candleData.close
-
-        // Update chart
-        if (chartType.value === 'candlesticks') {
-          candlestickSeries.value?.update(candleData)
-        } else {
-          lineSeries.value?.update({
-            time: candleData.time,
-            value: candleData.close,
-          })
-        }
-
-        // Update volume
-        volumeSeries.value?.update({
-          time: candleData.time,
-          value: candleData.volume,
-          color:
-            candleData.close >= candleData.open
-              ? chartColors.value.up + '80'
-              : chartColors.value.down + '80',
-        })
+      wsConnection.value.onopen = () => {
+        console.log('WebSocket connected successfully')
+        wsConnecting.value = false
       }
-    }
 
-    wsConnection.value.onerror = error => {
-      console.error('WebSocket error:', error)
+      wsConnection.value.onclose = (event) => {
+        console.log('WebSocket closed:', event.code, event.reason)
+        wsConnecting.value = false
+        wsConnection.value = undefined
+        
+        // Only attempt reconnection if component is not disposed and it wasn't a manual close
+        if (!isDisposed.value && event.code !== 1000 && event.code !== 1001) {
+          console.log('Attempting to reconnect in 5 seconds...')
+          wsReconnectTimeout.value = setTimeout(() => {
+            if (!isDisposed.value) {
+              startWebSocket()
+            }
+          }, 5000)
+        }
+      }
+
+      wsConnection.value.onerror = (error) => {
+        console.error('WebSocket error:', error)
+        wsConnecting.value = false
+      }
+
+      wsConnection.value.onmessage = event => {
+        const data = JSON.parse(event.data)
+
+        if (data.k) {
+          const kline = data.k
+          const candleData = {
+            time: Math.floor(kline.t / 1000) as any,
+            open: parseFloat(kline.o),
+            high: parseFloat(kline.h),
+            low: parseFloat(kline.l),
+            close: parseFloat(kline.c),
+            volume: parseFloat(kline.v),
+          }
+
+          // Update current price
+          currentPrice.value = candleData.close
+
+          // Update chart only if not disposed
+          if (!isDisposed.value && chart.value) {
+            try {
+              if (chartType.value === 'candlesticks') {
+                candlestickSeries.value?.update(candleData)
+              } else {
+                lineSeries.value?.update({
+                  time: candleData.time as any,
+                  value: candleData.close,
+                })
+              }
+
+              // Update volume
+              volumeSeries.value?.update({
+                time: candleData.time as any,
+                value: candleData.volume,
+                color:
+                  candleData.close >= candleData.open
+                    ? chartColors.value.up + '80'
+                    : chartColors.value.down + '80',
+              })
+            } catch (error) {
+              // Silently handle disposal errors
+              if (error instanceof Error && error.message.includes('disposed')) {
+                console.warn('Chart update attempted on disposed chart')
+                return
+              }
+              throw error
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to create WebSocket connection:', error)
+      wsConnecting.value = false
     }
   }
 
   const stopWebSocket = () => {
+    // Clear any pending reconnection
+    if (wsReconnectTimeout.value) {
+      clearTimeout(wsReconnectTimeout.value)
+      wsReconnectTimeout.value = undefined
+    }
+
+    // Close WebSocket connection
     if (wsConnection.value) {
-      wsConnection.value.close()
+      wsConnection.value.close(1000, 'Component unmounting') // Normal closure
       wsConnection.value = undefined
     }
+
+    wsConnecting.value = false
   }
 
   // Chart actions
@@ -647,7 +758,7 @@
 
   // Recreate series when chart type changes
   const recreateSeries = () => {
-    if (!chart.value) return
+    if (!chart.value || isDisposed.value) return
 
     // Remove existing series
     if (candlestickSeries.value) {
@@ -694,17 +805,29 @@
   })
 
   watch(selectedPeriod, async () => {
+    console.log('Period changed to:', selectedPeriod.value)
     stopWebSocket()
     await loadChartData()
-    startWebSocket()
+    // Add a longer delay to ensure the previous connection is fully closed
+    setTimeout(() => {
+      if (!isDisposed.value) {
+        startWebSocket()
+      }
+    }, 1000)
   })
 
   watch(
     () => props.tokenSymbol,
     async () => {
+      console.log('Token symbol changed to:', props.tokenSymbol)
       stopWebSocket()
       await loadChartData()
-      startWebSocket()
+      // Add a longer delay to ensure the previous connection is fully closed
+      setTimeout(() => {
+        if (!isDisposed.value) {
+          startWebSocket()
+        }
+      }, 1000)
     }
   )
 
@@ -720,7 +843,7 @@
 
   // Function to update chart theme colors
   const updateChartTheme = () => {
-    if (!chart.value) return
+    if (!chart.value || isDisposed.value) return
 
     // Update chart configuration with theme colors and font
     chart.value.applyOptions({
@@ -733,22 +856,24 @@
     })
 
     // Update series colors
-    candlestickSeries.value?.applyOptions({
-      upColor: chartColors.value.up,
-      downColor: chartColors.value.down,
-      borderUpColor: chartColors.value.up,
-      borderDownColor: chartColors.value.down,
-      wickUpColor: chartColors.value.up,
-      wickDownColor: chartColors.value.down,
-    })
+    if (!isDisposed.value) {
+      candlestickSeries.value?.applyOptions({
+        upColor: chartColors.value.up,
+        downColor: chartColors.value.down,
+        borderUpColor: chartColors.value.up,
+        borderDownColor: chartColors.value.down,
+        wickUpColor: chartColors.value.up,
+        wickDownColor: chartColors.value.down,
+      })
 
-    lineSeries.value?.applyOptions({
-      color: chartColors.value.primary,
-    })
+      lineSeries.value?.applyOptions({
+        color: chartColors.value.primary,
+      })
 
-    volumeSeries.value?.applyOptions({
-      color: chartColors.value.primary,
-    })
+      volumeSeries.value?.applyOptions({
+        color: chartColors.value.primary,
+      })
+    }
 
     // Update volume price scale
     chart.value.priceScale('volume').applyOptions({
@@ -764,9 +889,37 @@
   })
 
   onUnmounted(() => {
+    // Mark as disposed first to prevent any pending updates
+    isDisposed.value = true
+    
+    // Stop WebSocket connection and clear timeouts
     stopWebSocket()
+    
+    // Disconnect resize observer
     resizeObserver.value?.disconnect()
-    chart.value?.remove()
+    
+    // Dispose chart
+    if (chart.value) {
+      try {
+        chart.value.remove()
+      } catch (error) {
+        // Silently handle disposal errors
+        console.warn('Chart disposal error:', error)
+      }
+      chart.value = undefined
+    }
+    
+    // Clear series references
+    candlestickSeries.value = undefined
+    lineSeries.value = undefined
+    volumeSeries.value = undefined
+    
+    // Clear state variables
+    wsConnecting.value = false
+    if (wsReconnectTimeout.value) {
+      clearTimeout(wsReconnectTimeout.value)
+      wsReconnectTimeout.value = undefined
+    }
   })
 </script>
 

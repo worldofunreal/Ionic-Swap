@@ -253,31 +253,31 @@
                 <table class="w-full">
                   <thead class="bg-muted">
                     <tr>
-                      <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <th class="px-6 py-3 text-left text-sm font-medium text-muted-foreground uppercase tracking-wider">
                         Coin
                       </th>
-                      <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <th class="px-6 py-3 text-right text-sm font-medium text-muted-foreground uppercase tracking-wider">
                         Amount
                       </th>
-                      <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <th class="px-6 py-3 text-right text-sm font-medium text-muted-foreground uppercase tracking-wider">
                         Coin Price / Cost Price
                       </th>
-                      <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <th class="px-6 py-3 text-right text-sm font-medium text-muted-foreground uppercase tracking-wider">
                         Today's PnL
                       </th>
-                      <th class="px-4 py-2 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <th class="px-6 py-3 text-right text-sm font-medium text-muted-foreground uppercase tracking-wider">
                         Action
                       </th>
                     </tr>
                   </thead>
                   <tbody class="bg-card divide-y divide-gray-200 dark:divide-gray-800">
                     <tr v-if="tokensWithBalances.length === 0">
-                      <td colspan="5" class="px-4 py-8 text-center text-muted-foreground">
-                        <div class="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
-                          <UIcon name="i-heroicons-currency-dollar-20-solid" class="w-6 h-6" />
+                      <td colspan="5" class="px-6 py-12 text-center text-muted-foreground">
+                        <div class="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                          <UIcon name="i-heroicons-currency-dollar-20-solid" class="w-8 h-8" />
                         </div>
-                        <p class="text-sm font-medium">Loading Assets...</p>
-                        <p class="text-xs">Fetching your token balances</p>
+                        <p class="text-base font-medium">Loading Assets...</p>
+                        <p class="text-sm">Fetching your token balances</p>
                       </td>
                     </tr>
                     <tr
@@ -286,16 +286,16 @@
                       class="hover:bg-muted/50 transition-colors"
                     >
                       <!-- Coin Column -->
-                      <td class="px-4 py-3 whitespace-nowrap">
+                      <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
-                          <div class="w-6 h-6 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center mr-2">
-                            <UIcon :name="getTokenIcon(token.symbol)" class="w-4 h-4" />
+                          <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center mr-3">
+                            <UIcon :name="getTokenIcon(token.symbol)" class="w-6 h-6" />
                           </div>
                           <div>
-                            <div class="text-xs font-medium text-foreground">
+                            <div class="text-sm font-semibold text-foreground">
                               {{ token.symbol }}
                             </div>
-                            <div class="text-xs text-muted-foreground">
+                            <div class="text-sm text-muted-foreground">
                               {{ token.name }}
                             </div>
                           </div>
@@ -303,31 +303,31 @@
                       </td>
 
                       <!-- Amount Column -->
-                      <td class="px-4 py-3 whitespace-nowrap text-right">
-                        <div class="text-xs font-medium text-foreground">
+                      <td class="px-6 py-4 whitespace-nowrap text-right">
+                        <div class="text-sm font-semibold text-foreground">
                           <span v-if="balancesVisible">{{ token.normalizedBalance.toFixed(8) }}</span>
                           <span v-else>••••••••</span>
                         </div>
-                        <div class="text-xs text-muted-foreground">
+                        <div class="text-sm text-muted-foreground">
                           <span v-if="balancesVisible">${{ token.value.toFixed(2) }}</span>
                           <span v-else>••••••</span>
                         </div>
                       </td>
 
                       <!-- Coin Price / Cost Price Column -->
-                      <td class="px-4 py-3 whitespace-nowrap text-right">
-                        <div class="text-xs font-medium text-foreground">
+                      <td class="px-6 py-4 whitespace-nowrap text-right">
+                        <div class="text-sm font-semibold text-foreground">
                           <span v-if="balancesVisible">${{ token.price.toFixed(2) }}</span>
                           <span v-else>••••••</span>
                         </div>
-                        <div class="text-xs text-muted-foreground">
+                        <div class="text-sm text-muted-foreground">
                           --
                         </div>
                       </td>
 
                       <!-- Today's PnL Column -->
-                      <td class="px-4 py-3 whitespace-nowrap text-right">
-                        <div class="text-xs font-medium" :class="token.change24h >= 0 ? 'text-green-500' : 'text-red-500'">
+                      <td class="px-6 py-4 whitespace-nowrap text-right">
+                        <div class="text-sm font-semibold" :class="token.change24h >= 0 ? 'text-green-500' : 'text-red-500'">
                           <span v-if="balancesVisible">
                             {{ token.change24h >= 0 ? '+' : '' }}{{ token.change24h.toFixed(2) }}%
                           </span>
@@ -336,17 +336,17 @@
                       </td>
 
                       <!-- Action Column -->
-                      <td class="px-4 py-3 whitespace-nowrap text-right">
-                        <div class="flex justify-end gap-1">
+                      <td class="px-6 py-4 whitespace-nowrap text-right">
+                        <div class="flex justify-end gap-2">
                           <button
                             @click="copyToClipboard(token.symbol, 'token')"
-                            class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium"
+                            class="px-3 py-2 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium"
                           >
                             Copy
                           </button>
                           <button
                             @click="tradeToken(token.symbol)"
-                            class="px-3 py-1 bg-primary-500 hover:bg-primary-600 text-white text-xs font-semibold rounded transition-colors"
+                            class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded-lg transition-colors"
                           >
                             Trade
                           </button>
@@ -835,12 +835,13 @@
   const loadTokenData = async () => {
     if (!auth.userProfile?.id) return
 
-    try {
-      // Initialize canister service if needed
-      if (!canisterService.isInitialized()) {
-        await canisterService.initialize()
-      }
+    // Check if CanisterService is ready
+    if (!canisterService.isInitialized()) {
+      console.log('CanisterService not ready, waiting...')
+      return
+    }
 
+    try {
       // Load user balances
       const balances = await canisterService.getUserBalances(auth.userProfile.id.toText())
       userBalances.value = balances
@@ -880,6 +881,16 @@
     }
   }
 
+  // Watch for CanisterService initialization
+  const canisterServiceReady = ref(false)
+  
+  watch(canisterServiceReady, async (isReady) => {
+    if (isReady && auth.userProfile?.id) {
+      console.log('CanisterService ready, loading wallet data...')
+      await loadTokenData()
+    }
+  }, { immediate: true })
+
   onMounted(async () => {
     try {
       if (!auth.authenticated) {
@@ -900,8 +911,29 @@
       // Initial price update
       updatePrices()
 
-      // Load token data
-      await loadTokenData()
+      // Check if CanisterService is already ready
+      if (canisterService.isInitialized()) {
+        console.log('CanisterService already ready')
+        canisterServiceReady.value = true
+      } else {
+        console.log('CanisterService not ready, waiting for initialization...')
+        // Poll for service readiness
+        const checkService = setInterval(() => {
+          if (canisterService.isInitialized()) {
+            console.log('CanisterService became ready')
+            canisterServiceReady.value = true
+            clearInterval(checkService)
+          }
+        }, 100)
+        
+        // Stop polling after 10 seconds
+        setTimeout(() => {
+          clearInterval(checkService)
+          if (!canisterServiceReady.value) {
+            console.warn('CanisterService did not initialize within 10 seconds')
+          }
+        }, 10000)
+      }
 
       // Start auto-refresh
       startAutoRefresh()

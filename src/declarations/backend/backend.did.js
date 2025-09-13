@@ -99,7 +99,22 @@ export const idlFactory = ({ IDL }) => {
     'status_code' : IDL.Nat16,
   });
   const Result_6 = IDL.Variant({ 'Ok' : IDL.Bool, 'Err' : IDL.Text });
-  const Result_7 = IDL.Variant({
+  const SwapRequest = IDL.Record({
+    'to_token' : IDL.Text,
+    'from_token' : IDL.Text,
+    'amount' : IDL.Nat64,
+  });
+  const SwapResult = IDL.Record({
+    'to_token' : IDL.Text,
+    'from_amount' : IDL.Nat64,
+    'from_token' : IDL.Text,
+    'to_amount' : IDL.Nat64,
+    'timestamp' : IDL.Nat64,
+    'to_price' : IDL.Float64,
+    'from_price' : IDL.Float64,
+  });
+  const Result_7 = IDL.Variant({ 'Ok' : SwapResult, 'Err' : IDL.Text });
+  const Result_8 = IDL.Variant({
     'Ok' : IDL.Vec(CompactProfile),
     'Err' : UserError,
   });
@@ -128,29 +143,29 @@ export const idlFactory = ({ IDL }) => {
     'swap_tx_hash' : IDL.Text,
     'token_out_amount' : IDL.Nat64,
   });
-  const Result_8 = IDL.Variant({ 'Ok' : EvmSwapResult, 'Err' : IDL.Text });
-  const SwapRequest = IDL.Record({
+  const Result_9 = IDL.Variant({ 'Ok' : EvmSwapResult, 'Err' : IDL.Text });
+  const SwapRequest_1 = IDL.Record({
     'min_amount_out' : IDL.Nat64,
     'deadline' : IDL.Nat64,
     'amount_out' : IDL.Nat64,
     'user_token_account' : IDL.Text,
     'token_out_mint' : IDL.Text,
   });
-  const SwapResult = IDL.Record({
+  const SwapResult_1 = IDL.Record({
     'delegation_tx_hash' : IDL.Text,
     'token_in_amount' : IDL.Nat64,
     'swap_tx_hash' : IDL.Text,
     'token_out_amount' : IDL.Nat64,
   });
-  const Result_9 = IDL.Variant({ 'Ok' : SwapResult, 'Err' : IDL.Text });
-  const Result_10 = IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text });
+  const Result_10 = IDL.Variant({ 'Ok' : SwapResult_1, 'Err' : IDL.Text });
+  const Result_11 = IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text });
   const PriceUpdateResult = IDL.Record({
     'total_sources' : IDL.Nat8,
     'pairs_updated' : IDL.Vec(TradingPair),
     'successful_sources' : IDL.Nat8,
     'timestamp' : IDL.Nat64,
   });
-  const Result_11 = IDL.Variant({ 'Ok' : PriceUpdateResult, 'Err' : IDL.Text });
+  const Result_12 = IDL.Variant({ 'Ok' : PriceUpdateResult, 'Err' : IDL.Text });
   const UserUpdate = IDL.Record({
     'bio' : IDL.Opt(IDL.Text),
     'evm_address' : IDL.Opt(IDL.Text),
@@ -233,11 +248,12 @@ export const idlFactory = ({ IDL }) => {
       ),
     'is_token_deployed' : IDL.Func([IDL.Text, IDL.Text], [Result_6], ['query']),
     'is_username_available' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
+    'market_swap' : IDL.Func([SwapRequest], [Result_7], []),
     'reload_token_registry' : IDL.Func([], [Result], []),
-    'search_users' : IDL.Func([IDL.Text, IDL.Nat32], [Result_7], ['query']),
+    'search_users' : IDL.Func([IDL.Text, IDL.Nat32], [Result_8], ['query']),
     'search_users_personal' : IDL.Func(
         [IDL.Text, IDL.Nat32, IDL.Principal],
-        [Result_7],
+        [Result_8],
         ['query'],
       ),
     'signup' : IDL.Func(
@@ -258,14 +274,18 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'submit_gasless_permit' : IDL.Func([PermitRequest], [Result], []),
-    'swap_evm' : IDL.Func([PermitRequest, EvmSwapRequest], [Result_8], []),
-    'swap_solana' : IDL.Func([IDL.Vec(IDL.Nat8), SwapRequest], [Result_9], []),
+    'swap_evm' : IDL.Func([PermitRequest, EvmSwapRequest], [Result_9], []),
+    'swap_solana' : IDL.Func(
+        [IDL.Vec(IDL.Nat8), SwapRequest_1],
+        [Result_10],
+        [],
+      ),
     'test_ed25519' : IDL.Func([], [Result], []),
     'test_secp256k1' : IDL.Func([], [Result], []),
     'test_simple_evm_transaction' : IDL.Func([], [Result], []),
     'transfer_tokens' : IDL.Func(
         [IDL.Principal, IDL.Principal, IDL.Text, IDL.Nat64],
-        [Result_10],
+        [Result_11],
         [],
       ),
     'unfollow_user' : IDL.Func([IDL.Principal], [Result_3], []),
@@ -276,7 +296,7 @@ export const idlFactory = ({ IDL }) => {
     'update_display_name' : IDL.Func([IDL.Text], [Result_3], []),
     'update_evm_address' : IDL.Func([IDL.Text], [Result_3], []),
     'update_location' : IDL.Func([IDL.Text], [Result_3], []),
-    'update_prices' : IDL.Func([], [Result_11], []),
+    'update_prices' : IDL.Func([], [Result_12], []),
     'update_profile' : IDL.Func([UserUpdate], [Result_3], []),
     'update_solana_address' : IDL.Func([IDL.Text], [Result_3], []),
     'update_website' : IDL.Func([IDL.Text], [Result_3], []),
