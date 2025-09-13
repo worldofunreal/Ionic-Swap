@@ -228,6 +228,8 @@ service : (InitArg) -> {
   get_user_personal : (principal, principal) -> (Result_5) query;
   // HTTP request handler for serving assets
   http_request : (HttpRequest) -> (HttpResponse) query;
+  // Initialize canister token balances (admin function)
+  init_canister_balances : () -> (Result);
   // Asset upload functions (requires signed call, registered users only)
   init_upload : (text, nat64, opt nat64, text) -> (Result_1);
   // Check if user is following another user

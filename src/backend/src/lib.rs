@@ -629,6 +629,31 @@ pub fn reload_token_registry() -> Result<String, String> {
     tokens::reload_token_registry()
 }
 
+/// Initialize canister token balances (admin function)
+#[update]
+pub fn init_canister_balances() -> Result<String, String> {
+    let canister_id = ic_cdk::api::canister_self();
+    let token_symbols = vec!["USDT", "USDC", "BTC", "ETH"];
+    let mut initialized = Vec::new();
+    
+    for symbol in token_symbols {
+        if let Some(token) = icp::storage::IcpTokenDatabase::get_token(symbol) {
+            let current_balance = icp::storage::IcpTokenDatabase::get_balance(canister_id, symbol);
+            if current_balance == 0 {
+                icp::storage::IcpTokenDatabase::set_balance(canister_id, symbol, token.total_supply);
+                initialized.push(format!("{}: {}", symbol, token.total_supply));
+                ic_cdk::println!("✅ Initialized canister balance for {}: {}", symbol, token.total_supply);
+            }
+        }
+    }
+    
+    if initialized.is_empty() {
+        Ok("All canister balances already initialized".to_string())
+    } else {
+        Ok(format!("Initialized balances: {}", initialized.join(", ")))
+    }
+}
+
 // ============================================================================
 // TRADING OPERATIONS
 // ============================================================================

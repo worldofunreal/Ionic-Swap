@@ -31,6 +31,11 @@ cat src/backend/backend.did
 echo "🚀 Deploying backend canister..."
 dfx deploy backend
 dfx generate
+
+echo "💰 Initializing canister token balances..."
+BALANCE_RESULT=$(dfx canister call backend init_canister_balances)
+echo "Balance initialization result: $BALANCE_RESULT"
+
 echo "✅ Backend canister deployed successfully!"
 echo "🌐 Candid UI: http://127.0.0.1:4943/?canisterId=$(dfx canister id backend)"
 

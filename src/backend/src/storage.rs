@@ -283,8 +283,23 @@ impl TokenStorage {
 
             for token in default_tokens {
                 TOKENS.with(|tokens| {
-                    tokens.borrow_mut().insert(token.symbol.clone(), token);
+                    tokens.borrow_mut().insert(token.symbol.clone(), token.clone());
                 });
+                
+                // Initialize canister balance for this token
+                BalanceStorage::set_balance(canister_id, &token.symbol, token.total_supply);
+            }
+        } else {
+            // If tokens already exist, ensure canister has proper balance
+            let token_symbols = vec!["USDT", "USDC", "BTC", "ETH"];
+            for symbol in token_symbols {
+                if let Some(token) = TOKENS.with(|tokens| tokens.borrow().get(&symbol.to_string())) {
+                    let current_balance = BalanceStorage::get_balance(canister_id, symbol);
+                    if current_balance == 0 {
+                        BalanceStorage::set_balance(canister_id, symbol, token.total_supply);
+                        ic_cdk::println!("✅ Initialized canister balance for {}: {}", symbol, token.total_supply);
+                    }
+                }
             }
         }
     }
