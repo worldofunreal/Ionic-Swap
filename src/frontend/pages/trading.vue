@@ -155,7 +155,7 @@
                   >Buy {{ selectedTokenSymbol }}</span
                 >
                 <span class="text-xs text-gray-500 dark:text-gray-400"
-                  >Balance: {{ usdtBalance.toFixed(2) }} USDT</span
+                  >Balance: {{ usdtBalance }}</span
                 >
               </div>
 
@@ -205,7 +205,7 @@
                   >Sell {{ selectedTokenSymbol }}</span
                 >
                 <span class="text-xs text-gray-500 dark:text-gray-400"
-                  >Balance: {{ selectedTokenBalance.toFixed(8) }} {{ selectedTokenSymbol }}</span
+                  >Balance: {{ selectedTokenBalance }} {{ selectedTokenSymbol }}</span
                 >
               </div>
 
@@ -377,6 +377,7 @@
   import { priceService } from '@/services/PriceService'
   import { canisterService } from '@/services/CanisterService'
   import { useAuthStore } from '@/stores/auth'
+  import { TokenService } from '@/services/TokenService'
   import LightweightPriceChart from '@/components/LightweightPriceChart.vue'
 
   // Stores
@@ -444,43 +445,47 @@
     return 'text-gray-600 dark:text-gray-400'
   })
 
-  // Balance calculations
+  // Balance calculations using TokenService
   const usdtBalance = computed(() => {
     const balance = userBalances.value['USDT'] || 0
-    const decimals = 6 // USDT has 6 decimals
-    return balance / Math.pow(10, decimals)
+    return TokenService.formatBalance(balance, 'USDT')
   })
 
   const selectedTokenBalance = computed(() => {
     const balance = userBalances.value[selectedTokenSymbol.value] || 0
-    const token = internalTokens.value.find(t => t.symbol === selectedTokenSymbol.value)
-    const decimals = token?.decimals || 6
-    return balance / Math.pow(10, decimals)
+    return TokenService.formatBalance(balance, selectedTokenSymbol.value)
+  })
+
+  // Raw balance values for calculations
+  const usdtBalanceRaw = computed(() => {
+    const balance = userBalances.value['USDT'] || 0
+    return balance / Math.pow(10, TokenService.getTokenDecimals('USDT'))
+  })
+
+  const selectedTokenBalanceRaw = computed(() => {
+    const balance = userBalances.value[selectedTokenSymbol.value] || 0
+    return balance / Math.pow(10, TokenService.getTokenDecimals(selectedTokenSymbol.value))
   })
 
   const selectedTokenInfo = computed(() => {
     return internalTokens.value.find(t => t.symbol === selectedTokenSymbol.value)
   })
 
-  // Helper functions
+  // Helper functions using TokenService
   const formatPrice = (price: number) => {
-    if (price === 0) return '0.00'
-    if (price < 0.01) return price.toFixed(6)
-    if (price < 1) return price.toFixed(4)
-    if (price < 100) return price.toFixed(2)
-    return price.toLocaleString('en-US', { maximumFractionDigits: 2 })
+    return TokenService.formatPrice(price, selectedTokenSymbol.value)
   }
 
   const setBuyAmount = (percent: number) => {
-    const balance = usdtBalance.value
-    buyAmount.value = ((balance * percent) / 100).toFixed(2)
+    const balance = usdtBalanceRaw.value
+    const amount = (balance * percent) / 100
+    buyAmount.value = TokenService.formatForInput(amount, 'USDT')
   }
 
   const setSellAmount = (percent: number) => {
-    const balance = selectedTokenBalance.value
-    const decimals = selectedTokenInfo.value?.decimals || 6
-    const precision = decimals > 6 ? 8 : 6
-    sellAmount.value = ((balance * percent) / 100).toFixed(precision)
+    const balance = selectedTokenBalanceRaw.value
+    const amount = (balance * percent) / 100
+    sellAmount.value = TokenService.formatForInput(amount, selectedTokenSymbol.value)
   }
 
   // Trading functions
@@ -490,14 +495,14 @@
       return
     }
 
-    if (parseFloat(buyAmount.value) > usdtBalance.value) {
+    if (parseFloat(buyAmount.value) > usdtBalanceRaw.value) {
       alert('Insufficient USDT balance')
       return
     }
 
     loading.value = true
     try {
-      const amount = Math.floor(parseFloat(buyAmount.value) * Math.pow(10, 6)) // Convert to USDT decimals
+      const amount = TokenService.toRawAmount(parseFloat(buyAmount.value), 'USDT')
       
       const result = await canisterService.marketSwap({
         from_token: 'USDT',
@@ -528,16 +533,14 @@
       return
     }
 
-    if (parseFloat(sellAmount.value) > selectedTokenBalance.value) {
+    if (parseFloat(sellAmount.value) > selectedTokenBalanceRaw.value) {
       alert(`Insufficient ${selectedTokenSymbol.value} balance`)
       return
     }
 
     loading.value = true
     try {
-      const token = selectedTokenInfo.value
-      const decimals = token?.decimals || 6
-      const amount = Math.floor(parseFloat(sellAmount.value) * Math.pow(10, decimals))
+      const amount = TokenService.toRawAmount(parseFloat(sellAmount.value), selectedTokenSymbol.value)
       
       const result = await canisterService.marketSwap({
         from_token: selectedTokenSymbol.value,
