@@ -11,7 +11,7 @@ use ic_stable_structures::{
 use std::cell::RefCell;
 
 use crate::user::types::{User, PrincipalList};
-use crate::icp::types::{InternalToken, FaucetClaim, BalanceKey};
+use crate::icp::types::{InternalToken, FaucetClaim, BalanceKey, SwapTransaction, SwapTransactionKey};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -24,6 +24,7 @@ const ASSETS_MEMORY_ID: MemoryId = MemoryId::new(4);
 const TOKENS_MEMORY_ID: MemoryId = MemoryId::new(10);
 const BALANCES_MEMORY_ID: MemoryId = MemoryId::new(11);
 const FAUCET_CLAIMS_MEMORY_ID: MemoryId = MemoryId::new(12);
+const SWAP_TRANSACTIONS_MEMORY_ID: MemoryId = MemoryId::new(13);
 
 // Single memory manager for all stable structures
 thread_local! {
@@ -63,6 +64,11 @@ thread_local! {
 
     static FAUCET_CLAIMS: RefCell<StableBTreeMap<Principal, FaucetClaim, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|mm| mm.borrow().get(FAUCET_CLAIMS_MEMORY_ID)))
+    );
+
+    // Swap transaction history storage
+    static SWAP_TRANSACTIONS: RefCell<StableBTreeMap<SwapTransactionKey, SwapTransaction, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|mm| mm.borrow().get(SWAP_TRANSACTIONS_MEMORY_ID)))
     );
 }
 
@@ -480,5 +486,85 @@ impl FaucetStorage {
                 .sum()
         });
         (total_claims, total_distributed)
+    }
+}
+
+// Swap Transaction History Storage Operations
+pub struct SwapTransactionStorage;
+
+impl SwapTransactionStorage {
+    /// Store a completed swap transaction
+    pub fn store_transaction(transaction: SwapTransaction) {
+        let key = SwapTransactionKey {
+            user: transaction.user,
+            transaction_id: transaction.id.clone(),
+        };
+        
+        SWAP_TRANSACTIONS.with(|transactions| {
+            transactions.borrow_mut().insert(key, transaction);
+        });
+    }
+
+    /// Get all swap transactions for a specific user
+    pub fn get_user_transactions(user: Principal) -> Vec<SwapTransaction> {
+        SWAP_TRANSACTIONS.with(|transactions| {
+            transactions.borrow()
+                .iter()
+                .filter(|entry| entry.key().user == user)
+                .map(|entry| entry.value().clone())
+                .collect()
+        })
+    }
+
+    /// Get swap transactions for a user with pagination
+    pub fn get_user_transactions_paginated(
+        user: Principal, 
+        limit: u32, 
+        offset: u32
+    ) -> Vec<SwapTransaction> {
+        let all_transactions = Self::get_user_transactions(user);
+        
+        // Sort by timestamp descending (newest first)
+        let mut sorted_transactions = all_transactions;
+        sorted_transactions.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+        
+        // Apply pagination
+        let start = offset as usize;
+        let end = (start + limit as usize).min(sorted_transactions.len());
+        
+        if start >= sorted_transactions.len() {
+            return Vec::new();
+        }
+        
+        sorted_transactions[start..end].to_vec()
+    }
+
+    /// Get transaction count for a user
+    pub fn get_user_transaction_count(user: Principal) -> u32 {
+        SWAP_TRANSACTIONS.with(|transactions| {
+            transactions.borrow()
+                .iter()
+                .filter(|entry| entry.key().user == user)
+                .count() as u32
+        })
+    }
+
+    /// Get a specific transaction by ID
+    pub fn get_transaction(user: Principal, transaction_id: &str) -> Option<SwapTransaction> {
+        let key = SwapTransactionKey {
+            user,
+            transaction_id: transaction_id.to_string(),
+        };
+        
+        SWAP_TRANSACTIONS.with(|transactions| {
+            transactions.borrow().get(&key)
+        })
+    }
+
+    /// Get total transaction count across all users
+    pub fn get_total_transaction_count() -> u64 {
+        SWAP_TRANSACTIONS.with(|transactions| {
+            transactions.borrow().len() as u64
+        })
     }
 }

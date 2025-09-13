@@ -145,6 +145,18 @@ export interface SwapResult_1 {
   'swap_tx_hash' : string,
   'token_out_amount' : bigint,
 }
+export interface SwapTransaction {
+  'id' : string,
+  'to_token' : string,
+  'from_amount' : bigint,
+  'transaction_type' : string,
+  'from_token' : string,
+  'user' : Principal,
+  'to_amount' : bigint,
+  'timestamp' : bigint,
+  'to_price' : number,
+  'from_price' : number,
+}
 export interface TradingPair {
   'base' : string,
   'quote' : string,
@@ -216,6 +228,12 @@ export interface _SERVICE {
   'get_user_by_username' : ActorMethod<[string], Result_3>,
   'get_user_count' : ActorMethod<[], bigint>,
   'get_user_personal' : ActorMethod<[Principal, Principal], Result_5>,
+  'get_user_swap_history' : ActorMethod<[Principal], Array<SwapTransaction>>,
+  'get_user_swap_history_paginated' : ActorMethod<
+    [Principal, number, number],
+    Array<SwapTransaction>
+  >,
+  'get_user_transaction_count' : ActorMethod<[Principal], number>,
   'http_request' : ActorMethod<[HttpRequest], HttpResponse>,
   'init_all_tokens' : ActorMethod<[], Result>,
   'init_canister_balances' : ActorMethod<[], Result>,

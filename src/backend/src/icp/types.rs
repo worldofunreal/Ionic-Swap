@@ -119,3 +119,70 @@ impl Storable for BalanceKey {
         candid::decode_one(&bytes).unwrap()
     }
 }
+
+/// Represents a completed swap transaction for history tracking
+#[derive(Debug, Clone, CandidType, Deserialize, Serialize)]
+pub struct SwapTransaction {
+    /// Unique transaction ID (timestamp + user principal hash)
+    pub id: String,
+    /// User who executed the swap
+    pub user: Principal,
+    /// Token being sold
+    pub from_token: String,
+    /// Token being bought
+    pub to_token: String,
+    /// Amount of from_token sold
+    pub from_amount: u64,
+    /// Amount of to_token received
+    pub to_amount: u64,
+    /// Price of from_token in USD at time of swap
+    pub from_price: f64,
+    /// Price of to_token in USD at time of swap
+    pub to_price: f64,
+    /// Timestamp when swap was executed
+    pub timestamp: u64,
+    /// Transaction type (always "market" for now)
+    pub transaction_type: String,
+}
+
+impl Storable for SwapTransaction {
+    const BOUND: Bound = Bound::Unbounded;
+    
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+    
+    fn into_bytes(self) -> Vec<u8> {
+        candid::encode_one(&self).unwrap()
+    }
+    
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+}
+
+/// Key for storing swap transactions in stable storage
+/// Combines user principal and transaction ID for unique identification
+#[derive(Debug, Clone, CandidType, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+pub struct SwapTransactionKey {
+    /// User's principal
+    pub user: Principal,
+    /// Transaction ID
+    pub transaction_id: String,
+}
+
+impl Storable for SwapTransactionKey {
+    const BOUND: Bound = Bound::Unbounded;
+    
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+    
+    fn into_bytes(self) -> Vec<u8> {
+        candid::encode_one(&self).unwrap()
+    }
+    
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+}

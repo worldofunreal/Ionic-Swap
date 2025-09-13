@@ -223,6 +223,28 @@ pub fn get_faucet_stats() -> (u64, u64) {
     icp::faucet::get_faucet_stats()
 }
 
+/// Get swap transaction history for a user
+#[query]
+pub fn get_user_swap_history(user: Principal) -> Vec<icp::types::SwapTransaction> {
+    crate::storage::SwapTransactionStorage::get_user_transactions(user)
+}
+
+/// Get swap transaction history for a user with pagination
+#[query]
+pub fn get_user_swap_history_paginated(
+    user: Principal, 
+    limit: u32, 
+    offset: u32
+) -> Vec<icp::types::SwapTransaction> {
+    crate::storage::SwapTransactionStorage::get_user_transactions_paginated(user, limit, offset)
+}
+
+/// Get transaction count for a user
+#[query]
+pub fn get_user_transaction_count(user: Principal) -> u32 {
+    crate::storage::SwapTransactionStorage::get_user_transaction_count(user)
+}
+
 // ============================================================================
 // USER MANAGEMENT OPERATIONS
 // ============================================================================

@@ -9,6 +9,7 @@ import type {
   UserUpdate,
   CompactProfile,
   PersonalUser,
+  SwapTransaction,
 } from '../../declarations/backend/backend.did'
 import { appCacheService } from './AppCacheService'
 
@@ -25,6 +26,7 @@ export type {
   UserUpdate,
   CompactProfile,
   PersonalUser,
+  SwapTransaction,
 } from '../../declarations/backend/backend.did'
 
 // Helper function to handle UserResult
@@ -1010,6 +1012,62 @@ class CanisterService {
       return result
     } catch (error) {
       console.error('Error executing market swap:', error)
+      throw error
+    }
+  }
+
+  // Get user swap transaction history
+  async getUserSwapHistory(userPrincipal: string): Promise<SwapTransaction[]> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const principal = Principal.fromText(userPrincipal)
+      const result = await this.backendActor.get_user_swap_history(principal)
+      return result
+    } catch (error) {
+      console.error('Error getting user swap history:', error)
+      throw error
+    }
+  }
+
+  // Get user swap transaction history with pagination
+  async getUserSwapHistoryPaginated(
+    userPrincipal: string,
+    limit: number,
+    offset: number
+  ): Promise<SwapTransaction[]> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const principal = Principal.fromText(userPrincipal)
+      const result = await this.backendActor.get_user_swap_history_paginated(
+        principal,
+        limit,
+        offset
+      )
+      return result
+    } catch (error) {
+      console.error('Error getting paginated user swap history:', error)
+      throw error
+    }
+  }
+
+  // Get user transaction count
+  async getUserTransactionCount(userPrincipal: string): Promise<number> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const principal = Principal.fromText(userPrincipal)
+      const result = await this.backendActor.get_user_transaction_count(principal)
+      return result
+    } catch (error) {
+      console.error('Error getting user transaction count:', error)
       throw error
     }
   }

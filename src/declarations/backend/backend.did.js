@@ -85,6 +85,18 @@ export const idlFactory = ({ IDL }) => {
     'location' : IDL.Opt(IDL.Text),
   });
   const Result_5 = IDL.Variant({ 'Ok' : PersonalUser, 'Err' : UserError });
+  const SwapTransaction = IDL.Record({
+    'id' : IDL.Text,
+    'to_token' : IDL.Text,
+    'from_amount' : IDL.Nat64,
+    'transaction_type' : IDL.Text,
+    'from_token' : IDL.Text,
+    'user' : IDL.Principal,
+    'to_amount' : IDL.Nat64,
+    'timestamp' : IDL.Nat64,
+    'to_price' : IDL.Float64,
+    'from_price' : IDL.Float64,
+  });
   const HttpRequest = IDL.Record({
     'url' : IDL.Text,
     'method' : IDL.Text,
@@ -233,6 +245,21 @@ export const idlFactory = ({ IDL }) => {
     'get_user_personal' : IDL.Func(
         [IDL.Principal, IDL.Principal],
         [Result_5],
+        ['query'],
+      ),
+    'get_user_swap_history' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Vec(SwapTransaction)],
+        ['query'],
+      ),
+    'get_user_swap_history_paginated' : IDL.Func(
+        [IDL.Principal, IDL.Nat32, IDL.Nat32],
+        [IDL.Vec(SwapTransaction)],
+        ['query'],
+      ),
+    'get_user_transaction_count' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Nat32],
         ['query'],
       ),
     'http_request' : IDL.Func([HttpRequest], [HttpResponse], ['query']),

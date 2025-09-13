@@ -472,6 +472,125 @@
                 </div>
               </div>
             </div>
+
+            <!-- Transaction History Section -->
+            <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 mb-8">
+              <div class="p-4 border-b border-gray-200 dark:border-gray-800">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-lg font-semibold text-foreground">Recent Transactions</h3>
+                  <div class="flex items-center gap-2">
+                    <button
+                      @click="refreshTransactionHistory"
+                      :disabled="transactionHistoryLoading"
+                      class="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-50"
+                    >
+                      <UIcon 
+                        :name="transactionHistoryLoading ? 'i-heroicons-arrow-path' : 'i-heroicons-arrow-path'" 
+                        :class="transactionHistoryLoading ? 'animate-spin' : ''"
+                        class="w-4 h-4"
+                      />
+                    </button>
+                    <span class="text-xs text-muted-foreground">
+                      {{ transactionHistory.length }} transactions
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Transaction History Content -->
+              <div class="p-4">
+                <!-- Loading State -->
+                <div v-if="transactionHistoryLoading && transactionHistory.length === 0" class="text-center py-8">
+                  <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 mx-auto mb-2 animate-spin text-gray-400" />
+                  <p class="text-gray-500 dark:text-gray-400">Loading transaction history...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div v-else-if="!transactionHistoryLoading && transactionHistory.length === 0" class="text-center py-8">
+                  <UIcon name="i-heroicons-document-text" class="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                  <h4 class="text-lg font-medium text-foreground mb-2">No transactions yet</h4>
+                  <p class="text-gray-500 dark:text-gray-400 mb-4">
+                    Your trading history will appear here once you make your first swap.
+                  </p>
+                  <UButton 
+                    color="primary" 
+                    variant="soft" 
+                    @click="navigateTo('/trading')"
+                    class="text-sm font-semibold px-4 py-2"
+                  >
+                    <UIcon name="i-heroicons-arrow-right-20-solid" class="w-4 h-4 mr-2" />
+                    Start Trading
+                  </UButton>
+                </div>
+
+                <!-- Transaction List -->
+                <div v-else class="space-y-3">
+                  <div
+                    v-for="transaction in transactionHistory.slice(0, 5)"
+                    :key="transaction.id"
+                    class="bg-muted/50 rounded-lg p-4 hover:bg-muted transition-colors"
+                  >
+                    <div class="flex items-center justify-between">
+                      <!-- Transaction Type & Pair -->
+                      <div class="flex items-center space-x-3">
+                        <div class="flex items-center space-x-2">
+                          <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">
+                            ↔
+                          </div>
+                          <div>
+                            <div class="font-semibold text-foreground">
+                              {{ transaction.from_token }} → {{ transaction.to_token }}
+                            </div>
+                            <div class="text-sm text-muted-foreground">
+                              {{ formatTransactionType(transaction.transaction_type) }}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Transaction Details -->
+                      <div class="text-right">
+                        <div class="font-semibold text-foreground">
+                          {{ formatAmount(transaction.from_amount, transaction.from_token) }} 
+                          {{ transaction.from_token }}
+                        </div>
+                        <div class="text-sm text-muted-foreground">
+                          → {{ formatAmount(transaction.to_amount, transaction.to_token) }} 
+                          {{ transaction.to_token }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Transaction Metadata -->
+                    <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                      <div class="flex items-center justify-between text-sm text-muted-foreground">
+                        <div class="flex items-center space-x-4">
+                          <span>{{ formatDate(transaction.timestamp) }}</span>
+                          <span>•</span>
+                          <span>ID: {{ transaction.id.slice(0, 8) }}...</span>
+                        </div>
+                        <div class="text-right">
+                          <div>Rate: {{ formatPrice(transaction.from_price) }} → {{ formatPrice(transaction.to_price) }}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- View All Button -->
+                <div v-if="transactionHistory.length > 5" class="mt-4 text-center">
+                  <UButton 
+                    color="neutral" 
+                    variant="soft" 
+                    @click="navigateTo('/trading')"
+                    class="text-sm font-semibold px-4 py-2"
+                  >
+                    View All Transactions
+                    <UIcon name="i-heroicons-arrow-right-20-solid" class="w-4 h-4 ml-2" />
+                  </UButton>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -482,11 +601,12 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
   import { useAuthStore } from '@/stores/auth'
-  import { canisterService } from '@/services/CanisterService'
+  import { canisterService, type SwapTransaction } from '@/services/CanisterService'
   import { priceService } from '@/services/PriceService'
   import { useToast } from '#imports'
   import { useColorTheme } from '@/composables/useColorTheme'
   import { useTheme } from '@/composables/useTheme'
+  import { TokenService } from '@/services/TokenService'
 
   const auth = useAuthStore()
   const loading = ref(true)
@@ -509,6 +629,10 @@
   const faucetClaimed = ref(false)
   const totalValue = ref(0)
   const valueDisplay = ref<'usd' | 'btc'>('usd')
+  
+  // Transaction history
+  const transactionHistory = ref<SwapTransaction[]>([])
+  const transactionHistoryLoading = ref(false)
   
   // Real price data from PriceService
   const tokenPrices = ref<Record<string, { usd: number; btc: number; change24h: number }>>({})
@@ -777,6 +901,7 @@
     // Refresh every 30 seconds
     refreshInterval = setInterval(() => {
       refreshBalances(undefined, true) // Silent refresh
+      loadTransactionHistory() // Also refresh transaction history
     }, 30000)
   }
 
@@ -830,6 +955,53 @@
     })
   }
 
+  // Transaction history methods
+  const loadTransactionHistory = async () => {
+    if (!auth.userProfile?.id) return
+
+    if (!canisterService.isInitialized()) {
+      console.log('CanisterService not ready, skipping transaction history load')
+      return
+    }
+
+    transactionHistoryLoading.value = true
+    try {
+      const transactions = await canisterService.getUserSwapHistory(auth.userProfile.id.toText())
+      // Sort by timestamp descending (newest first)
+      transactionHistory.value = transactions.sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
+    } catch (error) {
+      console.error('Error loading transaction history:', error)
+    } finally {
+      transactionHistoryLoading.value = false
+    }
+  }
+
+  const refreshTransactionHistory = async () => {
+    await loadTransactionHistory()
+    toast.add({
+      title: 'Transaction History Refreshed',
+      description: 'Your transaction history has been updated',
+      color: 'success',
+    })
+  }
+
+  const formatTransactionType = (type: string) => {
+    return type.charAt(0).toUpperCase() + type.slice(1) + ' Swap'
+  }
+
+  const formatAmount = (amount: bigint, token: string) => {
+    return TokenService.formatBalance(Number(amount), token)
+  }
+
+  const formatPrice = (price: number) => {
+    return `$${price.toFixed(2)}`
+  }
+
+  const formatDate = (timestamp: bigint) => {
+    const date = new Date(Number(timestamp) * 1000)
+    return date.toLocaleString()
+  }
+
   // Load user token balances and data
   const loadTokenData = async () => {
     if (!auth.userProfile?.id) return
@@ -852,6 +1024,9 @@
       // Check if user has claimed faucet
       const faucetClaim = await canisterService.getFaucetClaim(auth.userProfile.id.toText())
       faucetClaimed.value = !!faucetClaim
+
+      // Load transaction history
+      await loadTransactionHistory()
 
       // Calculate total value using real price data
       totalValue.value = Object.entries(balances).reduce((total, [symbol, amount]) => {

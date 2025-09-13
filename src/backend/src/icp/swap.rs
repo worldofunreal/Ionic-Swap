@@ -8,6 +8,8 @@ use serde::Serialize;
 use crate::icp::storage::IcpTokenDatabase;
 use crate::icp::config::is_supported_token;
 use crate::oracle::aggregator::get_pair_price;
+use crate::storage::SwapTransactionStorage;
+use crate::icp::types::SwapTransaction;
 
 // ============================================================================
 // SWAP TYPES
@@ -132,6 +134,8 @@ pub async fn market_swap(
     // 2. Transfer to_token from canister to user
     IcpTokenDatabase::transfer_tokens(canister_id, caller, &request.to_token, to_amount)?;
     
+    let timestamp = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
+    
     let result = SwapResult {
         from_token: request.from_token.clone(),
         to_token: request.to_token.clone(),
@@ -139,12 +143,32 @@ pub async fn market_swap(
         to_amount,
         from_price: from_price.price,
         to_price: to_price.price,
-        timestamp: ic_cdk::api::time() / 1_000_000_000, // Convert nanoseconds to seconds
+        timestamp,
     };
+    
+    // Generate unique transaction ID
+    let transaction_id = format!("{}_{}_{}", timestamp, caller, request.amount);
+    
+    // Store transaction in history
+    let swap_transaction = SwapTransaction {
+        id: transaction_id.clone(),
+        user: caller,
+        from_token: request.from_token.clone(),
+        to_token: request.to_token.clone(),
+        from_amount: request.amount,
+        to_amount,
+        from_price: from_price.price,
+        to_price: to_price.price,
+        timestamp,
+        transaction_type: "market".to_string(),
+    };
+    
+    SwapTransactionStorage::store_transaction(swap_transaction);
     
     ic_cdk::println!("   ✅ Swap executed successfully!");
     ic_cdk::println!("   User paid: {} {}", result.from_amount, result.from_token);
     ic_cdk::println!("   User received: {} {}", result.to_amount, result.to_token);
+    ic_cdk::println!("   Transaction ID: {}", transaction_id);
     
     Ok(result)
 }

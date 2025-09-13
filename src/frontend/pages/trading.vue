@@ -367,6 +367,11 @@
               </button>
             </div>
           </div>
+
+          <!-- History Tab -->
+          <div v-if="activeTab === 'history'" class="space-y-4">
+            <TransactionHistory />
+          </div>
         </div>
       </div>
     </div>
@@ -380,6 +385,7 @@
   import { useAuthStore } from '@/stores/auth'
   import { TokenService } from '@/services/TokenService'
   import LightweightPriceChart from '@/components/LightweightPriceChart.vue'
+  import TransactionHistory from '@/components/TransactionHistory.vue'
 
   // Stores
   const auth = useAuthStore()
@@ -419,6 +425,7 @@
   // Trading tabs
   const tradingTabs = [
     { label: 'Market', value: 'market' },
+    { label: 'History', value: 'history' },
   ]
 
   // Token options - all internal tokens
@@ -535,6 +542,12 @@
           description: `Successfully bought ${receivedAmount} ${selectedTokenSymbol.value}`,
           color: 'success',
         })
+        
+        // Refresh transaction history if on history tab
+        if (activeTab.value === 'history') {
+          // Trigger refresh by emitting event to TransactionHistory component
+          // The component will automatically refresh when it detects the tab change
+        }
       } else {
         toast.add({
           title: 'Trade Failed',
@@ -597,6 +610,12 @@
           description: `Successfully sold ${soldAmount} ${selectedTokenSymbol.value} for ${receivedAmount}`,
           color: 'success',
         })
+        
+        // Refresh transaction history if on history tab
+        if (activeTab.value === 'history') {
+          // Trigger refresh by emitting event to TransactionHistory component
+          // The component will automatically refresh when it detects the tab change
+        }
       } else {
         toast.add({
           title: 'Trade Failed',
