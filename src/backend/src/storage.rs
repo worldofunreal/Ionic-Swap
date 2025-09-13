@@ -294,13 +294,6 @@ impl TokenStorage {
                                 owner: canister_id,
                             },
                             InternalToken {
-                                symbol: "USDC".to_string(),
-                                name: "USD Coin".to_string(),
-                                decimals: 6,
-                                total_supply: 1_000_000_000_000_000, // 1B USDC
-                                owner: canister_id,
-                            },
-                            InternalToken {
                                 symbol: "DOGE".to_string(),
                                 name: "Dogecoin".to_string(),
                                 decimals: 8,
@@ -340,7 +333,7 @@ impl TokenStorage {
             }
                     } else {
                         // If tokens already exist, ensure canister has proper balance
-                        let token_symbols = vec!["BTC", "ETH", "XRP", "USDT", "BNB", "SOL", "USDC", "DOGE", "ADA", "TRX", "ICP"];
+                        let token_symbols = vec!["BTC", "ETH", "XRP", "USDT", "BNB", "SOL", "DOGE", "ADA", "TRX", "ICP"];
                         for symbol in token_symbols {
                             if let Some(token) = TOKENS.with(|tokens| tokens.borrow().get(&symbol.to_string())) {
                                 let current_balance = BalanceStorage::get_balance(canister_id, symbol);

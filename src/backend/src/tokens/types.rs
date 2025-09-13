@@ -85,14 +85,14 @@ pub struct TokenQueryResult {
 // ============================================================================
 
 pub const SUPPORTED_CRYPTOCURRENCIES: &[&str] = &[
-    "BTC", "ETH", "XRP", "USDT", "BNB", "SOL", "USDC", "DOGE", "ADA", "TRX", "ICP"
+    "BTC", "ETH", "XRP", "USDT", "BNB", "SOL", "DOGE", "ADA", "TRX", "ICP"
 ];
 
 // Native tokens that don't have contract addresses
 pub const NATIVE_TOKENS: &[&str] = &["ETH", "SOL", "ICP"];
 
 // Stablecoins for special handling
-pub const STABLECOINS: &[&str] = &["USDT", "USDC"];
+pub const STABLECOINS: &[&str] = &["USDT"];
 
 // ============================================================================
 // UTILITY FUNCTIONS

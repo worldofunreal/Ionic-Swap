@@ -641,7 +641,6 @@
       'USDT': 'cryptocurrency-color:usdt',
       'BNB': 'token-branded:binance',
       'SOL': 'token-branded:solana',
-      'USDC': 'cryptocurrency-color:usdc',
       'DOGE': 'simple-icons:dogecoin',
       'ADA': 'logos:cardano-icon',
       'TRX': 'token-branded:tron',

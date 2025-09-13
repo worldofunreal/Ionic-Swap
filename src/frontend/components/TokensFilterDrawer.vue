@@ -291,7 +291,7 @@
       open: false,
       options: ['Arbitrum', 'Optimism', 'Base'],
     },
-    { label: 'Stablecoins', open: false, options: ['USDT', 'USDC', 'DAI'] },
+    { label: 'Stablecoins', open: false, options: ['USDT', 'DAI'] },
     {
       label: 'Smart Contract Platform',
       open: false,

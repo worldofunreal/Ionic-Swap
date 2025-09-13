@@ -98,7 +98,6 @@
     'USDT',
     'BNB',
     'SOL',
-    'USDC',
     'DOGE',
     'ADA',
     'TRX',

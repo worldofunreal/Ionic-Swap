@@ -36,7 +36,6 @@ const TOKEN_SYMBOLS: Record<string, string> = {
   XRP: 'XRPUSDT',
   BNB: 'BNBUSDT',
   SOL: 'SOLUSDT',
-  USDC: 'USDCUSDT',
   DOGE: 'DOGEUSDT', // Dogecoin
   ADA: 'ADAUSDT', // Cardano
   TRX: 'TRXUSDT', // TRON
@@ -146,7 +145,6 @@ class PriceService {
       { symbol: 'DOGE', price: 0.08, change24h: 8.5, volume24h: 800000000 },
       { symbol: 'TRX', price: 0.12, change24h: 1.5, volume24h: 600000000 },
       { symbol: 'ICP', price: 12.5, change24h: -0.8, volume24h: 400000000 },
-      { symbol: 'USDC', price: 1.0, change24h: 0.01, volume24h: 5000000000 },
     ]
 
     mockPrices.forEach(mock => {

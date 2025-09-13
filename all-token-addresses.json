@@ -34,13 +34,6 @@
           "address": "0x2ecc44a0f01BA5668BF28F07219e421BD8B6D77b",
           "etherscan": "https://sepolia.etherscan.io/address/0x2ecc44a0f01BA5668BF28F07219e421BD8B6D77b"
         },
-        "USDC": {
-          "name": "USD Coin",
-          "symbol": "USDC",
-          "decimals": 6,
-          "address": "0xC5c64a90712c0858cF9FD26ACf9662deDA980FE2",
-          "etherscan": "https://sepolia.etherscan.io/address/0xC5c64a90712c0858cF9FD26ACf9662deDA980FE2"
-        },
         "DOGE": {
           "name": "Dogecoin",
           "symbol": "DOGE",
@@ -107,14 +100,6 @@
           "mint": "L48YhNzBgxeWPrVXSZ8M39jrpNs8BJ1dpMbaQP47VXG",
           "tokenAccount": "HAtBFWqzEW9UxbGHZZ8nfacsgATa5dhVfqeKJpZEwV92",
           "explorer": "https://explorer.solana.com/address/L48YhNzBgxeWPrVXSZ8M39jrpNs8BJ1dpMbaQP47VXG?cluster=devnet"
-        },
-        "USDC": {
-          "name": "USD Coin",
-          "symbol": "USDC",
-          "decimals": 6,
-          "mint": "8zHkDmxiSP27fZYvkBvfjSEQrjkEdMfaZ6DGChByXfta",
-          "tokenAccount": "UvR2awd8STnja6DRZTtko6CJmCJzuq2pkHRqYvficMD",
-          "explorer": "https://explorer.solana.com/address/8zHkDmxiSP27fZYvkBvfjSEQrjkEdMfaZ6DGChByXfta?cluster=devnet"
         },
         "DOGE": {
           "name": "Dogecoin",
@@ -188,13 +173,6 @@
           "canisterId": "vizcg-th777-77774-qaaea-cai",
           "candid": "http://127.0.0.1:4943/?canisterId=u6s2n-gx777-77774-qaaba-cai&id=vizcg-th777-77774-qaaea-cai"
         },
-        "USDC": {
-          "name": "USD Coin",
-          "symbol": "USDC",
-          "decimals": 6,
-          "canisterId": "vb2j2-fp777-77774-qaafq-cai",
-          "candid": "http://127.0.0.1:4943/?canisterId=u6s2n-gx777-77774-qaaba-cai&id=vb2j2-fp777-77774-qaafq-cai"
-        },
         "DOGE": {
           "name": "Dogecoin",
           "symbol": "DOGE",
@@ -220,11 +198,11 @@
     }
   },
   "summary": {
-    "totalTokens": 27,
-    "evmTokens": 8,
-    "solanaTokens": 9,
-    "icpTokens": 10,
+    "totalTokens": 24,
+    "evmTokens": 7,
+    "solanaTokens": 8,
+    "icpTokens": 9,
     "supportedChains": ["EVM (Sepolia)", "Solana (Devnet)", "ICP (Local)"],
-    "cryptocurrencies": ["BTC", "ETH", "XRP", "USDT", "BNB", "SOL", "USDC", "DOGE", "ADA", "TRX"]
+    "cryptocurrencies": ["BTC", "ETH", "XRP", "USDT", "BNB", "SOL", "DOGE", "ADA", "TRX"]
   }
 }

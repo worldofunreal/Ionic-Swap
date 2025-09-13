@@ -176,7 +176,7 @@
                 <div
                   class="bg-gray-100 dark:bg-gray-800 p-3 rounded text-xs font-mono text-gray-700 dark:text-gray-300"
                 >
-                  { amount: 100, token: "USDC", deadline: 1234567890 }
+                  { amount: 100, token: "USDT", deadline: 1234567890 }
                 </div>
               </div>
             </div>
@@ -249,7 +249,7 @@
               </div>
               <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                 <li>• Native SPL tokens</li>
-                <li>• USDC (SPL)</li>
+                <li>• USDT (SPL)</li>
                 <li>• Custom SPL tokens</li>
                 <li>• Wrapped tokens</li>
                 <li>• Liquidity tokens</li>

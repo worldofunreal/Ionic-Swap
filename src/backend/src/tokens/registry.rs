@@ -137,7 +137,6 @@ fn get_token_metadata(symbol: &str) -> (&str, u8, &str) {
         "USDT" => ("Tether", 6, "tether"),
         "BNB" => ("BNB", 18, "binancecoin"),
         "SOL" => ("Solana", 9, "solana"),
-        "USDC" => ("USD Coin", 6, "usd-coin"),
         "DOGE" => ("Dogecoin", 8, "dogecoin"),
         "ADA" => ("Cardano", 6, "cardano"),
         "TRX" => ("TRON", 6, "tron"),

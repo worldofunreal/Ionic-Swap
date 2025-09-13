@@ -58,17 +58,6 @@
       "maxSupply": 200000000,
       "maxSupplyFormatted": "200,000,000"
     },
-    "usdc": {
-      "name": "USD Coin",
-      "symbol": "USDC",
-      "mint": "8zHkDmxiSP27fZYvkBvfjSEQrjkEdMfaZ6DGChByXfta",
-      "tokenAccount": "UvR2awd8STnja6DRZTtko6CJmCJzuq2pkHRqYvficMD",
-      "decimals": 6,
-      "initialSupply": 1000000000,
-      "initialSupplyFormatted": "1,000",
-      "maxSupply": 1000000000000,
-      "maxSupplyFormatted": "1,000,000,000,000"
-    },
     "doge": {
       "name": "Dogecoin",
       "symbol": "DOGE",

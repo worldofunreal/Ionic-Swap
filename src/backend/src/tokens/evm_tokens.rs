@@ -11,7 +11,6 @@ pub fn get_evm_token(symbol: &str) -> Option<ChainToken> {
         "XRP" => ("0x29f2A9eb954774B5951B2178EFAd9c7F80BF7c13", 6),
         "USDT" => ("0x02c32a72566dE763a7B150B941e770882eF3aCE2", 6),
         "BNB" => ("0x2ecc44a0f01BA5668BF28F07219e421BD8B6D77b", 18),
-        "USDC" => ("0xC5c64a90712c0858cF9FD26ACf9662deDA980FE2", 6),
         "DOGE" => ("0x9Ef8B792bF5B74b77765316000621865fDdABa88", 8),
         "ADA" => ("0x7fc5cf0F29D7F54589FaEE98f15C6EdD7F16911a", 6),
         "TRX" => ("0x061882b3DeDe2dD9Be136592534915a016395F70", 6),
@@ -39,7 +38,7 @@ pub fn get_evm_token(symbol: &str) -> Option<ChainToken> {
 
 /// Get all EVM token addresses
 pub fn get_all_evm_tokens() -> Vec<(String, ChainToken)> {
-    let symbols = ["BTC", "XRP", "USDT", "BNB", "USDC", "DOGE", "ADA", "TRX"];
+    let symbols = ["BTC", "XRP", "USDT", "BNB", "DOGE", "ADA", "TRX"];
     
     symbols.iter()
         .filter_map(|&symbol| {
@@ -127,14 +126,6 @@ pub fn get_evm_token_metadata(symbol: &str) -> Option<EvmTokenMetadata> {
             name: "BNB Token".to_string(),
             max_supply: Some(200_000_000),
             initial_supply: 1_000,
-            supports_permit: true,
-            supports_meta_tx: true,
-        },
-        "USDC" => EvmTokenMetadata {
-            symbol: "USDC".to_string(),
-            name: "USD Coin Token".to_string(),
-            max_supply: Some(1_000_000_000_000),
-            initial_supply: 10_000,
             supports_permit: true,
             supports_meta_tx: true,
         },

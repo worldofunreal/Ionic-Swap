@@ -126,6 +126,7 @@ const wsConnection = ref<WebSocket>()
 const isLoadingHistory = ref(false)
 const earliestTimestamp = ref<number>(0)
 const cachedData = ref<any[]>([])
+const isDisposed = ref(false)
 
 // Time periods
 const timePeriods = [
@@ -186,12 +187,12 @@ const getChartConfig = () => ({
   crosshair: {
     mode: 1, // Normal crosshair mode
     vertLine: {
-      width: 1,
+      width: 1 as any,
       color: chartColors.value.text,
       style: 0, // Solid line
     },
     horzLine: {
-      width: 1,
+      width: 1 as any,
       color: chartColors.value.text,
       style: 0, // Solid line
     },
@@ -243,7 +244,6 @@ const getBinanceSymbol = (symbol: string) => {
     'XRP': 'XRPUSDT',
     'BNB': 'BNBUSDT',
     'SOL': 'SOLUSDT',
-    'USDC': 'USDCUSDT',
     'DOGE': 'DOGEUSDT',
     'ADA': 'ADAUSDT',
     'TRX': 'TRXUSDT',
@@ -267,9 +267,11 @@ const getInterval = (period: string) => {
 
 // Chart initialization (v5 API) - Exchange Quality
 const initChart = async () => {
-  if (!chartContainer.value) return
+  if (!chartContainer.value || isDisposed.value) return
   
   try {
+    // Reset disposal flag
+    isDisposed.value = false
     
     // Create chart with proper configuration
     chart.value = createChart(chartContainer.value, {
@@ -312,11 +314,7 @@ const initChart = async () => {
         type: 'volume',
       },
       priceScaleId: 'volume',
-      scaleMargins: { 
-        top: 0.7,  // Volume takes bottom 30% of chart
-        bottom: 0 
-      },
-    })
+    } as any)
 
     // Configure volume price scale
     chart.value.priceScale('volume').applyOptions({
@@ -324,14 +322,17 @@ const initChart = async () => {
       borderVisible: false,
     })
 
-
     // Set up resize observer
     resizeObserver.value = new ResizeObserver(() => {
-      if (chart.value && chartContainer.value) {
-        chart.value.applyOptions({
-          width: chartContainer.value.clientWidth,
-          height: props.height,
-        })
+      if (!isDisposed.value && chart.value && chartContainer.value) {
+        try {
+          chart.value.applyOptions({
+            width: chartContainer.value.clientWidth,
+            height: props.height,
+          })
+        } catch (error) {
+          console.warn('Error updating chart size:', error)
+        }
       }
     })
     
@@ -341,7 +342,9 @@ const initChart = async () => {
     await loadChartData()
     
     // Start WebSocket connection for real-time updates
-    startWebSocket()
+    if (!isDisposed.value) {
+      startWebSocket()
+    }
     
   } catch (err) {
     console.error('Failed to initialize chart:', err)
@@ -434,20 +437,21 @@ const generateMockData = () => {
 }
 
 const loadChartData = async () => {
+  if (isDisposed.value) return
+  
   loading.value = true
   error.value = false
   
   try {
     const data = await fetchHistoricalData()
     
-    if (data.length > 0) {
+    if (data.length > 0 && !isDisposed.value) {
       // Ensure initial data is sorted in ascending order (oldest first)
-      const sortedData = data.sort((a, b) => a.time - b.time)
+      const sortedData = data.sort((a: any, b: any) => a.time - b.time)
       
       // Cache the sorted data and set earliest timestamp
       cachedData.value = [...sortedData]
       earliestTimestamp.value = sortedData[0].time
-      
       
       // Update current price (use latest from sorted data)
       const latest = sortedData[sortedData.length - 1]
@@ -455,29 +459,35 @@ const loadChartData = async () => {
       currentPrice.value = latest.close
       priceChange.value = ((latest.close - previous.close) / previous.close) * 100
       
-      // Set data to appropriate series (using sorted data)
-      if (chartType.value === 'candlesticks') {
-        candlestickSeries.value?.setData(sortedData)
-        lineSeries.value?.setData([])
-      } else {
-        const lineData = sortedData.map(d => ({ time: d.time, value: d.close }))
-        lineSeries.value?.setData(lineData)
-        candlestickSeries.value?.setData([])
+      // Set data to appropriate series (using sorted data) - with disposal checks
+      if (chartType.value === 'candlesticks' && candlestickSeries.value) {
+        candlestickSeries.value.setData(sortedData)
+        if (lineSeries.value) lineSeries.value.setData([])
+      } else if (lineSeries.value) {
+        const lineData = sortedData.map((d: any) => ({ time: d.time, value: d.close }))
+        lineSeries.value.setData(lineData)
+        if (candlestickSeries.value) candlestickSeries.value.setData([])
       }
       
       // Set volume data with proper colors (using sorted data)
-      const volumeData = sortedData.map(d => ({
-        time: d.time,
-        value: d.volume,
-        color: d.close >= d.open ? chartColors.value.up + '80' : chartColors.value.down + '80' // Add transparency
-      }))
-      volumeSeries.value?.setData(volumeData)
+      if (volumeSeries.value) {
+        const volumeData = sortedData.map((d: any) => ({
+          time: d.time,
+          value: d.volume,
+          color: d.close >= d.open ? chartColors.value.up + '80' : chartColors.value.down + '80' // Add transparency
+        }))
+        volumeSeries.value.setData(volumeData)
+      }
       
       // Set up infinite scroll for historical data
-      setupInfiniteScroll()
+      if (!isDisposed.value) {
+        setupInfiniteScroll()
+      }
       
       // Fit content to view
-      chart.value?.timeScale().fitContent()
+      if (!isDisposed.value && chart.value) {
+        chart.value.timeScale().fitContent()
+      }
       
       // Add current price line
       addCurrentPriceLine()
@@ -492,16 +502,18 @@ const loadChartData = async () => {
 
 // Set up infinite scroll for loading historical data
 const setupInfiniteScroll = () => {
-  if (!chart.value) return
+  if (isDisposed.value || !chart.value) return
   
   chart.value.timeScale().subscribeVisibleLogicalRangeChange(async (logicalRange) => {
+    if (isDisposed.value) return
+    
     // Check if user scrolled close to the beginning (left side)
     if (logicalRange && logicalRange.from < 20 && !isLoadingHistory.value) {
       
       try {
         const olderData = await fetchOlderData()
         
-        if (olderData.length > 0) {
+        if (olderData.length > 0 && !isDisposed.value) {
           // Prepend older data to cached data
           cachedData.value = [...olderData, ...cachedData.value]
           
@@ -516,22 +528,22 @@ const setupInfiniteScroll = () => {
           // Update cached data with unique, sorted data
           cachedData.value = uniqueData
           
-          
-          if (chartType.value === 'candlesticks') {
-            candlestickSeries.value?.setData(uniqueData)
-          } else {
+          if (chartType.value === 'candlesticks' && candlestickSeries.value) {
+            candlestickSeries.value.setData(uniqueData)
+          } else if (lineSeries.value) {
             const lineData = uniqueData.map(d => ({ time: d.time, value: d.close }))
-            lineSeries.value?.setData(lineData)
+            lineSeries.value.setData(lineData)
           }
           
           // Update volume data (also sorted and deduplicated)
-          const volumeData = uniqueData.map(d => ({
-            time: d.time,
-            value: d.volume,
-            color: d.close >= d.open ? chartColors.value.up + '80' : chartColors.value.down + '80'
-          }))
-          volumeSeries.value?.setData(volumeData)
-          
+          if (volumeSeries.value) {
+            const volumeData = uniqueData.map(d => ({
+              time: d.time,
+              value: d.volume,
+              color: d.close >= d.open ? chartColors.value.up + '80' : chartColors.value.down + '80'
+            }))
+            volumeSeries.value.setData(volumeData)
+          }
         }
       } catch (error) {
         console.error('Error in infinite scroll:', error)
@@ -543,33 +555,39 @@ const setupInfiniteScroll = () => {
 
 // Add current price line
 const addCurrentPriceLine = () => {
-  if (!chart.value || !candlestickSeries.value && !lineSeries.value) return
+  if (isDisposed.value || !chart.value || (!candlestickSeries.value && !lineSeries.value)) return
   
-  // Remove existing price line if it exists
-  if (currentPriceLine.value) {
-    candlestickSeries.value?.removePriceLine(currentPriceLine.value)
-    lineSeries.value?.removePriceLine(currentPriceLine.value)
-  }
-  
-  // Add new price line
-  const priceLine = {
-    price: currentPrice.value,
-    color: chartColors.value.primary,
-    lineWidth: 1,
-    lineStyle: 0, // Solid line
-    axisLabelVisible: true,
-    title: `$${formatPrice(currentPrice.value)}`,
-  }
-  
-  if (chartType.value === 'candlesticks') {
-    currentPriceLine.value = candlestickSeries.value?.createPriceLine(priceLine)
-  } else {
-    currentPriceLine.value = lineSeries.value?.createPriceLine(priceLine)
+  try {
+    // Remove existing price line if it exists
+    if (currentPriceLine.value) {
+      candlestickSeries.value?.removePriceLine(currentPriceLine.value)
+      lineSeries.value?.removePriceLine(currentPriceLine.value)
+    }
+    
+    // Add new price line
+    const priceLine = {
+      price: currentPrice.value,
+      color: chartColors.value.primary,
+      lineWidth: 1 as any,
+      lineStyle: 0, // Solid line
+      axisLabelVisible: true,
+      title: `$${formatPrice(currentPrice.value)}`,
+    }
+    
+    if (chartType.value === 'candlesticks' && candlestickSeries.value) {
+      currentPriceLine.value = candlestickSeries.value.createPriceLine(priceLine)
+    } else if (lineSeries.value) {
+      currentPriceLine.value = lineSeries.value.createPriceLine(priceLine)
+    }
+  } catch (error) {
+    console.warn('Error adding price line:', error)
   }
 }
 
 // WebSocket for real-time updates
 const startWebSocket = () => {
+  if (isDisposed.value) return
+  
   const binanceSymbol = getBinanceSymbol(props.tokenSymbol).toLowerCase()
   const interval = getInterval(selectedPeriod.value)
   const wsUrl = `wss://stream.binance.com:9443/ws/${binanceSymbol}@kline_${interval}`
@@ -577,40 +595,46 @@ const startWebSocket = () => {
   wsConnection.value = new WebSocket(wsUrl)
   
   wsConnection.value.onmessage = (event) => {
-    const data = JSON.parse(event.data)
+    if (isDisposed.value || !chart.value) return
     
-    if (data.k) {
-      const kline = data.k
-      const candleData = {
-        time: Math.floor(kline.t / 1000),
-        open: parseFloat(kline.o),
-        high: parseFloat(kline.h),
-        low: parseFloat(kline.l),
-        close: parseFloat(kline.c),
-        volume: parseFloat(kline.v)
+    try {
+      const data = JSON.parse(event.data)
+      
+      if (data.k) {
+        const kline = data.k
+        const candleData = {
+          time: Math.floor(kline.t / 1000),
+          open: parseFloat(kline.o),
+          high: parseFloat(kline.h),
+          low: parseFloat(kline.l),
+          close: parseFloat(kline.c),
+          volume: parseFloat(kline.v)
+        }
+        
+        // Update current price
+        currentPrice.value = candleData.close
+        
+        // Update chart - with disposal check
+        if (chartType.value === 'candlesticks' && candlestickSeries.value) {
+          candlestickSeries.value.update(candleData)
+        } else if (lineSeries.value) {
+          lineSeries.value.update({ time: candleData.time, value: candleData.close })
+        }
+        
+        // Update current price line
+        addCurrentPriceLine()
+        
+        // Update volume
+        if (volumeSeries.value) {
+          volumeSeries.value.update({
+            time: candleData.time,
+            value: candleData.volume,
+            color: candleData.close >= candleData.open ? chartColors.value.up + '80' : chartColors.value.down + '80'
+          })
+        }
       }
-      
-      // Update current price
-      currentPrice.value = candleData.close
-      
-      // Update chart
-      if (chartType.value === 'candlesticks') {
-        candlestickSeries.value?.update(candleData)
-      } else {
-        lineSeries.value?.update({ time: candleData.time, value: candleData.close })
-      }
-      
-      // Update current price line
-      addCurrentPriceLine()
-      
-      // Update volume
-      volumeSeries.value?.update({
-        time: candleData.time,
-        value: candleData.volume,
-        color: candleData.close >= candleData.open ? chartColors.value.up + '80' : chartColors.value.down + '80'
-      })
-      
-      // Price line removed - current price shows on Y-axis only
+    } catch (error) {
+      console.error('WebSocket message processing error:', error)
     }
   }
   
@@ -626,6 +650,38 @@ const stopWebSocket = () => {
   }
 }
 
+// Safe chart disposal
+const disposeChart = () => {
+  if (isDisposed.value) return
+  
+  isDisposed.value = true
+  
+  // Stop WebSocket first
+  stopWebSocket()
+  
+  // Disconnect resize observer
+  if (resizeObserver.value) {
+    resizeObserver.value.disconnect()
+    resizeObserver.value = undefined
+  }
+  
+  // Remove chart
+  if (chart.value) {
+    try {
+      chart.value.remove()
+    } catch (error) {
+      console.warn('Error disposing chart:', error)
+    }
+    chart.value = undefined
+  }
+  
+  // Clear series references
+  candlestickSeries.value = undefined
+  lineSeries.value = undefined
+  volumeSeries.value = undefined
+  currentPriceLine.value = undefined
+}
+
 // Chart actions
 const refreshChart = () => {
   loadChartData()
@@ -633,62 +689,69 @@ const refreshChart = () => {
 
 // Recreate series when chart type changes
 const recreateSeries = () => {
-  if (!chart.value) return
+  if (isDisposed.value || !chart.value) return
   
-  // Remove existing series
-  if (candlestickSeries.value) {
-    chart.value.removeSeries(candlestickSeries.value)
-    candlestickSeries.value = undefined
+  try {
+    // Remove existing series
+    if (candlestickSeries.value) {
+      chart.value.removeSeries(candlestickSeries.value)
+      candlestickSeries.value = undefined
+    }
+    if (lineSeries.value) {
+      chart.value.removeSeries(lineSeries.value)
+      lineSeries.value = undefined
+    }
+    
+    // Create new series based on chart type
+    if (chartType.value === 'candlesticks') {
+      candlestickSeries.value = chart.value.addSeries(CandlestickSeries, {
+        upColor: chartColors.value.up,
+        downColor: chartColors.value.down,
+        borderUpColor: chartColors.value.up,
+        borderDownColor: chartColors.value.down,
+        wickUpColor: chartColors.value.up,
+        wickDownColor: chartColors.value.down,
+        priceFormat: {
+          type: 'price',
+          precision: 4,
+          minMove: 0.0001,
+        },
+      })
+    } else {
+      lineSeries.value = chart.value.addSeries(LineSeries, {
+        color: chartColors.value.primary,
+        lineWidth: 2,
+        priceFormat: {
+          type: 'price',
+          precision: 4,
+          minMove: 0.0001,
+        },
+      })
+    }
+    
+    // Add current price line to the new series
+    addCurrentPriceLine()
+  } catch (error) {
+    console.warn('Error recreating series:', error)
   }
-  if (lineSeries.value) {
-    chart.value.removeSeries(lineSeries.value)
-    lineSeries.value = undefined
-  }
-  
-  // Create new series based on chart type
-  if (chartType.value === 'candlesticks') {
-    candlestickSeries.value = chart.value.addSeries(CandlestickSeries, {
-      upColor: chartColors.value.up,
-      downColor: chartColors.value.down,
-      borderUpColor: chartColors.value.up,
-      borderDownColor: chartColors.value.down,
-      wickUpColor: chartColors.value.up,
-      wickDownColor: chartColors.value.down,
-      priceFormat: {
-        type: 'price',
-        precision: 4,
-        minMove: 0.0001,
-      },
-    })
-  } else {
-    lineSeries.value = chart.value.addSeries(LineSeries, {
-      color: chartColors.value.primary,
-      lineWidth: 2,
-      priceFormat: {
-        type: 'price',
-        precision: 4,
-        minMove: 0.0001,
-      },
-    })
-  }
-  
-  // Add current price line to the new series
-  addCurrentPriceLine()
 }
 
 // Watchers
 watch(chartType, async () => {
+  if (isDisposed.value) return
   recreateSeries()
   await loadChartData()
 })
 
 watch(selectedPeriod, async () => {
+  if (isDisposed.value) return
   stopWebSocket()
   await loadChartData()
   startWebSocket()
 })
 
 watch(() => props.tokenSymbol, async () => {
+  if (isDisposed.value) return
   stopWebSocket()
   await loadChartData()
   startWebSocket()
@@ -696,47 +759,53 @@ watch(() => props.tokenSymbol, async () => {
 
 // Update chart colors when color theme changes
 watch(colorTheme, () => {
+  if (isDisposed.value) return
   updateChartTheme()
 })
 
 // Update chart colors when light/dark mode changes  
 watch(themeMode, () => {
+  if (isDisposed.value) return
   updateChartTheme()
 })
 
 // Function to update chart theme colors
 const updateChartTheme = () => {
-  if (!chart.value) return
+  if (isDisposed.value || !chart.value) return
   
-  // Update chart configuration
-  chart.value.applyOptions(getChartConfig())
-  
-  // Update series colors
-  candlestickSeries.value?.applyOptions({
-    upColor: chartColors.value.up,
-    downColor: chartColors.value.down,
-    borderUpColor: chartColors.value.up,
-    borderDownColor: chartColors.value.down,
-    wickUpColor: chartColors.value.up,
-    wickDownColor: chartColors.value.down,
-  })
-  
-  lineSeries.value?.applyOptions({
-    color: chartColors.value.primary,
-  })
-  
-  volumeSeries.value?.applyOptions({
-    color: chartColors.value.primary,
-  })
-  
-  // Update volume price scale
-  chart.value.priceScale('volume').applyOptions({
-    scaleMargins: { top: 0.7, bottom: 0 },
-    borderVisible: false,
-  })
-  
-  // Update current price line
-  addCurrentPriceLine()
+  try {
+    // Update chart configuration
+    chart.value.applyOptions(getChartConfig())
+    
+    // Update series colors
+    candlestickSeries.value?.applyOptions({
+      upColor: chartColors.value.up,
+      downColor: chartColors.value.down,
+      borderUpColor: chartColors.value.up,
+      borderDownColor: chartColors.value.down,
+      wickUpColor: chartColors.value.up,
+      wickDownColor: chartColors.value.down,
+    })
+    
+    lineSeries.value?.applyOptions({
+      color: chartColors.value.primary,
+    })
+    
+    volumeSeries.value?.applyOptions({
+      color: chartColors.value.primary,
+    })
+    
+    // Update volume price scale
+    chart.value.priceScale('volume').applyOptions({
+      scaleMargins: { top: 0.7, bottom: 0 },
+      borderVisible: false,
+    })
+    
+    // Update current price line
+    addCurrentPriceLine()
+  } catch (error) {
+    console.warn('Error updating chart theme:', error)
+  }
 }
 
 // Lifecycle
@@ -746,9 +815,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  stopWebSocket()
-  resizeObserver.value?.disconnect()
-  chart.value?.remove()
+  disposeChart()
 })
 </script>
 

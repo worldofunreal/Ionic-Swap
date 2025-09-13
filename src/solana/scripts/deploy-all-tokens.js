@@ -57,7 +57,6 @@ async function main() {
     { name: 'XRP', symbol: 'XRP', decimals: 6, supply: 100000000000 },
     { name: 'Tether', symbol: 'USDT', decimals: 6, supply: 1000000000000 },
     { name: 'BNB', symbol: 'BNB', decimals: 18, supply: 200000000 },
-    { name: 'USD Coin', symbol: 'USDC', decimals: 6, supply: 1000000000000 },
     { name: 'Dogecoin', symbol: 'DOGE', decimals: 8, supply: 1000000000000 },
     { name: 'Cardano', symbol: 'ADA', decimals: 6, supply: 45000000000 },
     { name: 'TRON', symbol: 'TRX', decimals: 6, supply: 1000000000000 },

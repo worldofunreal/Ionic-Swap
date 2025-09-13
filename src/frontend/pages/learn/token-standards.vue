@@ -120,16 +120,6 @@
                 class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
               >
                 <h4 class="font-semibold text-gray-900 dark:text-white">
-                  USDC
-                </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                  USD Coin - Stablecoin
-                </p>
-              </div>
-              <div
-                class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
-              >
-                <h4 class="font-semibold text-gray-900 dark:text-white">
                   USDT
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -214,16 +204,6 @@
                 <h4 class="font-semibold text-gray-900 dark:text-white">SOL</h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
                   Solana - Native token
-                </p>
-              </div>
-              <div
-                class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
-              >
-                <h4 class="font-semibold text-gray-900 dark:text-white">
-                  USDC
-                </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                  USD Coin - Stablecoin
                 </p>
               </div>
               <div

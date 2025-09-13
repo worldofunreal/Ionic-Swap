@@ -13,7 +13,6 @@ async function main() {
     { name: "XRPToken", symbol: "XRP", decimals: 6 },
     { name: "TetherToken", symbol: "USDT", decimals: 6 },
     { name: "BNBToken", symbol: "BNB", decimals: 18 },
-    { name: "USDCToken", symbol: "USDC", decimals: 6 },
     { name: "DogecoinToken", symbol: "DOGE", decimals: 8 },
     { name: "CardanoToken", symbol: "ADA", decimals: 6 },
     { name: "TronToken", symbol: "TRX", decimals: 6 },

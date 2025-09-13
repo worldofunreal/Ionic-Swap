@@ -12,7 +12,6 @@ pub fn get_solana_token(symbol: &str) -> Option<ChainToken> {
         "XRP" => ("2pfQs3r123nU5TRzuoTGmdX4qZymJQS29jFACQHT67aY", "CpDEPtBPgq9QTGJJGgMC7UfXU7tSBw89siZRGEkwLJWv", 6),
         "USDT" => ("DPBmipSAHhpUd3ZPTVAbLfaWPVEvp77V13hG1B5nrHKv", "FNKRx7MZS2REkWMeCojN5t6ZySaq4zS1KAAPPebav1ZH", 6),
         "BNB" => ("L48YhNzBgxeWPrVXSZ8M39jrpNs8BJ1dpMbaQP47VXG", "HAtBFWqzEW9UxbGHZZ8nfacsgATa5dhVfqeKJpZEwV92", 18),
-        "USDC" => ("8zHkDmxiSP27fZYvkBvfjSEQrjkEdMfaZ6DGChByXfta", "UvR2awd8STnja6DRZTtko6CJmCJzuq2pkHRqYvficMD", 6),
         "DOGE" => ("DV5JDdMg55KE8bJKDnCHpYWKhdFZDsoimJFME9AoYDQh", "ANw6vCmkNdMjsaQRZhu8TeFm18usEveqtC6Mb29hmLKz", 8),
         "ADA" => ("BzqvJ1AVL7TSYvugPDr9xqQKeNDyK6QTcouBspRv9Jvp", "3mFWRYqapmvViDk2vM4Z9FaUxnjk2uphht81fgCNWL8q", 6),
         "TRX" => ("4WRoSSeCcGPzXzgFKfZcB4viHau8pZXhdvVG3fKPCrXL", "BU7bJMXGcyQSPGgj1gKocLJYf8wF1aEtK2hReJj1Cru4", 6),
@@ -40,7 +39,7 @@ pub fn get_solana_token(symbol: &str) -> Option<ChainToken> {
 
 /// Get all Solana token addresses
 pub fn get_all_solana_tokens() -> Vec<(String, ChainToken)> {
-    let symbols = ["BTC", "ETH", "XRP", "USDT", "BNB", "USDC", "DOGE", "ADA", "TRX"];
+    let symbols = ["BTC", "ETH", "XRP", "USDT", "BNB", "DOGE", "ADA", "TRX"];
     
     symbols.iter()
         .filter_map(|&symbol| {
@@ -148,14 +147,6 @@ pub fn get_solana_token_metadata(symbol: &str) -> Option<SolanaTokenMetadata> {
             symbol: "BNB".to_string(),
             name: "BNB".to_string(),
             max_supply: Some(200_000_000),
-            initial_supply: 1_000,
-            freeze_authority: Some(SOLANA_DEPLOYER_ADDRESS.to_string()),
-            mint_authority: Some(SOLANA_DEPLOYER_ADDRESS.to_string()),
-        },
-        "USDC" => SolanaTokenMetadata {
-            symbol: "USDC".to_string(),
-            name: "USD Coin".to_string(),
-            max_supply: Some(1_000_000_000_000),
             initial_supply: 1_000,
             freeze_authority: Some(SOLANA_DEPLOYER_ADDRESS.to_string()),
             mint_authority: Some(SOLANA_DEPLOYER_ADDRESS.to_string()),

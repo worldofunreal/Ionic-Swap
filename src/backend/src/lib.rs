@@ -631,7 +631,7 @@ pub fn reload_token_registry() -> Result<String, String> {
     #[update]
     pub fn init_canister_balances() -> Result<String, String> {
         let canister_id = ic_cdk::api::canister_self();
-        let token_symbols = vec!["BTC", "ETH", "XRP", "USDT", "BNB", "SOL", "USDC", "DOGE", "ADA", "TRX", "ICP"];
+        let token_symbols = vec!["BTC", "ETH", "XRP", "USDT", "BNB", "SOL", "DOGE", "ADA", "TRX", "ICP"];
         let mut initialized = Vec::new();
         
         for symbol in token_symbols {
@@ -666,7 +666,6 @@ pub fn reload_token_registry() -> Result<String, String> {
             ("USDT", "Tether USD", 6, 1_000_000_000_000_000),
             ("BNB", "BNB", 18, 200_000_000_000_000_000),
             ("SOL", "Solana", 9, 500_000_000_000_000_000),
-            ("USDC", "USD Coin", 6, 1_000_000_000_000_000),
             ("DOGE", "Dogecoin", 8, 130_000_000_000_000_000),
             ("ADA", "Cardano", 6, 45_000_000_000_000_000),
             ("TRX", "TRON", 6, 100_000_000_000_000_000),

@@ -32,13 +32,6 @@
       "address": "0x2ecc44a0f01BA5668BF28F07219e421BD8B6D77b",
       "deployerBalance": "1000.0"
     },
-    "USDC": {
-      "name": "USDCToken",
-      "symbol": "USDC",
-      "decimals": 6,
-      "address": "0xC5c64a90712c0858cF9FD26ACf9662deDA980FE2",
-      "deployerBalance": "10000.0"
-    },
     "DOGE": {
       "name": "DogecoinToken",
       "symbol": "DOGE",

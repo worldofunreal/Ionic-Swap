@@ -154,7 +154,6 @@
     USDT: { name: 'Tether', icon: 'cryptocurrency-color:usdt' },
     BNB: { name: 'BNB', icon: 'token-branded:binance' },
     SOL: { name: 'Solana', icon: 'token-branded:solana' },
-    USDC: { name: 'USD Coin', icon: 'cryptocurrency-color:usdc' },
     DOGE: { name: 'Dogecoin', icon: 'simple-icons:dogecoin' },
     ADA: { name: 'Cardano', icon: 'logos:cardano-icon' },
     TRX: { name: 'TRON', icon: 'token-branded:tron' },

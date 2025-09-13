@@ -104,7 +104,6 @@
         <!-- Chart Area -->
         <div class="flex-1 bg-white dark:bg-neutral-900 p-4 overflow-hidden">
           <LightweightPriceChart
-            :key="selectedTokenSymbol"
             :token-symbol="selectedTokenSymbol"
             :default-chart-type="'candlesticks'"
             :no-container="true"

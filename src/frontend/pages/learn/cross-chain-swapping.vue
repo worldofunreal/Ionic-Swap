@@ -194,7 +194,7 @@
               </div>
               <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                 <li>• Solana (SOL)</li>
-                <li>• USDC (SPL)</li>
+                <li>• USDT (SPL)</li>
                 <li>• Raydium (RAY)</li>
                 <li>• Serum (SRM)</li>
                 <li>• Jupiter (JUP)</li>

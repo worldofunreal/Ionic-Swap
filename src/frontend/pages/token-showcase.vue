@@ -213,20 +213,6 @@
       tech: ['High Speed', 'Low Fees', 'PoH'],
     },
     {
-      id: 'usdc',
-      name: 'USD Coin',
-      symbol: 'USDC',
-      category: 'Stablecoin',
-      description:
-        'Fully-backed US dollar stablecoin providing stability and liquidity in the crypto ecosystem.',
-      image: '/icons/usdc.svg',
-      price: 1.0,
-      change24h: 0.0,
-      marketCap: '28B',
-      chains: ['EVM', 'Solana', 'ICP'],
-      tech: ['Stablecoin', 'USD Backed', 'Regulated'],
-    },
-    {
       id: 'usdt',
       name: 'Tether',
       symbol: 'USDT',
