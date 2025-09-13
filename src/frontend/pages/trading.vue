@@ -104,7 +104,7 @@
         <!-- Chart Area -->
         <div class="flex-1 bg-white dark:bg-neutral-900 p-4 overflow-hidden">
           <LightweightPriceChart
-            v-if="selectedTokenSymbol"
+            :key="selectedTokenSymbol"
             :token-symbol="selectedTokenSymbol"
             :default-chart-type="'candlesticks'"
             :no-container="true"
@@ -188,10 +188,11 @@
 
               <button
                 @click="executeBuy"
-                :disabled="loading || !buyAmount || parseFloat(buyAmount) <= 0"
-                class="w-full py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors"
+                :disabled="buyLoading || !buyAmount || parseFloat(buyAmount) <= 0"
+                class="w-full py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center"
               >
-                {{ loading ? 'Buying...' : `Buy ${selectedTokenSymbol}` }}
+                <UIcon v-if="buyLoading" name="i-heroicons-arrow-path" class="w-4 h-4 mr-2 animate-spin" />
+                {{ buyLoading ? 'Buying...' : `Buy ${selectedTokenSymbol}` }}
               </button>
             </div>
 
@@ -238,10 +239,11 @@
 
               <button
                 @click="executeSell"
-                :disabled="loading || !sellAmount || parseFloat(sellAmount) <= 0"
-                class="w-full py-3 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors"
+                :disabled="sellLoading || !sellAmount || parseFloat(sellAmount) <= 0"
+                class="w-full py-3 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center"
               >
-                {{ loading ? 'Selling...' : `Sell ${selectedTokenSymbol}` }}
+                <UIcon v-if="sellLoading" name="i-heroicons-arrow-path" class="w-4 h-4 mr-2 animate-spin" />
+                {{ sellLoading ? 'Selling...' : `Sell ${selectedTokenSymbol}` }}
               </button>
             </div>
           </div>
@@ -382,12 +384,15 @@
 
   // Stores
   const auth = useAuthStore()
+  const toast = useToast()
 
   // Reactive data
   const selectedTokenSymbol = ref('BTC')
   const selectedPeriod = ref('1h')
   const activeTab = ref('market')
   const loading = ref(false)
+  const buyLoading = ref(false)
+  const sellLoading = ref(false)
 
   // Trading form data
   const buyAmount = ref('')
@@ -491,16 +496,24 @@
   // Trading functions
   const executeBuy = async () => {
     if (!buyAmount.value || parseFloat(buyAmount.value) <= 0) {
-      alert('Please enter a valid amount')
+      toast.add({
+        title: 'Invalid Amount',
+        description: 'Please enter a valid amount',
+        color: 'error',
+      })
       return
     }
 
     if (parseFloat(buyAmount.value) > usdtBalanceRaw.value) {
-      alert('Insufficient USDT balance')
+      toast.add({
+        title: 'Insufficient Balance',
+        description: 'You don\'t have enough USDT for this trade',
+        color: 'error',
+      })
       return
     }
 
-    loading.value = true
+    buyLoading.value = true
     try {
       const amount = TokenService.toRawAmount(parseFloat(buyAmount.value), 'USDT')
       
@@ -515,30 +528,53 @@
         await loadUserBalances()
         // Clear form
         buyAmount.value = ''
-        alert(`Successfully bought ${result.Ok.to_amount} ${selectedTokenSymbol.value}`)
+        
+        // Show success toast
+        const receivedAmount = TokenService.formatBalance(Number(result.Ok.to_amount), selectedTokenSymbol.value)
+        toast.add({
+          title: 'Trade Successful!',
+          description: `Successfully bought ${receivedAmount} ${selectedTokenSymbol.value}`,
+          color: 'success',
+        })
       } else {
-        alert(`Trade failed: ${result.Err}`)
+        toast.add({
+          title: 'Trade Failed',
+          description: result.Err,
+          color: 'error',
+        })
       }
     } catch (error) {
       console.error('Buy error:', error)
-      alert('Trade failed. Please try again.')
+      toast.add({
+        title: 'Trade Failed',
+        description: 'Please try again',
+        color: 'error',
+      })
     } finally {
-      loading.value = false
+      buyLoading.value = false
     }
   }
 
   const executeSell = async () => {
     if (!sellAmount.value || parseFloat(sellAmount.value) <= 0) {
-      alert('Please enter a valid amount')
+      toast.add({
+        title: 'Invalid Amount',
+        description: 'Please enter a valid amount',
+        color: 'error',
+      })
       return
     }
 
     if (parseFloat(sellAmount.value) > selectedTokenBalanceRaw.value) {
-      alert(`Insufficient ${selectedTokenSymbol.value} balance`)
+      toast.add({
+        title: 'Insufficient Balance',
+        description: `You don't have enough ${selectedTokenSymbol.value} for this trade`,
+        color: 'error',
+      })
       return
     }
 
-    loading.value = true
+    sellLoading.value = true
     try {
       const amount = TokenService.toRawAmount(parseFloat(sellAmount.value), selectedTokenSymbol.value)
       
@@ -553,15 +589,31 @@
         await loadUserBalances()
         // Clear form
         sellAmount.value = ''
-        alert(`Successfully sold ${result.Ok.from_amount} ${selectedTokenSymbol.value} for ${result.Ok.to_amount} USDT`)
+        
+        // Show success toast
+        const soldAmount = TokenService.formatBalance(Number(result.Ok.from_amount), selectedTokenSymbol.value)
+        const receivedAmount = TokenService.formatBalance(Number(result.Ok.to_amount), 'USDT')
+        toast.add({
+          title: 'Trade Successful!',
+          description: `Successfully sold ${soldAmount} ${selectedTokenSymbol.value} for ${receivedAmount}`,
+          color: 'success',
+        })
       } else {
-        alert(`Trade failed: ${result.Err}`)
+        toast.add({
+          title: 'Trade Failed',
+          description: result.Err,
+          color: 'error',
+        })
       }
     } catch (error) {
       console.error('Sell error:', error)
-      alert('Trade failed. Please try again.')
+      toast.add({
+        title: 'Trade Failed',
+        description: 'Please try again',
+        color: 'error',
+      })
     } finally {
-      loading.value = false
+      sellLoading.value = false
     }
   }
 

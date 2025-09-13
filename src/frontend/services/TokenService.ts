@@ -26,17 +26,17 @@ export const TOKEN_CONFIGS: Record<string, TokenConfig> = {
     symbol: 'BTC', 
     name: 'Bitcoin', 
     decimals: 8, 
-    displayDecimals: 2, 
+    displayDecimals: 6, 
     formatType: 'crypto',
-    minDisplayValue: 0.01
+    minDisplayValue: 0.000001
   },
   ETH: { 
     symbol: 'ETH', 
     name: 'Ethereum', 
     decimals: 18, 
-    displayDecimals: 4, 
+    displayDecimals: 6, 
     formatType: 'crypto',
-    minDisplayValue: 0.0001
+    minDisplayValue: 0.000001
   },
   SOL: { 
     symbol: 'SOL', 
