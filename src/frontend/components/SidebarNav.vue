@@ -62,7 +62,7 @@
       { label: 'History', icon: 'tabler:activity', to: '/activity' },
     ]
 
-    // Only show profile and settings if user is logged in
+    // Only show profile, wallet, and settings if user is logged in
     if (auth.userProfile) {
       items.push({
         label: 'Profile',
@@ -70,6 +70,11 @@
         to: auth.userProfile.username
           ? `/@${auth.userProfile.username}`
           : '/profile',
+      })
+      items.push({
+        label: 'Wallet',
+        icon: 'heroicons:wallet-20-solid',
+        to: '/wallet',
       })
       items.push({ hr: true })
       items.push({

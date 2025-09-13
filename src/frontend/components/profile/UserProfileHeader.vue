@@ -2,10 +2,10 @@
   <div
     class="bg-white dark:bg-neutral-950 rounded-lg shadow-lg overflow-hidden mb-8"
   >
-    <!-- Banner Section -->
+    <!-- Compact Banner Section -->
     <div
       class="relative bg-gradient-to-r from-blue-500 to-purple-600"
-      style="aspect-ratio: 3/1"
+      style="height: 120px"
     >
       <img
         v-if="bannerUrl"
@@ -23,21 +23,21 @@
     <!-- Profile Info Section -->
     <div class="px-6 pb-6">
       <!-- Avatar Section -->
-      <div class="flex justify-between items-start -mt-16 mb-4">
+      <div class="flex justify-between items-start -mt-12 mb-4">
         <div class="relative">
           <img
             v-if="avatarUrl"
             :src="avatarUrl"
             alt="Avatar"
-            class="w-32 h-32 rounded-full border-4 border-white dark:border-gray-900 shadow-lg bg-white object-cover cursor-pointer hover:opacity-90 transition-opacity"
+            class="w-20 h-20 rounded-full border-4 border-white dark:border-gray-900 shadow-lg bg-white object-cover cursor-pointer hover:opacity-90 transition-opacity"
             crossorigin="anonymous"
             @click="openImageModal(avatarUrl, 'Avatar')"
           >
           <div
             v-else
-            class="w-32 h-32 rounded-full border-4 border-white dark:border-gray-900 shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
+            class="w-20 h-20 rounded-full border-4 border-white dark:border-gray-900 shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
           >
-            <span class="text-white font-bold text-5xl">{{
+            <span class="text-white font-bold text-2xl">{{
               avatarInitial
             }}</span>
           </div>
@@ -99,202 +99,87 @@
       </div>
 
       <!-- User Info -->
-      <div class="space-y-6">
-        <!-- Row 1: Name/Username/Bio + Wallet Addresses -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-          <!-- Name, Username, and Bio -->
-          <div class="space-y-4 text-left justify-self-start">
-            <div class="space-y-2">
-              <div class="flex items-center gap-2">
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                  {{ displayName }}
-                </h1>
-                <span v-if="userProfile?.is_verified" class="text-blue-500">
-                  <UIcon
-                    name="i-heroicons-check-badge-20-solid"
-                    class="w-5 h-5"
-                  />
-                </span>
-              </div>
-              <div
-                v-if="
-                  userProfile?.username && displayName !== userProfile.username
-                "
-                class="text-gray-600 dark:text-gray-400"
-              >
-                @{{ userProfile.username }}
-              </div>
+      <div class="space-y-4">
+        <!-- Row 1: Name/Username + Portfolio Stats -->
+        <div class="flex justify-between items-start">
+          <!-- Name and Username -->
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+                {{ displayName }}
+              </h1>
+              <span v-if="userProfile?.is_verified" class="text-blue-500">
+                <UIcon
+                  name="i-heroicons-check-badge-20-solid"
+                  class="w-4 h-4"
+                />
+              </span>
             </div>
-
-            <!-- Bio -->
             <div
-              v-if="bio"
-              class="text-gray-900 dark:text-white"
-              @click="handleMentionClick"
+              v-if="
+                userProfile?.username && displayName !== userProfile.username
+              "
+              class="text-gray-600 dark:text-gray-400 text-sm"
             >
-              <!-- eslint-disable-next-line vue/no-v-html -->
-              <span v-html="formattedBio" />
+              @{{ userProfile.username }}
             </div>
           </div>
 
-          <!-- Wallet Addresses -->
-          <div class="grid grid-cols-2 gap-3 justify-self-end">
-            <!-- EVM Address -->
-            <div
-              v-if="userProfile?.evm_address?.[0]"
-              class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
-            >
-              <span
-                class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded-full"
-                >EVM</span
-              >
-              <span class="truncate flex-1">{{
-                formatAddress(userProfile.evm_address[0])
-              }}</span>
-              <UIcon
-                name="i-heroicons-document-duplicate-20-solid"
-                class="cursor-pointer hover:text-gray-900 dark:hover:text-white transition flex-shrink-0"
-                @click="copyToClipboard(userProfile.evm_address[0], 'EVM')"
-              />
+          <!-- Social Stats -->
+          <div class="flex items-center gap-6 text-sm">
+            <div class="text-center">
+              <div class="font-semibold text-gray-900 dark:text-white text-lg">
+                {{ userProfile?.following_count || 0 }}
+              </div>
+              <div class="text-gray-600 dark:text-gray-400 text-xs">Following</div>
             </div>
-
-            <!-- Bitcoin Address -->
-            <div
-              v-if="userProfile?.bitcoin_address?.[0]"
-              class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
-            >
-              <span
-                class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs font-semibold px-2 py-1 rounded-full"
-                >BTC</span
-              >
-              <span class="truncate flex-1">{{
-                formatAddress(userProfile.bitcoin_address[0])
-              }}</span>
-              <UIcon
-                name="i-heroicons-document-duplicate-20-solid"
-                class="cursor-pointer hover:text-gray-900 dark:hover:text-white transition flex-shrink-0"
-                @click="
-                  copyToClipboard(userProfile.bitcoin_address[0], 'Bitcoin')
-                "
-              />
-            </div>
-
-            <!-- Solana Address -->
-            <div
-              v-if="userProfile?.solana_address?.[0]"
-              class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
-            >
-              <span
-                class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs font-semibold px-2 py-1 rounded-full"
-                >SOL</span
-              >
-              <span class="truncate flex-1">{{
-                formatAddress(userProfile.solana_address[0])
-              }}</span>
-              <UIcon
-                name="i-heroicons-document-duplicate-20-solid"
-                class="cursor-pointer hover:text-gray-900 dark:hover:text-white transition flex-shrink-0"
-                @click="
-                  copyToClipboard(userProfile.solana_address[0], 'Solana')
-                "
-              />
-            </div>
-
-            <!-- ICP Principal -->
-            <div
-              v-if="userProfile?.id"
-              class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg"
-            >
-              <span
-                class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-semibold px-2 py-1 rounded-full"
-                >ICP</span
-              >
-              <span class="truncate flex-1">{{
-                formatAddress(userProfile.id.toText())
-              }}</span>
-              <UIcon
-                name="i-heroicons-document-duplicate-20-solid"
-                class="cursor-pointer hover:text-gray-900 dark:hover:text-white transition flex-shrink-0"
-                @click="copyToClipboard(userProfile.id.toText(), 'ICP')"
-              />
+            <div class="text-center">
+              <div class="font-semibold text-gray-900 dark:text-white text-lg">
+                {{ userProfile?.followers_count || 0 }}
+              </div>
+              <div class="text-gray-600 dark:text-gray-400 text-xs">Followers</div>
             </div>
           </div>
         </div>
 
-        <!-- Row 2: Location/Website/Follow Stats + Portfolio Overview -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-          <!-- Location, Website, Follow Stats -->
-          <div class="space-y-4 text-left justify-self-start">
-            <!-- Location & Website -->
-            <div
-              class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400"
-            >
-              <div v-if="location" class="flex items-center gap-1">
-                <UIcon name="i-heroicons-map-pin-20-solid" class="w-4 h-4" />
-                <span>{{ location }}</span>
-              </div>
-              <div v-if="website" class="flex items-center gap-1">
-                <UIcon name="i-heroicons-link-20-solid" class="w-4 h-4" />
-                <a
-                  :href="website"
-                  target="_blank"
-                  class="hover:text-blue-500 transition"
-                >
-                  {{ formatWebsite(website) }}
-                </a>
-              </div>
-              <div class="flex items-center gap-1">
-                <UIcon name="i-heroicons-calendar-20-solid" class="w-4 h-4" />
-                <span
-                  >Joined
-                  {{
-                    userProfile?.created_at
-                      ? formatDate(userProfile.created_at)
-                      : ''
-                  }}</span
-                >
-              </div>
-            </div>
+        <!-- Row 2: Bio -->
+        <div
+          v-if="bio"
+          class="text-gray-900 dark:text-white text-sm"
+          @click="handleMentionClick"
+        >
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <span v-html="formattedBio" />
+        </div>
 
-            <!-- Follow Stats -->
-            <div class="flex items-center gap-6 text-sm">
-              <button
-                class="flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer"
-                @click="$emit('tabChange', 'Following')"
-              >
-                <span class="font-semibold text-gray-900 dark:text-white">{{
-                  userProfile?.following_count || 0
-                }}</span>
-                <span class="text-gray-600 dark:text-gray-400">Following</span>
-              </button>
-              <button
-                class="flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer"
-                @click="$emit('tabChange', 'Followers')"
-              >
-                <span class="font-semibold text-gray-900 dark:text-white">{{
-                  userProfile?.followers_count || 0
-                }}</span>
-                <span class="text-gray-600 dark:text-gray-400">Followers</span>
-              </button>
-            </div>
+        <!-- Row 3: Location/Website/Join Date -->
+        <div
+          class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400"
+        >
+          <div v-if="location" class="flex items-center gap-1">
+            <UIcon name="i-heroicons-map-pin-20-solid" class="w-4 h-4" />
+            <span>{{ location }}</span>
           </div>
-
-          <!-- Portfolio Overview -->
-          <div
-            class="flex items-center gap-6 text-sm justify-self-end self-end"
-          >
-            <div class="flex items-center gap-1">
-              <span class="text-gray-600 dark:text-gray-400">Portfolio:</span>
-              <span class="font-semibold text-gray-900 dark:text-white"
-                >{{ portfolioValueEth }} ETH</span
-              >
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="text-gray-600 dark:text-gray-400">Tokens:</span>
-              <span class="font-semibold text-gray-900 dark:text-white"
-                >{{ tokenPercentage }}%</span
-              >
-            </div>
+          <div v-if="website" class="flex items-center gap-1">
+            <UIcon name="i-heroicons-link-20-solid" class="w-4 h-4" />
+            <a
+              :href="website"
+              target="_blank"
+              class="hover:text-blue-500 transition"
+            >
+              {{ formatWebsite(website) }}
+            </a>
+          </div>
+          <div class="flex items-center gap-1">
+            <UIcon name="i-heroicons-calendar-20-solid" class="w-4 h-4" />
+            <span
+              >Joined
+              {{
+                userProfile?.created_at
+                  ? formatDate(userProfile.created_at)
+                  : ''
+              }}</span
+            >
           </div>
         </div>
       </div>
@@ -521,14 +406,6 @@
     return `${baseUrl}?t=${timestamp}&v=${cacheBuster}&trigger=${profileUpdateTrigger.value}`
   })
 
-  // Portfolio stats - using placeholder values for now
-  const portfolioValueEth = computed(() => {
-    return '0.00' // Portfolio data not available in current backend User type
-  })
-
-  const tokenPercentage = computed(() => {
-    return '0' // Portfolio data not available in current backend User type
-  })
 
   // Format address for display
   const formatAddress = (address: string) => {

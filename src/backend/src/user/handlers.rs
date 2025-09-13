@@ -8,6 +8,7 @@ use std::cell::RefCell;
 use crate::user::errors::UserError;
 use crate::user::storage::UserDatabase;
 use crate::user::types::*;
+use crate::icp::faucet;
 
 // HTTP certification tree for asset certification
 thread_local! {
@@ -142,6 +143,17 @@ pub async fn signup(
     
     let user = User::new(caller, username, evm_address, bitcoin_address, solana_address);
     UserDatabase::insert_user(user.clone());
+    
+    // Automatically claim faucet tokens for new users
+    match faucet::claim_faucet().await {
+        Ok(message) => {
+            ic_cdk::println!("✅ New user {} automatically received faucet tokens: {}", caller, message);
+        }
+        Err(error) => {
+            // Log the error but don't fail the signup
+            ic_cdk::println!("⚠️ Failed to claim faucet for new user {}: {}", caller, error);
+        }
+    }
     
     Ok(user)
 }

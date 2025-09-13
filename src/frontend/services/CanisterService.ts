@@ -937,6 +937,64 @@ class CanisterService {
     }
   }
 
+  // Get user token balances
+  async getUserBalances(userPrincipal: string): Promise<Record<string, number>> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      // Convert string to Principal
+      const principal = Principal.fromText(userPrincipal)
+      const result = await this.backendActor.get_user_balances(principal)
+      
+      // Convert array of [string, bigint] to Record<string, number>
+      const balances: Record<string, number> = {}
+      if (Array.isArray(result)) {
+        result.forEach(([symbol, amount]) => {
+          balances[symbol] = Number(amount)
+        })
+      }
+      
+      return balances
+    } catch (error) {
+      console.error('Error getting user balances:', error)
+      throw error
+    }
+  }
+
+  // Get faucet claim info for a user
+  async getFaucetClaim(userPrincipal: string): Promise<any> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      // Convert string to Principal
+      const principal = Principal.fromText(userPrincipal)
+      const result = await this.backendActor.get_faucet_claim(principal)
+      return result
+    } catch (error) {
+      console.error('Error getting faucet claim:', error)
+      throw error
+    }
+  }
+
+  // Get all internal tokens
+  async getAllInternalTokens(): Promise<any[]> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.get_all_internal_tokens()
+      return result
+    } catch (error) {
+      console.error('Error getting internal tokens:', error)
+      throw error
+    }
+  }
+
   // Get asset URL
   getAssetUrl(filePath: string): string {
     const backendCanisterId = getBackendCanisterId()

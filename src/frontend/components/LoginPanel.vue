@@ -249,7 +249,7 @@
           // Show success toast
           toast.add({
             title: `Welcome to Ionic Swap ${profile.username}!`,
-            description: 'Your account has been created automatically',
+            description: 'Your account has been created and you received 2M USDT automatically!',
             color: 'success',
           })
 
