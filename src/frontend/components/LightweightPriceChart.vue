@@ -581,8 +581,6 @@
       })
   }
 
-  // Price line functionality removed - only using Y-axis price display
-
   // WebSocket for real-time updates
   const startWebSocket = () => {
     const binanceSymbol = getBinanceSymbol(props.tokenSymbol).toLowerCase()
@@ -627,8 +625,6 @@
               ? chartColors.value.up + '80'
               : chartColors.value.down + '80',
         })
-
-        // Price line removed - current price shows on Y-axis only
       }
     }
 

@@ -1,3 +1,13 @@
+type CompactProfile = record {
+  id : principal;
+  bio : opt text;
+  username : text;
+  avatar_url : opt text;
+  is_following_me : bool;
+  display_name : opt text;
+  am_following_them : bool;
+  is_verified : bool;
+};
 type EvmSwapRequest = record {
   min_amount_out : nat64;
   deadline : nat64;
@@ -18,6 +28,19 @@ type FaucetClaim = record {
   timestamp : nat64;
   amount : nat64;
 };
+type HttpRequest = record {
+  url : text;
+  method : text;
+  body : blob;
+  headers : vec record { text; text };
+  certificate_version : opt nat16;
+};
+type HttpResponse = record {
+  body : blob;
+  headers : vec record { text; text };
+  upgrade : opt bool;
+  status_code : nat16;
+};
 type InitArg = record { solana_network : opt SolanaNetwork };
 type InternalToken = record {
   decimals : nat8;
@@ -36,6 +59,26 @@ type PermitRequest = record {
   deadline : text;
   spender : text;
 };
+type PersonalUser = record {
+  id : principal;
+  bio : opt text;
+  updated_at : nat64;
+  username : text;
+  evm_address : opt text;
+  bitcoin_address : opt text;
+  banner_url : opt text;
+  avatar_url : opt text;
+  following_count : nat32;
+  is_following_me : bool;
+  created_at : nat64;
+  website : opt text;
+  display_name : opt text;
+  am_following_them : bool;
+  is_verified : bool;
+  solana_address : opt text;
+  followers_count : nat32;
+  location : opt text;
+};
 type PriceUpdateResult = record {
   total_sources : nat8;
   pairs_updated : vec TradingPair;
@@ -43,12 +86,17 @@ type PriceUpdateResult = record {
   timestamp : nat64;
 };
 type Result = variant { Ok : text; Err : text };
-type Result_1 = variant { Ok : TradingPair; Err : text };
-type Result_2 = variant { Ok : bool; Err : text };
-type Result_3 = variant { Ok : EvmSwapResult; Err : text };
-type Result_4 = variant { Ok : SwapResult; Err : text };
-type Result_5 = variant { Ok; Err : text };
-type Result_6 = variant { Ok : PriceUpdateResult; Err : text };
+type Result_1 = variant { Ok; Err : UserError };
+type Result_10 = variant { Ok; Err : text };
+type Result_11 = variant { Ok : PriceUpdateResult; Err : text };
+type Result_2 = variant { Ok : text; Err : UserError };
+type Result_3 = variant { Ok : User; Err : UserError };
+type Result_4 = variant { Ok : TradingPair; Err : text };
+type Result_5 = variant { Ok : PersonalUser; Err : UserError };
+type Result_6 = variant { Ok : bool; Err : text };
+type Result_7 = variant { Ok : vec CompactProfile; Err : UserError };
+type Result_8 = variant { Ok : EvmSwapResult; Err : text };
+type Result_9 = variant { Ok : SwapResult; Err : text };
 type SolanaNetwork = variant { Mainnet; Testnet; Devnet };
 type SwapRequest = record {
   min_amount_out : nat64;
@@ -70,6 +118,42 @@ type TradingPair = record {
   sources_count : nat8;
   price : float64;
 };
+type User = record {
+  id : principal;
+  bio : opt text;
+  updated_at : nat64;
+  username : text;
+  evm_address : opt text;
+  bitcoin_address : opt text;
+  banner_url : opt text;
+  avatar_url : opt text;
+  following_count : nat32;
+  created_at : nat64;
+  website : opt text;
+  display_name : opt text;
+  is_verified : bool;
+  solana_address : opt text;
+  followers_count : nat32;
+  location : opt text;
+};
+type UserError = variant {
+  InvalidInput : text;
+  UsernameTaken;
+  Unauthorized;
+  InternalError : text;
+  UserNotFound;
+};
+type UserUpdate = record {
+  bio : opt text;
+  evm_address : opt text;
+  bitcoin_address : opt text;
+  banner_url : opt text;
+  avatar_url : opt text;
+  website : opt text;
+  display_name : opt text;
+  solana_address : opt text;
+  location : opt text;
+};
 service : (InitArg) -> {
   // Claim 2M USDT from faucet (one-time only per principal)
   claim_faucet : () -> (Result);
@@ -77,12 +161,19 @@ service : (InitArg) -> {
   debug_test_external_apis : () -> (Result);
   // Debug function to verify wallet address matches signer
   debug_wallet_verification : () -> (Result);
+  // Delete account (requires signed call, owner only)
+  delete_account : () -> (Result_1);
   // Export complete token registry (admin function)
   export_token_registry : () -> (Result) query;
+  finalize_upload : (text) -> (Result_2);
+  // Follow/Unfollow functionality
+  follow_user : (principal) -> (Result_3);
   // Get all internal tokens
   get_all_internal_tokens : () -> (vec InternalToken) query;
   // Get all supported tokens with their chain deployments
   get_all_supported_tokens : () -> (Result) query;
+  // Get all usernames for sitemap generation
+  get_all_usernames : () -> (vec text) query;
   // Get the canister's own Ethereum address (always returns canister's wallet)
   get_canister_ethereum_address : () -> (text) query;
   // Get the canister's own public key (always returns canister's wallet)
@@ -93,8 +184,11 @@ service : (InitArg) -> {
   get_faucet_claim : (principal) -> (opt FaucetClaim) query;
   // Get faucet statistics
   get_faucet_stats : () -> (nat64, nat64) query;
+  get_followers : (principal) -> (vec CompactProfile) query;
+  // Get following and followers lists
+  get_following : (principal) -> (vec CompactProfile) query;
   // Get specific trading pair price
-  get_pair_price : (text) -> (Result_1) query;
+  get_pair_price : (text) -> (Result_4) query;
   // Get comprehensive Solana token balances for all known tokens
   get_solana_token_balances : () -> (Result);
   // Get token address on specific chain
@@ -107,24 +201,47 @@ service : (InitArg) -> {
   get_token_registry_stats : () -> (Result) query;
   // Get tokens deployed on specific chain
   get_tokens_by_chain : (text) -> (Result) query;
+  // Get user by principal
+  get_user : (principal) -> (Result_3) query;
   // Get all token balances for a user
   get_user_balances : (principal) -> (vec record { text; nat64 }) query;
+  // Get user by username
+  get_user_by_username : (text) -> (Result_3) query;
+  // Get total user count
+  get_user_count : () -> (nat64) query;
+  // Personal user lookup with follow state
+  get_user_personal : (principal, principal) -> (Result_5) query;
+  // HTTP request handler for serving assets
+  http_request : (HttpRequest) -> (HttpResponse) query;
+  // Asset upload functions (requires signed call, registered users only)
+  init_upload : (text, nat64, opt nat64, text) -> (Result_1);
+  // Check if user is following another user
+  is_following : (principal, principal) -> (bool) query;
   // Check if token is deployed on chain
-  is_token_deployed : (text, text) -> (Result_2) query;
+  is_token_deployed : (text, text) -> (Result_6) query;
+  // Check if username is available
+  is_username_available : (text) -> (bool) query;
   // Reload token registry from chain definitions (admin function)
   reload_token_registry : () -> (Result);
+  // Search users
+  search_users : (text, nat32) -> (Result_7) query;
+  // Personal search with follow state
+  search_users_personal : (text, nat32, principal) -> (Result_7) query;
+  // User registration (requires signed call)
+  signup : (text, opt text, opt text, opt text) -> (Result_3);
   // Start the price update scheduler (runs every second)
   start_price_scheduler : () -> (Result);
   // Stop the price update scheduler
   stop_price_scheduler : () -> (Result);
+  store_chunk : (nat64, blob, text) -> (Result_1);
   // Submit atomic delegation + transfer transaction (gasless for user)
   submit_delegation_transaction : (blob) -> (Result);
   // Submit gasless permit transaction (user signs permit, canister pays gas)
   submit_gasless_permit : (PermitRequest) -> (Result);
   // Submit atomic EVM swap transaction (permit + immediate token transfer)
-  swap_evm : (PermitRequest, EvmSwapRequest) -> (Result_3);
+  swap_evm : (PermitRequest, EvmSwapRequest) -> (Result_8);
   // Submit atomic swap transaction (delegation + immediate liquidity transfer)
-  swap_solana : (blob, SwapRequest) -> (Result_4);
+  swap_solana : (blob, SwapRequest) -> (Result_9);
   // Test Ed25519 key generation and signing
   test_ed25519 : () -> (Result);
   // Test secp256k1 key generation and signing
@@ -132,7 +249,20 @@ service : (InitArg) -> {
   // Test simple EVM transaction (get nonce, etc.)
   test_simple_evm_transaction : () -> (Result);
   // Transfer tokens between users
-  transfer_tokens : (principal, principal, text, nat64) -> (Result_5);
+  transfer_tokens : (principal, principal, text, nat64) -> (Result_10);
+  unfollow_user : (principal) -> (Result_3);
+  update_avatar : (text) -> (Result_3);
+  update_banner : (text) -> (Result_3);
+  update_bio : (text) -> (Result_3);
+  update_bitcoin_address : (text) -> (Result_3);
+  // Individual field updates (requires signed call, owner only)
+  update_display_name : (text) -> (Result_3);
+  update_evm_address : (text) -> (Result_3);
+  update_location : (text) -> (Result_3);
   // Update all prices from all sources (manual trigger)
-  update_prices : () -> (Result_6);
+  update_prices : () -> (Result_11);
+  // Update user profile (requires signed call, owner only)
+  update_profile : (UserUpdate) -> (Result_3);
+  update_solana_address : (text) -> (Result_3);
+  update_website : (text) -> (Result_3);
 }

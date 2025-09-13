@@ -1,4 +1,3 @@
-// Removed unused imports: ref, watch
 import { useColorMode } from '#imports'
 
 export const useTheme = () => {

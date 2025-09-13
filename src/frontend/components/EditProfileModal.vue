@@ -55,7 +55,6 @@
                 v-else
                 class="w-full h-full flex items-center justify-center"
               >
-                <!-- Removed RUSH text -->
               </div>
               <!-- Hover overlay -->
               <div

@@ -2,7 +2,7 @@ use candid::{CandidType, Deserialize};
 use thiserror::Error;
 
 #[derive(CandidType, Deserialize, Error, Debug, Clone)]
-pub enum Error {
+pub enum UserError {
     #[error("User not found")]
     UserNotFound,
     #[error("Username already taken")]
@@ -15,14 +15,14 @@ pub enum Error {
     InternalError(String),
 }
 
-impl From<std::string::FromUtf8Error> for Error {
+impl From<std::string::FromUtf8Error> for UserError {
     fn from(err: std::string::FromUtf8Error) -> Self {
-        Error::InternalError(format!("UTF-8 error: {}", err))
+        UserError::InternalError(format!("UTF-8 error: {}", err))
     }
 }
 
-impl From<serde_json::Error> for Error {
+impl From<serde_json::Error> for UserError {
     fn from(err: serde_json::Error) -> Self {
-        Error::InternalError(format!("Serialization error: {}", err))
+        UserError::InternalError(format!("Serialization error: {}", err))
     }
 }

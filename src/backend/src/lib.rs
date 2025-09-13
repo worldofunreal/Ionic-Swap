@@ -5,6 +5,7 @@ pub mod evm;
 pub mod types;
 pub mod tokens;
 pub mod icp;
+pub mod user;
 
 use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::{init, post_upgrade, update, query};
@@ -54,8 +55,6 @@ pub struct PermitMessage {
     pub deadline: i64,
     pub token_mint: String,
 }
-
-// Removed unused types: CreateEscrowWithPermitArgs, PermitResult
 
 // ============================================================================
 // SOLANA OPERATIONS
@@ -178,7 +177,6 @@ pub async fn swap_evm(
     evm::swap_evm(permit_request, swap_request).await
 }
 
-
 // ============================================================================
 // ICP INTERNAL TOKEN FAUCET OPERATIONS
 // ============================================================================
@@ -188,7 +186,6 @@ pub async fn swap_evm(
 pub async fn claim_faucet() -> Result<String, String> {
     icp::faucet::claim_faucet().await
 }
-
 
 /// Get faucet claim info for a principal
 #[query]
@@ -214,18 +211,334 @@ pub fn transfer_tokens(from: Principal, to: Principal, symbol: String, amount: u
     icp::balances::transfer_tokens(from, to, &symbol, amount)
 }
 
-
 /// Get all internal tokens
 #[query]
 pub fn get_all_internal_tokens() -> Vec<icp::types::InternalToken> {
     icp::queries::get_all_tokens()
 }
 
-
 /// Get faucet statistics
 #[query]
 pub fn get_faucet_stats() -> (u64, u64) {
     icp::faucet::get_faucet_stats()
+}
+
+// ============================================================================
+// USER MANAGEMENT OPERATIONS
+// ============================================================================
+
+/// User registration (requires signed call)
+#[update]
+pub async fn signup(
+    username: String, 
+    evm_address: Option<String>, 
+    bitcoin_address: Option<String>, 
+    solana_address: Option<String>
+) -> Result<user::User, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    user::signup(caller, username, evm_address, bitcoin_address, solana_address).await
+}
+
+/// Get user by principal
+#[query]
+pub fn get_user(principal: candid::Principal) -> Result<user::User, user::UserError> {
+    user::get_user(principal)
+}
+
+/// Get user by username
+#[query]
+pub fn get_user_by_username(username: String) -> Result<user::User, user::UserError> {
+    user::get_user_by_username(username)
+}
+
+/// Update user profile (requires signed call, owner only)
+#[update]
+pub async fn update_profile(update: user::UserUpdate) -> Result<user::User, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    user::update_profile(caller, update).await
+}
+
+/// Individual field updates (requires signed call, owner only)
+#[update]
+pub async fn update_display_name(display_name: String) -> Result<user::User, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    let mut user = user::UserDatabase::get_user(caller).ok_or(user::UserError::UserNotFound)?;
+    user::validate_display_name(&display_name)?;
+    user.display_name = Some(display_name);
+    user.updated_at = ic_cdk::api::time();
+    user::UserDatabase::update_user(user.clone());
+    Ok(user)
+}
+
+#[update]
+pub async fn update_bio(bio: String) -> Result<user::User, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    let mut user = user::UserDatabase::get_user(caller).ok_or(user::UserError::UserNotFound)?;
+    user::validate_bio(&bio)?;
+    user.bio = Some(bio);
+    user.updated_at = ic_cdk::api::time();
+    user::UserDatabase::update_user(user.clone());
+    Ok(user)
+}
+
+#[update]
+pub async fn update_avatar(avatar_url: String) -> Result<user::User, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    let mut user = user::UserDatabase::get_user(caller).ok_or(user::UserError::UserNotFound)?;
+    user.avatar_url = Some(avatar_url);
+    user.updated_at = ic_cdk::api::time();
+    user::UserDatabase::update_user(user.clone());
+    Ok(user)
+}
+
+#[update]
+pub async fn update_banner(banner_url: String) -> Result<user::User, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    let mut user = user::UserDatabase::get_user(caller).ok_or(user::UserError::UserNotFound)?;
+    user.banner_url = Some(banner_url);
+    user.updated_at = ic_cdk::api::time();
+    user::UserDatabase::update_user(user.clone());
+    Ok(user)
+}
+
+#[update]
+pub async fn update_location(location: String) -> Result<user::User, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    let mut user = user::UserDatabase::get_user(caller).ok_or(user::UserError::UserNotFound)?;
+    user::validate_location(&location)?;
+    user.location = Some(location);
+    user.updated_at = ic_cdk::api::time();
+    user::UserDatabase::update_user(user.clone());
+    Ok(user)
+}
+
+#[update]
+pub async fn update_website(website: String) -> Result<user::User, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    let mut user = user::UserDatabase::get_user(caller).ok_or(user::UserError::UserNotFound)?;
+    user::validate_website(&website)?;
+    user.website = Some(website);
+    user.updated_at = ic_cdk::api::time();
+    user::UserDatabase::update_user(user.clone());
+    Ok(user)
+}
+
+#[update]
+pub async fn update_evm_address(evm_address: String) -> Result<user::User, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    let mut user = user::UserDatabase::get_user(caller).ok_or(user::UserError::UserNotFound)?;
+    user::validate_evm_address(&evm_address)?;
+    user.evm_address = Some(evm_address);
+    user.updated_at = ic_cdk::api::time();
+    user::UserDatabase::update_user(user.clone());
+    Ok(user)
+}
+
+#[update]
+pub async fn update_bitcoin_address(bitcoin_address: String) -> Result<user::User, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    let mut user = user::UserDatabase::get_user(caller).ok_or(user::UserError::UserNotFound)?;
+    user::validate_bitcoin_address(&bitcoin_address)?;
+    user.bitcoin_address = Some(bitcoin_address);
+    user.updated_at = ic_cdk::api::time();
+    user::UserDatabase::update_user(user.clone());
+    Ok(user)
+}
+
+#[update]
+pub async fn update_solana_address(solana_address: String) -> Result<user::User, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    let mut user = user::UserDatabase::get_user(caller).ok_or(user::UserError::UserNotFound)?;
+    user::validate_solana_address(&solana_address)?;
+    user.solana_address = Some(solana_address);
+    user.updated_at = ic_cdk::api::time();
+    user::UserDatabase::update_user(user.clone());
+    Ok(user)
+}
+
+/// Search users
+#[query]
+pub fn search_users(query: String, limit: u32) -> Result<Vec<user::CompactProfile>, user::UserError> {
+    user::search_users(query, limit)
+}
+
+/// Personal search with follow state
+#[query]
+pub fn search_users_personal(query: String, limit: u32, caller: candid::Principal) -> Result<Vec<user::CompactProfile>, user::UserError> {
+    user::search_users_personal(query, limit, caller)
+}
+
+/// Personal user lookup with follow state
+#[query]
+pub fn get_user_personal(target: candid::Principal, caller: candid::Principal) -> Result<user::PersonalUser, user::UserError> {
+    user::get_user_personal(target, caller)
+}
+
+/// Check if username is available
+#[query]
+pub fn is_username_available(username: String) -> bool {
+    user::is_username_available(username)
+}
+
+/// Get total user count
+#[query]
+pub fn get_user_count() -> u64 {
+    user::get_user_count()
+}
+
+/// Get all usernames for sitemap generation
+#[query]
+pub fn get_all_usernames() -> Vec<String> {
+    user::get_all_usernames()
+}
+
+/// Follow/Unfollow functionality
+#[update]
+pub async fn follow_user(target: candid::Principal) -> Result<user::User, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    user::follow_user(caller, target).await
+}
+
+#[update]
+pub async fn unfollow_user(target: candid::Principal) -> Result<user::User, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    user::unfollow_user(caller, target).await
+}
+
+/// Get following and followers lists
+#[query]
+pub fn get_following(user: candid::Principal) -> Vec<user::CompactProfile> {
+    user::get_following(user)
+}
+
+#[query]
+pub fn get_followers(user: candid::Principal) -> Vec<user::CompactProfile> {
+    user::get_followers(user)
+}
+
+/// Check if user is following another user
+#[query]
+pub fn is_following(follower: candid::Principal, following: candid::Principal) -> bool {
+    user::is_following(follower, following)
+}
+
+/// Delete account (requires signed call, owner only)
+#[update]
+pub async fn delete_account() -> Result<(), user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    user::delete_account(caller).await
+}
+
+// ============================================================================
+// ASSET UPLOAD OPERATIONS
+// ============================================================================
+
+/// Asset upload functions (requires signed call, registered users only)
+#[update]
+pub async fn init_upload(
+    file_path: String,
+    file_size: u64,
+    chunk_size: Option<u64>,
+    file_hash: String,
+) -> Result<(), user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    // Validate file size (max 1MB)
+    const MAX_FILE_SIZE: u64 = 1 * 1024 * 1024; // 1MB
+    if file_size > MAX_FILE_SIZE {
+        return Err(user::UserError::InvalidInput("File size exceeds maximum allowed size (1MB)".to_string()));
+    }
+    
+    user::init_upload(caller, file_path, file_size, chunk_size, file_hash).await
+}
+
+#[update]
+pub async fn store_chunk(
+    chunk_id: u64,
+    chunk_data: Vec<u8>,
+    file_path: String,
+) -> Result<(), user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    user::store_chunk(caller, chunk_id, chunk_data, file_path).await
+}
+
+#[update]
+pub async fn finalize_upload(file_path: String) -> Result<String, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    user::finalize_upload(caller, file_path).await
+}
+
+/// HTTP request handler for serving assets
+#[query]
+pub fn http_request(req: ic_http_certification::HttpRequest) -> ic_http_certification::HttpResponse {
+    user::http_request(req)
 }
 
 // ============================================================================

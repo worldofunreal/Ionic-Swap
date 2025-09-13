@@ -4,9 +4,8 @@ use ic_stable_structures::{
     DefaultMemoryImpl, StableBTreeMap,
 };
 use std::cell::RefCell;
-use std::collections::HashMap;
 
-use crate::types::{User, PrincipalList};
+use crate::user::types::{User, PrincipalList};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -42,28 +41,10 @@ thread_local! {
     );
 }
 
-pub struct Database;
+// User Database Operations
+pub struct UserDatabase;
 
-impl Database {
-    pub fn new() -> Self {
-        Self
-    }
-
-
-
-    pub fn init(&mut self) {
-        // Database is initialized automatically by thread_local!
-    }
-
-    pub fn pre_upgrade(&self) {
-        // Stable structures handle persistence automatically
-    }
-
-    pub fn post_upgrade(&mut self) {
-        // Stable structures handle restoration automatically
-    }
-
-    // User operations
+impl UserDatabase {
     pub fn insert_user(user: User) {
         USERS.with(|users| {
             users.borrow_mut().insert(user.id, user.clone());
@@ -148,23 +129,20 @@ impl Database {
 
     // Following/Followers operations
     pub fn follow_user(follower: Principal, following: Principal) -> bool {
-        // Check if already following
         let current_following = FOLLOWING.with(|following_map| {
             following_map.borrow().get(&follower).map(|list| list.0.clone()).unwrap_or_default()
         });
         
         if current_following.contains(&following) {
-            return false; // Already following
+            return false;
         }
         
-        // Add to follower's FOLLOWING list
         let mut new_following = current_following;
         new_following.push(following);
         FOLLOWING.with(|following_map| {
             following_map.borrow_mut().insert(follower, PrincipalList(new_following));
         });
         
-        // Add to following's FOLLOWERS list
         let current_followers = FOLLOWERS.with(|followers_map| {
             followers_map.borrow().get(&following).map(|list| list.0.clone()).unwrap_or_default()
         });
@@ -183,10 +161,9 @@ impl Database {
         });
         
         if !current_following.contains(&following) {
-            return false; // Not following
+            return false;
         }
         
-        // Remove from follower's FOLLOWING list
         let new_following: Vec<Principal> = current_following.into_iter()
             .filter(|&p| p != following)
             .collect();
@@ -194,7 +171,6 @@ impl Database {
             following_map.borrow_mut().insert(follower, PrincipalList(new_following));
         });
         
-        // Remove from following's FOLLOWERS list
         let current_followers = FOLLOWERS.with(|followers_map| {
             followers_map.borrow().get(&following).map(|list| list.0.clone()).unwrap_or_default()
         });
@@ -225,137 +201,8 @@ impl Database {
         })
     }
 
-    // Account deletion operations
-    pub fn remove_user_from_following(user: Principal) {
-        // Remove user from all following lists
-        FOLLOWING.with(|following_map| {
-            let mut following_map = following_map.borrow_mut();
-            let keys: Vec<Principal> = following_map.iter().map(|entry| entry.key().clone()).collect();
-            for key in keys {
-                if let Some(following_list) = following_map.get(&key) {
-                    let mut principals = following_list.0.clone();
-                    principals.retain(|&p| p != user);
-                    following_map.insert(key, PrincipalList(principals));
-                }
-            }
-        });
-    }
-
-    pub fn remove_user_from_followers(user: Principal) {
-        // Remove user from all followers lists
-        FOLLOWERS.with(|followers_map| {
-            let mut followers_map = followers_map.borrow_mut();
-            let keys: Vec<Principal> = followers_map.iter().map(|entry| entry.key().clone()).collect();
-            for key in keys {
-                if let Some(followers_list) = followers_map.get(&key) {
-                    let mut principals = followers_list.0.clone();
-                    principals.retain(|&p| p != user);
-                    followers_map.insert(key, PrincipalList(principals));
-                }
-            }
-        });
-    }
-
-    pub fn remove_username(username: String) {
-        USERNAMES.with(|usernames| {
-            usernames.borrow_mut().remove(&username);
-        });
-    }
-
-    pub fn remove_user(user: Principal) {
-        USERS.with(|users| {
-            users.borrow_mut().remove(&user);
-        });
-    }
-
-    pub fn remove_user_assets(user: Principal) {
-        // Remove all assets associated with the user
-        // This is a simplified implementation - in production you might want to
-        // track which assets belong to which user
-        ASSETS.with(|assets| {
-            let mut assets = assets.borrow_mut();
-            let keys: Vec<String> = assets.iter().map(|entry| entry.key().clone()).collect();
-            for key in keys {
-                if key.contains(&user.to_string()) {
-                    assets.remove(&key);
-                }
-            }
-        });
-    }
-
-    // Upload storage operations
-    // Note: For simplicity, we'll use in-memory storage for uploads
-    // In production, you'd want to use stable storage
-    
-    // Temporary storage for chunks during upload (using thread_local for simplicity)
-    thread_local! {
-        static CHUNKS: RefCell<HashMap<String, Vec<Vec<u8>>>> = RefCell::new(HashMap::new());
-    }
-    
-    pub fn init_upload(
-        caller: Principal,
-        file_path: String,
-        file_size: u64,
-        chunk_size: Option<u64>,
-        file_hash: String,
-    ) {
-        // Initialize empty chunk storage for this file
-        Self::CHUNKS.with(|chunks| {
-            chunks.borrow_mut().insert(file_path.clone(), vec![]);
-        });
-        println!("Init upload: {} by {} (size: {}, hash: {})", file_path, caller, file_size, file_hash);
-        if let Some(chunk_size) = chunk_size {
-            println!("Chunk size: {}", chunk_size);
-        }
-    }
-
-    pub fn store_chunk(
-        caller: Principal,
-        chunk_id: u64,
-        chunk_data: Vec<u8>,
-        file_path: String,
-    ) {
-        let chunk_size = chunk_data.len();
-        // Store chunk data
-        Self::CHUNKS.with(|chunks| {
-            if let Some(file_chunks) = chunks.borrow_mut().get_mut(&file_path) {
-                // Ensure we have enough space for this chunk
-                while file_chunks.len() <= chunk_id as usize {
-                    file_chunks.push(vec![]);
-                }
-                file_chunks[chunk_id as usize] = chunk_data;
-            }
-        });
-        println!("Store chunk {} for {} by {} (size: {})", chunk_id, file_path, caller, chunk_size);
-    }
-
-    pub fn get_complete_file(caller: Principal, file_path: String) -> Result<Vec<u8>, crate::errors::Error> {
-        // Reconstruct file from chunks
-        let complete_file = Self::CHUNKS.with(|chunks| {
-            if let Some(file_chunks) = chunks.borrow().get(&file_path) {
-                // Concatenate all chunks
-                let mut result = Vec::new();
-                for chunk in file_chunks {
-                    result.extend_from_slice(chunk);
-                }
-                result
-            } else {
-                vec![]
-            }
-        });
-        
-        println!("Get complete file: {} by {} (size: {})", file_path, caller, complete_file.len());
-        Ok(complete_file)
-    }
-
-    pub fn cleanup_upload(caller: Principal, file_path: String) {
-        // Clean up chunks after successful upload
-        println!("Cleanup upload: {} by {}", file_path, caller);
-    }
-
     // Asset storage operations
     pub fn store_asset(file_path: String, asset_data: Vec<u8>) {
-        // Store the complete asset in stable storage
         ASSETS.with(|assets| {
             assets.borrow_mut().insert(file_path, asset_data);
         });

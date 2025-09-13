@@ -10,7 +10,7 @@ pub struct PrincipalList(pub Vec<Principal>);
 impl Storable for PrincipalList {
     const BOUND: Bound = Bound::Unbounded;
     
-    fn to_bytes(&self) -> Cow<[u8]> {
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
         Cow::Owned(candid::encode_one(self).unwrap())
     }
     
@@ -46,7 +46,7 @@ pub struct User {
 impl Storable for User {
     const BOUND: Bound = Bound::Unbounded;
     
-    fn to_bytes(&self) -> Cow<[u8]> {
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
         Cow::Owned(candid::encode_one(self).unwrap())
     }
     

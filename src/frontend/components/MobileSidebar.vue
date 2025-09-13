@@ -54,7 +54,6 @@
 </template>
 
 <script setup lang="ts">
-  // Removed unused import: useColorMode
 
   // Define props
   interface Props {
