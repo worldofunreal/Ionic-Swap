@@ -109,8 +109,15 @@ pub async fn get_current_prices() -> Result<HashMap<String, TradingPair>, String
 pub async fn get_pair_price(symbol: &str) -> Result<TradingPair, String> {
     let cache = super::types::init_price_cache();
     let prices = cache.lock().unwrap();
+    
+    ic_cdk::println!("   🔍 Looking for price of {} in cache...", symbol);
+    ic_cdk::println!("   📊 Cache contains {} prices: {:?}", prices.len(), prices.keys().collect::<Vec<_>>());
+    
     prices.get(symbol).cloned()
-        .ok_or_else(|| format!("Price not found for {}", symbol))
+        .ok_or_else(|| {
+            ic_cdk::println!("   ❌ Price not found for {} in cache", symbol);
+            format!("Price not found for {}", symbol)
+        })
 }
 
 /// Calculate weighted averages from all price sources

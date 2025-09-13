@@ -68,8 +68,12 @@ pub async fn market_swap(
             sources_count: 1,
         }
     } else {
+        ic_cdk::println!("   🔍 Fetching price for {}...", request.from_token);
         get_pair_price(&request.from_token).await
-            .map_err(|e| format!("Failed to get price for {}: {}", request.from_token, e))?
+            .map_err(|e| {
+                ic_cdk::println!("   ❌ Failed to get price for {}: {}", request.from_token, e);
+                format!("Failed to get price for {}: {}", request.from_token, e)
+            })?
     };
     
     let to_price = if request.to_token == "USDT" {
@@ -81,8 +85,12 @@ pub async fn market_swap(
             sources_count: 1,
         }
     } else {
+        ic_cdk::println!("   🔍 Fetching price for {}...", request.to_token);
         get_pair_price(&request.to_token).await
-            .map_err(|e| format!("Failed to get price for {}: {}", request.to_token, e))?
+            .map_err(|e| {
+                ic_cdk::println!("   ❌ Failed to get price for {}: {}", request.to_token, e);
+                format!("Failed to get price for {}: {}", request.to_token, e)
+            })?
     };
     
     ic_cdk::println!("   Current prices: {} = ${}, {} = ${}", 
