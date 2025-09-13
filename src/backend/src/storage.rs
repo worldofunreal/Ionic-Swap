@@ -248,38 +248,87 @@ impl TokenStorage {
     pub fn init_storage() {
         let canister_id = ic_cdk::api::canister_self();
         
-        // Initialize default tokens if they don't exist
-        if TOKENS.with(|tokens| tokens.borrow().is_empty()) {
-            let default_tokens = vec![
-                InternalToken {
-                    symbol: "USDT".to_string(),
-                    name: "Tether USD".to_string(),
-                    decimals: 6,
-                    total_supply: 1_000_000_000_000_000, // 1B USDT
-                    owner: canister_id,
-                },
-                InternalToken {
-                    symbol: "USDC".to_string(),
-                    name: "USD Coin".to_string(),
-                    decimals: 6,
-                    total_supply: 1_000_000_000_000_000, // 1B USDC
-                    owner: canister_id,
-                },
-                InternalToken {
-                    symbol: "BTC".to_string(),
-                    name: "Bitcoin".to_string(),
-                    decimals: 8,
-                    total_supply: 21_000_000_000_000_000, // 21M BTC
-                    owner: canister_id,
-                },
-                InternalToken {
-                    symbol: "ETH".to_string(),
-                    name: "Ethereum".to_string(),
-                    decimals: 18,
-                    total_supply: 120_000_000_000_000_000, // 120M ETH (fits in u64)
-                    owner: canister_id,
-                },
-            ];
+                    // Initialize default tokens if they don't exist
+                    if TOKENS.with(|tokens| tokens.borrow().is_empty()) {
+                        let default_tokens = vec![
+                            InternalToken {
+                                symbol: "BTC".to_string(),
+                                name: "Bitcoin".to_string(),
+                                decimals: 8,
+                                total_supply: 21_000_000_000_000_000, // 21M BTC
+                                owner: canister_id,
+                            },
+                            InternalToken {
+                                symbol: "ETH".to_string(),
+                                name: "Ethereum".to_string(),
+                                decimals: 18,
+                                total_supply: 120_000_000_000_000_000, // 120M ETH
+                                owner: canister_id,
+                            },
+                            InternalToken {
+                                symbol: "XRP".to_string(),
+                                name: "XRP".to_string(),
+                                decimals: 6,
+                                total_supply: 100_000_000_000_000_000, // 100B XRP
+                                owner: canister_id,
+                            },
+                            InternalToken {
+                                symbol: "USDT".to_string(),
+                                name: "Tether USD".to_string(),
+                                decimals: 6,
+                                total_supply: 1_000_000_000_000_000, // 1B USDT
+                                owner: canister_id,
+                            },
+                            InternalToken {
+                                symbol: "BNB".to_string(),
+                                name: "BNB".to_string(),
+                                decimals: 18,
+                                total_supply: 200_000_000_000_000_000, // 200M BNB
+                                owner: canister_id,
+                            },
+                            InternalToken {
+                                symbol: "SOL".to_string(),
+                                name: "Solana".to_string(),
+                                decimals: 9,
+                                total_supply: 500_000_000_000_000_000, // 500M SOL
+                                owner: canister_id,
+                            },
+                            InternalToken {
+                                symbol: "USDC".to_string(),
+                                name: "USD Coin".to_string(),
+                                decimals: 6,
+                                total_supply: 1_000_000_000_000_000, // 1B USDC
+                                owner: canister_id,
+                            },
+                            InternalToken {
+                                symbol: "DOGE".to_string(),
+                                name: "Dogecoin".to_string(),
+                                decimals: 8,
+                                total_supply: 130_000_000_000_000_000, // 130B DOGE
+                                owner: canister_id,
+                            },
+                            InternalToken {
+                                symbol: "ADA".to_string(),
+                                name: "Cardano".to_string(),
+                                decimals: 6,
+                                total_supply: 45_000_000_000_000_000, // 45B ADA
+                                owner: canister_id,
+                            },
+                            InternalToken {
+                                symbol: "TRX".to_string(),
+                                name: "TRON".to_string(),
+                                decimals: 6,
+                                total_supply: 100_000_000_000_000_000, // 100B TRX
+                                owner: canister_id,
+                            },
+                            InternalToken {
+                                symbol: "ICP".to_string(),
+                                name: "Internet Computer".to_string(),
+                                decimals: 8,
+                                total_supply: 500_000_000_000_000_000, // 500M ICP
+                                owner: canister_id,
+                            },
+                        ];
 
             for token in default_tokens {
                 TOKENS.with(|tokens| {
@@ -289,19 +338,19 @@ impl TokenStorage {
                 // Initialize canister balance for this token
                 BalanceStorage::set_balance(canister_id, &token.symbol, token.total_supply);
             }
-        } else {
-            // If tokens already exist, ensure canister has proper balance
-            let token_symbols = vec!["USDT", "USDC", "BTC", "ETH"];
-            for symbol in token_symbols {
-                if let Some(token) = TOKENS.with(|tokens| tokens.borrow().get(&symbol.to_string())) {
-                    let current_balance = BalanceStorage::get_balance(canister_id, symbol);
-                    if current_balance == 0 {
-                        BalanceStorage::set_balance(canister_id, symbol, token.total_supply);
-                        ic_cdk::println!("✅ Initialized canister balance for {}: {}", symbol, token.total_supply);
+                    } else {
+                        // If tokens already exist, ensure canister has proper balance
+                        let token_symbols = vec!["BTC", "ETH", "XRP", "USDT", "BNB", "SOL", "USDC", "DOGE", "ADA", "TRX", "ICP"];
+                        for symbol in token_symbols {
+                            if let Some(token) = TOKENS.with(|tokens| tokens.borrow().get(&symbol.to_string())) {
+                                let current_balance = BalanceStorage::get_balance(canister_id, symbol);
+                                if current_balance == 0 {
+                                    BalanceStorage::set_balance(canister_id, symbol, token.total_supply);
+                                    ic_cdk::println!("✅ Initialized canister balance for {}: {}", symbol, token.total_supply);
+                                }
+                            }
+                        }
                     }
-                }
-            }
-        }
     }
 
     pub fn get_all_tokens() -> Vec<InternalToken> {

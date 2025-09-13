@@ -629,30 +629,82 @@ pub fn reload_token_registry() -> Result<String, String> {
     tokens::reload_token_registry()
 }
 
-/// Initialize canister token balances (admin function)
-#[update]
-pub fn init_canister_balances() -> Result<String, String> {
-    let canister_id = ic_cdk::api::canister_self();
-    let token_symbols = vec!["USDT", "USDC", "BTC", "ETH"];
-    let mut initialized = Vec::new();
-    
-    for symbol in token_symbols {
-        if let Some(token) = icp::storage::IcpTokenDatabase::get_token(symbol) {
-            let current_balance = icp::storage::IcpTokenDatabase::get_balance(canister_id, symbol);
-            if current_balance == 0 {
-                icp::storage::IcpTokenDatabase::set_balance(canister_id, symbol, token.total_supply);
-                initialized.push(format!("{}: {}", symbol, token.total_supply));
-                ic_cdk::println!("✅ Initialized canister balance for {}: {}", symbol, token.total_supply);
+    /// Initialize canister token balances (admin function)
+    #[update]
+    pub fn init_canister_balances() -> Result<String, String> {
+        let canister_id = ic_cdk::api::canister_self();
+        let token_symbols = vec!["BTC", "ETH", "XRP", "USDT", "BNB", "SOL", "USDC", "DOGE", "ADA", "TRX", "ICP"];
+        let mut initialized = Vec::new();
+        
+        for symbol in token_symbols {
+            if let Some(token) = icp::storage::IcpTokenDatabase::get_token(symbol) {
+                let current_balance = icp::storage::IcpTokenDatabase::get_balance(canister_id, symbol);
+                if current_balance == 0 {
+                    icp::storage::IcpTokenDatabase::set_balance(canister_id, symbol, token.total_supply);
+                    initialized.push(format!("{}: {}", symbol, token.total_supply));
+                    ic_cdk::println!("✅ Initialized canister balance for {}: {}", symbol, token.total_supply);
+                }
             }
         }
+        
+        if initialized.is_empty() {
+            Ok("All canister balances already initialized".to_string())
+        } else {
+            Ok(format!("Initialized balances: {}", initialized.join(", ")))
+        }
     }
-    
-    if initialized.is_empty() {
-        Ok("All canister balances already initialized".to_string())
-    } else {
-        Ok(format!("Initialized balances: {}", initialized.join(", ")))
+
+    /// Initialize all missing tokens (admin function)
+    #[update]
+    pub fn init_all_tokens() -> Result<String, String> {
+        let canister_id = ic_cdk::api::canister_self();
+        let mut added_tokens = Vec::new();
+        
+        // Define all tokens that should exist
+        let all_tokens = vec![
+            ("BTC", "Bitcoin", 8, 21_000_000_000_000_000),
+            ("ETH", "Ethereum", 18, 120_000_000_000_000_000),
+            ("XRP", "XRP", 6, 100_000_000_000_000_000),
+            ("USDT", "Tether USD", 6, 1_000_000_000_000_000),
+            ("BNB", "BNB", 18, 200_000_000_000_000_000),
+            ("SOL", "Solana", 9, 500_000_000_000_000_000),
+            ("USDC", "USD Coin", 6, 1_000_000_000_000_000),
+            ("DOGE", "Dogecoin", 8, 130_000_000_000_000_000),
+            ("ADA", "Cardano", 6, 45_000_000_000_000_000),
+            ("TRX", "TRON", 6, 100_000_000_000_000_000),
+            ("ICP", "Internet Computer", 8, 500_000_000_000_000_000),
+        ];
+        
+        for (symbol, name, decimals, total_supply) in all_tokens {
+            // Check if token already exists
+            if icp::storage::IcpTokenDatabase::get_token(symbol).is_none() {
+                // Create and add the token
+                let token = icp::types::InternalToken {
+                    symbol: symbol.to_string(),
+                    name: name.to_string(),
+                    decimals,
+                    total_supply,
+                    owner: canister_id,
+                };
+                
+                icp::storage::TokenStorage::create_token(token.clone()).unwrap_or_else(|e| {
+                    ic_cdk::println!("Warning: Failed to create token {}: {}", symbol, e);
+                });
+                
+                // Initialize canister balance
+                icp::storage::IcpTokenDatabase::set_balance(canister_id, symbol, total_supply);
+                
+                added_tokens.push(format!("{}: {}", symbol, total_supply));
+                ic_cdk::println!("✅ Added token {} with balance: {}", symbol, total_supply);
+            }
+        }
+        
+        if added_tokens.is_empty() {
+            Ok("All tokens already exist".to_string())
+        } else {
+            Ok(format!("Added tokens: {}", added_tokens.join(", ")))
+        }
     }
-}
 
 // ============================================================================
 // TRADING OPERATIONS
