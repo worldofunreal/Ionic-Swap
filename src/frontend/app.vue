@@ -66,7 +66,6 @@
 
   const loginPanelRef = ref<{
     open: () => void
-    showRegistrationModal: () => void
   } | null>(null)
   // Temporarily disabled for performance optimization
   // const disclaimerModalRef = ref<{
@@ -126,15 +125,16 @@
           })
         } else {
           console.log('User authenticated but needs to complete registration')
+          // This should not happen with auto-registration, but handle gracefully
           toast.add({
-            title: 'Complete Registration',
-            description: 'Please complete your profile registration.',
+            title: 'Registration Required',
+            description: 'Please log in again to complete registration.',
             color: 'warning',
           })
-          // Show registration modal
+          // Show login panel
           await nextTick()
           if (loginPanelRef.value) {
-            loginPanelRef.value.showRegistrationModal()
+            loginPanelRef.value.open()
           }
         }
       } else {

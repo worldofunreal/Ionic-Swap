@@ -20,7 +20,7 @@
         <!-- Logo Section -->
         <div class="flex flex-col items-center mb-8">
           <img src="/logo.svg" alt="Ionic Swap Logo" class="w-12 h-12 mb-2" >
-          <img src="/logo-text.svg" alt="Ionic Swap" class="h-6 light:invert" >
+          <img src="/logo-text.svg" alt="Ionic Swap" class="h-6" >
         </div>
 
         <h2 class="text-2xl font-bold mb-6 text-center">
@@ -123,16 +123,13 @@
       </div>
     </div>
   </div>
-  <RegistrationModal
-    ref="registrationModalRef"
-    :class="[showRegistrationModal ? '' : 'hidden']"
-  />
 </template>
 
 <script setup lang="ts">
   import { ref, watch, nextTick } from 'vue'
   import { useAuthStore } from '@/stores/auth'
-  import RegistrationModal from './RegistrationModal.vue'
+  import { canisterService } from '@/services/CanisterService'
+  import { generateRandomUsername } from '@/utils/usernameGenerator'
   import type { WalletType } from '@/services/wallets/types'
 
   // TypeScript declarations for wallet extensions
@@ -157,17 +154,6 @@
   const error = ref('')
   const loginMethod = ref('')
 
-  const showRegistrationModal = ref(false)
-  const registrationModalRef = ref<{
-    open: (
-      principalValue: string,
-      evmAddressValue: string,
-      solAddressValue: string,
-      btcAddressValue: string,
-      walletTypeValue: string
-    ) => void
-    close: () => void
-  } | null>(null)
   const toast = useToast()
 
   // Function to signal successful login completion
@@ -190,25 +176,6 @@
     close: () => {
       show.value = false
       error.value = ''
-      showRegistrationModal.value = false
-    },
-    showRegistrationModal: () => {
-      console.log('LoginPanel showRegistrationModal() called')
-      showRegistrationModal.value = true
-      nextTick(() => {
-        if (registrationModalRef.value) {
-          console.log('Opening registration modal with cross-chain addresses')
-          registrationModalRef.value.open(
-            auth.principal,
-            auth.evmAddress || '',
-            auth.solAddress || '',
-            auth.btcAddress || '',
-            auth.nativeWallet
-          )
-        } else {
-          console.error('registrationModalRef.value is null/undefined!')
-        }
-      })
     },
   })
 
@@ -241,27 +208,61 @@
         // Navigate to profile page
         await navigateTo('/profile')
       } else {
-        // New user, show registration modal
-        console.log('New user, opening registration modal...')
-        show.value = false
-        showRegistrationModal.value = true
+        // New user, auto-register with random username
+        console.log('New user, auto-registering with random username...')
+        
+        try {
+          // Generate a random username
+          let username = generateRandomUsername()
+          let attempts = 0
+          const maxAttempts = 10
 
-        await nextTick()
+          // Try to find an available username
+          while (attempts < maxAttempts) {
+            const isAvailable = await canisterService.isUsernameAvailable(username)
+            if (isAvailable) {
+              break
+            }
+            username = generateRandomUsername()
+            attempts++
+          }
 
-        if (registrationModalRef.value) {
-          console.log('Opening registration modal with cross-chain addresses')
-          registrationModalRef.value.open(
-            auth.principal,
-            auth.evmAddress || '',
-            auth.solAddress || '',
-            auth.btcAddress || '',
-            auth.nativeWallet
+          if (attempts >= maxAttempts) {
+            throw new Error('Unable to generate available username. Please try again.')
+          }
+
+          console.log('Auto-registering user with username:', username)
+
+          // Auto-register the user
+          const profile = await canisterService.signup(
+            username,
+            auth.evmAddress || undefined,
+            auth.btcAddress || undefined,
+            auth.solAddress || undefined
           )
+
+          console.log('Auto-registration successful:', profile)
+
+          // Update auth store with the new profile
+          await auth.completeRegistration(profile)
+
+          // Show success toast
+          toast.add({
+            title: `Welcome to Ionic Swap ${profile.username}!`,
+            description: 'Your account has been created automatically',
+            color: 'success',
+          })
+
+          show.value = false
 
           // Signal successful login completion for the tour
           signalLoginSuccess()
-        } else {
-          console.error('registrationModalRef.value is null/undefined!')
+
+          // Navigate to profile page
+          await navigateTo('/profile')
+        } catch (registrationError) {
+          console.error('Auto-registration failed:', registrationError)
+          throw new Error(`Auto-registration failed: ${registrationError instanceof Error ? registrationError.message : 'Unknown error'}`)
         }
       }
     } catch (err: unknown) {

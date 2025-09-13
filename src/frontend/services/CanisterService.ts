@@ -15,7 +15,7 @@ import { appCacheService } from './AppCacheService'
 // Get canister ID from runtime config
 const getBackendCanisterId = () => {
   // Get canister ID from environment
-  return process.env.CANISTER_ID_BACKEND || 'bhhab-xyaaa-aaaap-qqchq-cai'
+  return process.env.CANISTER_ID_BACKEND || 'uxrrr-q7777-77774-qaaaq-cai'
 }
 
 // Export types from the backend canister
@@ -48,12 +48,12 @@ class CanisterService {
 
       // Create HTTP agent with proper configuration
       this.agent = new HttpAgent({
-        host: 'https://icp0.io', // Use mainnet
+        host: 'http://127.0.0.1:4943', // Use local development
         identity: this.identity || undefined,
       })
 
-      // Fetch root key for mainnet
-      console.log('Fetching root key for mainnet...')
+      // For local development, fetch the local replica's root key
+      console.log('Using local development agent...')
       await this.agent.fetchRootKey()
 
       // Create backend actor
@@ -75,11 +75,11 @@ class CanisterService {
     try {
       // Create HTTP agent without identity for anonymous access
       this.agent = new HttpAgent({
-        host: 'https://icp0.io', // Use mainnet
+        host: 'http://127.0.0.1:4943', // Use local development
       })
 
-      // Fetch root key for mainnet
-      console.log('Fetching root key for mainnet (anonymous)...')
+      // For local development, fetch the local replica's root key
+      console.log('Using local development agent (anonymous)...')
       await this.agent.fetchRootKey()
 
       // Create backend actor for anonymous queries
@@ -940,7 +940,7 @@ class CanisterService {
   // Get asset URL
   getAssetUrl(filePath: string): string {
     const backendCanisterId = getBackendCanisterId()
-    return `https://${backendCanisterId}.raw.icp0.io${filePath}`
+    return `http://${backendCanisterId}.localhost:4943${filePath}`
   }
 }
 
