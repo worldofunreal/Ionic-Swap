@@ -38,7 +38,6 @@ fn post_upgrade(init_arg: Option<InitArg>) {
             solana::set_solana_network(network);
         }
     }
-    ic_cdk::println!("Backend post-upgrade with network: {:?}", solana::get_solana_network());
 }
 
 // ============================================================================
@@ -694,7 +693,6 @@ pub fn reload_token_registry() -> Result<String, String> {
                 icp::storage::IcpTokenDatabase::set_balance(canister_id, symbol, total_supply);
                 
                 added_tokens.push(format!("{}: {}", symbol, total_supply));
-                ic_cdk::println!("✅ Added token {} with balance: {}", symbol, total_supply);
             }
         }
         

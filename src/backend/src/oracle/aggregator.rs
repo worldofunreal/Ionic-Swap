@@ -1,117 +1,90 @@
 use std::collections::HashMap;
 use crate::oracle::types::{PriceData, TradingPair, PriceUpdateResult};
+use std::sync::{Mutex, OnceLock};
 
-use super::coingecko;
-use super::coincap;
-use super::cryptocompare;
 use super::binance;
 
-/// Update all prices from all sources
+// Track consecutive failures for trading halt logic
+static CONSECUTIVE_FAILURES: OnceLock<Mutex<u32>> = OnceLock::new();
+
+/// Update prices from Binance only (single source of truth)
 pub async fn update_all_prices() -> Result<PriceUpdateResult, String> {
-    ic_cdk::println!("🔄 Starting price update from all sources...");
     
-    let mut all_prices = Vec::new();
-    let mut successful_sources = 0;
-    
-    // Try to fetch from CoinGecko
-    match coingecko::get_coingecko_prices().await {
-        Ok(mut prices) => {
-            all_prices.append(&mut prices);
-            successful_sources += 1;
-            ic_cdk::println!("   ✅ CoinGecko: {} prices fetched", prices.len());
-        }
-        Err(e) => {
-            ic_cdk::println!("   ❌ CoinGecko failed: {}", e);
-        }
-    }
+    // Initialize failure counter
+    CONSECUTIVE_FAILURES.get_or_init(|| Mutex::new(0));
     
     // Try to fetch from Binance
     match binance::get_binance_prices().await {
-        Ok(mut prices) => {
-            all_prices.append(&mut prices);
-            successful_sources += 1;
+        Ok(prices) => {
+            // Reset failure counter on success
+            {
+                let mut failures = CONSECUTIVE_FAILURES.get().unwrap().lock().unwrap();
+                *failures = 0;
+            }
+            
             ic_cdk::println!("   ✅ Binance: {} prices fetched", prices.len());
+            
+            // Convert to final prices format
+            let final_prices = convert_to_trading_pairs(prices);
+            
+            // Update cache
+            update_price_cache(final_prices.clone()).await?;
+            
+            let result = PriceUpdateResult {
+                pairs_updated: final_prices.values().cloned().collect(),
+                total_sources: 1,
+                successful_sources: 1,
+                timestamp: ic_cdk::api::time() / 1_000_000_000,
+            };
+            
+            ic_cdk::println!("   🎉 Price update completed: {} pairs updated", result.pairs_updated.len());
+            Ok(result)
         }
         Err(e) => {
-            ic_cdk::println!("   ❌ Binance failed: {}", e);
-        }
-    }
-    
-    // Try to fetch from CoinCap
-    match coincap::get_coincap_prices().await {
-        Ok(mut prices) => {
-            all_prices.append(&mut prices);
-            successful_sources += 1;
-            ic_cdk::println!("   ✅ CoinCap: {} prices fetched", prices.len());
-        }
-        Err(e) => {
-            ic_cdk::println!("   ❌ CoinCap failed: {}", e);
-        }
-    }
-    
-    // Try to fetch from CryptoCompare
-    match cryptocompare::get_cryptocompare_prices().await {
-        Ok(mut prices) => {
-            all_prices.append(&mut prices);
-            successful_sources += 1;
-            ic_cdk::println!("   ✅ CryptoCompare: {} prices fetched", prices.len());
-        }
-        Err(e) => {
-            ic_cdk::println!("   ❌ CryptoCompare failed: {}", e);
-        }
-    }
-    
-    // If no sources succeeded, fall back to cached prices
-    if successful_sources == 0 {
-        ic_cdk::println!("   ⚠️  All sources failed, attempting to use cached prices...");
-        
-        // Get cached prices from storage
-        match get_current_prices().await {
-            Ok(cached_prices) => {
-                if !cached_prices.is_empty() {
-                    ic_cdk::println!("   📦 Using {} cached prices as fallback", cached_prices.len());
-                    let timestamp = ic_cdk::api::time() / 1_000_000_000;
-                    
-                    // Convert cached prices to PriceData format
-                    for (symbol, cached_pair) in cached_prices {
-                        all_prices.push(PriceData { 
-                            symbol: symbol.clone(), 
-                            price: cached_pair.price, 
-                            timestamp,
-                            source: "Cached".to_string() 
-                        });
+            // Increment failure counter
+            let failure_count = {
+                let mut failures = CONSECUTIVE_FAILURES.get().unwrap().lock().unwrap();
+                *failures += 1;
+                *failures
+            };
+            
+            ic_cdk::println!("   ❌ Binance failed (attempt {}): {}", failure_count, e);
+            
+            // Check if we should halt trading (3 consecutive failures)
+            if failure_count >= 3 {
+                ic_cdk::println!("   🚨 3 consecutive failures reached - halting trading");
+                return Err("Binance API failed 3 times consecutively. Trading halted until successful connection restored.".to_string());
+            }
+            
+            // Try to use cached prices as fallback
+            ic_cdk::println!("   ⚠️  Attempting to use cached prices as fallback...");
+            
+            match get_current_prices().await {
+                Ok(cached_prices) => {
+                    if !cached_prices.is_empty() {
+                        ic_cdk::println!("   📦 Using {} cached prices as fallback", cached_prices.len());
+                        
+                        let result = PriceUpdateResult {
+                            pairs_updated: cached_prices.values().cloned().collect(),
+                            total_sources: 1,
+                            successful_sources: 0, // 0 because we're using cached data
+                            timestamp: ic_cdk::api::time() / 1_000_000_000,
+                        };
+                        
+                        ic_cdk::println!("   ⚠️  Using cached prices - {} pairs available", result.pairs_updated.len());
+                        Ok(result)
+                    } else {
+                        ic_cdk::println!("   ❌ No cached prices available");
+                        Err("Binance failed and no cached prices available. Trading unavailable.".to_string())
                     }
-                    successful_sources = 1;
-                } else {
-                    ic_cdk::println!("   ❌ No cached prices available - cannot provide reliable pricing data");
-                    return Err("All price sources failed and no cached prices available. Trading temporarily unavailable.".to_string());
+                }
+                Err(cache_error) => {
+                    ic_cdk::println!("   ❌ Failed to retrieve cached prices: {}", cache_error);
+                    Err(format!("Binance failed and cache retrieval failed: {}. Trading unavailable.", cache_error))
                 }
             }
-            Err(e) => {
-                ic_cdk::println!("   ❌ Failed to retrieve cached prices: {}", e);
-                ic_cdk::println!("   ❌ Cannot provide reliable pricing data - trading unavailable");
-                return Err(format!("All price sources failed and cache retrieval failed: {}. Trading temporarily unavailable.", e));
-            }
         }
     }
-    
-    ic_cdk::println!("   📊 Total prices collected: {} from {} sources", all_prices.len(), successful_sources);
-    
-    // Calculate weighted averages
-    let final_prices = calculate_weighted_averages(all_prices).await?;
-    
-    // Update cache
-    update_price_cache(final_prices.clone()).await?;
-    
-    let result = PriceUpdateResult {
-        pairs_updated: final_prices.values().cloned().collect(),
-        total_sources: 4,
-        successful_sources,
-        timestamp: ic_cdk::api::time() / 1_000_000_000, // Convert nanoseconds to seconds
-    };
-    
-    ic_cdk::println!("   🎉 Price update completed: {} pairs updated", result.pairs_updated.len());
-    Ok(result)
 }
 
 /// Get current prices from cache
@@ -136,7 +109,25 @@ pub async fn get_pair_price(symbol: &str) -> Result<TradingPair, String> {
         })
 }
 
-/// Calculate weighted averages from all price sources
+/// Convert PriceData to TradingPair format
+fn convert_to_trading_pairs(prices: Vec<PriceData>) -> HashMap<String, TradingPair> {
+    let mut final_prices = HashMap::new();
+    
+    for price in prices {
+        let trading_pair = TradingPair {
+            base: price.symbol.clone(),
+            quote: "USDT".to_string(),
+            price: price.price,
+            last_updated: price.timestamp,
+            sources_count: 1, // Only Binance
+        };
+        final_prices.insert(price.symbol, trading_pair);
+    }
+    
+    final_prices
+}
+
+/// Calculate weighted averages from all price sources (legacy function - not used in Binance-only mode)
 async fn calculate_weighted_averages(prices: Vec<PriceData>) -> Result<HashMap<String, TradingPair>, String> {
     let mut grouped: HashMap<String, Vec<PriceData>> = HashMap::new();
     
@@ -191,37 +182,21 @@ async fn update_price_cache(prices: HashMap<String, TradingPair>) -> Result<(), 
     Ok(())
 }
 
-/// Debug function to test external API calls (for testing only)
+/// Debug function to test Binance API (for testing only)
 pub async fn debug_test_external_apis() -> Result<String, String> {
-    ic_cdk::println!("🧪 Testing external API calls...");
+    ic_cdk::println!("🧪 Testing Binance API...");
     
-    let mut results = Vec::new();
-    
-    // Test CoinGecko
-    match coingecko::get_coingecko_prices().await {
-        Ok(prices) => results.push(format!("✅ CoinGecko: {} prices", prices.len())),
-        Err(e) => results.push(format!("❌ CoinGecko: {}", e)),
-    }
-    
-    // Test CoinCap
-    match coincap::get_coincap_prices().await {
-        Ok(prices) => results.push(format!("✅ CoinCap: {} prices", prices.len())),
-        Err(e) => results.push(format!("❌ CoinCap: {}", e)),
-    }
-    
-    // Test CryptoCompare
-    match cryptocompare::get_cryptocompare_prices().await {
-        Ok(prices) => results.push(format!("✅ CryptoCompare: {} prices", prices.len())),
-        Err(e) => results.push(format!("❌ CryptoCompare: {}", e)),
-    }
-    
-    // Test Binance
+    // Test Binance only
     match binance::get_binance_prices().await {
-        Ok(prices) => results.push(format!("✅ Binance: {} prices", prices.len())),
-        Err(e) => results.push(format!("❌ Binance: {}", e)),
+        Ok(prices) => {
+            let result = format!("✅ Binance: {} prices", prices.len());
+            ic_cdk::println!("🧪 API Test Results:\n{}", result);
+            Ok(result)
+        },
+        Err(e) => {
+            let result = format!("❌ Binance: {}", e);
+            ic_cdk::println!("🧪 API Test Results:\n{}", result);
+            Ok(result)
+        }
     }
-    
-    let result = results.join("\n");
-    ic_cdk::println!("🧪 API Test Results:\n{}", result);
-    Ok(result)
 }
