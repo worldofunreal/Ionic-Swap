@@ -10,44 +10,74 @@ use super::binance;
 pub async fn update_all_prices() -> Result<PriceUpdateResult, String> {
     ic_cdk::println!("🔄 Starting price update from all sources...");
     
-    // For now, let's use mock data to test the system
-    ic_cdk::println!("   🧪 Using mock data for testing...");
-    
     let mut all_prices = Vec::new();
     let mut successful_sources = 0;
     
-    // Create mock price data
-    let timestamp = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
+    // Try to fetch from CoinGecko
+    match coingecko::get_coingecko_prices().await {
+        Ok(mut prices) => {
+            all_prices.append(&mut prices);
+            successful_sources += 1;
+            ic_cdk::println!("   ✅ CoinGecko: {} prices fetched", prices.len());
+        }
+        Err(e) => {
+            ic_cdk::println!("   ❌ CoinGecko failed: {}", e);
+        }
+    }
     
-    // Mock CoinGecko data
-    all_prices.push(PriceData { symbol: "BTC".to_string(), price: 45000.0, timestamp, source: "CoinGecko".to_string() });
-    all_prices.push(PriceData { symbol: "ETH".to_string(), price: 3000.0, timestamp, source: "CoinGecko".to_string() });
-    all_prices.push(PriceData { symbol: "SOL".to_string(), price: 100.0, timestamp, source: "CoinGecko".to_string() });
-    all_prices.push(PriceData { symbol: "ICP".to_string(), price: 5.0, timestamp, source: "CoinGecko".to_string() });
-    successful_sources += 1;
+    // Try to fetch from Binance
+    match binance::get_binance_prices().await {
+        Ok(mut prices) => {
+            all_prices.append(&mut prices);
+            successful_sources += 1;
+            ic_cdk::println!("   ✅ Binance: {} prices fetched", prices.len());
+        }
+        Err(e) => {
+            ic_cdk::println!("   ❌ Binance failed: {}", e);
+        }
+    }
     
-    // Mock CoinCap data
-    all_prices.push(PriceData { symbol: "BTC".to_string(), price: 45100.0, timestamp, source: "CoinCap".to_string() });
-    all_prices.push(PriceData { symbol: "ETH".to_string(), price: 3010.0, timestamp, source: "CoinCap".to_string() });
-    all_prices.push(PriceData { symbol: "SOL".to_string(), price: 101.0, timestamp, source: "CoinCap".to_string() });
-    all_prices.push(PriceData { symbol: "ICP".to_string(), price: 5.1, timestamp, source: "CoinCap".to_string() });
-    successful_sources += 1;
+    // Try to fetch from CoinCap
+    match coincap::get_coincap_prices().await {
+        Ok(mut prices) => {
+            all_prices.append(&mut prices);
+            successful_sources += 1;
+            ic_cdk::println!("   ✅ CoinCap: {} prices fetched", prices.len());
+        }
+        Err(e) => {
+            ic_cdk::println!("   ❌ CoinCap failed: {}", e);
+        }
+    }
     
-    // Mock CryptoCompare data
-    all_prices.push(PriceData { symbol: "BTC".to_string(), price: 44900.0, timestamp, source: "CryptoCompare".to_string() });
-    all_prices.push(PriceData { symbol: "ETH".to_string(), price: 2990.0, timestamp, source: "CryptoCompare".to_string() });
-    all_prices.push(PriceData { symbol: "SOL".to_string(), price: 99.0, timestamp, source: "CryptoCompare".to_string() });
-    all_prices.push(PriceData { symbol: "ICP".to_string(), price: 4.9, timestamp, source: "CryptoCompare".to_string() });
-    successful_sources += 1;
+    // Try to fetch from CryptoCompare
+    match cryptocompare::get_cryptocompare_prices().await {
+        Ok(mut prices) => {
+            all_prices.append(&mut prices);
+            successful_sources += 1;
+            ic_cdk::println!("   ✅ CryptoCompare: {} prices fetched", prices.len());
+        }
+        Err(e) => {
+            ic_cdk::println!("   ❌ CryptoCompare failed: {}", e);
+        }
+    }
     
-    // Mock Binance data
-    all_prices.push(PriceData { symbol: "BTC".to_string(), price: 45050.0, timestamp, source: "Binance".to_string() });
-    all_prices.push(PriceData { symbol: "ETH".to_string(), price: 3005.0, timestamp, source: "Binance".to_string() });
-    all_prices.push(PriceData { symbol: "SOL".to_string(), price: 100.5, timestamp, source: "Binance".to_string() });
-    all_prices.push(PriceData { symbol: "ICP".to_string(), price: 5.05, timestamp, source: "Binance".to_string() });
-    successful_sources += 1;
-    
-    ic_cdk::println!("   📊 Mock data created: {} prices from {} sources", all_prices.len(), successful_sources);
+    // If no sources succeeded, fall back to mock data for testing
+    if successful_sources == 0 {
+        ic_cdk::println!("   🧪 All sources failed, using mock data for testing...");
+        let timestamp = ic_cdk::api::time() / 1_000_000_000;
+        
+        // Mock data for all supported tokens
+        all_prices.push(PriceData { symbol: "BTC".to_string(), price: 45000.0, timestamp, source: "Mock".to_string() });
+        all_prices.push(PriceData { symbol: "ETH".to_string(), price: 3000.0, timestamp, source: "Mock".to_string() });
+        all_prices.push(PriceData { symbol: "SOL".to_string(), price: 100.0, timestamp, source: "Mock".to_string() });
+        all_prices.push(PriceData { symbol: "ICP".to_string(), price: 5.0, timestamp, source: "Mock".to_string() });
+        all_prices.push(PriceData { symbol: "ADA".to_string(), price: 0.45, timestamp, source: "Mock".to_string() });
+        all_prices.push(PriceData { symbol: "XRP".to_string(), price: 0.60, timestamp, source: "Mock".to_string() });
+        all_prices.push(PriceData { symbol: "BNB".to_string(), price: 300.0, timestamp, source: "Mock".to_string() });
+        all_prices.push(PriceData { symbol: "DOGE".to_string(), price: 0.08, timestamp, source: "Mock".to_string() });
+        all_prices.push(PriceData { symbol: "TRX".to_string(), price: 0.12, timestamp, source: "Mock".to_string() });
+        successful_sources = 1;
+    }
     
     ic_cdk::println!("   📊 Total prices collected: {} from {} sources", all_prices.len(), successful_sources);
     

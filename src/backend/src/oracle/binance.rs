@@ -2,7 +2,7 @@ use crate::oracle::types::PriceData;
 
 /// Fetch prices from Binance Public API
 pub async fn get_binance_prices() -> Result<Vec<PriceData>, String> {
-    let url = "https://api.binance.com/api/v3/ticker/price?symbols=%5B%22BTCUSDT%22%2C%22ETHUSDT%22%2C%22SOLUSDT%22%2C%22ICPUSDT%22%5D";
+    let url = "https://api.binance.com/api/v3/ticker/price?symbols=%5B%22BTCUSDT%22%2C%22ETHUSDT%22%2C%22SOLUSDT%22%2C%22ICPUSDT%22%2C%22ADAUSDT%22%2C%22XRPUSDT%22%2C%22BNBUSDT%22%2C%22DOGEUSDT%22%2C%22TRXUSDT%22%5D";
     
     let request = ic_http_certification::HttpRequest::get(url)
         .with_headers(vec![
@@ -38,6 +38,11 @@ pub async fn get_binance_prices() -> Result<Vec<PriceData>, String> {
                         "ETHUSDT" => "ETH", 
                         "SOLUSDT" => "SOL",
                         "ICPUSDT" => "ICP",
+                        "ADAUSDT" => "ADA",
+                        "XRPUSDT" => "XRP",
+                        "BNBUSDT" => "BNB",
+                        "DOGEUSDT" => "DOGE",
+                        "TRXUSDT" => "TRX",
                         _ => continue,
                     };
                     prices.push(PriceData { 

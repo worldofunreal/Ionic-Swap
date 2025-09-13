@@ -6,6 +6,7 @@ pub mod types;
 pub mod tokens;
 pub mod icp;
 pub mod user;
+pub mod storage;
 
 use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::{init, post_upgrade, update, query};

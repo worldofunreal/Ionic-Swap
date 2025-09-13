@@ -2,7 +2,7 @@ use crate::oracle::types::PriceData;
 
 /// Fetch prices from CoinGecko API
 pub async fn get_coingecko_prices() -> Result<Vec<PriceData>, String> {
-    let url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,internet-computer&vs_currencies=usd";
+    let url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,internet-computer,cardano,ripple,binancecoin,dogecoin,tron&vs_currencies=usd";
     
     let request = ic_http_certification::HttpRequest::get(url)
         .with_headers(vec![
@@ -47,6 +47,21 @@ pub async fn get_coingecko_prices() -> Result<Vec<PriceData>, String> {
     }
     if let Some(icp) = json["internet-computer"]["usd"].as_f64() {
         prices.push(PriceData { symbol: "ICP".to_string(), price: icp, timestamp, source: "CoinGecko".to_string() });
+    }
+    if let Some(cardano) = json["cardano"]["usd"].as_f64() {
+        prices.push(PriceData { symbol: "ADA".to_string(), price: cardano, timestamp, source: "CoinGecko".to_string() });
+    }
+    if let Some(ripple) = json["ripple"]["usd"].as_f64() {
+        prices.push(PriceData { symbol: "XRP".to_string(), price: ripple, timestamp, source: "CoinGecko".to_string() });
+    }
+    if let Some(binancecoin) = json["binancecoin"]["usd"].as_f64() {
+        prices.push(PriceData { symbol: "BNB".to_string(), price: binancecoin, timestamp, source: "CoinGecko".to_string() });
+    }
+    if let Some(dogecoin) = json["dogecoin"]["usd"].as_f64() {
+        prices.push(PriceData { symbol: "DOGE".to_string(), price: dogecoin, timestamp, source: "CoinGecko".to_string() });
+    }
+    if let Some(tron) = json["tron"]["usd"].as_f64() {
+        prices.push(PriceData { symbol: "TRX".to_string(), price: tron, timestamp, source: "CoinGecko".to_string() });
     }
     
     Ok(prices)
