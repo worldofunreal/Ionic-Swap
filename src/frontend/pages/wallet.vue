@@ -96,12 +96,7 @@
         <!-- Main Dashboard Content -->
         <div class="p-6">
           <div class="max-w-7xl mx-auto">
-            <!-- Portfolio Tracker Section -->
-            <div v-if="userPrincipal" class="mb-6">
-              <PortfolioTracker :user-principal="userPrincipal?.toText?.() || userPrincipal" />
-            </div>
-            
-            <!-- User Profile & Balance Section -->
+            <!-- Portfolio Overview & User Profile Section -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
               <!-- User Profile Card -->
               <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4">
@@ -133,84 +128,16 @@
                 </div>
               </div>
 
-              <!-- Estimated Balance Card -->
-              <div class="lg:col-span-2 bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4">
-                <div class="flex items-center justify-between mb-4">
-                  <h3 class="text-lg font-semibold text-foreground">
-                    Estimated Balance
-                  </h3>
-                  <div class="flex items-center gap-2">
-                    <!-- Value Toggle -->
-                    <div class="flex bg-muted rounded-md p-1">
-                      <button
-                        :class="[
-                          'px-3 py-1 text-sm rounded-md transition-colors',
-                          valueDisplay === 'usd'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'text-muted-foreground hover:bg-muted/80',
-                        ]"
-                        @click="valueDisplay = 'usd'"
-                      >
-                        USD
-                      </button>
-                      <button
-                        :class="[
-                          'px-3 py-1 text-sm rounded-md transition-colors',
-                          valueDisplay === 'btc'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'text-muted-foreground hover:bg-muted/80',
-                        ]"
-                        @click="valueDisplay = 'btc'"
-                      >
-                        BTC
-                      </button>
-                    </div>
-                    <UIcon 
-                      :name="balancesVisible ? 'i-heroicons-eye-20-solid' : 'i-heroicons-eye-slash-20-solid'" 
-                      class="w-5 h-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" 
-                      @click="toggleBalanceVisibility"
-                    />
-                  </div>
-                </div>
-                
-                <div class="flex items-center justify-between">
-                  <div>
-                    <div class="text-3xl font-bold text-foreground mb-1">
-                      <span v-if="balancesVisible">
-                        {{ valueDisplay === 'usd' ? `$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `${(totalValue / btcPrice).toFixed(8)} BTC` }}
-                      </span>
-                      <span v-else class="text-2xl">••••••••</span>
-                    </div>
-                    <div class="text-sm text-muted-foreground">
-                      {{ valueDisplay === 'usd' ? 'Total Portfolio Value' : 'Total Portfolio Value' }}
-                    </div>
-                  </div>
-                  
-                  <div class="text-right">
-                    <div class="text-xs text-muted-foreground mb-1">
-                      {{ faucetClaimed ? 'Faucet Claimed' : 'Welcome Bonus' }}
-                    </div>
-                    <div class="text-sm font-semibold text-green-500">
-                      + 2M USDT
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex gap-3 mt-4">
-                  <UButton color="primary" size="md" class="text-sm font-semibold px-4 py-2 text-white">
-                    <UIcon name="i-heroicons-arrow-down-tray-20-solid" class="w-4 h-4 mr-2" />
-                    Deposit
-                  </UButton>
-                  <UButton color="neutral" variant="soft" size="md" class="text-sm font-semibold px-4 py-2">
-                    <UIcon name="i-heroicons-arrow-up-tray-20-solid" class="w-4 h-4 mr-2" />
-                    Withdraw
-                  </UButton>
-                  <UButton color="neutral" variant="soft" size="md" class="text-sm font-semibold px-4 py-2">
-                    <UIcon name="i-heroicons-currency-dollar-20-solid" class="w-4 h-4 mr-2" />
-                    Cash In
-                  </UButton>
-                </div>
+              <!-- Portfolio Overview Card -->
+              <div class="lg:col-span-2">
+                <PortfolioTracker 
+                  :user-principal="userPrincipal?.toText?.() || ''"
+                  :local-portfolio-value="totalValue"
+                  :btc-price="btcPrice"
+                  :balances-visible="balancesVisible"
+                  @toggle-balance-visibility="toggleBalanceVisibility"
+                  @update-value-display="valueDisplay = $event"
+                />
               </div>
             </div>
 

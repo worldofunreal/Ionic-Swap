@@ -2,13 +2,36 @@
   <div class="bg-card rounded-lg p-4 border border-gray-200 dark:border-gray-800">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-semibold text-foreground">Portfolio Overview</h3>
-      <div>
-        <UButton 
-          :loading="loading" 
-          @click="refreshPortfolio"
-          size="xs"
-          variant="ghost"
-          icon="i-heroicons-arrow-path"
+      <div class="flex items-center gap-2">
+        <!-- Value Toggle -->
+        <div class="flex bg-muted rounded-md p-1">
+          <button
+            :class="[
+              'px-3 py-1 text-sm rounded-md transition-colors',
+              valueDisplay === 'usd'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted/80',
+            ]"
+            @click="updateValueDisplay('usd')"
+          >
+            USD
+          </button>
+          <button
+            :class="[
+              'px-3 py-1 text-sm rounded-md transition-colors',
+              valueDisplay === 'btc'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted/80',
+            ]"
+            @click="updateValueDisplay('btc')"
+          >
+            BTC
+          </button>
+        </div>
+        <UIcon 
+          :name="balancesVisible ? 'i-heroicons-eye-20-solid' : 'i-heroicons-eye-slash-20-solid'" 
+          class="w-5 h-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" 
+          @click="toggleBalanceVisibility"
         />
       </div>
     </div>
@@ -23,13 +46,16 @@
       <!-- Portfolio Value -->
       <div class="flex items-center justify-between">
         <div class="flex flex-col">
-          <span class="text-sm text-muted-foreground mb-1">Total Value</span>
+          <span class="text-sm text-muted-foreground mb-1">Estimated Balance</span>
           <span class="text-2xl font-bold text-foreground">
-            ${{ formatNumber(portfolioData.current_value_usdt, 2) }}
+            <span v-if="balancesVisible">
+              {{ valueDisplay === 'usd' ? `$${formatNumber(localPortfolioValue, 2)}` : `${(localPortfolioValue / btcPrice).toFixed(8)} BTC` }}
+            </span>
+            <span v-else class="text-2xl">••••••••</span>
           </span>
         </div>
         
-        <!-- 24h Change -->
+        <!-- 24h Change (from backend) -->
         <div class="flex flex-col items-end">
           <div class="flex items-center gap-1 mb-1">
             <UIcon 
@@ -40,37 +66,39 @@
               :class="portfolioData.change_24h >= 0 ? 'text-green-500' : 'text-red-500'"
               class="text-sm font-medium"
             >
-              ${{ formatNumber(Math.abs(portfolioData.change_24h), 2) }}
-              ({{ formatNumber(portfolioData.change_24h_percent, 2) }}%)
+              <span v-if="balancesVisible">
+                ${{ formatNumber(Math.abs(portfolioData.change_24h), 2) }}
+                ({{ formatNumber(portfolioData.change_24h_percent, 2) }}%)
+              </span>
+              <span v-else>••••••</span>
             </span>
           </div>
           <span class="text-xs text-muted-foreground">24h</span>
         </div>
       </div>
 
-      <!-- Mini Sparkline Chart -->
-      <div class="flex justify-center py-2">
-        <PortfolioSparkline 
-          :portfolio-history="portfolioData.portfolio_history"
-          :is-positive="portfolioData.change_24h >= 0"
-          :width="120"
-          :height="30"
-        />
-      </div>
+      <!-- Action Buttons and Chart -->
+      <div class="flex items-end justify-between pt-2">
+        <!-- Action Buttons -->
+        <div class="flex gap-3">
+          <UButton color="primary" size="md" class="text-sm font-semibold px-4 py-2 text-white">
+            <UIcon name="i-heroicons-arrow-down-tray-20-solid" class="w-4 h-4 mr-2" />
+            Deposit
+          </UButton>
+          <UButton color="neutral" variant="soft" size="md" class="text-sm font-semibold px-4 py-2">
+            <UIcon name="i-heroicons-arrow-up-tray-20-solid" class="w-4 h-4 mr-2" />
+            Withdraw
+          </UButton>
+        </div>
 
-      <!-- Additional Stats -->
-      <div class="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-800">
-        <div class="flex flex-col items-center text-center">
-          <span class="text-xs text-muted-foreground mb-1">All Time High</span>
-          <span class="text-sm font-medium text-foreground">${{ formatNumber(portfolioData.all_time_high, 2) }}</span>
-        </div>
-        <div class="flex flex-col items-center text-center">
-          <span class="text-xs text-muted-foreground mb-1">Total Trades</span>
-          <span class="text-sm font-medium text-foreground">{{ portfolioData.total_trades }}</span>
-        </div>
-        <div class="flex flex-col items-center text-center">
-          <span class="text-xs text-muted-foreground mb-1">Initial Value</span>
-          <span class="text-sm font-medium text-foreground">${{ formatNumber(portfolioData.initial_value_usdt, 2) }}</span>
+        <!-- Mini Sparkline Chart (Bottom Right) -->
+        <div class="flex justify-end">
+          <PortfolioSparkline 
+            :portfolio-history="portfolioData.portfolio_history"
+            :is-positive="portfolioData.change_24h >= 0"
+            :width="180"
+            :height="50"
+          />
         </div>
       </div>
     </div>
@@ -90,14 +118,35 @@ import PortfolioSparkline from './PortfolioSparkline.vue'
 
 interface Props {
   userPrincipal: string
+  localPortfolioValue: number
+  btcPrice: number
+  balancesVisible: boolean
 }
 
 const props = defineProps<Props>()
 
 const portfolioData = ref<PortfolioData | null>(null)
 const loading = ref(false)
+const valueDisplay = ref<'usd' | 'btc'>('usd')
 
-// Load portfolio data
+// Emit events for parent component
+const emit = defineEmits<{
+  'toggle-balance-visibility': []
+  'update-value-display': [value: 'usd' | 'btc']
+}>()
+
+// Toggle balance visibility
+const toggleBalanceVisibility = () => {
+  emit('toggle-balance-visibility')
+}
+
+// Update value display
+const updateValueDisplay = (value: 'usd' | 'btc') => {
+  valueDisplay.value = value
+  emit('update-value-display', value)
+}
+
+// Load portfolio data (for 24h change and sparkline only)
 const loadPortfolioData = async () => {
   if (!props.userPrincipal) return
   
@@ -109,11 +158,6 @@ const loadPortfolioData = async () => {
   } finally {
     loading.value = false
   }
-}
-
-// Refresh portfolio data
-const refreshPortfolio = () => {
-  loadPortfolioData()
 }
 
 // Format numbers with commas
