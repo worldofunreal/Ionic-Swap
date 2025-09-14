@@ -58,9 +58,9 @@ export const TOKEN_CONFIGS: Record<string, TokenConfig> = {
     symbol: 'XRP', 
     name: 'XRP', 
     decimals: 6, 
-    displayDecimals: 4, 
+    displayDecimals: 2, 
     formatType: 'crypto',
-    minDisplayValue: 0.0001
+    minDisplayValue: 0.01
   },
   BNB: { 
     symbol: 'BNB', 
@@ -74,25 +74,25 @@ export const TOKEN_CONFIGS: Record<string, TokenConfig> = {
     symbol: 'DOGE', 
     name: 'Dogecoin', 
     decimals: 8, 
-    displayDecimals: 6, 
+    displayDecimals: 2, 
     formatType: 'crypto',
-    minDisplayValue: 0.000001
+    minDisplayValue: 0.01
   },
   ADA: { 
     symbol: 'ADA', 
     name: 'Cardano', 
     decimals: 6, 
-    displayDecimals: 4, 
+    displayDecimals: 2, 
     formatType: 'crypto',
-    minDisplayValue: 0.0001
+    minDisplayValue: 0.01
   },
   TRX: { 
     symbol: 'TRX', 
     name: 'TRON', 
     decimals: 6, 
-    displayDecimals: 4, 
+    displayDecimals: 2, 
     formatType: 'crypto',
-    minDisplayValue: 0.0001
+    minDisplayValue: 0.01
   },
 }
 

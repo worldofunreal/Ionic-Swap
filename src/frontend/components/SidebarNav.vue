@@ -64,7 +64,7 @@
       // Logged users - Full menu
       items.push(
         { label: 'Wallet', icon: 'heroicons:wallet-20-solid', to: '/wallet' },
-        { label: 'Trade', icon: 'streamline-ultimate:trading-pattern-up-bold', to: '/trading' },
+        { label: 'Trade', icon: 'i-heroicons-chart-bar-20-solid', to: '/trading' },
         { label: 'Activity', icon: 'tabler:activity', to: '/activity' },
         { label: 'Profile', icon: 'iconamoon:profile-fill', 
           to: auth.userProfile.username ? `/@${auth.userProfile.username}` : '/profile' },

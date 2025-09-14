@@ -5,7 +5,7 @@
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
     </div>
 
-    <!-- Binance-Style Dashboard -->
+    <!-- Dashboard -->
     <div v-else class="flex">
       <!-- Left Sidebar Navigation -->
       <div class="w-64 bg-card border-r border-gray-200 dark:border-gray-800 min-h-screen">
@@ -185,19 +185,19 @@
                 <table class="w-full">
                   <thead class="bg-muted">
                     <tr>
-                      <th class="px-6 py-3 text-left text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                      <th class="px-6 py-3 text-left text-sm font-bold text-muted-foreground uppercase tracking-wider">
                         Coin
                       </th>
-                      <th class="px-6 py-3 text-right text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                      <th class="px-6 py-3 text-right text-sm font-bold text-muted-foreground uppercase tracking-wider">
                         Amount
                       </th>
-                      <th class="px-6 py-3 text-right text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                      <th class="px-6 py-3 text-right text-sm font-bold text-muted-foreground uppercase tracking-wider">
                         Price
                       </th>
-                      <th class="px-6 py-3 text-right text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                      <th class="px-6 py-3 text-right text-sm font-bold text-muted-foreground uppercase tracking-wider">
                         Today's PnL
                       </th>
-                      <th class="px-6 py-3 text-right text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                      <th class="px-6 py-3 text-right text-sm font-bold text-muted-foreground uppercase tracking-wider">
                         Action
                       </th>
                     </tr>
@@ -236,11 +236,11 @@
 
                       <!-- Amount Column -->
                       <td class="px-6 py-4 whitespace-nowrap text-right">
-                        <div class="text-sm font-semibold text-foreground">
+                        <div class="text-sm font-bold text-foreground">
                           <span v-if="balancesVisible">{{ formatTokenAmount(token.symbol, token.balance) }}</span>
                           <span v-else>••••••••</span>
                         </div>
-                        <div class="text-sm text-muted-foreground">
+                        <div class="text-xs text-muted-foreground">
                           <span v-if="balancesVisible">{{ formatTokenValue(token.value) }}</span>
                           <span v-else>••••••</span>
                         </div>
@@ -251,9 +251,6 @@
                         <div class="text-sm font-semibold text-foreground">
                           <span v-if="balancesVisible">{{ formatTokenPrice(token.price) }}</span>
                           <span v-else>••••••</span>
-                        </div>
-                        <div class="text-sm text-muted-foreground">
-                          --
                         </div>
                       </td>
 
@@ -270,12 +267,6 @@
                       <!-- Action Column -->
                       <td class="px-6 py-4 whitespace-nowrap text-right">
                         <div class="flex justify-end gap-2">
-                          <button
-                            @click="copyToClipboard(token.symbol, 'token')"
-                            class="px-3 py-2 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium"
-                          >
-                            Copy
-                          </button>
                           <button
                             @click="tradeToken(token.symbol)"
                             class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded-lg transition-colors"
