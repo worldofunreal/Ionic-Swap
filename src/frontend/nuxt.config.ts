@@ -33,6 +33,11 @@ export default defineNuxtConfig({
         provider: 'none', // System font, no need to load from external provider
         fallbacks: ['Helvetica', 'Arial', 'sans-serif'],
       },
+      {
+        name: 'IBM Plex Sans',
+        provider: 'google',
+        fallbacks: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+      },
     ],
   },
   css: ['~/assets/css/main.css'],

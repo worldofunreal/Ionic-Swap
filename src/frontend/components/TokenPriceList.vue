@@ -1,30 +1,32 @@
 <template>
   <div class="p-4">
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex items-center justify-between mb-3">
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
         Token Prices
       </h3>
       <UButton
-        size="xs"
-        variant="ghost"
-        icon="i-heroicons-arrow-path"
-        :loading="loading"
-        @click="refreshPrices"
-      />
+        color="primary"
+        size="lg"
+        class="text-base font-semibold px-6 py-2 text-white"
+        @click="handleTradeClick"
+      >
+        <UIcon name="streamline-ultimate:trading-pattern-up-bold" class="w-5 h-5 mr-2" />
+        Trade
+      </UButton>
     </div>
 
-    <div class="space-y-3">
+    <div class="space-y-2">
       <div
         v-for="token in tokens"
         :key="token.symbol"
-        class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+        class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
         @click="selectToken(token)"
       >
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
           <div
-            class="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center"
+            class="w-7 h-7 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center"
           >
-            <UIcon :name="getTokenIcon(token.symbol)" class="w-5 h-5" />
+            <UIcon :name="getTokenIcon(token.symbol)" class="w-4 h-4" />
           </div>
           <div>
             <div class="font-bold text-black dark:text-white">
@@ -37,11 +39,11 @@
         </div>
 
         <div class="text-right">
-          <div class="font-normal text-gray-900 dark:text-white">
+          <div class="font-semibold text-gray-900 dark:text-white tabular-nums">
             ${{ formatPrice(token.price) }}
           </div>
           <div
-            class="text-xs flex items-center gap-1"
+            class="text-xs flex items-center justify-end gap-1 font-medium tabular-nums"
             :class="
               token.change >= 0
                 ? 'text-green-600 dark:text-green-400'
@@ -61,18 +63,13 @@
         </div>
       </div>
     </div>
-
-    <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-      <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
-        Last updated: {{ lastUpdated }}
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, computed } from 'vue'
+  import { ref, onMounted, onUnmounted, computed, inject, type Ref } from 'vue'
   import { priceService } from '@/services/PriceService'
+  import { useAuthStore } from '@/stores/auth'
 
   interface Token {
     symbol: string
@@ -83,14 +80,27 @@
   }
 
   const loading = ref(false)
-  const lastUpdated = ref('')
+  const auth = useAuthStore()
+
+  // Inject the login panel ref from the app
+  const loginPanelRef = inject('loginPanelRef') as Ref<{
+    open: () => void
+  }> | null
+
+  const openLoginPanel = () => {
+    console.log('TokenPriceList: Opening login panel')
+    if (loginPanelRef?.value) {
+      loginPanelRef.value.open()
+    } else {
+      console.warn('LoginPanel ref not found')
+    }
+  }
 
   // Token configuration (same as markets page)
   const tokenConfig = {
     BTC: { name: 'Bitcoin', icon: 'logos:bitcoin' },
     ETH: { name: 'Ethereum', icon: 'token-branded:ethereum' },
     XRP: { name: 'XRP', icon: 'cryptocurrency-color:xrp' },
-    USDT: { name: 'Tether', icon: 'cryptocurrency-color:usdt' },
     BNB: { name: 'BNB', icon: 'token-branded:binance' },
     SOL: { name: 'Solana', icon: 'token-branded:solana' },
     DOGE: { name: 'Dogecoin', icon: 'simple-icons:dogecoin' },
@@ -116,13 +126,6 @@
       chains: ['EVM', 'ICP'],
     },
     { symbol: 'XRP', name: 'XRP', price: 0, change: 0, chains: ['EVM', 'ICP'] },
-    {
-      symbol: 'USDT',
-      name: 'Tether',
-      price: 0,
-      change: 0,
-      chains: ['EVM', 'ICP'],
-    },
     { symbol: 'BNB', name: 'BNB', price: 0, change: 0, chains: ['EVM', 'ICP'] },
     {
       symbol: 'SOL',
@@ -178,10 +181,11 @@
     if (price < 0.01) return price.toFixed(6)
     if (price < 1) return price.toFixed(4)
     if (price < 100) return price.toFixed(2)
-    // For prices >= 100, use thousands separators
+    // For prices >= 100, use thousands separators with proper formatting
     return price.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
+      useGrouping: true,
     })
   }
 
@@ -202,17 +206,14 @@
   // Price service subscription
   let unsubscribe: (() => void) | null = null
 
-  const refreshPrices = async () => {
-    loading.value = true
-
-    try {
-      // Force refresh from PriceService
-      // The PriceService will automatically fetch new data
-      lastUpdated.value = new Date().toLocaleTimeString()
-    } catch (error) {
-      console.error('Failed to refresh prices:', error)
-    } finally {
-      loading.value = false
+  // Handle trade button click - check auth status
+  const handleTradeClick = () => {
+    if (auth.authenticated && auth.userProfile) {
+      // User is logged in, navigate to trading page
+      navigateTo('/trading')
+    } else {
+      // User is not logged in, open login panel
+      openLoginPanel()
     }
   }
 
@@ -224,11 +225,8 @@
   onMounted(() => {
     // Subscribe to price updates
     unsubscribe = priceService.subscribe(_prices => {
-      lastUpdated.value = new Date().toLocaleTimeString()
+      // Price updates are handled automatically
     })
-
-    // Initial refresh
-    refreshPrices()
   })
 
   onUnmounted(() => {

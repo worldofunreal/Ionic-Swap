@@ -51,40 +51,29 @@
       icon?: string
       to?: string
       hr?: boolean
-    }> = [
-      { label: 'Discover', icon: 'eos-icons:compass', to: '/' },
-      {
-        label: 'Markets',
-        icon: 'icon-park-solid:stock-market',
-        to: '/markets',
-      },
-      { label: 'Trading', icon: 'hugeicons:coins-swap', to: '/trading' },
-      { label: 'History', icon: 'tabler:activity', to: '/activity' },
-    ]
+    }> = []
 
-    // Only show profile, wallet, and settings if user is logged in
-    if (auth.userProfile) {
-      items.push({
-        label: 'Profile',
-        icon: 'iconamoon:profile-fill',
-        to: auth.userProfile.username
-          ? `/@${auth.userProfile.username}`
-          : '/profile',
-      })
-      items.push({
-        label: 'Wallet',
-        icon: 'heroicons:wallet-20-solid',
-        to: '/wallet',
-      })
-      items.push({ hr: true })
-      items.push({
-        label: 'Settings',
-        icon: 'iconamoon:settings-fill',
-        to: '/settings',
-      })
+    if (!auth.userProfile) {
+      // Non-logged users - Limited menu
+      items.push(
+        { label: 'Discovery', icon: 'eos-icons:compass', to: '/' },
+        { label: 'Markets', icon: 'mdi:bank', to: '/markets' },
+        { label: 'Wallet', icon: 'heroicons:wallet-20-solid', to: '#login' }
+      )
+    } else {
+      // Logged users - Full menu
+      items.push(
+        { label: 'Wallet', icon: 'heroicons:wallet-20-solid', to: '/wallet' },
+        { label: 'Trade', icon: 'streamline-ultimate:trading-pattern-up-bold', to: '/trading' },
+        { label: 'Activity', icon: 'tabler:activity', to: '/activity' },
+        { label: 'Profile', icon: 'iconamoon:profile-fill', 
+          to: auth.userProfile.username ? `/@${auth.userProfile.username}` : '/profile' },
+        { label: 'Settings', icon: 'iconamoon:settings-fill', to: '/settings' },
+        { hr: true },
+        { label: 'Discovery', icon: 'eos-icons:compass', to: '/' },
+        { label: 'Markets', icon: 'mdi:bank', to: '/markets' }
+      )
     }
-
-    items.push({ label: 'Support', icon: 'ix:support', to: '/support' })
 
     return items
   })

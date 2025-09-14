@@ -3,7 +3,7 @@
 
 /* Global font family override */
 * {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'IBM Plex Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 :root {
