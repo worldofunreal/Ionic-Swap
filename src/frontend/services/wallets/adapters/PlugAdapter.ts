@@ -152,7 +152,7 @@ export class PlugAdapter implements WalletAdapter {
       console.log('Got Plug principal:', principal)
 
       // 2. Sign a message to create a secret signature for deterministic wallets
-      const message = `Login to NFTropoly - Plug - ${principal}`
+      const message = `Login to Ionic Swap - Plug - ${principal}`
       const signature = await this.signMessageWithPlug(message)
       console.log('Signed message with Plug')
 

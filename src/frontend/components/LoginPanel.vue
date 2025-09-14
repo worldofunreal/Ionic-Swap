@@ -111,7 +111,7 @@
         <div
           class="mt-6 text-xs text-gray-500 dark:text-gray-400 text-center leading-relaxed"
         >
-          By signing in and using Nftropoly, you agree to our
+          By signing in and using Ionic Swap, you agree to our
           <NuxtLink to="/terms" class="text-primary hover:underline"
             >Terms of Service</NuxtLink
           >

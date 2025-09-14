@@ -11,9 +11,9 @@ export default defineNuxtPlugin(nuxtApp => {
   if (import.meta.server) return
 
   const config = useRuntimeConfig()
-  const projectId = (config.public.CLARITY_PROJECT_ID as string) || 'stqeko2g9v'
+  const projectId = (config.public.CLARITY_PROJECT_ID as string) || 'taqnz3t16k'
 
-  const consentKey = 'nftropoly_analytics_consent'
+  const consentKey = 'ionicswap_analytics_consent'
   const hasConsent = () => localStorage.getItem(consentKey) === 'true'
 
   // Initialize when consent present

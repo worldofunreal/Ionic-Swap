@@ -49,7 +49,7 @@ class AppCacheService {
     if (typeof window === 'undefined') return
 
     try {
-      localStorage.setItem('nftropoly_session', JSON.stringify(session))
+      localStorage.setItem('ionicswap_session', JSON.stringify(session))
     } catch (error) {
       console.warn('Failed to save session to localStorage:', error)
     }
@@ -60,7 +60,7 @@ class AppCacheService {
     if (typeof window === 'undefined') return
 
     try {
-      const stored = localStorage.getItem('nftropoly_session')
+      const stored = localStorage.getItem('ionicswap_session')
       if (stored) {
         const session = JSON.parse(stored) as SessionCache
         if (this.isSessionValid(session)) {
@@ -68,12 +68,12 @@ class AppCacheService {
           console.log('Session loaded from localStorage')
         } else {
           console.log('Stored session expired, clearing')
-          localStorage.removeItem('nftropoly_session')
+          localStorage.removeItem('ionicswap_session')
         }
       }
     } catch (error) {
       console.warn('Failed to load session from localStorage:', error)
-      localStorage.removeItem('nftropoly_session')
+      localStorage.removeItem('ionicswap_session')
     }
   }
 
@@ -112,7 +112,7 @@ class AppCacheService {
   clearSession(): void {
     this.sessionCache = null
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('nftropoly_session')
+      localStorage.removeItem('ionicswap_session')
     }
     console.log('Session cleared from cache and localStorage')
   }

@@ -35,17 +35,6 @@
       </div>
     </div>
     <LoginPanel ref="loginPanelRef" />
-    <!-- Temporarily disabled for performance optimization -->
-    <!-- <ClientOnly>
-      <DisclaimerModal ref="disclaimerModalRef" @close="onDisclaimerClose" />
-    </ClientOnly> -->
-    <!-- Temporarily disabled onboarding tour until issues are resolved -->
-    <!-- <ClientOnly>
-      <OnboardingTour ref="onboardingTourRef" />
-    </ClientOnly> -->
-    <!-- <ClientOnly>
-      <OnboardingTrigger />
-    </ClientOnly> -->
   </UApp>
 </template>
 
@@ -58,55 +47,19 @@
   import Header from './components/Header.vue'
   import AppFooter from './components/AppFooter.vue'
   import LoginPanel from './components/LoginPanel.vue'
-  // Temporarily disabled for performance optimization
-  // import DisclaimerModal from './components/DisclaimerModal.vue'
-  // Temporarily disabled onboarding tour until issues are resolved
-  // import OnboardingTour from './components/onBoardingTour/OnboardingTour.vue'
-  // import OnboardingTrigger from './components/onBoardingTour/OnboardingTrigger.vue'
 
   const loginPanelRef = ref<{
     open: () => void
   } | null>(null)
-  // Temporarily disabled for performance optimization
-  // const disclaimerModalRef = ref<{
-  //   open: () => void
-  //   close: () => void
-  // } | null>(null)
+
   const mobileSidebarOpen = ref(false)
   const { $trackInteraction } = useNuxtApp()
-  // Temporarily disabled onboarding tour until issues are resolved
-  // const onboardingTourRef = ref<{
-  //   startTour: () => void
-  //   stopTour: () => void
-  //   updateTourForRegistration: () => void
-  // } | null>(null)
-
-  // Temporarily disabled for performance optimization
-  // // Handle disclaimer close event
-  // const onDisclaimerClose = () => {
-  //   // Start the onboarding tour after disclaimer is closed
-  //   setTimeout(() => {
-  //     if (onboardingTourRef?.value?.startTour) {
-  //       onboardingTourRef.value.startTour()
-  //     }
-  //   }, 500) // Small delay to ensure smooth transition
-  // }
-
+  
   // Provide the login panel ref so other components can access it
   provide('loginPanelRef', loginPanelRef)
-  // Temporarily disabled onboarding tour until issues are resolved
-  // // Provide the onboarding tour ref for manual triggering
-  // provide('onboardingTourRef', onboardingTourRef)
 
   // Track app initialization and key metrics
   onMounted(async () => {
-    // Theme is now handled automatically by Nuxt color mode
-    // No need to manually initialize
-
-    // Temporarily disabled onboarding tour until issues are resolved
-    // // Initialize onboarding
-    // const { shouldShowOnboarding, startTour } = useOnboarding()
-
     // Restore session if available
     const auth = useAuthStore()
     const toast = useToast()
@@ -153,19 +106,9 @@
       viewportSize: `${window.innerWidth}x${window.innerHeight}`,
       timestamp: Date.now(),
     })
-
-    // Temporarily disabled onboarding tour until issues are resolved
-    // // Auto-start onboarding tour for new users
-    // if (shouldShowOnboarding.value) {
-    //   setTimeout(() => {
-    //     startTour('registration')
-    //   }, 100) // Small delay to ensure everything is loaded
-    // }
   })
 </script>
 
 <style>
   /* Add any global styles or layout styles here if needed */
-  /* Temporarily disabled for performance optimization */
-  @import 'intro.js/minified/introjs.min.css';
 </style>

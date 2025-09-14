@@ -187,7 +187,7 @@ export default defineNuxtConfig({
         process.env.NUXT_PUBLIC_GA_MEASUREMENT_ID || 'G-9M4CYZTMME',
       GTM_ID: process.env.NUXT_PUBLIC_GTM_ID || 'GTM-MGJCRHQ3',
       CLARITY_PROJECT_ID:
-        process.env.NUXT_PUBLIC_CLARITY_PROJECT_ID || 'stqeko2g9v',
+        process.env.NUXT_PUBLIC_CLARITY_PROJECT_ID || 'taqnz3t16k',
       network: 'local',
     },
   },

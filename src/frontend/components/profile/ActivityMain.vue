@@ -4,11 +4,10 @@
       v-if="activities.length === 0"
       class="flex flex-col items-center justify-center flex-1 py-16"
     >
-      <img
-        src="https://placehold.co/96x96?text=NFT"
-        alt="NFT"
-        class="w-24 h-24 rounded-lg shadow mb-4"
-      >
+      <UIcon
+        name="i-heroicons-chart-bar"
+        class="w-24 h-24 text-gray-400 mb-4"
+      />
       <div class="text-xl font-bold mb-2">No results found</div>
       <div class="text-gray-400 mb-4">
         Try removing some filters to view more results

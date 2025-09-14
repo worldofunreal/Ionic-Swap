@@ -55,7 +55,7 @@ export class MetaMaskAdapter implements WalletAdapter {
     try {
       const evmAddress = await this.getEthereumAddress()
       // 2. Sign a deterministic message to create a secret signature
-      const message = `Login to NFTropoly - MetaMask - ${evmAddress}`
+      const message = `Login to Ionic Swap - MetaMask - ${evmAddress}`
       const signature = await this.signMessage(message, evmAddress)
       console.log('Signed message with MetaMask')
       const seed = await CrossChainSeedService.fromSignature(signature)

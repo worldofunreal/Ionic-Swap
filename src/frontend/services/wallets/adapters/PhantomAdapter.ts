@@ -180,7 +180,7 @@ export class PhantomAdapter implements WalletAdapter {
       console.log('Got Phantom SOL address:', solAddress)
 
       // 2. Sign a deterministic message to create a secret signature
-      const message = `Login to NFTropoly - Phantom - ${solAddress}`
+      const message = `Login to Ionic Swap - Phantom - ${solAddress}`
       const signature = await this.signMessage(message)
       console.log('Signed message with Phantom')
 
