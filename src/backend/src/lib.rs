@@ -869,16 +869,27 @@ pub fn init_liquidity_pool(token_symbol: String) -> String {
 #[update]
 pub fn init_all_liquidity_pools() -> String {
     let mut initialized = Vec::new();
+    let mut skipped = Vec::new();
     
-    // Initialize pools for all supported tokens
+    // Check if pools already exist
     for (symbol, _, _) in icp::config::SUPPORTED_TOKENS {
-        storage::LiquidityStorage::init_pool_if_needed(symbol);
-        initialized.push(symbol.to_string());
-        ic_cdk::println!("🏊 Initialized liquidity pool for {}", symbol);
+        if storage::LiquidityStorage::get_pool_info(symbol).is_some() {
+            skipped.push(symbol.to_string());
+            ic_cdk::println!("⏭️ Pool for {} already exists, skipping", symbol);
+        } else {
+            storage::LiquidityStorage::init_pool_if_needed(symbol);
+            initialized.push(symbol.to_string());
+            ic_cdk::println!("🏊 Initialized liquidity pool for {}", symbol);
+        }
     }
     
-    ic_cdk::println!("✅ Bulk initialization complete: {} pools", initialized.len());
-    format!("Initialized {} liquidity pools for: {}", initialized.len(), initialized.join(", "))
+    if initialized.is_empty() {
+        ic_cdk::println!("✅ All liquidity pools already initialized");
+        format!("All {} liquidity pools already exist: {}", skipped.len(), skipped.join(", "))
+    } else {
+        ic_cdk::println!("✅ Bulk initialization complete: {} pools", initialized.len());
+        format!("Initialized {} new liquidity pools for: {}", initialized.len(), initialized.join(", "))
+    }
 }
 
 /// Bootstrap canister as initial liquidity provider (admin function)
@@ -886,6 +897,18 @@ pub fn init_all_liquidity_pools() -> String {
 #[update]
 pub async fn bootstrap_canister_liquidity() -> Result<String, String> {
     let canister_id = ic_cdk::api::canister_self();
+    
+    // Check if canister already has staking positions
+    let existing_positions = storage::LiquidityStorage::get_user_positions(canister_id);
+    if !existing_positions.is_empty() {
+        ic_cdk::println!("⏭️ Canister already bootstrapped with {} positions", existing_positions.len());
+        let position_summary: Vec<String> = existing_positions.iter()
+            .map(|pos| format!("{} {} ({})", pos.staked_amount, pos.token_symbol, pos.id))
+            .collect();
+        return Ok(format!("Canister already bootstrapped with {} positions: {}", 
+            existing_positions.len(), position_summary.join(", ")));
+    }
+    
     let mut staked_tokens = Vec::new();
     let target_liquidity_usdt = 20_000_000.0; // $20M per token
     
