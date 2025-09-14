@@ -116,7 +116,7 @@
               </div>
             </div>
             <NuxtLink
-              :to="`/tokens/${selectedToken}`"
+              :to="`/trading?token=${selectedToken}`"
               class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium transition-colors"
             >
               Trade {{ selectedToken }}
