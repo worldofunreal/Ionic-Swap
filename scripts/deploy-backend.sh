@@ -40,6 +40,14 @@ echo "🔄 Starting price scheduler..."
 SCHEDULER_RESULT=$(dfx canister call backend start_price_scheduler)
 echo "Scheduler initialization result: $SCHEDULER_RESULT"
 
+echo "🏊 Initializing liquidity pools..."
+POOLS_RESULT=$(dfx canister call backend init_all_liquidity_pools)
+echo "Liquidity pools initialization result: $POOLS_RESULT"
+
+echo "🏦 Bootstrapping canister as initial liquidity provider..."
+BOOTSTRAP_RESULT=$(dfx canister call backend bootstrap_canister_liquidity)
+echo "Canister bootstrap result: $BOOTSTRAP_RESULT"
+
 echo "✅ Backend canister deployed successfully!"
 echo "🌐 Candid UI: http://127.0.0.1:4943/?canisterId=$(dfx canister id backend)"
 

@@ -78,10 +78,10 @@ export const idlFactory = ({ IDL }) => {
     'is_verified' : IDL.Bool,
   });
   const TokenThresholds = IDL.Record({
-    'healthy_threshold' : IDL.Nat64,
-    'halt_threshold' : IDL.Nat64,
-    'rebalance_threshold' : IDL.Nat64,
-    'min_trade_threshold' : IDL.Nat64,
+    'healthy_threshold_usdt' : IDL.Float64,
+    'min_trade_threshold_usdt' : IDL.Float64,
+    'rebalance_threshold_usdt' : IDL.Float64,
+    'halt_threshold_usdt' : IDL.Float64,
   });
   const LiquidityConfig = IDL.Record({
     'max_dissolve_delay_seconds' : IDL.Nat64,
@@ -284,6 +284,7 @@ export const idlFactory = ({ IDL }) => {
     'location' : IDL.Opt(IDL.Text),
   });
   return IDL.Service({
+    'bootstrap_canister_liquidity' : IDL.Func([], [Result], []),
     'claim_faucet' : IDL.Func([], [Result], []),
     'debug_test_external_apis' : IDL.Func([], [Result], []),
     'debug_wallet_verification' : IDL.Func([], [Result], []),
@@ -386,6 +387,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'http_request' : IDL.Func([HttpRequest], [HttpResponse], ['query']),
+    'init_all_liquidity_pools' : IDL.Func([], [IDL.Text], []),
     'init_all_tokens' : IDL.Func([], [Result], []),
     'init_canister_balances' : IDL.Func([], [Result], []),
     'init_liquidity_pool' : IDL.Func([IDL.Text], [IDL.Text], []),

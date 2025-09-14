@@ -273,6 +273,12 @@
                           >
                             Trade
                           </button>
+                          <button
+                            @click="openWithdrawModal(token.symbol)"
+                            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                          >
+                            Withdraw
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -518,6 +524,174 @@
         </div>
       </div>
     </div>
+
+    <!-- Withdrawal Modal -->
+    <UModal v-model="withdrawModalOpen">
+      <UCard :ui="{ ring: '', divide: 'divide-y divide-gray-100 dark:divide-gray-800' }">
+        <template #header>
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-foreground">Withdraw {{ selectedToken }}</h3>
+            <UButton
+              color="gray"
+              variant="ghost"
+              icon="i-heroicons-x-mark-20-solid"
+              class="-my-1"
+              @click="withdrawModalOpen = false"
+            />
+          </div>
+        </template>
+
+        <div class="space-y-6">
+          <!-- Development Notice -->
+          <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+            <div class="flex items-start">
+              <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 mr-3 flex-shrink-0" />
+              <div>
+                <h4 class="text-sm font-medium text-amber-800 dark:text-amber-200">Withdrawals in Development</h4>
+                <p class="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                  Withdrawal functionality is currently under development. This feature will be available soon.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Available Balance -->
+          <div class="bg-muted rounded-lg p-4">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium text-muted-foreground">Available Balance</span>
+              <span class="text-lg font-semibold text-foreground">
+                <span v-if="balancesVisible">
+                  {{ formatTokenAmount(selectedToken, getTokenBalance(selectedToken)) }} {{ selectedToken }}
+                </span>
+                <span v-else>•••••• {{ selectedToken }}</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Wallet Selection -->
+          <div class="space-y-4">
+            <h4 class="text-sm font-medium text-foreground">Select Withdrawal Wallet</h4>
+            
+            <div class="space-y-3">
+              <!-- EVM Wallet -->
+              <div 
+                v-if="userProfile?.evm_address?.[0]" 
+                class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                :class="{ 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20': selectedWallet === 'evm' }"
+                @click="selectedWallet = 'evm'"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                      <UIcon name="i-heroicons-cube" class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <div class="font-medium text-foreground">EVM Wallet</div>
+                      <div class="text-sm text-muted-foreground">Ethereum, BSC, Polygon</div>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-xs text-muted-foreground">Address</div>
+                    <div class="text-sm font-mono text-foreground">{{ formatAddress(userProfile.evm_address[0]) }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bitcoin Wallet -->
+              <div 
+                v-if="userProfile?.bitcoin_address?.[0]" 
+                class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                :class="{ 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20': selectedWallet === 'bitcoin' }"
+                @click="selectedWallet = 'bitcoin'"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
+                      <UIcon name="logos:bitcoin" class="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <div>
+                      <div class="font-medium text-foreground">Bitcoin Wallet</div>
+                      <div class="text-sm text-muted-foreground">Bitcoin Network</div>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-xs text-muted-foreground">Address</div>
+                    <div class="text-sm font-mono text-foreground">{{ formatAddress(userProfile.bitcoin_address[0]) }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Solana Wallet -->
+              <div 
+                v-if="userProfile?.solana_address?.[0]" 
+                class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                :class="{ 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20': selectedWallet === 'solana' }"
+                @click="selectedWallet = 'solana'"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
+                      <UIcon name="token-branded:solana" class="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div>
+                      <div class="font-medium text-foreground">Solana Wallet</div>
+                      <div class="text-sm text-muted-foreground">Solana Network</div>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-xs text-muted-foreground">Address</div>
+                    <div class="text-sm font-mono text-foreground">{{ formatAddress(userProfile.solana_address[0]) }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ICP Wallet -->
+              <div 
+                v-if="userProfile?.id" 
+                class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                :class="{ 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20': selectedWallet === 'icp' }"
+                @click="selectedWallet = 'icp'"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-cyan-100 dark:bg-cyan-900 rounded-lg flex items-center justify-center">
+                      <UIcon name="token-branded:icp" class="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+                    </div>
+                    <div>
+                      <div class="font-medium text-foreground">ICP Wallet</div>
+                      <div class="text-sm text-muted-foreground">Internet Computer</div>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-xs text-muted-foreground">Principal</div>
+                    <div class="text-sm font-mono text-foreground">{{ formatAddress(userProfile.id.toText()) }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <template #footer>
+          <div class="flex justify-end gap-3">
+            <UButton
+              color="gray"
+              variant="soft"
+              @click="withdrawModalOpen = false"
+            >
+              Cancel
+            </UButton>
+            <UButton
+              color="primary"
+              :disabled="!selectedWallet"
+              @click="confirmWithdrawal"
+            >
+              Continue Withdrawal
+            </UButton>
+          </div>
+        </template>
+      </UCard>
+    </UModal>
   </div>
 </template>
 
@@ -569,6 +743,11 @@
   
   // Auto-refresh interval
   let refreshInterval: NodeJS.Timeout | null = null
+  
+  // Withdrawal modal state
+  const withdrawModalOpen = ref(false)
+  const selectedToken = ref('')
+  const selectedWallet = ref('')
   
   // Toggle balance visibility
   const toggleBalanceVisibility = () => {
@@ -816,6 +995,31 @@
       description: `Trading for ${symbol} will be available soon`,
       color: 'info',
     })
+  }
+
+  // Get token balance for withdrawal modal
+  const getTokenBalance = (symbol: string) => {
+    return userBalances.value[symbol] || 0
+  }
+
+  // Open withdrawal modal
+  const openWithdrawModal = (tokenSymbol: string) => {
+    selectedToken.value = tokenSymbol
+    selectedWallet.value = ''
+    withdrawModalOpen.value = true
+  }
+
+  // Confirm withdrawal
+  const confirmWithdrawal = () => {
+    if (!selectedWallet.value) return
+    
+    toast.add({
+      title: 'Withdrawals Coming Soon',
+      description: `Withdrawal functionality for ${selectedToken.value} is currently under development`,
+      color: 'info',
+    })
+    
+    withdrawModalOpen.value = false
   }
 
   // View token details

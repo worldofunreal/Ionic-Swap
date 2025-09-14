@@ -215,10 +215,10 @@ type SwapTransaction = record {
   from_price : float64;
 };
 type TokenThresholds = record {
-  healthy_threshold : nat64;
-  halt_threshold : nat64;
-  rebalance_threshold : nat64;
-  min_trade_threshold : nat64;
+  healthy_threshold_usdt : float64;
+  min_trade_threshold_usdt : float64;
+  rebalance_threshold_usdt : float64;
+  halt_threshold_usdt : float64;
 };
 type TradingPair = record {
   base : text;
@@ -264,6 +264,9 @@ type UserUpdate = record {
   location : opt text;
 };
 service : (InitArg) -> {
+  // Bootstrap canister as initial liquidity provider (admin function)
+  // Stakes ~$20M worth of each token to provide initial liquidity
+  bootstrap_canister_liquidity : () -> (Result);
   // Claim 2M USDT from faucet (one-time only per principal)
   claim_faucet : () -> (Result);
   // Debug function to test external API calls (for testing only)
@@ -354,6 +357,8 @@ service : (InitArg) -> {
   get_user_transaction_count : (principal) -> (nat32) query;
   // HTTP request handler for serving assets
   http_request : (HttpRequest) -> (HttpResponse) query;
+  // Initialize liquidity pools for all supported tokens
+  init_all_liquidity_pools : () -> (text);
   // Initialize all missing tokens (admin function)
   init_all_tokens : () -> (Result);
   // Initialize canister token balances (admin function)

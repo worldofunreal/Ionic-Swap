@@ -74,6 +74,25 @@ pub struct LiquidityNeuron {
 }
 
 impl LiquidityNeuron {
+    /// Create a new liquidity neuron position
+    pub fn new(user: Principal, token_symbol: String, staked_amount: u64, dissolve_delay_seconds: u64) -> Self {
+        let timestamp = ic_cdk::api::time() / 1_000_000_000; // Convert to seconds
+        let id = Self::generate_id(user, &token_symbol, timestamp);
+        
+        Self {
+            id,
+            user,
+            token_symbol,
+            staked_amount,
+            dissolve_delay_seconds,
+            state: NeuronState::Locked,
+            created_at: timestamp,
+            dissolving_started_at: None,
+            withdrawn_amount: 0,
+            last_fee_index: 0.0,
+        }
+    }
+    
     /// Generate a unique position ID
     pub fn generate_id(user: Principal, token_symbol: &str, timestamp: u64) -> String {
         format!("{}_{}_{}_{}", user.to_text(), token_symbol, timestamp, 
@@ -256,62 +275,73 @@ impl PoolInfo {
 /// Values are in the token's base units (wei for ETH, satoshis for BTC, etc.)
 #[derive(Debug, Clone, CandidType, Deserialize, Serialize)]
 pub struct TokenThresholds {
-    /// Healthy pool threshold (e.g., 10,000 ETH)
+    /// Healthy pool threshold in USDT value (e.g., $10M)
     /// Above this: normal operations, standard spreads
-    pub healthy_threshold: u64,
+    pub healthy_threshold_usdt: f64,
     
-    /// Rebalancing needed threshold (e.g., 5,000 ETH)
+    /// Rebalancing needed threshold in USDT value (e.g., $7M)
     /// Below this: manual alert, higher spreads, all ops allowed
-    pub rebalance_threshold: u64,
+    pub rebalance_threshold_usdt: f64,
     
-    /// Critical threshold - halt trading (e.g., 1,000 ETH)
+    /// Critical threshold - halt trading in USDT value (e.g., $5M)
     /// Below this: halt all trades, only withdrawals allowed
-    pub halt_threshold: u64,
+    pub halt_threshold_usdt: f64,
     
-    /// Minimum threshold for any trade (e.g., 100 ETH)
+    /// Minimum threshold for any trade in USDT value (e.g., $100)
     /// Prevents tiny trades that could be used for gaming
-    pub min_trade_threshold: u64,
+    pub min_trade_threshold_usdt: f64,
 }
 
 impl TokenThresholds {
-    /// Create default thresholds for a token based on its type
-    pub fn default_for_token(token_symbol: &str) -> Self {
-        match token_symbol {
-            "ETH" => Self {
-                healthy_threshold: 10_000 * 10_u64.pow(18),     // 10,000 ETH
-                rebalance_threshold: 5_000 * 10_u64.pow(18),    // 5,000 ETH
-                halt_threshold: 1_000 * 10_u64.pow(18),         // 1,000 ETH
-                min_trade_threshold: 1 * 10_u64.pow(17),        // 0.1 ETH minimum
-            },
-            "BTC" => Self {
-                healthy_threshold: 500 * 10_u64.pow(8),         // 500 BTC
-                rebalance_threshold: 250 * 10_u64.pow(8),       // 250 BTC
-                halt_threshold: 50 * 10_u64.pow(8),             // 50 BTC
-                min_trade_threshold: 1 * 10_u64.pow(6),         // 0.01 BTC minimum
-            },
-            "USDT" => Self {
-                healthy_threshold: 10_000_000 * 10_u64.pow(6),  // $10M USDT
-                rebalance_threshold: 5_000_000 * 10_u64.pow(6), // $5M USDT
-                halt_threshold: 1_000_000 * 10_u64.pow(6),      // $1M USDT
-                min_trade_threshold: 1_000 * 10_u64.pow(6),     // $1,000 minimum
-            },
-            _ => Self {
-                // Generic defaults for other tokens
-                healthy_threshold: 1_000_000 * 10_u64.pow(6),   // 1M units
-                rebalance_threshold: 500_000 * 10_u64.pow(6),   // 500k units
-                halt_threshold: 100_000 * 10_u64.pow(6),        // 100k units
-                min_trade_threshold: 1_000 * 10_u64.pow(6),     // 1k units minimum
-            }
+    /// Convert USDT threshold to token amount based on current price
+    pub fn get_token_amount(&self, threshold_usdt: f64, price: f64, decimals: u8) -> u64 {
+        let decimal_multiplier = 10.0_f64.powi(decimals as i32);
+        (threshold_usdt / price * decimal_multiplier) as u64
+    }
+    
+    /// Get healthy threshold in token amount
+    pub fn get_healthy_amount(&self, price: f64, decimals: u8) -> u64 {
+        self.get_token_amount(self.healthy_threshold_usdt, price, decimals)
+    }
+    
+    /// Get rebalance threshold in token amount
+    pub fn get_rebalance_amount(&self, price: f64, decimals: u8) -> u64 {
+        self.get_token_amount(self.rebalance_threshold_usdt, price, decimals)
+    }
+    
+    /// Get halt threshold in token amount
+    pub fn get_halt_amount(&self, price: f64, decimals: u8) -> u64 {
+        self.get_token_amount(self.halt_threshold_usdt, price, decimals)
+    }
+    
+    /// Get minimum trade threshold in token amount
+    pub fn get_min_trade_amount(&self, price: f64, decimals: u8) -> u64 {
+        self.get_token_amount(self.min_trade_threshold_usdt, price, decimals)
+    }
+}
+
+impl TokenThresholds {
+    /// Create default USDT-based thresholds for all tokens
+    pub fn default_for_token(_token_symbol: &str) -> Self {
+        Self {
+            healthy_threshold_usdt: 10_000_000.0,    // $10M healthy threshold
+            rebalance_threshold_usdt: 7_000_000.0,   // $7M rebalance alert
+            halt_threshold_usdt: 5_000_000.0,        // $5M halt trading
+            min_trade_threshold_usdt: 100.0,         // $100 minimum trade
         }
     }
 
     /// Check what status the current liquidity amount corresponds to
-    pub fn get_status(&self, current_liquidity: u64) -> LiquidityStatus {
-        if current_liquidity >= self.healthy_threshold {
+    pub fn get_status(&self, current_liquidity: u64, price: f64, decimals: u8) -> LiquidityStatus {
+        let healthy_amount = self.get_healthy_amount(price, decimals);
+        let rebalance_amount = self.get_rebalance_amount(price, decimals);
+        let halt_amount = self.get_halt_amount(price, decimals);
+        
+        if current_liquidity >= healthy_amount {
             LiquidityStatus::Healthy
-        } else if current_liquidity >= self.rebalance_threshold {
+        } else if current_liquidity >= rebalance_amount {
             LiquidityStatus::NeedsRebalance
-        } else if current_liquidity >= self.halt_threshold {
+        } else if current_liquidity >= halt_amount {
             LiquidityStatus::Critical
         } else {
             LiquidityStatus::Halted

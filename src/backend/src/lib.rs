@@ -865,6 +865,83 @@ pub fn init_liquidity_pool(token_symbol: String) -> String {
     format!("Initialized liquidity pool for {}", token_symbol)
 }
 
+/// Initialize liquidity pools for all supported tokens
+#[update]
+pub fn init_all_liquidity_pools() -> String {
+    let mut initialized = Vec::new();
+    
+    // Initialize pools for all supported tokens
+    for (symbol, _, _) in icp::config::SUPPORTED_TOKENS {
+        storage::LiquidityStorage::init_pool_if_needed(symbol);
+        initialized.push(symbol.to_string());
+        ic_cdk::println!("🏊 Initialized liquidity pool for {}", symbol);
+    }
+    
+    ic_cdk::println!("✅ Bulk initialization complete: {} pools", initialized.len());
+    format!("Initialized {} liquidity pools for: {}", initialized.len(), initialized.join(", "))
+}
+
+/// Bootstrap canister as initial liquidity provider (admin function)
+/// Stakes ~$20M worth of each token to provide initial liquidity
+#[update]
+pub async fn bootstrap_canister_liquidity() -> Result<String, String> {
+    let canister_id = ic_cdk::api::canister_self();
+    let mut staked_tokens = Vec::new();
+    let target_liquidity_usdt = 20_000_000.0; // $20M per token
+    
+    // Calculate appropriate staking amounts based on current prices
+    for (symbol, _, decimals) in icp::config::SUPPORTED_TOKENS {
+        // Get current price from oracle
+        let price = if *symbol == "USDT" {
+            1.0 // USDT is always $1
+        } else {
+            match oracle::aggregator::get_pair_price(symbol).await {
+                Ok(trading_pair) => trading_pair.price,
+                Err(e) => {
+                    ic_cdk::println!("⚠️ Failed to get price for {}: {}, skipping", symbol, e);
+                    continue;
+                }
+            }
+        };
+        
+        // Calculate token amount equivalent to $20M
+        let decimal_multiplier = 10.0_f64.powi(*decimals as i32);
+        let stake_amount = (target_liquidity_usdt / price * decimal_multiplier) as u64;
+        
+        // Check if canister has enough balance
+        let canister_balance = icp::storage::IcpTokenDatabase::get_balance(canister_id, symbol);
+        
+        if canister_balance >= stake_amount {
+            // Create maximum dissolve delay position (365 days) for highest voting power
+            let position = icp::liquidity::LiquidityNeuron::new(
+                canister_id,
+                symbol.to_string(), 
+                stake_amount,
+                365 * 24 * 3600 // 365 days in seconds
+            );
+            
+            // Store the position
+            storage::LiquidityStorage::store_position(position.clone())?;
+            
+            // Calculate USDT value for logging
+            let usdt_value = stake_amount as f64 / decimal_multiplier * price;
+            
+            ic_cdk::println!("🏦 Canister staked {} {} (${:.2}M, dissolve delay: 365 days)", 
+                stake_amount, symbol, usdt_value / 1_000_000.0);
+            staked_tokens.push(format!("{} {} (${:.1}M)", stake_amount, symbol, usdt_value / 1_000_000.0));
+            
+            // Recalculate pool aggregates
+            storage::LiquidityStorage::recalculate_pool_aggregates(symbol)?;
+        } else {
+            ic_cdk::println!("⚠️ Insufficient {} balance: need {}, have {}", 
+                symbol, stake_amount, canister_balance);
+        }
+    }
+    
+    ic_cdk::println!("✅ Canister bootstrap complete: {} tokens staked", staked_tokens.len());
+    Ok(format!("Canister bootstrapped as LP with: {}", staked_tokens.join(", ")))
+}
+
 /// Get fee analytics for a time period (testing function)
 #[query]
 pub fn get_fee_analytics(

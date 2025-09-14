@@ -237,10 +237,10 @@ export interface SwapTransaction {
   'from_price' : number,
 }
 export interface TokenThresholds {
-  'healthy_threshold' : bigint,
-  'halt_threshold' : bigint,
-  'rebalance_threshold' : bigint,
-  'min_trade_threshold' : bigint,
+  'healthy_threshold_usdt' : number,
+  'min_trade_threshold_usdt' : number,
+  'rebalance_threshold_usdt' : number,
+  'halt_threshold_usdt' : number,
 }
 export interface TradingPair {
   'base' : string,
@@ -284,6 +284,7 @@ export interface UserUpdate {
   'location' : [] | [string],
 }
 export interface _SERVICE {
+  'bootstrap_canister_liquidity' : ActorMethod<[], Result>,
   'claim_faucet' : ActorMethod<[], Result>,
   'debug_test_external_apis' : ActorMethod<[], Result>,
   'debug_wallet_verification' : ActorMethod<[], Result>,
@@ -338,6 +339,7 @@ export interface _SERVICE {
   >,
   'get_user_transaction_count' : ActorMethod<[Principal], number>,
   'http_request' : ActorMethod<[HttpRequest], HttpResponse>,
+  'init_all_liquidity_pools' : ActorMethod<[], string>,
   'init_all_tokens' : ActorMethod<[], Result>,
   'init_canister_balances' : ActorMethod<[], Result>,
   'init_liquidity_pool' : ActorMethod<[string], string>,
