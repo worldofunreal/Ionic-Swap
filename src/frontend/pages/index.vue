@@ -10,7 +10,6 @@
       "
     >
       <DiscoverCarousel class="mb-2" />
-      <TopMoversToday class="mb-2" />
       <DeFi101 class="mb-2" />
     </div>
     <!-- Right Column (Token Prices) -->
@@ -32,7 +31,6 @@
 
   // Stub components for layout
   import DiscoverCarousel from '@/components/DiscoverCarousel.vue'
-  import TopMoversToday from '@/components/TopMoversToday.vue'
   import DeFi101 from '@/components/DeFi101.vue'
   import TokenPriceList from '~/components/TokenPriceList.vue'
 

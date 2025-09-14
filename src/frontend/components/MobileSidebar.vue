@@ -73,7 +73,6 @@
     { label: 'Discover', icon: 'eos-icons:compass', to: '/' },
     { label: 'Markets', icon: 'icon-park-solid:stock-market', to: '/markets' },
     { label: 'Trading', icon: 'heroicons:chart-bar', to: '/trading' },
-    { label: 'History', icon: 'tabler:activity', to: '/activity' },
     { label: 'Profile', icon: 'iconamoon:profile-fill', to: '/profile' },
     { label: 'Settings', icon: 'iconamoon:settings-fill', to: '/settings' },
     { label: 'Support', icon: 'ix:support', to: '/support' },

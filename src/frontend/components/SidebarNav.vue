@@ -65,7 +65,6 @@
       items.push(
         { label: 'Wallet', icon: 'heroicons:wallet-20-solid', to: '/wallet' },
         { label: 'Trade', icon: 'i-heroicons-chart-bar-20-solid', to: '/trading' },
-        { label: 'Activity', icon: 'tabler:activity', to: '/activity' },
         { label: 'Profile', icon: 'iconamoon:profile-fill', 
           to: auth.userProfile.username ? `/@${auth.userProfile.username}` : '/profile' },
         { label: 'Settings', icon: 'iconamoon:settings-fill', to: '/settings' },
