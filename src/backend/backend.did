@@ -49,6 +49,57 @@ type InternalToken = record {
   total_supply : nat64;
   symbol : text;
 };
+type LiquidityConfig = record {
+  max_dissolve_delay_seconds : nat64;
+  max_trade_amount_usdt : nat64;
+  k_depth : float64;
+  spread_base : float64;
+  paused_tokens : vec text;
+  oracle_failure_threshold : nat32;
+  volatility_window_seconds : nat64;
+  min_dissolve_delay_seconds : nat64;
+  token_thresholds : vec record { text; TokenThresholds };
+  fee_rate_base : float64;
+  k_vol : float64;
+  max_hourly_volume_usdt : nat64;
+};
+type LiquidityNeuron = record {
+  id : text;
+  dissolve_delay_seconds : nat64;
+  withdrawn_amount : nat64;
+  staked_amount : nat64;
+  token_symbol : text;
+  user : principal;
+  created_at : nat64;
+  dissolving_started_at : opt nat64;
+  state : NeuronState;
+  last_fee_index : float64;
+};
+type LiquidityStatus = variant { Healthy; Critical; NeedsRebalance; Halted };
+type LiquidityTransaction = record {
+  id : text;
+  transaction_type : LiquidityTxType;
+  token_symbol : text;
+  user : principal;
+  error_message : opt text;
+  before_state : opt text;
+  after_state : opt text;
+  timestamp : nat64;
+  success : bool;
+  amount : nat64;
+  position_id : opt text;
+};
+type LiquidityTxType = variant {
+  FullWithdraw;
+  ClaimFees;
+  Stake;
+  CancelDissolving;
+  EmergencyPause;
+  StartDissolving;
+  ConfigUpdate;
+  PartialWithdraw;
+};
+type NeuronState = variant { Dissolved; Locked; Dissolving };
 type PermitRequest = record {
   r : text;
   s : text;
@@ -78,6 +129,21 @@ type PersonalUser = record {
   solana_address : opt text;
   followers_count : nat32;
   location : opt text;
+};
+type PoolInfo = record {
+  fees_from_volatility : nat64;
+  current_volatility_1h : float64;
+  liquidity_status : LiquidityStatus;
+  token_symbol : text;
+  available_liquidity : nat64;
+  total_staked : nat64;
+  fees_from_trading : nat64;
+  global_fee_index : float64;
+  total_volume_1h : nat64;
+  total_fees_collected : nat64;
+  fees_from_spread : nat64;
+  total_voting_power : float64;
+  fees_from_depth : nat64;
 };
 type PortfolioData = record {
   change_24h : float64;
@@ -148,6 +214,12 @@ type SwapTransaction = record {
   to_price : float64;
   from_price : float64;
 };
+type TokenThresholds = record {
+  healthy_threshold : nat64;
+  halt_threshold : nat64;
+  rebalance_threshold : nat64;
+  min_trade_threshold : nat64;
+};
 type TradingPair = record {
   base : text;
   quote : text;
@@ -207,6 +279,8 @@ service : (InitArg) -> {
   follow_user : (principal) -> (Result_3);
   // Get all internal tokens
   get_all_internal_tokens : () -> (vec InternalToken) query;
+  // Get all liquidity pools (testing function)
+  get_all_liquidity_pools : () -> (vec PoolInfo) query;
   // Get all supported tokens with their chain deployments
   get_all_supported_tokens : () -> (Result) query;
   // Get all usernames for sitemap generation
@@ -221,9 +295,27 @@ service : (InitArg) -> {
   get_faucet_claim : (principal) -> (opt FaucetClaim) query;
   // Get faucet statistics
   get_faucet_stats : () -> (nat64, nat64) query;
+  // Get fee analytics for a time period (testing function)
+  get_fee_analytics : (opt text, nat64, nat64) -> (
+      nat64,
+      nat64,
+      nat64,
+      nat64,
+      nat64,
+    ) query;
   get_followers : (principal) -> (vec CompactProfile) query;
   // Get following and followers lists
   get_following : (principal) -> (vec CompactProfile) query;
+  // Get liquidity configuration (testing function)
+  get_liquidity_config : () -> (LiquidityConfig) query;
+  // Get pool information for a token (testing function)
+  get_liquidity_pool_info : (text) -> (opt PoolInfo) query;
+  // Get liquidity positions for a user (testing function)
+  get_liquidity_positions : (principal) -> (vec LiquidityNeuron) query;
+  // Get system-wide liquidity statistics (testing function)
+  get_liquidity_system_stats : () -> (nat64, nat64, float64, nat64) query;
+  // Get liquidity transactions for a user (testing function)
+  get_liquidity_transactions : (principal) -> (vec LiquidityTransaction) query;
   // Get specific trading pair price
   get_pair_price : (text) -> (Result_4) query;
   // Get complete portfolio data for a user
@@ -238,6 +330,8 @@ service : (InitArg) -> {
   get_token_info : (text) -> (Result) query;
   // Get token registry statistics
   get_token_registry_stats : () -> (Result) query;
+  // Get current volatility for a token (testing function)
+  get_token_volatility : (text) -> (float64) query;
   // Get tokens deployed on specific chain
   get_tokens_by_chain : (text) -> (Result) query;
   // Get user by principal
@@ -264,6 +358,8 @@ service : (InitArg) -> {
   init_all_tokens : () -> (Result);
   // Initialize canister token balances (admin function)
   init_canister_balances : () -> (Result);
+  // Initialize a liquidity pool for a token (testing function)
+  init_liquidity_pool : (text) -> (text);
   // Asset upload functions (requires signed call, registered users only)
   init_upload : (text, nat64, opt nat64, text) -> (Result_1);
   // Check if user is following another user
@@ -280,6 +376,8 @@ service : (InitArg) -> {
   search_users : (text, nat32) -> (Result_8) query;
   // Personal search with follow state
   search_users_personal : (text, nat32, principal) -> (Result_8) query;
+  // Set liquidity configuration (admin function for testing)
+  set_liquidity_config : (LiquidityConfig) -> (Result);
   // User registration (requires signed call)
   signup : (text, opt text, opt text, opt text) -> (Result_3);
   // Start the price update scheduler (runs every second)

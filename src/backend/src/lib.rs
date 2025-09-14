@@ -811,5 +811,75 @@ pub async fn market_swap(request: icp::swap::SwapRequest) -> Result<icp::swap::S
 // UTILITY FUNCTIONS
 // ============================================================================
 
+// ============================================================================
+// LIQUIDITY STAKING OPERATIONS (STAGE 1 - TESTING FUNCTIONS)
+// ============================================================================
+
+/// Get liquidity positions for a user (testing function)
+#[query]
+pub fn get_liquidity_positions(user: Principal) -> Vec<icp::liquidity::LiquidityNeuron> {
+    storage::LiquidityStorage::get_user_positions(user)
+}
+
+/// Get pool information for a token (testing function)  
+#[query]
+pub fn get_liquidity_pool_info(token_symbol: String) -> Option<icp::liquidity::PoolInfo> {
+    storage::LiquidityStorage::get_pool_info(&token_symbol)
+}
+
+/// Get liquidity configuration (testing function)
+#[query]
+pub fn get_liquidity_config() -> icp::liquidity::LiquidityConfig {
+    storage::LiquidityStorage::get_config()
+}
+
+/// Set liquidity configuration (admin function for testing)
+#[update]
+pub fn set_liquidity_config(config: icp::liquidity::LiquidityConfig) -> Result<String, String> {
+    storage::LiquidityStorage::set_config(config)?;
+    Ok("Liquidity configuration updated successfully".to_string())
+}
+
+/// Get all liquidity pools (testing function)
+#[query]
+pub fn get_all_liquidity_pools() -> Vec<icp::liquidity::PoolInfo> {
+    storage::LiquidityStorage::get_all_pools()
+}
+
+/// Get liquidity transactions for a user (testing function)
+#[query]
+pub fn get_liquidity_transactions(user: Principal) -> Vec<icp::liquidity::LiquidityTransaction> {
+    storage::LiquidityStorage::get_user_transactions(user)
+}
+
+/// Get system-wide liquidity statistics (testing function)
+#[query]
+pub fn get_liquidity_system_stats() -> (u64, u64, f64, u64) {
+    storage::LiquidityStorage::get_system_stats()
+}
+
+/// Initialize a liquidity pool for a token (testing function)
+#[update]
+pub fn init_liquidity_pool(token_symbol: String) -> String {
+    storage::LiquidityStorage::init_pool_if_needed(&token_symbol);
+    format!("Initialized liquidity pool for {}", token_symbol)
+}
+
+/// Get fee analytics for a time period (testing function)
+#[query]
+pub fn get_fee_analytics(
+    token_symbol: Option<String>,
+    start_time: u64,
+    end_time: u64
+) -> (u64, u64, u64, u64, u64) {
+    storage::LiquidityStorage::get_fee_analytics(token_symbol, start_time, end_time)
+}
+
+/// Get current volatility for a token (testing function)
+#[query]
+pub fn get_token_volatility(token_symbol: String) -> f64 {
+    storage::LiquidityStorage::get_current_volatility(&token_symbol)
+}
+
 // Enable Candid export
 ic_cdk::export_candid!();

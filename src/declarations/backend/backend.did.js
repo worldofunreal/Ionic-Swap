@@ -41,6 +41,27 @@ export const idlFactory = ({ IDL }) => {
     'total_supply' : IDL.Nat64,
     'symbol' : IDL.Text,
   });
+  const LiquidityStatus = IDL.Variant({
+    'Healthy' : IDL.Null,
+    'Critical' : IDL.Null,
+    'NeedsRebalance' : IDL.Null,
+    'Halted' : IDL.Null,
+  });
+  const PoolInfo = IDL.Record({
+    'fees_from_volatility' : IDL.Nat64,
+    'current_volatility_1h' : IDL.Float64,
+    'liquidity_status' : LiquidityStatus,
+    'token_symbol' : IDL.Text,
+    'available_liquidity' : IDL.Nat64,
+    'total_staked' : IDL.Nat64,
+    'fees_from_trading' : IDL.Nat64,
+    'global_fee_index' : IDL.Float64,
+    'total_volume_1h' : IDL.Nat64,
+    'total_fees_collected' : IDL.Nat64,
+    'fees_from_spread' : IDL.Nat64,
+    'total_voting_power' : IDL.Float64,
+    'fees_from_depth' : IDL.Nat64,
+  });
   const FaucetClaim = IDL.Record({
     'user' : IDL.Principal,
     'timestamp' : IDL.Nat64,
@@ -55,6 +76,66 @@ export const idlFactory = ({ IDL }) => {
     'display_name' : IDL.Opt(IDL.Text),
     'am_following_them' : IDL.Bool,
     'is_verified' : IDL.Bool,
+  });
+  const TokenThresholds = IDL.Record({
+    'healthy_threshold' : IDL.Nat64,
+    'halt_threshold' : IDL.Nat64,
+    'rebalance_threshold' : IDL.Nat64,
+    'min_trade_threshold' : IDL.Nat64,
+  });
+  const LiquidityConfig = IDL.Record({
+    'max_dissolve_delay_seconds' : IDL.Nat64,
+    'max_trade_amount_usdt' : IDL.Nat64,
+    'k_depth' : IDL.Float64,
+    'spread_base' : IDL.Float64,
+    'paused_tokens' : IDL.Vec(IDL.Text),
+    'oracle_failure_threshold' : IDL.Nat32,
+    'volatility_window_seconds' : IDL.Nat64,
+    'min_dissolve_delay_seconds' : IDL.Nat64,
+    'token_thresholds' : IDL.Vec(IDL.Tuple(IDL.Text, TokenThresholds)),
+    'fee_rate_base' : IDL.Float64,
+    'k_vol' : IDL.Float64,
+    'max_hourly_volume_usdt' : IDL.Nat64,
+  });
+  const NeuronState = IDL.Variant({
+    'Dissolved' : IDL.Null,
+    'Locked' : IDL.Null,
+    'Dissolving' : IDL.Null,
+  });
+  const LiquidityNeuron = IDL.Record({
+    'id' : IDL.Text,
+    'dissolve_delay_seconds' : IDL.Nat64,
+    'withdrawn_amount' : IDL.Nat64,
+    'staked_amount' : IDL.Nat64,
+    'token_symbol' : IDL.Text,
+    'user' : IDL.Principal,
+    'created_at' : IDL.Nat64,
+    'dissolving_started_at' : IDL.Opt(IDL.Nat64),
+    'state' : NeuronState,
+    'last_fee_index' : IDL.Float64,
+  });
+  const LiquidityTxType = IDL.Variant({
+    'FullWithdraw' : IDL.Null,
+    'ClaimFees' : IDL.Null,
+    'Stake' : IDL.Null,
+    'CancelDissolving' : IDL.Null,
+    'EmergencyPause' : IDL.Null,
+    'StartDissolving' : IDL.Null,
+    'ConfigUpdate' : IDL.Null,
+    'PartialWithdraw' : IDL.Null,
+  });
+  const LiquidityTransaction = IDL.Record({
+    'id' : IDL.Text,
+    'transaction_type' : LiquidityTxType,
+    'token_symbol' : IDL.Text,
+    'user' : IDL.Principal,
+    'error_message' : IDL.Opt(IDL.Text),
+    'before_state' : IDL.Opt(IDL.Text),
+    'after_state' : IDL.Opt(IDL.Text),
+    'timestamp' : IDL.Nat64,
+    'success' : IDL.Bool,
+    'amount' : IDL.Nat64,
+    'position_id' : IDL.Opt(IDL.Text),
   });
   const TradingPair = IDL.Record({
     'base' : IDL.Text,
@@ -215,6 +296,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(InternalToken)],
         ['query'],
       ),
+    'get_all_liquidity_pools' : IDL.Func([], [IDL.Vec(PoolInfo)], ['query']),
     'get_all_supported_tokens' : IDL.Func([], [Result], ['query']),
     'get_all_usernames' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'get_canister_ethereum_address' : IDL.Func([], [IDL.Text], ['query']),
@@ -226,6 +308,11 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'get_faucet_stats' : IDL.Func([], [IDL.Nat64, IDL.Nat64], ['query']),
+    'get_fee_analytics' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Nat64, IDL.Nat64],
+        [IDL.Nat64, IDL.Nat64, IDL.Nat64, IDL.Nat64, IDL.Nat64],
+        ['query'],
+      ),
     'get_followers' : IDL.Func(
         [IDL.Principal],
         [IDL.Vec(CompactProfile)],
@@ -234,6 +321,27 @@ export const idlFactory = ({ IDL }) => {
     'get_following' : IDL.Func(
         [IDL.Principal],
         [IDL.Vec(CompactProfile)],
+        ['query'],
+      ),
+    'get_liquidity_config' : IDL.Func([], [LiquidityConfig], ['query']),
+    'get_liquidity_pool_info' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(PoolInfo)],
+        ['query'],
+      ),
+    'get_liquidity_positions' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Vec(LiquidityNeuron)],
+        ['query'],
+      ),
+    'get_liquidity_system_stats' : IDL.Func(
+        [],
+        [IDL.Nat64, IDL.Nat64, IDL.Float64, IDL.Nat64],
+        ['query'],
+      ),
+    'get_liquidity_transactions' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Vec(LiquidityTransaction)],
         ['query'],
       ),
     'get_pair_price' : IDL.Func([IDL.Text], [Result_4], ['query']),
@@ -247,6 +355,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'get_token_info' : IDL.Func([IDL.Text], [Result], ['query']),
     'get_token_registry_stats' : IDL.Func([], [Result], ['query']),
+    'get_token_volatility' : IDL.Func([IDL.Text], [IDL.Float64], ['query']),
     'get_tokens_by_chain' : IDL.Func([IDL.Text], [Result], ['query']),
     'get_user' : IDL.Func([IDL.Principal], [Result_3], ['query']),
     'get_user_balances' : IDL.Func(
@@ -279,6 +388,7 @@ export const idlFactory = ({ IDL }) => {
     'http_request' : IDL.Func([HttpRequest], [HttpResponse], ['query']),
     'init_all_tokens' : IDL.Func([], [Result], []),
     'init_canister_balances' : IDL.Func([], [Result], []),
+    'init_liquidity_pool' : IDL.Func([IDL.Text], [IDL.Text], []),
     'init_upload' : IDL.Func(
         [IDL.Text, IDL.Nat64, IDL.Opt(IDL.Nat64), IDL.Text],
         [Result_1],
@@ -299,6 +409,7 @@ export const idlFactory = ({ IDL }) => {
         [Result_8],
         ['query'],
       ),
+    'set_liquidity_config' : IDL.Func([LiquidityConfig], [Result], []),
     'signup' : IDL.Func(
         [IDL.Text, IDL.Opt(IDL.Text), IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
         [Result_3],

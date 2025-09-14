@@ -18,6 +18,7 @@ pub mod faucet;
 pub mod balances;
 pub mod queries;
 pub mod swap;
+pub mod liquidity;
 
 // Re-export main functionality
 pub use types::*;

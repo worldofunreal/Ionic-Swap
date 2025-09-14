@@ -7,6 +7,9 @@ use serde::Serialize;
 use ic_stable_structures::{storable::Bound, Storable};
 use std::borrow::Cow;
 
+// Import liquidity types for storage keys
+use crate::icp::liquidity::{LiquidityNeuron, PoolInfo, LiquidityConfig, LiquidityTransaction, FeeTransaction, VolatilityData};
+
 /// Represents an internal token in the ICP token system
 #[derive(Debug, Clone, CandidType, Deserialize, Serialize)]
 pub struct InternalToken {
@@ -241,6 +244,136 @@ pub struct PortfolioPointKey {
 }
 
 impl Storable for PortfolioPointKey {
+    const BOUND: Bound = Bound::Unbounded;
+    
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+    
+    fn into_bytes(self) -> Vec<u8> {
+        candid::encode_one(&self).unwrap()
+    }
+    
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+}
+
+// ============================================================================
+// LIQUIDITY STAKING STORAGE KEYS
+// ============================================================================
+
+/// Key for storing liquidity positions in stable storage
+/// Combines user principal and position ID for unique identification
+#[derive(Debug, Clone, CandidType, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+pub struct LiquidityPositionKey {
+    /// User's principal
+    pub user: Principal,
+    /// Position ID
+    pub position_id: String,
+}
+
+impl Storable for LiquidityPositionKey {
+    const BOUND: Bound = Bound::Unbounded;
+    
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+    
+    fn into_bytes(self) -> Vec<u8> {
+        candid::encode_one(&self).unwrap()
+    }
+    
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+}
+
+// ============================================================================
+// STORABLE IMPLEMENTATIONS FOR LIQUIDITY TYPES
+// ============================================================================
+
+impl Storable for LiquidityNeuron {
+    const BOUND: Bound = Bound::Unbounded;
+    
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+    
+    fn into_bytes(self) -> Vec<u8> {
+        candid::encode_one(&self).unwrap()
+    }
+    
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+}
+
+impl Storable for PoolInfo {
+    const BOUND: Bound = Bound::Unbounded;
+    
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+    
+    fn into_bytes(self) -> Vec<u8> {
+        candid::encode_one(&self).unwrap()
+    }
+    
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+}
+
+impl Storable for LiquidityConfig {
+    const BOUND: Bound = Bound::Unbounded;
+    
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+    
+    fn into_bytes(self) -> Vec<u8> {
+        candid::encode_one(&self).unwrap()
+    }
+    
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+}
+
+impl Storable for LiquidityTransaction {
+    const BOUND: Bound = Bound::Unbounded;
+    
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+    
+    fn into_bytes(self) -> Vec<u8> {
+        candid::encode_one(&self).unwrap()
+    }
+    
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+}
+
+impl Storable for FeeTransaction {
+    const BOUND: Bound = Bound::Unbounded;
+    
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+    
+    fn into_bytes(self) -> Vec<u8> {
+        candid::encode_one(&self).unwrap()
+    }
+    
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+}
+
+impl Storable for VolatilityData {
     const BOUND: Bound = Bound::Unbounded;
     
     fn to_bytes(&self) -> Cow<'_, [u8]> {

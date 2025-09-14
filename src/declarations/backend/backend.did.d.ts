@@ -53,6 +53,60 @@ export interface InternalToken {
   'total_supply' : bigint,
   'symbol' : string,
 }
+export interface LiquidityConfig {
+  'max_dissolve_delay_seconds' : bigint,
+  'max_trade_amount_usdt' : bigint,
+  'k_depth' : number,
+  'spread_base' : number,
+  'paused_tokens' : Array<string>,
+  'oracle_failure_threshold' : number,
+  'volatility_window_seconds' : bigint,
+  'min_dissolve_delay_seconds' : bigint,
+  'token_thresholds' : Array<[string, TokenThresholds]>,
+  'fee_rate_base' : number,
+  'k_vol' : number,
+  'max_hourly_volume_usdt' : bigint,
+}
+export interface LiquidityNeuron {
+  'id' : string,
+  'dissolve_delay_seconds' : bigint,
+  'withdrawn_amount' : bigint,
+  'staked_amount' : bigint,
+  'token_symbol' : string,
+  'user' : Principal,
+  'created_at' : bigint,
+  'dissolving_started_at' : [] | [bigint],
+  'state' : NeuronState,
+  'last_fee_index' : number,
+}
+export type LiquidityStatus = { 'Healthy' : null } |
+  { 'Critical' : null } |
+  { 'NeedsRebalance' : null } |
+  { 'Halted' : null };
+export interface LiquidityTransaction {
+  'id' : string,
+  'transaction_type' : LiquidityTxType,
+  'token_symbol' : string,
+  'user' : Principal,
+  'error_message' : [] | [string],
+  'before_state' : [] | [string],
+  'after_state' : [] | [string],
+  'timestamp' : bigint,
+  'success' : boolean,
+  'amount' : bigint,
+  'position_id' : [] | [string],
+}
+export type LiquidityTxType = { 'FullWithdraw' : null } |
+  { 'ClaimFees' : null } |
+  { 'Stake' : null } |
+  { 'CancelDissolving' : null } |
+  { 'EmergencyPause' : null } |
+  { 'StartDissolving' : null } |
+  { 'ConfigUpdate' : null } |
+  { 'PartialWithdraw' : null };
+export type NeuronState = { 'Dissolved' : null } |
+  { 'Locked' : null } |
+  { 'Dissolving' : null };
 export interface PermitRequest {
   'r' : string,
   's' : string,
@@ -82,6 +136,21 @@ export interface PersonalUser {
   'solana_address' : [] | [string],
   'followers_count' : number,
   'location' : [] | [string],
+}
+export interface PoolInfo {
+  'fees_from_volatility' : bigint,
+  'current_volatility_1h' : number,
+  'liquidity_status' : LiquidityStatus,
+  'token_symbol' : string,
+  'available_liquidity' : bigint,
+  'total_staked' : bigint,
+  'fees_from_trading' : bigint,
+  'global_fee_index' : number,
+  'total_volume_1h' : bigint,
+  'total_fees_collected' : bigint,
+  'fees_from_spread' : bigint,
+  'total_voting_power' : number,
+  'fees_from_depth' : bigint,
 }
 export interface PortfolioData {
   'change_24h' : number,
@@ -167,6 +236,12 @@ export interface SwapTransaction {
   'to_price' : number,
   'from_price' : number,
 }
+export interface TokenThresholds {
+  'healthy_threshold' : bigint,
+  'halt_threshold' : bigint,
+  'rebalance_threshold' : bigint,
+  'min_trade_threshold' : bigint,
+}
 export interface TradingPair {
   'base' : string,
   'quote' : string,
@@ -217,6 +292,7 @@ export interface _SERVICE {
   'finalize_upload' : ActorMethod<[string], Result_2>,
   'follow_user' : ActorMethod<[Principal], Result_3>,
   'get_all_internal_tokens' : ActorMethod<[], Array<InternalToken>>,
+  'get_all_liquidity_pools' : ActorMethod<[], Array<PoolInfo>>,
   'get_all_supported_tokens' : ActorMethod<[], Result>,
   'get_all_usernames' : ActorMethod<[], Array<string>>,
   'get_canister_ethereum_address' : ActorMethod<[], string>,
@@ -224,8 +300,23 @@ export interface _SERVICE {
   'get_current_prices' : ActorMethod<[], Result>,
   'get_faucet_claim' : ActorMethod<[Principal], [] | [FaucetClaim]>,
   'get_faucet_stats' : ActorMethod<[], [bigint, bigint]>,
+  'get_fee_analytics' : ActorMethod<
+    [[] | [string], bigint, bigint],
+    [bigint, bigint, bigint, bigint, bigint]
+  >,
   'get_followers' : ActorMethod<[Principal], Array<CompactProfile>>,
   'get_following' : ActorMethod<[Principal], Array<CompactProfile>>,
+  'get_liquidity_config' : ActorMethod<[], LiquidityConfig>,
+  'get_liquidity_pool_info' : ActorMethod<[string], [] | [PoolInfo]>,
+  'get_liquidity_positions' : ActorMethod<[Principal], Array<LiquidityNeuron>>,
+  'get_liquidity_system_stats' : ActorMethod<
+    [],
+    [bigint, bigint, number, bigint]
+  >,
+  'get_liquidity_transactions' : ActorMethod<
+    [Principal],
+    Array<LiquidityTransaction>
+  >,
   'get_pair_price' : ActorMethod<[string], Result_4>,
   'get_portfolio_data' : ActorMethod<[Principal], PortfolioData>,
   'get_solana_token_balances' : ActorMethod<[], Result>,
@@ -233,6 +324,7 @@ export interface _SERVICE {
   'get_token_balance' : ActorMethod<[Principal, string], bigint>,
   'get_token_info' : ActorMethod<[string], Result>,
   'get_token_registry_stats' : ActorMethod<[], Result>,
+  'get_token_volatility' : ActorMethod<[string], number>,
   'get_tokens_by_chain' : ActorMethod<[string], Result>,
   'get_user' : ActorMethod<[Principal], Result_3>,
   'get_user_balances' : ActorMethod<[Principal], Array<[string, bigint]>>,
@@ -248,6 +340,7 @@ export interface _SERVICE {
   'http_request' : ActorMethod<[HttpRequest], HttpResponse>,
   'init_all_tokens' : ActorMethod<[], Result>,
   'init_canister_balances' : ActorMethod<[], Result>,
+  'init_liquidity_pool' : ActorMethod<[string], string>,
   'init_upload' : ActorMethod<
     [string, bigint, [] | [bigint], string],
     Result_1
@@ -259,6 +352,7 @@ export interface _SERVICE {
   'reload_token_registry' : ActorMethod<[], Result>,
   'search_users' : ActorMethod<[string, number], Result_8>,
   'search_users_personal' : ActorMethod<[string, number, Principal], Result_8>,
+  'set_liquidity_config' : ActorMethod<[LiquidityConfig], Result>,
   'signup' : ActorMethod<
     [string, [] | [string], [] | [string], [] | [string]],
     Result_3

@@ -11,7 +11,8 @@ use ic_stable_structures::{
 use std::cell::RefCell;
 
 use crate::user::types::{User, PrincipalList};
-use crate::icp::types::{InternalToken, FaucetClaim, BalanceKey, SwapTransaction, SwapTransactionKey, PortfolioPoint, PortfolioPointKey};
+use crate::icp::types::{InternalToken, FaucetClaim, BalanceKey, SwapTransaction, SwapTransactionKey, PortfolioPoint, PortfolioPointKey, LiquidityPositionKey};
+use crate::icp::liquidity::{LiquidityNeuron, PoolInfo, LiquidityConfig, LiquidityTransaction, FeeTransaction, VolatilityData};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -26,6 +27,13 @@ const BALANCES_MEMORY_ID: MemoryId = MemoryId::new(11);
 const FAUCET_CLAIMS_MEMORY_ID: MemoryId = MemoryId::new(12);
 const SWAP_TRANSACTIONS_MEMORY_ID: MemoryId = MemoryId::new(13);
 const PORTFOLIO_POINTS_MEMORY_ID: MemoryId = MemoryId::new(14);
+// Liquidity staking memory IDs
+const LIQUIDITY_POSITIONS_MEMORY_ID: MemoryId = MemoryId::new(15);
+const LIQUIDITY_POOLS_MEMORY_ID: MemoryId = MemoryId::new(16);
+const LIQUIDITY_CONFIG_MEMORY_ID: MemoryId = MemoryId::new(17);
+const LIQUIDITY_TRANSACTIONS_MEMORY_ID: MemoryId = MemoryId::new(18);
+const FEE_TRANSACTIONS_MEMORY_ID: MemoryId = MemoryId::new(19);
+const VOLATILITY_DATA_MEMORY_ID: MemoryId = MemoryId::new(20);
 
 // Single memory manager for all stable structures
 thread_local! {
@@ -75,6 +83,31 @@ thread_local! {
     // Portfolio points storage
     static PORTFOLIO_POINTS: RefCell<StableBTreeMap<PortfolioPointKey, PortfolioPoint, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|mm| mm.borrow().get(PORTFOLIO_POINTS_MEMORY_ID)))
+    );
+
+    // Liquidity staking storage
+    static LIQUIDITY_POSITIONS: RefCell<StableBTreeMap<LiquidityPositionKey, LiquidityNeuron, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|mm| mm.borrow().get(LIQUIDITY_POSITIONS_MEMORY_ID)))
+    );
+
+    static LIQUIDITY_POOLS: RefCell<StableBTreeMap<String, PoolInfo, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|mm| mm.borrow().get(LIQUIDITY_POOLS_MEMORY_ID)))
+    );
+
+    static LIQUIDITY_CONFIG: RefCell<StableBTreeMap<u8, LiquidityConfig, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|mm| mm.borrow().get(LIQUIDITY_CONFIG_MEMORY_ID)))
+    );
+
+    static LIQUIDITY_TRANSACTIONS: RefCell<StableBTreeMap<String, LiquidityTransaction, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|mm| mm.borrow().get(LIQUIDITY_TRANSACTIONS_MEMORY_ID)))
+    );
+
+    static FEE_TRANSACTIONS: RefCell<StableBTreeMap<String, FeeTransaction, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|mm| mm.borrow().get(FEE_TRANSACTIONS_MEMORY_ID)))
+    );
+
+    static VOLATILITY_DATA: RefCell<StableBTreeMap<String, VolatilityData, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|mm| mm.borrow().get(VOLATILITY_DATA_MEMORY_ID)))
     );
 }
 
@@ -655,5 +688,387 @@ impl PortfolioStorage {
                 .filter(|entry| entry.key().user == user)
                 .count() as u32
         })
+    }
+}
+
+// ============================================================================
+// LIQUIDITY STAKING DATABASE OPERATIONS
+// ============================================================================
+
+/// Database operations for liquidity staking system
+/// Provides CRUD operations for positions, pools, config, transactions, and analytics
+pub struct LiquidityStorage;
+
+impl LiquidityStorage {
+    // ============================================================================
+    // POSITION OPERATIONS
+    // ============================================================================
+
+    /// Store a new liquidity position
+    pub fn store_position(position: LiquidityNeuron) -> Result<(), String> {
+        let key = LiquidityPositionKey {
+            user: position.user,
+            position_id: position.id.clone(),
+        };
+
+        let position_id = key.position_id.clone();
+        LIQUIDITY_POSITIONS.with(|positions| {
+            positions.borrow_mut().insert(key, position);
+        });
+
+        ic_cdk::println!("💾 Stored liquidity position: {}", position_id);
+        Ok(())
+    }
+
+    /// Get a specific liquidity position
+    pub fn get_position(user: Principal, position_id: &str) -> Option<LiquidityNeuron> {
+        let key = LiquidityPositionKey {
+            user,
+            position_id: position_id.to_string(),
+        };
+
+        LIQUIDITY_POSITIONS.with(|positions| {
+            positions.borrow().get(&key)
+        })
+    }
+
+    /// Get all positions for a user
+    pub fn get_user_positions(user: Principal) -> Vec<LiquidityNeuron> {
+        LIQUIDITY_POSITIONS.with(|positions| {
+            positions.borrow().iter()
+                .filter(|entry| entry.key().user == user)
+                .map(|entry| entry.value())
+                .collect()
+        })
+    }
+
+    /// Update an existing position
+    pub fn update_position(position: LiquidityNeuron) -> Result<(), String> {
+        let key = LiquidityPositionKey {
+            user: position.user,
+            position_id: position.id.clone(),
+        };
+
+        LIQUIDITY_POSITIONS.with(|positions| {
+            if positions.borrow().contains_key(&key) {
+                positions.borrow_mut().insert(key, position);
+                Ok(())
+            } else {
+                Err(format!("Position {} not found", key.position_id))
+            }
+        })
+    }
+
+    /// Delete a position (used when fully withdrawn)
+    pub fn delete_position(user: Principal, position_id: &str) -> Result<(), String> {
+        let key = LiquidityPositionKey {
+            user,
+            position_id: position_id.to_string(),
+        };
+
+        LIQUIDITY_POSITIONS.with(|positions| {
+            if positions.borrow_mut().remove(&key).is_some() {
+                ic_cdk::println!("🗑️ Deleted liquidity position: {}", position_id);
+                Ok(())
+            } else {
+                Err(format!("Position {} not found", position_id))
+            }
+        })
+    }
+
+    /// Get all positions for a specific token
+    pub fn get_token_positions(token_symbol: &str) -> Vec<LiquidityNeuron> {
+        LIQUIDITY_POSITIONS.with(|positions| {
+            positions.borrow().iter()
+                .filter(|entry| entry.value().token_symbol == token_symbol)
+                .map(|entry| entry.value())
+                .collect()
+        })
+    }
+
+    /// Count total positions in the system
+    pub fn get_total_position_count() -> u64 {
+        LIQUIDITY_POSITIONS.with(|positions| {
+            positions.borrow().len()
+        })
+    }
+
+    // ============================================================================
+    // POOL OPERATIONS
+    // ============================================================================
+
+    /// Get pool information for a token
+    pub fn get_pool_info(token_symbol: &str) -> Option<PoolInfo> {
+        LIQUIDITY_POOLS.with(|pools| {
+            pools.borrow().get(&token_symbol.to_string())
+        })
+    }
+
+    /// Update pool information
+    pub fn update_pool_info(pool: PoolInfo) {
+        LIQUIDITY_POOLS.with(|pools| {
+            pools.borrow_mut().insert(pool.token_symbol.clone(), pool);
+        });
+    }
+
+    /// Initialize pool if it doesn't exist
+    pub fn init_pool_if_needed(token_symbol: &str) {
+        LIQUIDITY_POOLS.with(|pools| {
+            if !pools.borrow().contains_key(&token_symbol.to_string()) {
+                let new_pool = PoolInfo::new(token_symbol.to_string());
+                pools.borrow_mut().insert(token_symbol.to_string(), new_pool);
+                ic_cdk::println!("🏊 Initialized new liquidity pool for {}", token_symbol);
+            }
+        });
+    }
+
+    /// Get all pool information
+    pub fn get_all_pools() -> Vec<PoolInfo> {
+        LIQUIDITY_POOLS.with(|pools| {
+            pools.borrow().iter()
+                .map(|entry| entry.value())
+                .collect()
+        })
+    }
+
+    /// Get pool names (token symbols)
+    pub fn get_pool_tokens() -> Vec<String> {
+        LIQUIDITY_POOLS.with(|pools| {
+            pools.borrow().iter()
+                .map(|entry| entry.key().clone())
+                .collect()
+        })
+    }
+
+    // ============================================================================
+    // CONFIGURATION OPERATIONS
+    // ============================================================================
+
+    /// Get the current liquidity configuration
+    pub fn get_config() -> LiquidityConfig {
+        LIQUIDITY_CONFIG.with(|config| {
+            config.borrow().get(&0).unwrap_or_else(|| {
+                // Return default config if none exists
+                let default_config = LiquidityConfig::default();
+                ic_cdk::println!("📝 Using default liquidity configuration");
+                default_config
+            })
+        })
+    }
+
+    /// Set the liquidity configuration
+    pub fn set_config(config: LiquidityConfig) -> Result<(), String> {
+        // Validate configuration first
+        config.validate()?;
+
+        LIQUIDITY_CONFIG.with(|cfg| {
+            cfg.borrow_mut().insert(0, config);
+        });
+
+        ic_cdk::println!("⚙️ Updated liquidity configuration");
+        Ok(())
+    }
+
+    /// Check if a token is paused
+    pub fn is_token_paused(token_symbol: &str) -> bool {
+        let config = Self::get_config();
+        config.paused_tokens.contains(&token_symbol.to_string())
+    }
+
+    // ============================================================================
+    // TRANSACTION LOGGING OPERATIONS
+    // ============================================================================
+
+    /// Store a liquidity transaction for audit trail
+    pub fn store_transaction(transaction: LiquidityTransaction) {
+        LIQUIDITY_TRANSACTIONS.with(|txs| {
+            txs.borrow_mut().insert(transaction.id.clone(), transaction);
+        });
+    }
+
+    /// Get transaction by ID
+    pub fn get_transaction(transaction_id: &str) -> Option<LiquidityTransaction> {
+        LIQUIDITY_TRANSACTIONS.with(|txs| {
+            txs.borrow().get(&transaction_id.to_string())
+        })
+    }
+
+    /// Get all transactions for a user
+    pub fn get_user_transactions(user: Principal) -> Vec<LiquidityTransaction> {
+        LIQUIDITY_TRANSACTIONS.with(|txs| {
+            txs.borrow().iter()
+                .filter(|entry| entry.value().user == user)
+                .map(|entry| entry.value())
+                .collect()
+        })
+    }
+
+    /// Get recent transactions (last N)
+    pub fn get_recent_transactions(limit: usize) -> Vec<LiquidityTransaction> {
+        LIQUIDITY_TRANSACTIONS.with(|txs| {
+            let mut transactions: Vec<_> = txs.borrow().iter()
+                .map(|entry| entry.value())
+                .collect();
+            
+            // Sort by timestamp (newest first)
+            transactions.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+            transactions.into_iter().take(limit).collect()
+        })
+    }
+
+    /// Get transaction count for a user
+    pub fn get_user_transaction_count(user: Principal) -> u32 {
+        LIQUIDITY_TRANSACTIONS.with(|txs| {
+            txs.borrow().iter()
+                .filter(|entry| entry.value().user == user)
+                .count() as u32
+        })
+    }
+
+    // ============================================================================
+    // FEE TRANSACTION OPERATIONS
+    // ============================================================================
+
+    /// Store a fee transaction for analytics
+    pub fn store_fee_transaction(fee_tx: FeeTransaction) {
+        FEE_TRANSACTIONS.with(|fee_txs| {
+            fee_txs.borrow_mut().insert(fee_tx.id.clone(), fee_tx);
+        });
+    }
+
+    /// Get fee transaction by ID
+    pub fn get_fee_transaction(fee_tx_id: &str) -> Option<FeeTransaction> {
+        FEE_TRANSACTIONS.with(|fee_txs| {
+            fee_txs.borrow().get(&fee_tx_id.to_string())
+        })
+    }
+
+    /// Get all fee transactions for a token pair
+    pub fn get_token_pair_fee_transactions(token_pair: &str) -> Vec<FeeTransaction> {
+        FEE_TRANSACTIONS.with(|fee_txs| {
+            fee_txs.borrow().iter()
+                .filter(|entry| entry.value().token_pair == token_pair)
+                .map(|entry| entry.value())
+                .collect()
+        })
+    }
+
+    /// Get fee analytics for a time period
+    pub fn get_fee_analytics(
+        token_symbol: Option<String>,
+        start_time: u64,
+        end_time: u64
+    ) -> (u64, u64, u64, u64, u64) { // (total, trading, spread, volatility, depth)
+        FEE_TRANSACTIONS.with(|fee_txs| {
+            let relevant_txs: Vec<_> = fee_txs.borrow().iter()
+                .filter(|entry| {
+                    let tx = entry.value();
+                    tx.timestamp >= start_time && tx.timestamp <= end_time &&
+                    (token_symbol.is_none() || tx.token_pair.contains(token_symbol.as_ref().unwrap()))
+                })
+                .map(|entry| entry.value())
+                .collect();
+
+            let total_fees = relevant_txs.iter().map(|tx| tx.fee_breakdown.total_fee).sum();
+            let trading_fees = relevant_txs.iter().map(|tx| tx.fee_breakdown.base_trading_fee).sum();
+            let spread_fees = relevant_txs.iter().map(|tx| tx.fee_breakdown.spread_base_fee).sum();
+            let volatility_fees = relevant_txs.iter().map(|tx| tx.fee_breakdown.volatility_fee).sum();
+            let depth_fees = relevant_txs.iter().map(|tx| tx.fee_breakdown.depth_fee).sum();
+
+            (total_fees, trading_fees, spread_fees, volatility_fees, depth_fees)
+        })
+    }
+
+    // ============================================================================
+    // VOLATILITY DATA OPERATIONS
+    // ============================================================================
+
+    /// Get volatility data for a token
+    pub fn get_volatility_data(token_symbol: &str) -> Option<VolatilityData> {
+        VOLATILITY_DATA.with(|vol_data| {
+            vol_data.borrow().get(&token_symbol.to_string())
+        })
+    }
+
+    /// Update volatility data for a token
+    pub fn update_volatility_data(volatility: VolatilityData) {
+        VOLATILITY_DATA.with(|vol_data| {
+            vol_data.borrow_mut().insert(volatility.token_symbol.clone(), volatility);
+        });
+    }
+
+    /// Initialize volatility tracking for a token
+    pub fn init_volatility_if_needed(token_symbol: &str) {
+        VOLATILITY_DATA.with(|vol_data| {
+            if !vol_data.borrow().contains_key(&token_symbol.to_string()) {
+                let new_volatility = VolatilityData::new(token_symbol.to_string());
+                vol_data.borrow_mut().insert(token_symbol.to_string(), new_volatility);
+                ic_cdk::println!("📈 Initialized volatility tracking for {}", token_symbol);
+            }
+        });
+    }
+
+    /// Get current volatility for a token
+    pub fn get_current_volatility(token_symbol: &str) -> f64 {
+        Self::get_volatility_data(token_symbol)
+            .map(|vol| vol.current_volatility_1h)
+            .unwrap_or(0.0)
+    }
+
+    // ============================================================================
+    // AGGREGATE OPERATIONS (Cross-table queries)
+    // ============================================================================
+
+    /// Recalculate pool aggregates from individual positions
+    /// Used for consistency checks and recovery
+    pub fn recalculate_pool_aggregates(token_symbol: &str) -> Result<(), String> {
+        let positions = Self::get_token_positions(token_symbol);
+        let mut pool = Self::get_pool_info(token_symbol)
+            .unwrap_or_else(|| PoolInfo::new(token_symbol.to_string()));
+
+        // Reset aggregates
+        pool.total_staked = 0;
+        pool.total_voting_power = 0.0;
+        pool.available_liquidity = 0;
+
+        // Recalculate from positions
+        for position in positions {
+            pool.total_staked += position.staked_amount;
+            
+            // Calculate voting power (simplified - will be enhanced in later stages)
+            let base_voting_power = position.locked_amount() as f64;
+            pool.total_voting_power += base_voting_power;
+            
+            // Add dissolving amounts to available liquidity
+            pool.available_liquidity += position.available_to_withdraw();
+        }
+
+        // Store values before update
+        let total_staked = pool.total_staked;
+        let total_voting_power = pool.total_voting_power;
+        
+        // Update pool
+        Self::update_pool_info(pool);
+        ic_cdk::println!("🔄 Recalculated aggregates for {}: {} staked, {:.2} voting power", 
+                        token_symbol, total_staked, total_voting_power);
+        
+        Ok(())
+    }
+
+    /// Get system-wide statistics
+    pub fn get_system_stats() -> (u64, u64, f64, u64) { // (total_positions, total_pools, total_staked_value, total_fees)
+        let total_positions = Self::get_total_position_count();
+        let pools = Self::get_all_pools();
+        let total_pools = pools.len() as u64;
+        
+        let total_staked_value = pools.iter()
+            .map(|pool| pool.total_staked as f64)
+            .sum::<f64>();
+            
+        let total_fees = pools.iter()
+            .map(|pool| pool.total_fees_collected)
+            .sum::<u64>();
+
+        (total_positions, total_pools, total_staked_value, total_fees)
     }
 }
