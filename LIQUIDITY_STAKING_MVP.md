@@ -146,6 +146,69 @@ This document specifies a neuron-inspired liquidity staking system, a protected 
 - **Withdrawal bounds**: `withdrawn_total ≤ A × f(elapsed)` for each dissolving position.
 - **Monotonic indices**: `global_fee_index[token]` never decreases; `last_index_i` ≤ current index.
 
+## Threat Model & Concrete Test Cases
+
+### Oracle/TWAP Manipulation
+- **Attack**: Front-run oracle updates with large stakes/swaps to exploit stale prices
+- **Test**: Oracle price = $100, TWAP = $95, deviation_limit = 2%. Swap should be rejected.
+- **Test**: Oracle last_updated > max_staleness_sec. Quote should fail with "stale oracle".
+- **Failure mode**: If deviation check bypassed, arbitrageurs drain pool via oracle-lag trades
+
+### Fee/Index Gaming
+- **Attack**: Stake large amount right before high-fee swap, claim immediately after
+- **Test**: User stakes 1M tokens at index 1.0, swap generates 1000 fee units → index 1.001. User claims immediately, should get ~1000 tokens.
+- **Test**: Two users with 50/50 stake split; verify proportional fee distribution over multiple swaps
+- **Failure mode**: If index checkpointing is wrong, late stakers can steal early stakers' accumulated fees
+
+### Dissolving Schedule Gaming  
+- **Attack**: Start dissolving, manipulate elapsed time calculations to withdraw more than allowed
+- **Test**: 1-year dissolve, after 6 months should allow 50% withdrawal, not 51%
+- **Test**: User tries to withdraw 100% immediately after starting dissolve → should fail
+- **Test**: Dissolving position should have W_i = 0 after dissolve starts, verify no fee accrual
+- **Failure mode**: If schedule math is wrong, users drain pool faster than intended
+
+### Precision/Overflow Attacks
+- **Attack**: Use extremely large or small amounts to cause integer overflow/underflow in fee calculations
+- **Test**: Swap amount = u64::MAX, verify fee calculation doesn't overflow
+- **Test**: Very small swap (1 unit), verify fee ≥ 0 and ≤ amount
+- **Failure mode**: Overflow could wrap fees to 0 or negative, or corrupt index calculations
+
+### Liquidity Drain via Quote Manipulation
+- **Attack**: Exploit edge cases in spread calculation to get favorable quotes
+- **Test**: When pool utilization = 99%, spread should be very high, making large swaps uneconomical
+- **Test**: When trade_size = 50% of pool, depth component should make spread prohibitive
+- **Failure mode**: If spread doesn't scale properly, large trades can drain one side of pool
+
+### DoS via Position Spam
+- **Attack**: Create thousands of tiny positions to make fee distribution computationally expensive
+- **Test**: Create 1000 positions with 1 unit each, verify claim_fees still completes within cycle limits
+- **Test**: Verify pagination/batching for large position sets
+- **Failure mode**: Too many positions could make fee claims timeout, freezing rewards
+
+### Admin/Circuit Breaker Abuse
+- **Attack**: Malicious admin pauses tokens right before users try to withdraw profits
+- **Test**: Paused token should reject all swaps/stakes but allow existing position management
+- **Test**: Admin parameter changes should have reasonable bounds (e.g., max_fee ≤ 10%)
+- **Failure mode**: Unbounded admin power could rug users via extreme parameters or permanent pauses
+
+### Voting Power Manipulation
+- **Attack**: Rapidly cycle between Locked/Dissolving states to game age/delay bonuses
+- **Test**: User starts dissolving (age→1.0), cancels, restarts → age should remain 1.0, not reset to max
+- **Test**: User with 365d delay shouldn't get more than max_delay_multiplier regardless of actual delay
+- **Failure mode**: If state transitions don't properly reset bonuses, users can accumulate unfair voting power
+
+### Cross-Position Gaming (Future)
+- **Attack**: Use multiple positions across different tokens to manipulate relative weights
+- **Test**: User with positions in both ETH and BTC pools can't claim ETH fees using BTC voting power
+- **Test**: Dissolving one position shouldn't affect fee accrual in other positions
+- **Failure mode**: If cross-position interactions exist, complex gaming strategies emerge
+
+### Edge Case: Empty Pool Recovery
+- **Attack**: Drain pool to near-zero, then provide tiny liquidity to capture large fees on recovery
+- **Test**: When pool balance < min_threshold, swaps should be rejected
+- **Test**: Fee distribution with only 1 active position should work correctly
+- **Failure mode**: Division by zero or single-user monopoly on fee stream
+
 ## Open Questions for Discussion (pre-implementation)
 - Should Dissolving positions continue earning at reduced power or stop entirely?
 - Linear withdrawal smoothing on dissolve completion (e.g., 1–24h) vs immediate withdrawal?
