@@ -186,3 +186,72 @@ impl Storable for SwapTransactionKey {
         candid::decode_one(&bytes).unwrap()
     }
 }
+
+/// Represents a portfolio value point for tracking over time
+#[derive(Debug, Clone, CandidType, Deserialize, Serialize)]
+pub struct PortfolioPoint {
+    /// Timestamp when this point was recorded
+    pub timestamp: u64,
+    /// Total portfolio value in USDT at this time
+    pub value_usdt: f64,
+}
+
+impl Storable for PortfolioPoint {
+    const BOUND: Bound = Bound::Unbounded;
+    
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+    
+    fn into_bytes(self) -> Vec<u8> {
+        candid::encode_one(&self).unwrap()
+    }
+    
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+}
+
+/// Complete portfolio data for a user
+#[derive(Debug, Clone, CandidType, Deserialize, Serialize)]
+pub struct PortfolioData {
+    /// Current total portfolio value in USDT
+    pub current_value_usdt: f64,
+    /// Initial portfolio value (2M USDT from signup)
+    pub initial_value_usdt: f64,
+    /// 24h change in absolute USDT value
+    pub change_24h: f64,
+    /// 24h change as percentage
+    pub change_24h_percent: f64,
+    /// All-time high portfolio value
+    pub all_time_high: f64,
+    /// Total number of trades made
+    pub total_trades: u32,
+    /// Historical portfolio points for charting
+    pub portfolio_history: Vec<PortfolioPoint>,
+}
+
+/// Key for storing portfolio points in stable storage
+#[derive(Debug, Clone, CandidType, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PortfolioPointKey {
+    /// User's principal
+    pub user: Principal,
+    /// Timestamp of the portfolio point
+    pub timestamp: u64,
+}
+
+impl Storable for PortfolioPointKey {
+    const BOUND: Bound = Bound::Unbounded;
+    
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+    
+    fn into_bytes(self) -> Vec<u8> {
+        candid::encode_one(&self).unwrap()
+    }
+    
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+}

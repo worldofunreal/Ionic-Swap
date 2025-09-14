@@ -11,7 +11,7 @@ use ic_stable_structures::{
 use std::cell::RefCell;
 
 use crate::user::types::{User, PrincipalList};
-use crate::icp::types::{InternalToken, FaucetClaim, BalanceKey, SwapTransaction, SwapTransactionKey};
+use crate::icp::types::{InternalToken, FaucetClaim, BalanceKey, SwapTransaction, SwapTransactionKey, PortfolioPoint, PortfolioPointKey};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -25,6 +25,7 @@ const TOKENS_MEMORY_ID: MemoryId = MemoryId::new(10);
 const BALANCES_MEMORY_ID: MemoryId = MemoryId::new(11);
 const FAUCET_CLAIMS_MEMORY_ID: MemoryId = MemoryId::new(12);
 const SWAP_TRANSACTIONS_MEMORY_ID: MemoryId = MemoryId::new(13);
+const PORTFOLIO_POINTS_MEMORY_ID: MemoryId = MemoryId::new(14);
 
 // Single memory manager for all stable structures
 thread_local! {
@@ -69,6 +70,11 @@ thread_local! {
     // Swap transaction history storage
     static SWAP_TRANSACTIONS: RefCell<StableBTreeMap<SwapTransactionKey, SwapTransaction, Memory>> = RefCell::new(
         StableBTreeMap::init(MEMORY_MANAGER.with(|mm| mm.borrow().get(SWAP_TRANSACTIONS_MEMORY_ID)))
+    );
+
+    // Portfolio points storage
+    static PORTFOLIO_POINTS: RefCell<StableBTreeMap<PortfolioPointKey, PortfolioPoint, Memory>> = RefCell::new(
+        StableBTreeMap::init(MEMORY_MANAGER.with(|mm| mm.borrow().get(PORTFOLIO_POINTS_MEMORY_ID)))
     );
 }
 
@@ -267,7 +273,7 @@ impl TokenStorage {
                             InternalToken {
                                 symbol: "ETH".to_string(),
                                 name: "Ethereum".to_string(),
-                                decimals: 18,
+                                decimals: 8,
                                 total_supply: 120_000_000_000_000_000, // 120M ETH
                                 owner: canister_id,
                             },
@@ -565,6 +571,89 @@ impl SwapTransactionStorage {
     pub fn get_total_transaction_count() -> u64 {
         SWAP_TRANSACTIONS.with(|transactions| {
             transactions.borrow().len() as u64
+        })
+    }
+}
+
+// Portfolio Storage Operations
+pub struct PortfolioStorage;
+
+impl PortfolioStorage {
+    /// Store a portfolio point for a user
+    pub fn store_portfolio_point(user: Principal, timestamp: u64, value_usdt: f64) {
+        let key = PortfolioPointKey { user, timestamp };
+        let point = PortfolioPoint { timestamp, value_usdt };
+        
+        PORTFOLIO_POINTS.with(|points| {
+            points.borrow_mut().insert(key, point);
+        });
+    }
+
+    /// Get all portfolio points for a user, sorted by timestamp
+    pub fn get_user_portfolio_points(user: Principal) -> Vec<PortfolioPoint> {
+        PORTFOLIO_POINTS.with(|points| {
+            points.borrow()
+                .iter()
+                .filter(|entry| entry.key().user == user)
+                .map(|entry| entry.value().clone())
+                .collect::<Vec<_>>()
+        })
+        .into_iter()
+        .collect::<Vec<_>>()
+    }
+
+    /// Get portfolio points for a user within a time range
+    pub fn get_user_portfolio_points_range(
+        user: Principal, 
+        start_time: u64, 
+        end_time: u64
+    ) -> Vec<PortfolioPoint> {
+        PORTFOLIO_POINTS.with(|points| {
+            points.borrow()
+                .iter()
+                .filter(|entry| {
+                    let key = entry.key();
+                    key.user == user && key.timestamp >= start_time && key.timestamp <= end_time
+                })
+                .map(|entry| entry.value().clone())
+                .collect::<Vec<_>>()
+        })
+        .into_iter()
+        .collect::<Vec<_>>()
+    }
+
+    /// Get the latest portfolio point for a user
+    pub fn get_latest_portfolio_point(user: Principal) -> Option<PortfolioPoint> {
+        let mut points = Self::get_user_portfolio_points(user);
+        points.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+        points.first().cloned()
+    }
+
+    /// Get portfolio point from 24 hours ago
+    pub fn get_portfolio_point_24h_ago(user: Principal) -> Option<PortfolioPoint> {
+        let current_time = ic_cdk::api::time() / 1_000_000_000; // Convert to seconds
+        let twenty_four_hours_ago = current_time - (24 * 60 * 60);
+        
+        let mut points = Self::get_user_portfolio_points_range(user, twenty_four_hours_ago, current_time);
+        points.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
+        points.first().cloned()
+    }
+
+    /// Get all-time high portfolio value for a user
+    pub fn get_all_time_high(user: Principal) -> f64 {
+        let points = Self::get_user_portfolio_points(user);
+        points.into_iter()
+            .map(|point| point.value_usdt)
+            .fold(0.0, f64::max)
+    }
+
+    /// Get total number of portfolio points for a user
+    pub fn get_user_portfolio_point_count(user: Principal) -> u32 {
+        PORTFOLIO_POINTS.with(|points| {
+            points.borrow()
+                .iter()
+                .filter(|entry| entry.key().user == user)
+                .count() as u32
         })
     }
 }

@@ -148,6 +148,12 @@ pub async fn signup(
     match faucet::claim_faucet().await {
         Ok(message) => {
             ic_cdk::println!("✅ New user {} automatically received faucet tokens: {}", caller, message);
+            
+            // Record initial portfolio snapshot (2M USDT)
+            let timestamp = ic_cdk::api::time() / 1_000_000_000; // Convert to seconds
+            let initial_portfolio_value = 2_000_000.0; // 2M USDT from faucet
+            crate::storage::PortfolioStorage::store_portfolio_point(caller, timestamp, initial_portfolio_value);
+            ic_cdk::println!("📊 Recorded initial portfolio snapshot: {} USDT", initial_portfolio_value);
         }
         Err(error) => {
             // Log the error but don't fail the signup

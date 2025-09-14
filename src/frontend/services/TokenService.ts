@@ -33,7 +33,7 @@ export const TOKEN_CONFIGS: Record<string, TokenConfig> = {
   ETH: { 
     symbol: 'ETH', 
     name: 'Ethereum', 
-    decimals: 18, 
+    decimals: 8, 
     displayDecimals: 6, 
     formatType: 'crypto',
     minDisplayValue: 0.000001

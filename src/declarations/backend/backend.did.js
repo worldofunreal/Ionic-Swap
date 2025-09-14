@@ -64,6 +64,19 @@ export const idlFactory = ({ IDL }) => {
     'price' : IDL.Float64,
   });
   const Result_4 = IDL.Variant({ 'Ok' : TradingPair, 'Err' : IDL.Text });
+  const PortfolioPoint = IDL.Record({
+    'value_usdt' : IDL.Float64,
+    'timestamp' : IDL.Nat64,
+  });
+  const PortfolioData = IDL.Record({
+    'change_24h' : IDL.Float64,
+    'current_value_usdt' : IDL.Float64,
+    'total_trades' : IDL.Nat32,
+    'change_24h_percent' : IDL.Float64,
+    'portfolio_history' : IDL.Vec(PortfolioPoint),
+    'initial_value_usdt' : IDL.Float64,
+    'all_time_high' : IDL.Float64,
+  });
   const PersonalUser = IDL.Record({
     'id' : IDL.Principal,
     'bio' : IDL.Opt(IDL.Text),
@@ -224,6 +237,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'get_pair_price' : IDL.Func([IDL.Text], [Result_4], ['query']),
+    'get_portfolio_data' : IDL.Func([IDL.Principal], [PortfolioData], []),
     'get_solana_token_balances' : IDL.Func([], [Result], []),
     'get_token_address' : IDL.Func([IDL.Text, IDL.Text], [Result], ['query']),
     'get_token_balance' : IDL.Func(

@@ -8,7 +8,7 @@ use serde::Serialize;
 use crate::icp::storage::IcpTokenDatabase;
 use crate::icp::config::is_supported_token;
 use crate::oracle::aggregator::get_pair_price;
-use crate::storage::SwapTransactionStorage;
+use crate::storage::{SwapTransactionStorage, PortfolioStorage};
 use crate::icp::types::SwapTransaction;
 
 // ============================================================================
@@ -165,6 +165,11 @@ pub async fn market_swap(
     
     SwapTransactionStorage::store_transaction(swap_transaction);
     
+    // Record portfolio snapshot after successful swap
+    let current_portfolio_value = calculate_portfolio_value(caller).await;
+    PortfolioStorage::store_portfolio_point(caller, timestamp, current_portfolio_value);
+    ic_cdk::println!("   📊 Portfolio snapshot recorded: {} USDT", current_portfolio_value);
+    
     ic_cdk::println!("   ✅ Swap executed successfully!");
     ic_cdk::println!("   User paid: {} {}", result.from_amount, result.from_token);
     ic_cdk::println!("   User received: {} {}", result.to_amount, result.to_token);
@@ -173,11 +178,39 @@ pub async fn market_swap(
     Ok(result)
 }
 
+/// Calculate current portfolio value for a user
+async fn calculate_portfolio_value(user: Principal) -> f64 {
+    let current_balances = IcpTokenDatabase::get_user_balances(user);
+    let tokens = crate::icp::queries::get_all_tokens();
+    
+    let mut total_value = 0.0;
+    for (symbol, amount) in current_balances.iter() {
+        // Get price from oracle
+        let price = if symbol.as_str() == "USDT" {
+            1.0 // USDT is always $1
+        } else {
+            // Get price from oracle (oracle stores prices with base symbol as key)
+            crate::oracle::get_pair_price(symbol)
+                .await
+                .map(|trading_pair| trading_pair.price)
+                .unwrap_or(1.0)
+        };
+        
+        let token = tokens.iter().find(|t| t.symbol == *symbol);
+        let decimals = token.map(|t| t.decimals as u32).unwrap_or(6);
+        let normalized_amount = *amount as f64 / (10.0_f64.powi(decimals as i32));
+        
+        total_value += normalized_amount * price;
+    }
+    
+    total_value
+}
+
 /// Get the decimal divisor for a token
 fn get_decimal_divisor(symbol: &str) -> f64 {
     match symbol {
         "BTC" | "DOGE" | "ICP" => 100_000_000.0,      // 8 decimals
-        "ETH" => 1_000_000_000_000_000_000.0, // 18 decimals
+        "ETH" => 100_000_000.0, // 8 decimals
         "BNB" => 100_000_000.0, // 8 decimals
         "SOL" => 1_000_000_000.0,                      // 9 decimals
         "XRP" | "USDT" | "ADA" | "TRX" => 1_000_000.0, // 6 decimals

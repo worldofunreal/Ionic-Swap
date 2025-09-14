@@ -124,7 +124,7 @@
           </div>
           <div class="flex-1 px-6 pb-6 overflow-hidden">
             <LightweightPriceChart
-              :key="selectedToken"
+              :key="`markets-${selectedToken}`"
               :token-symbol="selectedToken"
               :no-container="true"
               class="h-full"

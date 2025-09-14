@@ -6,7 +6,7 @@
 /// Format: (symbol, name, decimals)
 pub const SUPPORTED_TOKENS: &[(&str, &str, u8)] = &[
     ("BTC", "Bitcoin", 8),
-    ("ETH", "Ethereum", 18),
+    ("ETH", "Ethereum", 8),
     ("XRP", "XRP", 6),
     ("USDT", "Tether USD", 6),
     ("BNB", "BNB", 8),
@@ -22,7 +22,7 @@ pub fn get_token_supply(symbol: &str) -> u64 {
     match symbol {
         "USDT" => 2_000_000_000_000, // 2M USDT (6 decimals)
         "BTC" => 100_000_000,        // 100 BTC (8 decimals)
-        "ETH" => 1_000_000_000_000_000_000, // 1000 ETH (18 decimals)
+        "ETH" => 1_000_000_000_000_000, // 1000 ETH (8 decimals)
         "SOL" => 1_000_000_000,      // 1000 SOL (9 decimals)
         "XRP" => 1_000_000_000_000,  // 1M XRP (6 decimals)
         "BNB" => 200_000_000_000_000_00, // 200M BNB (8 decimals)

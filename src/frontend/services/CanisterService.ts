@@ -10,6 +10,8 @@ import type {
   CompactProfile,
   PersonalUser,
   SwapTransaction,
+  PortfolioData,
+  PortfolioPoint,
 } from '../../declarations/backend/backend.did'
 import { appCacheService } from './AppCacheService'
 
@@ -27,6 +29,8 @@ export type {
   CompactProfile,
   PersonalUser,
   SwapTransaction,
+  PortfolioData,
+  PortfolioPoint,
 } from '../../declarations/backend/backend.did'
 
 // Helper function to handle UserResult
@@ -1068,6 +1072,22 @@ class CanisterService {
       return result
     } catch (error) {
       console.error('Error getting user transaction count:', error)
+      throw error
+    }
+  }
+
+  // Portfolio data methods
+  async getPortfolioData(userPrincipal: string): Promise<PortfolioData> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const principal = Principal.fromText(userPrincipal)
+      const result = await this.backendActor.get_portfolio_data(principal)
+      return result
+    } catch (error) {
+      console.error('Error getting portfolio data:', error)
       throw error
     }
   }

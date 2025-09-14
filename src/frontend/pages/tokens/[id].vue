@@ -96,6 +96,7 @@
         <div class="flex-1 bg-white dark:bg-neutral-900 p-4">
           <LightweightPriceChart
             v-if="tokenSymbol"
+            :key="`token-${tokenSymbol}-${selectedPeriod}`"
             :token-symbol="tokenSymbol"
             :height="400"
             :default-chart-type="'candlesticks'"

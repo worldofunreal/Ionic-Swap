@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { 
   createChart, 
   CandlestickSeries, 
@@ -128,6 +128,14 @@ const earliestTimestamp = ref<number>(0)
 const cachedData = ref<any[]>([])
 const isDisposed = ref(false)
 
+// Debouncing refs
+const resizeTimeout = ref<NodeJS.Timeout>()
+const themeUpdateTimeout = ref<NodeJS.Timeout>()
+const wsReconnectTimeout = ref<NodeJS.Timeout>()
+
+// Component instance tracking for debugging
+const componentId = ref(Math.random().toString(36).substr(2, 9))
+
 // Time periods
 const timePeriods = [
   { label: '1m', value: '1m' },
@@ -146,8 +154,19 @@ const priceChangeClass = computed(() => {
   return 'text-gray-600 dark:text-gray-400'
 })
 
-// Chart colors based on theme (reactive to both color theme and dark/light mode)
-const chartColors = computed(() => {
+// Chart colors based on theme (non-reactive to prevent constant updates)
+const chartColors = ref({
+  primary: '#10b981',
+  up: '#10b981', 
+  down: '#ef4444',
+  background: '#ffffff',
+  text: '#000000',
+  grid: '#e5e7eb',
+  border: '#d1d5db',
+})
+
+// Function to update chart colors (called only when needed)
+const updateChartColors = () => {
   const isDark = themeMode.value === 'dark'
   
   // Color theme mapping
@@ -164,15 +183,19 @@ const chartColors = computed(() => {
   
   const colors = colorMap[colorTheme.value] || colorMap.emerald
   
-  return {
-    ...colors,
-    // Theme-reactive backgrounds and text
-    background: isDark ? '#0a0a0a' : '#ffffff',
-    text: isDark ? '#ffffff' : '#000000',
-    grid: isDark ? '#2a2a2a' : '#e5e7eb',
-    border: isDark ? '#374151' : '#d1d5db',
+  if (colors) {
+    chartColors.value = {
+      primary: colors.primary,
+      up: colors.up,
+      down: colors.down,
+      // Theme-reactive backgrounds and text
+      background: isDark ? '#0a0a0a' : '#ffffff',
+      text: isDark ? '#ffffff' : '#000000',
+      grid: isDark ? '#2a2a2a' : '#e5e7eb',
+      border: isDark ? '#374151' : '#d1d5db',
+    }
   }
-})
+}
 
 // Chart configuration (v5 API)
 const getChartConfig = () => ({
@@ -270,6 +293,15 @@ const initChart = async () => {
   if (!chartContainer.value || isDisposed.value) return
   
   try {
+    console.log(`[Chart ${componentId.value}] Initializing chart for ${props.tokenSymbol}`)
+    
+    // Ensure any existing chart is properly disposed first
+    if (chart.value) {
+      console.log(`[Chart ${componentId.value}] Disposing existing chart before reinit`)
+      disposeChart()
+      await nextTick() // Wait for DOM cleanup
+    }
+    
     // Reset disposal flag
     isDisposed.value = false
     
@@ -322,17 +354,27 @@ const initChart = async () => {
       borderVisible: false,
     })
 
-    // Set up resize observer
+    // Set up resize observer with debouncing
     resizeObserver.value = new ResizeObserver(() => {
       if (!isDisposed.value && chart.value && chartContainer.value) {
-        try {
-          chart.value.applyOptions({
-            width: chartContainer.value.clientWidth,
-            height: props.height,
-          })
-        } catch (error) {
-          console.warn('Error updating chart size:', error)
+        // Clear existing timeout
+        if (resizeTimeout.value) {
+          clearTimeout(resizeTimeout.value)
         }
+        
+        // Debounce resize updates
+        resizeTimeout.value = setTimeout(() => {
+          if (!isDisposed.value && chart.value && chartContainer.value) {
+            try {
+              chart.value.applyOptions({
+                width: chartContainer.value.clientWidth,
+                height: props.height,
+              })
+            } catch (error) {
+              console.warn('Error updating chart size:', error)
+            }
+          }
+        }, 150) // 150ms debounce
       }
     })
     
@@ -654,7 +696,22 @@ const stopWebSocket = () => {
 const disposeChart = () => {
   if (isDisposed.value) return
   
+  console.log(`[Chart ${componentId.value}] Disposing chart for ${props.tokenSymbol}`)
   isDisposed.value = true
+  
+  // Clear all timeouts
+  if (resizeTimeout.value) {
+    clearTimeout(resizeTimeout.value)
+    resizeTimeout.value = undefined
+  }
+  if (themeUpdateTimeout.value) {
+    clearTimeout(themeUpdateTimeout.value)
+    themeUpdateTimeout.value = undefined
+  }
+  if (wsReconnectTimeout.value) {
+    clearTimeout(wsReconnectTimeout.value)
+    wsReconnectTimeout.value = undefined
+  }
   
   // Stop WebSocket first
   stopWebSocket()
@@ -665,14 +722,27 @@ const disposeChart = () => {
     resizeObserver.value = undefined
   }
   
-  // Remove chart
+  // Remove chart with proper cleanup
   if (chart.value) {
     try {
+      // Clear all data first to prevent memory leaks
+      if (candlestickSeries.value) {
+        candlestickSeries.value.setData([])
+      }
+      if (lineSeries.value) {
+        lineSeries.value.setData([])
+      }
+      if (volumeSeries.value) {
+        volumeSeries.value.setData([])
+      }
+      
+      // Remove the chart
       chart.value.remove()
     } catch (error) {
       console.warn('Error disposing chart:', error)
+    } finally {
+      chart.value = undefined
     }
-    chart.value = undefined
   }
   
   // Clear series references
@@ -680,6 +750,10 @@ const disposeChart = () => {
   lineSeries.value = undefined
   volumeSeries.value = undefined
   currentPriceLine.value = undefined
+  
+  // Clear cached data
+  cachedData.value = []
+  earliestTimestamp.value = 0
 }
 
 // Chart actions
@@ -745,35 +819,67 @@ watch(chartType, async () => {
 
 watch(selectedPeriod, async () => {
   if (isDisposed.value) return
+  
+  // Clear existing reconnect timeout
+  if (wsReconnectTimeout.value) {
+    clearTimeout(wsReconnectTimeout.value)
+  }
+  
   stopWebSocket()
   await loadChartData()
-  startWebSocket()
+  
+  // Debounce WebSocket reconnection
+  wsReconnectTimeout.value = setTimeout(() => {
+    if (!isDisposed.value) {
+      startWebSocket()
+    }
+  }, 300)
 })
 
 watch(() => props.tokenSymbol, async () => {
   if (isDisposed.value) return
+  
+  // Clear existing reconnect timeout
+  if (wsReconnectTimeout.value) {
+    clearTimeout(wsReconnectTimeout.value)
+  }
+  
   stopWebSocket()
   await loadChartData()
-  startWebSocket()
+  
+  // Debounce WebSocket reconnection
+  wsReconnectTimeout.value = setTimeout(() => {
+    if (!isDisposed.value) {
+      startWebSocket()
+    }
+  }, 300)
 })
 
-// Update chart colors when color theme changes
-watch(colorTheme, () => {
+// Debounced theme updates to prevent excessive chart recreation
+watch([colorTheme, themeMode], () => {
   if (isDisposed.value) return
-  updateChartTheme()
-})
-
-// Update chart colors when light/dark mode changes  
-watch(themeMode, () => {
-  if (isDisposed.value) return
-  updateChartTheme()
-})
+  
+  // Clear existing theme update timeout
+  if (themeUpdateTimeout.value) {
+    clearTimeout(themeUpdateTimeout.value)
+  }
+  
+  // Debounce theme updates
+  themeUpdateTimeout.value = setTimeout(() => {
+    if (!isDisposed.value) {
+      updateChartTheme()
+    }
+  }, 100) // 100ms debounce for theme changes
+}, { deep: false })
 
 // Function to update chart theme colors
 const updateChartTheme = () => {
   if (isDisposed.value || !chart.value) return
   
   try {
+    // Update chart colors first
+    updateChartColors()
+    
     // Update chart configuration
     chart.value.applyOptions(getChartConfig())
     
@@ -811,11 +917,23 @@ const updateChartTheme = () => {
 // Lifecycle
 onMounted(async () => {
   await nextTick()
+  
+  // Initialize chart colors first
+  updateChartColors()
+  
   await initChart()
 })
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
+  // Ensure cleanup happens before component is destroyed
   disposeChart()
+})
+
+onUnmounted(() => {
+  // Final cleanup - should already be done in beforeUnmount
+  if (!isDisposed.value) {
+    disposeChart()
+  }
 })
 </script>
 

@@ -245,6 +245,78 @@ pub fn get_user_transaction_count(user: Principal) -> u32 {
     crate::storage::SwapTransactionStorage::get_user_transaction_count(user)
 }
 
+/// Get complete portfolio data for a user
+#[update]
+pub async fn get_portfolio_data(user: Principal) -> icp::types::PortfolioData {
+    use crate::storage::{PortfolioStorage, SwapTransactionStorage};
+    use crate::icp::balances::get_user_balances;
+    use crate::icp::queries::get_all_tokens;
+    
+    // Get current portfolio value by calculating from current balances and prices
+    let current_balances = get_user_balances(user);
+    let tokens = get_all_tokens();
+    
+    // Calculate current portfolio value using oracle prices
+    let mut current_value_usdt = 0.0;
+    for (symbol, amount) in current_balances.iter() {
+        // Get price from oracle
+        let price = if symbol.as_str() == "USDT" {
+            1.0 // USDT is always $1
+        } else {
+            // Get price from oracle (oracle stores prices with base symbol as key)
+            crate::oracle::get_pair_price(symbol)
+                .await
+                .map(|trading_pair| trading_pair.price)
+                .unwrap_or(1.0)
+        };
+        
+        let token = tokens.iter().find(|t| t.symbol == *symbol);
+        let decimals = token.map(|t| t.decimals as u32).unwrap_or(6);
+        let normalized_amount = *amount as f64 / (10.0_f64.powi(decimals as i32));
+        
+        current_value_usdt += normalized_amount * price;
+    }
+    
+    // Get historical portfolio points
+    let portfolio_history = PortfolioStorage::get_user_portfolio_points(user);
+    
+    // Get 24h change
+    let change_24h = if let Some(point_24h_ago) = PortfolioStorage::get_portfolio_point_24h_ago(user) {
+        current_value_usdt - point_24h_ago.value_usdt
+    } else {
+        0.0
+    };
+    
+    let change_24h_percent = if let Some(point_24h_ago) = PortfolioStorage::get_portfolio_point_24h_ago(user) {
+        if point_24h_ago.value_usdt > 0.0 {
+            (change_24h / point_24h_ago.value_usdt) * 100.0
+        } else {
+            0.0
+        }
+    } else {
+        0.0
+    };
+    
+    // Get all-time high
+    let all_time_high = PortfolioStorage::get_all_time_high(user);
+    
+    // Get total trades
+    let total_trades = SwapTransactionStorage::get_user_transaction_count(user);
+    
+    // Initial value is 2M USDT (from faucet)
+    let initial_value_usdt = 2_000_000.0;
+    
+    icp::types::PortfolioData {
+        current_value_usdt,
+        initial_value_usdt,
+        change_24h,
+        change_24h_percent,
+        all_time_high,
+        total_trades,
+        portfolio_history,
+    }
+}
+
 // ============================================================================
 // USER MANAGEMENT OPERATIONS
 // ============================================================================
@@ -683,7 +755,7 @@ pub fn reload_token_registry() -> Result<String, String> {
         // Define all tokens that should exist
         let all_tokens = vec![
             ("BTC", "Bitcoin", 8, 21_000_000_000_000_000),
-            ("ETH", "Ethereum", 18, 120_000_000_000_000_000),
+            ("ETH", "Ethereum", 8, 120_000_000_000_000_000),
             ("XRP", "XRP", 6, 100_000_000_000_000_000),
             ("USDT", "Tether USD", 6, 1_000_000_000_000_000),
             ("BNB", "BNB", 8, 200_000_000_000_000_00),

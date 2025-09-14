@@ -43,6 +43,12 @@ pub async fn claim_faucet() -> Result<String, String> {
     };
     IcpTokenDatabase::store_faucet_claim(claim);
 
+    // Record initial portfolio snapshot (2M USDT)
+    let timestamp = ic_cdk::api::time() / 1_000_000_000; // Convert to seconds
+    let initial_portfolio_value = 2_000_000.0; // 2M USDT from faucet
+    crate::storage::PortfolioStorage::store_portfolio_point(caller, timestamp, initial_portfolio_value);
+    ic_cdk::println!("📊 Recorded initial portfolio snapshot: {} USDT", initial_portfolio_value);
+
     ic_cdk::println!("✅ Faucet claim: {} received 2M USDT", caller);
     Ok(format!("Successfully claimed 2,000,000 USDT"))
 }

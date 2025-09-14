@@ -104,6 +104,7 @@
         <!-- Chart Area -->
         <div class="flex-1 bg-white dark:bg-neutral-900 p-4 overflow-hidden">
           <LightweightPriceChart
+            :key="`trading-${selectedTokenSymbol}-${selectedPeriod}`"
             :token-symbol="selectedTokenSymbol"
             :default-chart-type="'candlesticks'"
             :no-container="true"
@@ -162,8 +163,10 @@
                 <div class="relative">
                   <input
                     v-model="buyAmount"
-                    type="number"
+                    type="text"
                     placeholder="0.00"
+                    @input="formatBuyAmount"
+                    @blur="validateBuyAmount"
                     class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                   <div
@@ -187,7 +190,7 @@
 
               <button
                 @click="executeBuy"
-                :disabled="buyLoading || !buyAmount || parseFloat(buyAmount) <= 0"
+                :disabled="buyLoading || !buyAmount || parseFormattedNumber(buyAmount) <= 0"
                 class="w-full py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center"
               >
                 <UIcon v-if="buyLoading" name="i-heroicons-arrow-path" class="w-4 h-4 mr-2 animate-spin" />
@@ -213,8 +216,10 @@
                 <div class="relative">
                   <input
                     v-model="sellAmount"
-                    type="number"
+                    type="text"
                     placeholder="0.00"
+                    @input="formatSellAmount"
+                    @blur="validateSellAmount"
                     class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                   <div
@@ -238,7 +243,7 @@
 
               <button
                 @click="executeSell"
-                :disabled="sellLoading || !sellAmount || parseFloat(sellAmount) <= 0"
+                :disabled="sellLoading || !sellAmount || parseFormattedNumber(sellAmount) <= 0"
                 class="w-full py-3 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center"
               >
                 <UIcon v-if="sellLoading" name="i-heroicons-arrow-path" class="w-4 h-4 mr-2 animate-spin" />
@@ -490,18 +495,74 @@
   const setBuyAmount = (percent: number) => {
     const balance = usdtBalanceRaw.value
     const amount = (balance * percent) / 100
-    buyAmount.value = TokenService.formatForInput(amount, 'USDT')
+    buyAmount.value = formatNumberWithCommas(amount, TokenService.getDisplayDecimals('USDT'))
   }
 
   const setSellAmount = (percent: number) => {
     const balance = selectedTokenBalanceRaw.value
     const amount = (balance * percent) / 100
-    sellAmount.value = TokenService.formatForInput(amount, selectedTokenSymbol.value)
+    sellAmount.value = formatNumberWithCommas(amount, TokenService.getDisplayDecimals(selectedTokenSymbol.value))
+  }
+
+  // Format number with commas
+  const formatNumberWithCommas = (value: number, decimals: number): string => {
+    if (isNaN(value) || !isFinite(value)) return '0.00'
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: decimals,
+    }).format(value)
+  }
+
+  // Parse number from formatted string (remove commas)
+  const parseFormattedNumber = (value: string): number => {
+    const cleaned = value.replace(/,/g, '')
+    return parseFloat(cleaned) || 0
+  }
+
+  // Format buy amount input
+  const formatBuyAmount = (event: Event) => {
+    const target = event.target as HTMLInputElement
+    const value = target.value
+    const parsed = parseFormattedNumber(value)
+    
+    if (!isNaN(parsed) && isFinite(parsed)) {
+      const formatted = formatNumberWithCommas(parsed, TokenService.getDisplayDecimals('USDT'))
+      buyAmount.value = formatted
+    }
+  }
+
+  // Format sell amount input
+  const formatSellAmount = (event: Event) => {
+    const target = event.target as HTMLInputElement
+    const value = target.value
+    const parsed = parseFormattedNumber(value)
+    
+    if (!isNaN(parsed) && isFinite(parsed)) {
+      const formatted = formatNumberWithCommas(parsed, TokenService.getDisplayDecimals(selectedTokenSymbol.value))
+      sellAmount.value = formatted
+    }
+  }
+
+  // Validate buy amount on blur
+  const validateBuyAmount = () => {
+    const parsed = parseFormattedNumber(buyAmount.value)
+    if (parsed > usdtBalanceRaw.value) {
+      buyAmount.value = formatNumberWithCommas(usdtBalanceRaw.value, TokenService.getDisplayDecimals('USDT'))
+    }
+  }
+
+  // Validate sell amount on blur
+  const validateSellAmount = () => {
+    const parsed = parseFormattedNumber(sellAmount.value)
+    if (parsed > selectedTokenBalanceRaw.value) {
+      sellAmount.value = formatNumberWithCommas(selectedTokenBalanceRaw.value, TokenService.getDisplayDecimals(selectedTokenSymbol.value))
+    }
   }
 
   // Trading functions
   const executeBuy = async () => {
-    if (!buyAmount.value || parseFloat(buyAmount.value) <= 0) {
+    const parsedAmount = parseFormattedNumber(buyAmount.value)
+    if (!buyAmount.value || parsedAmount <= 0) {
       toast.add({
         title: 'Invalid Amount',
         description: 'Please enter a valid amount',
@@ -510,7 +571,7 @@
       return
     }
 
-    if (parseFloat(buyAmount.value) > usdtBalanceRaw.value) {
+    if (parsedAmount > usdtBalanceRaw.value) {
       toast.add({
         title: 'Insufficient Balance',
         description: 'You don\'t have enough USDT for this trade',
@@ -521,7 +582,7 @@
 
     buyLoading.value = true
     try {
-      const amount = TokenService.toRawAmount(parseFloat(buyAmount.value), 'USDT')
+      const amount = TokenService.toRawAmount(parsedAmount, 'USDT')
       
       const result = await canisterService.marketSwap({
         from_token: 'USDT',
@@ -537,9 +598,10 @@
         
         // Show success toast
         const receivedAmount = TokenService.formatBalance(Number(result.Ok.to_amount), selectedTokenSymbol.value)
+        const paidAmount = TokenService.formatBalance(Number(result.Ok.from_amount), 'USDT')
         toast.add({
           title: 'Trade Successful!',
-          description: `Successfully bought ${receivedAmount} ${selectedTokenSymbol.value}`,
+          description: `Bought ${receivedAmount} ${selectedTokenSymbol.value} for ${paidAmount} USDT`,
           color: 'success',
         })
         
@@ -568,7 +630,8 @@
   }
 
   const executeSell = async () => {
-    if (!sellAmount.value || parseFloat(sellAmount.value) <= 0) {
+    const parsedAmount = parseFormattedNumber(sellAmount.value)
+    if (!sellAmount.value || parsedAmount <= 0) {
       toast.add({
         title: 'Invalid Amount',
         description: 'Please enter a valid amount',
@@ -577,7 +640,7 @@
       return
     }
 
-    if (parseFloat(sellAmount.value) > selectedTokenBalanceRaw.value) {
+    if (parsedAmount > selectedTokenBalanceRaw.value) {
       toast.add({
         title: 'Insufficient Balance',
         description: `You don't have enough ${selectedTokenSymbol.value} for this trade`,
@@ -588,7 +651,7 @@
 
     sellLoading.value = true
     try {
-      const amount = TokenService.toRawAmount(parseFloat(sellAmount.value), selectedTokenSymbol.value)
+      const amount = TokenService.toRawAmount(parsedAmount, selectedTokenSymbol.value)
       
       const result = await canisterService.marketSwap({
         from_token: selectedTokenSymbol.value,
@@ -607,7 +670,7 @@
         const receivedAmount = TokenService.formatBalance(Number(result.Ok.to_amount), 'USDT')
         toast.add({
           title: 'Trade Successful!',
-          description: `Successfully sold ${soldAmount} ${selectedTokenSymbol.value} for ${receivedAmount}`,
+          description: `Sold ${soldAmount} ${selectedTokenSymbol.value} for ${receivedAmount} USDT`,
           color: 'success',
         })
         

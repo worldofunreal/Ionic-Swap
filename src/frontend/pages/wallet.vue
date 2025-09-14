@@ -96,6 +96,11 @@
         <!-- Main Dashboard Content -->
         <div class="p-6">
           <div class="max-w-7xl mx-auto">
+            <!-- Portfolio Tracker Section -->
+            <div v-if="userPrincipal" class="mb-6">
+              <PortfolioTracker :user-principal="userPrincipal?.toText?.() || userPrincipal" />
+            </div>
+            
             <!-- User Profile & Balance Section -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
               <!-- User Profile Card -->
@@ -260,7 +265,7 @@
                         Amount
                       </th>
                       <th class="px-6 py-3 text-right text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                        Coin Price / Cost Price
+                        Price
                       </th>
                       <th class="px-6 py-3 text-right text-sm font-medium text-muted-foreground uppercase tracking-wider">
                         Today's PnL
@@ -305,11 +310,11 @@
                       <!-- Amount Column -->
                       <td class="px-6 py-4 whitespace-nowrap text-right">
                         <div class="text-sm font-semibold text-foreground">
-                          <span v-if="balancesVisible">{{ token.normalizedBalance.toFixed(8) }}</span>
+                          <span v-if="balancesVisible">{{ formatTokenAmount(token.symbol, token.balance) }}</span>
                           <span v-else>••••••••</span>
                         </div>
                         <div class="text-sm text-muted-foreground">
-                          <span v-if="balancesVisible">${{ token.value.toFixed(2) }}</span>
+                          <span v-if="balancesVisible">{{ formatTokenValue(token.value) }}</span>
                           <span v-else>••••••</span>
                         </div>
                       </td>
@@ -317,7 +322,7 @@
                       <!-- Coin Price / Cost Price Column -->
                       <td class="px-6 py-4 whitespace-nowrap text-right">
                         <div class="text-sm font-semibold text-foreground">
-                          <span v-if="balancesVisible">${{ token.price.toFixed(2) }}</span>
+                          <span v-if="balancesVisible">{{ formatTokenPrice(token.price) }}</span>
                           <span v-else>••••••</span>
                         </div>
                         <div class="text-sm text-muted-foreground">
@@ -607,6 +612,7 @@
   import { useColorTheme } from '@/composables/useColorTheme'
   import { useTheme } from '@/composables/useTheme'
   import { TokenService } from '@/services/TokenService'
+  import PortfolioTracker from '@/components/PortfolioTracker.vue'
 
   const auth = useAuthStore()
   const loading = ref(true)
@@ -616,6 +622,7 @@
 
   // Get user profile from auth store
   const userProfile = computed(() => auth.userProfile)
+  const userPrincipal = computed(() => auth.userProfile?.id)
 
   // User initial for avatar
   const userInitial = computed(() => {
@@ -725,18 +732,25 @@
     return address
   }
 
-  // Format token balance for display
+  // Format token balance for display using TokenService
   const formatTokenBalance = (symbol: string) => {
     const balance = userBalances.value[symbol] || 0
-    const token = internalTokens.value.find(t => t.symbol === symbol)
-    const decimals = token?.decimals || 6
-    const normalizedBalance = balance / Math.pow(10, decimals)
-    
-    if (normalizedBalance === 0) return '0.00'
-    if (normalizedBalance < 0.01) return normalizedBalance.toFixed(6)
-    if (normalizedBalance < 1) return normalizedBalance.toFixed(4)
-    if (normalizedBalance < 1000) return normalizedBalance.toFixed(2)
-    return normalizedBalance.toLocaleString('en-US', { maximumFractionDigits: 2 })
+    return TokenService.formatBalance(balance, symbol)
+  }
+
+  // Format token amount for display using TokenService
+  const formatTokenAmount = (symbol: string, balance: number) => {
+    return TokenService.formatBalance(balance, symbol)
+  }
+
+  // Format token value with commas
+  const formatTokenValue = (value: number) => {
+    return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
+
+  // Format token price with commas
+  const formatTokenPrice = (price: number) => {
+    return `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 
   // Get token color for display
@@ -802,42 +816,6 @@
     return normalizedSupply.toFixed(0)
   }
 
-  // Format token price for display
-  const formatTokenPrice = (symbol: string) => {
-    const price = tokenPrices.value[symbol]
-    if (!price) return '$0.00'
-    
-    if (valueDisplay.value === 'usd') {
-      return `$${price.usd.toLocaleString('en-US', { 
-        minimumFractionDigits: 2, 
-        maximumFractionDigits: price.usd < 1 ? 6 : 2 
-      })}`
-    } else {
-      return `${price.btc.toFixed(8)} BTC`
-    }
-  }
-
-  // Format token value for display
-  const formatTokenValue = (symbol: string) => {
-    const balance = userBalances.value[symbol] || 0
-    const token = internalTokens.value.find(t => t.symbol === symbol)
-    const decimals = token?.decimals || 6
-    const normalizedBalance = balance / Math.pow(10, decimals)
-    const price = tokenPrices.value[symbol]
-    
-    if (!price) return '$0.00'
-    
-    const value = normalizedBalance * (valueDisplay.value === 'usd' ? price.usd : price.btc)
-    
-    if (valueDisplay.value === 'usd') {
-      return `$${value.toLocaleString('en-US', { 
-        minimumFractionDigits: 2, 
-        maximumFractionDigits: 2 
-      })}`
-    } else {
-      return `${value.toFixed(8)} BTC`
-    }
-  }
 
   // Format token change for display
   const formatTokenChange = (symbol: string) => {

@@ -79,6 +79,16 @@ type PersonalUser = record {
   followers_count : nat32;
   location : opt text;
 };
+type PortfolioData = record {
+  change_24h : float64;
+  current_value_usdt : float64;
+  total_trades : nat32;
+  change_24h_percent : float64;
+  portfolio_history : vec PortfolioPoint;
+  initial_value_usdt : float64;
+  all_time_high : float64;
+};
+type PortfolioPoint = record { value_usdt : float64; timestamp : nat64 };
 type PriceUpdateResult = record {
   total_sources : nat8;
   pairs_updated : vec TradingPair;
@@ -216,6 +226,8 @@ service : (InitArg) -> {
   get_following : (principal) -> (vec CompactProfile) query;
   // Get specific trading pair price
   get_pair_price : (text) -> (Result_4) query;
+  // Get complete portfolio data for a user
+  get_portfolio_data : (principal) -> (PortfolioData);
   // Get comprehensive Solana token balances for all known tokens
   get_solana_token_balances : () -> (Result);
   // Get token address on specific chain

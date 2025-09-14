@@ -83,6 +83,16 @@ export interface PersonalUser {
   'followers_count' : number,
   'location' : [] | [string],
 }
+export interface PortfolioData {
+  'change_24h' : number,
+  'current_value_usdt' : number,
+  'total_trades' : number,
+  'change_24h_percent' : number,
+  'portfolio_history' : Array<PortfolioPoint>,
+  'initial_value_usdt' : number,
+  'all_time_high' : number,
+}
+export interface PortfolioPoint { 'value_usdt' : number, 'timestamp' : bigint }
 export interface PriceUpdateResult {
   'total_sources' : number,
   'pairs_updated' : Array<TradingPair>,
@@ -217,6 +227,7 @@ export interface _SERVICE {
   'get_followers' : ActorMethod<[Principal], Array<CompactProfile>>,
   'get_following' : ActorMethod<[Principal], Array<CompactProfile>>,
   'get_pair_price' : ActorMethod<[string], Result_4>,
+  'get_portfolio_data' : ActorMethod<[Principal], PortfolioData>,
   'get_solana_token_balances' : ActorMethod<[], Result>,
   'get_token_address' : ActorMethod<[string, string], Result>,
   'get_token_balance' : ActorMethod<[Principal, string], bigint>,
