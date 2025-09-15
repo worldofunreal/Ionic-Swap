@@ -367,6 +367,7 @@ export interface _SERVICE {
     [string, [] | [string], [] | [string], [] | [string]],
     Result_3
   >,
+  'stake_tokens' : ActorMethod<[string, bigint, bigint], Result>,
   'start_price_scheduler' : ActorMethod<[], Result>,
   'stop_price_scheduler' : ActorMethod<[], Result>,
   'store_chunk' : ActorMethod<

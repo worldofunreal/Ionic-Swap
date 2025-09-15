@@ -425,6 +425,7 @@ export const idlFactory = ({ IDL }) => {
         [Result_3],
         [],
       ),
+    'stake_tokens' : IDL.Func([IDL.Text, IDL.Nat64, IDL.Nat64], [Result], []),
     'start_price_scheduler' : IDL.Func([], [Result], []),
     'stop_price_scheduler' : IDL.Func([], [Result], []),
     'store_chunk' : IDL.Func(

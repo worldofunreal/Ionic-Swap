@@ -420,13 +420,22 @@
     return TokenService.formatBalance(balance, selectedTokenSymbol.value)
   })
 
-  // Raw balance values for calculations
+  // Raw balance values for calculations (keep as raw values from backend)
   const usdtBalanceRaw = computed(() => {
+    return userBalances.value['USDT'] || 0
+  })
+
+  const selectedTokenBalanceRaw = computed(() => {
+    return userBalances.value[selectedTokenSymbol.value] || 0
+  })
+
+  // Display balance values (converted for UI display)
+  const usdtBalanceDisplay = computed(() => {
     const balance = userBalances.value['USDT'] || 0
     return balance / Math.pow(10, TokenService.getTokenDecimals('USDT'))
   })
 
-  const selectedTokenBalanceRaw = computed(() => {
+  const selectedTokenBalanceDisplay = computed(() => {
     const balance = userBalances.value[selectedTokenSymbol.value] || 0
     return balance / Math.pow(10, TokenService.getTokenDecimals(selectedTokenSymbol.value))
   })
@@ -458,14 +467,16 @@
   }
 
   const setBuyAmount = (percent: number) => {
-    const balance = usdtBalanceRaw.value
+    const balance = usdtBalanceDisplay.value
     const amount = (balance * percent) / 100
+    console.log(`Setting buy amount: ${percent}% of ${balance} USDT = ${amount}`)
     buyAmount.value = formatNumberWithCommas(amount, TokenService.getDisplayDecimals('USDT'))
   }
 
   const setSellAmount = (percent: number) => {
-    const balance = selectedTokenBalanceRaw.value
+    const balance = selectedTokenBalanceDisplay.value
     const amount = (balance * percent) / 100
+    console.log(`Setting sell amount: ${percent}% of ${balance} ${selectedTokenSymbol.value} = ${amount}`)
     sellAmount.value = formatNumberWithCommas(amount, TokenService.getDisplayDecimals(selectedTokenSymbol.value))
   }
 
@@ -511,22 +522,24 @@
   // Validate buy amount on blur
   const validateBuyAmount = () => {
     const parsed = parseFormattedNumber(buyAmount.value)
-    if (parsed > usdtBalanceRaw.value) {
-      buyAmount.value = formatNumberWithCommas(usdtBalanceRaw.value, TokenService.getDisplayDecimals('USDT'))
+    if (parsed > usdtBalanceDisplay.value) {
+      buyAmount.value = formatNumberWithCommas(usdtBalanceDisplay.value, TokenService.getDisplayDecimals('USDT'))
     }
   }
 
   // Validate sell amount on blur
   const validateSellAmount = () => {
     const parsed = parseFormattedNumber(sellAmount.value)
-    if (parsed > selectedTokenBalanceRaw.value) {
-      sellAmount.value = formatNumberWithCommas(selectedTokenBalanceRaw.value, TokenService.getDisplayDecimals(selectedTokenSymbol.value))
+    if (parsed > selectedTokenBalanceDisplay.value) {
+      sellAmount.value = formatNumberWithCommas(selectedTokenBalanceDisplay.value, TokenService.getDisplayDecimals(selectedTokenSymbol.value))
     }
   }
 
   // Trading functions
   const executeBuy = async () => {
     const parsedAmount = parseFormattedNumber(buyAmount.value)
+    console.log(`Execute buy: parsedAmount=${parsedAmount}, usdtBalanceDisplay=${usdtBalanceDisplay.value}`)
+    
     if (!buyAmount.value || parsedAmount <= 0) {
       toast.add({
         title: 'Invalid Amount',
@@ -536,7 +549,8 @@
       return
     }
 
-    if (parsedAmount > usdtBalanceRaw.value) {
+    if (parsedAmount > usdtBalanceDisplay.value) {
+      console.log(`Insufficient balance: ${parsedAmount} > ${usdtBalanceDisplay.value}`)
       toast.add({
         title: 'Insufficient Balance',
         description: 'You don\'t have enough USDT for this trade',
@@ -592,6 +606,8 @@
 
   const executeSell = async () => {
     const parsedAmount = parseFormattedNumber(sellAmount.value)
+    console.log(`Execute sell: parsedAmount=${parsedAmount}, selectedTokenBalanceDisplay=${selectedTokenBalanceDisplay.value}`)
+    
     if (!sellAmount.value || parsedAmount <= 0) {
       toast.add({
         title: 'Invalid Amount',
@@ -601,7 +617,8 @@
       return
     }
 
-    if (parsedAmount > selectedTokenBalanceRaw.value) {
+    if (parsedAmount > selectedTokenBalanceDisplay.value) {
+      console.log(`Insufficient balance: ${parsedAmount} > ${selectedTokenBalanceDisplay.value}`)
       toast.add({
         title: 'Insufficient Balance',
         description: `You don't have enough ${selectedTokenSymbol.value} for this trade`,

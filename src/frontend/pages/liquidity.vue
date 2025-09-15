@@ -26,7 +26,7 @@
           <div class="flex items-center space-x-6 ml-8">
             <div class="text-center">
               <div class="text-xl font-bold text-purple-600 dark:text-purple-400">
-                ${{ formatUSDTValue(systemStats.totalStaked) }}
+                ${{ formatUSDTSystemValue(systemStats.totalStaked) }}
               </div>
               <div class="text-xs text-gray-500 dark:text-gray-400">Total TVL</div>
             </div>
@@ -38,7 +38,7 @@
             </div>
             <div class="text-center">
               <div class="text-xl font-bold text-green-600 dark:text-green-400">
-                ${{ formatUSDTValue(systemStats.totalFees) }}
+                ${{ formatUSDTSystemValue(systemStats.totalFees) }}
               </div>
               <div class="text-xs text-gray-500 dark:text-gray-400">Fee Earnings</div>
             </div>
@@ -639,6 +639,7 @@
   const userPositions = ref<any[]>([])
   const systemStats = ref({ totalStaked: 0, totalVotingPower: 0, totalFees: 0, totalPools: 0 })
   const canisterServiceReady = ref(false)
+  const userBalances = ref<Record<string, number>>({})
 
   // Staking form
   const stakeAmount = ref('')
@@ -719,7 +720,7 @@
 
   const formatUSDTValue = (value: number[] | null | undefined) => {
     // Handle Candid optional values: [] means None, [number] means Some(number)
-    let actualValue: number | null = null
+    let actualValue: number | null | undefined = null
     
     if (Array.isArray(value)) {
       if (value.length === 1) {
@@ -742,6 +743,16 @@
       return `${(actualValue / 1_000).toFixed(1)}K`
     } else {
       return actualValue.toFixed(2)
+    }
+  }
+
+  const formatUSDTSystemValue = (value: number) => {
+    if (value >= 1_000_000) {
+      return `${(value / 1_000_000).toFixed(1)}M`
+    } else if (value >= 1_000) {
+      return `${(value / 1_000).toFixed(1)}K`
+    } else {
+      return value.toFixed(2)
     }
   }
 
@@ -777,13 +788,14 @@
     return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
   }
 
-  const formatDuration = (seconds: number) => {
-    const days = Math.floor(seconds / (24 * 3600))
+  const formatDuration = (seconds: number | bigint) => {
+    const secondsNum = typeof seconds === 'bigint' ? Number(seconds) : seconds
+    const days = Math.floor(secondsNum / (24 * 3600))
     if (days >= 365) return `${Math.floor(days / 365)} year${Math.floor(days / 365) !== 1 ? 's' : ''}`
     if (days >= 30) return `${Math.floor(days / 30)} month${Math.floor(days / 30) !== 1 ? 's' : ''}`
     if (days >= 7) return `${Math.floor(days / 7)} week${Math.floor(days / 7) !== 1 ? 's' : ''}`
     if (days > 0) return `${days} day${days !== 1 ? 's' : ''}`
-    const hours = Math.floor(seconds / 3600)
+    const hours = Math.floor(secondsNum / 3600)
     return `${hours} hour${hours !== 1 ? 's' : ''}`
   }
 
@@ -818,8 +830,11 @@
 
   const formatUserBalance = (symbol: string) => {
     if (!auth.userProfile?.id || !canisterServiceReady.value) return '0.00'
-    // This would need to load user balances - simplified for now
-    return '0.00'
+    
+    const balance = userBalances.value[symbol]
+    if (balance === undefined || balance === null) return '0.00'
+    
+    return TokenService.formatBalance(balance, symbol)
   }
 
   const formatThresholdStatus = (pool: any) => {
@@ -896,15 +911,41 @@
     // Add validation logic here
   }
 
+  const loadUserBalances = async () => {
+    if (!auth.userProfile?.id || !canisterServiceReady.value) return
+    
+    try {
+      const balances = await canisterService.getUserBalances(auth.userProfile.id.toString())
+      userBalances.value = balances
+    } catch (error) {
+      console.error('Error loading user balances:', error)
+    }
+  }
+
   const setStakeAmount = (percent: number) => {
-    // This would need user balance - simplified for now
-    stakeAmount.value = '0.00'
+    if (!selectedPool.value) return
+    
+    const symbol = selectedPool.value.token_symbol
+    const balance = userBalances.value[symbol]
+    
+    if (balance === undefined || balance === null) {
+      stakeAmount.value = '0.00'
+      return
+    }
+    
+    // Convert raw balance to display amount, then calculate percentage
+    const balanceRaw = balance / Math.pow(10, TokenService.getTokenDecimals(symbol))
+    const amount = (balanceRaw * percent) / 100
+    
+    // Format for display
+    stakeAmount.value = formatNumberWithCommas(amount, TokenService.getDisplayDecimals(symbol))
   }
 
   // Actions
   const selectPool = (pool: any) => {
     selectedPool.value = pool
     loadUserPositions()
+    loadUserBalances()
   }
 
   const refreshData = async () => {
@@ -913,7 +954,8 @@
       await Promise.all([
         loadAllPools(),
         loadSystemStats(),
-        loadUserPositions()
+        loadUserPositions(),
+        loadUserBalances()
       ])
     } catch (error) {
       console.error('Error refreshing liquidity data:', error)
@@ -959,7 +1001,7 @@
     
     positionsLoading.value = true
     try {
-      const positions = await canisterService.getLiquidityPositions(auth.userProfile.id)
+      const positions = await canisterService.getLiquidityPositions(auth.userProfile.id as any)
       
       // Filter positions for selected pool if one is selected
       if (selectedPool.value) {
@@ -975,12 +1017,86 @@
   }
 
   const executeStake = async () => {
-    // Placeholder for staking implementation
-    toast.add({
-      title: 'Staking Coming Soon',
-      description: 'User staking functionality will be available in the next update',
-      color: 'info',
-    })
+    if (!selectedPool.value || !stakeAmount.value) {
+      toast.add({
+        title: 'Invalid Input',
+        description: 'Please select a pool and enter an amount',
+        color: 'error',
+      })
+      return
+    }
+
+    const parsedAmount = parseFormattedNumber(stakeAmount.value)
+    if (parsedAmount <= 0) {
+      toast.add({
+        title: 'Invalid Amount',
+        description: 'Amount must be greater than 0',
+        color: 'error',
+      })
+      return
+    }
+
+    // Check if user has sufficient balance
+    const symbol = selectedPool.value.token_symbol
+    const balance = userBalances.value[symbol]
+    if (balance === undefined || balance === null) {
+      toast.add({
+        title: 'Balance Error',
+        description: 'Unable to check your balance',
+        color: 'error',
+      })
+      return
+    }
+
+    const balanceRaw = balance / Math.pow(10, TokenService.getTokenDecimals(symbol))
+    if (parsedAmount > balanceRaw) {
+      toast.add({
+        title: 'Insufficient Balance',
+        description: `You have ${TokenService.formatBalance(balance, symbol)} but trying to stake ${stakeAmount.value}`,
+        color: 'error',
+      })
+      return
+    }
+
+    stakeLoading.value = true
+    try {
+      // Convert amount to raw format for backend
+      const rawAmount = TokenService.toRawAmount(parsedAmount, symbol)
+      
+      const result = await canisterService.stakeTokens(
+        symbol,
+        BigInt(rawAmount),
+        BigInt(selectedDissolveDelay.value)
+      )
+
+      // Success!
+      toast.add({
+        title: 'Staking Successful!',
+        description: result,
+        color: 'success',
+      })
+
+      // Clear form
+      stakeAmount.value = ''
+
+      // Refresh data
+      await Promise.all([
+        loadUserBalances(),
+        loadUserPositions(),
+        loadAllPools(),
+        loadSystemStats()
+      ])
+
+    } catch (error) {
+      console.error('Staking error:', error)
+      toast.add({
+        title: 'Staking Failed',
+        description: error instanceof Error ? error.message : 'Please try again',
+        color: 'error',
+      })
+    } finally {
+      stakeLoading.value = false
+    }
   }
 
   const startDissolving = async (position: any) => {

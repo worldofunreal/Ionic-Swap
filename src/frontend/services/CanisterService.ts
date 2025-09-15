@@ -1193,6 +1193,26 @@ class CanisterService {
     }
   }
 
+  // Stake tokens in liquidity pool
+  async stakeTokens(tokenSymbol: string, amount: bigint, dissolveDelaySeconds: bigint): Promise<string> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.stake_tokens(tokenSymbol, amount, dissolveDelaySeconds)
+      
+      if (result.Ok) {
+        return result.Ok
+      } else {
+        throw new Error(result.Err)
+      }
+    } catch (error) {
+      console.error('Error staking tokens:', error)
+      throw error
+    }
+  }
+
   // Get fee analytics for a token and time period
   async getFeeAnalytics(
     tokenSymbol: string | null,

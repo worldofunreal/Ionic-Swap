@@ -885,6 +885,85 @@ pub fn init_liquidity_pool(token_symbol: String) -> String {
     format!("Initialized liquidity pool for {}", token_symbol)
 }
 
+/// Stake tokens in liquidity pool (user function)
+#[update]
+pub async fn stake_tokens(token_symbol: String, amount: u64, dissolve_delay_seconds: u64) -> Result<String, String> {
+    let caller = ic_cdk::api::msg_caller();
+    
+    // Validate inputs
+    if amount == 0 {
+        return Err("Amount must be greater than 0".to_string());
+    }
+    
+    if dissolve_delay_seconds < 24 * 3600 { // Minimum 1 day
+        return Err("Dissolve delay must be at least 1 day".to_string());
+    }
+    
+    if dissolve_delay_seconds > 365 * 24 * 3600 { // Maximum 1 year
+        return Err("Dissolve delay cannot exceed 1 year".to_string());
+    }
+    
+    // Check if user has sufficient balance
+    let user_balance = icp::balances::get_balance(caller, &token_symbol);
+    if user_balance < amount {
+        return Err(format!("Insufficient balance. You have {} {} but trying to stake {}", 
+            user_balance, token_symbol, amount));
+    }
+    
+    // Check if token exists and is supported
+    let tokens = icp::queries::get_all_tokens();
+    if !tokens.iter().any(|t| t.symbol == token_symbol) {
+        return Err(format!("Token {} is not supported", token_symbol));
+    }
+    
+    // Initialize pool if needed
+    storage::LiquidityStorage::init_pool_if_needed(&token_symbol);
+    
+    // Transfer tokens from user to canister (for staking)
+    icp::balances::transfer_tokens(caller, ic_cdk::api::canister_self(), &token_symbol, amount)
+        .map_err(|e| format!("Failed to transfer tokens: {}", e))?;
+    
+    // Create liquidity position
+    let position = icp::liquidity::LiquidityNeuron::new(
+        caller,
+        token_symbol.clone(),
+        amount,
+        dissolve_delay_seconds
+    );
+    
+    // Store the position
+    storage::LiquidityStorage::store_position(position.clone())
+        .map_err(|e| format!("Failed to store position: {}", e))?;
+    
+    // Record transaction
+    let transaction = icp::liquidity::LiquidityTransaction {
+        id: uuid::Uuid::new_v4().to_string(),
+        transaction_type: icp::liquidity::LiquidityTxType::Stake,
+        token_symbol: token_symbol.clone(),
+        user: caller,
+        error_message: None,
+        before_state: None,
+        after_state: Some(format!("Staked {} {} with {} day dissolve delay", 
+            amount, token_symbol, dissolve_delay_seconds / (24 * 3600))),
+        timestamp: ic_cdk::api::time(),
+        success: true,
+        amount,
+        position_id: Some(position.id.clone()),
+    };
+    
+    storage::LiquidityStorage::store_transaction(transaction);
+    
+    // Recalculate pool aggregates
+    storage::LiquidityStorage::recalculate_pool_aggregates(&token_symbol)
+        .map_err(|e| format!("Failed to update pool aggregates: {}", e))?;
+    
+    ic_cdk::println!("🎯 User {} staked {} {} with {} day dissolve delay", 
+        caller, amount, token_symbol, dissolve_delay_seconds / (24 * 3600));
+    
+    Ok(format!("Successfully staked {} {} with {} day dissolve delay", 
+        amount, token_symbol, dissolve_delay_seconds / (24 * 3600)))
+}
+
 /// Initialize liquidity pools for all supported tokens
 #[update]
 pub fn init_all_liquidity_pools() -> String {
