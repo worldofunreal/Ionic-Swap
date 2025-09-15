@@ -1,8 +1,8 @@
 <template>
-  <div class="h-full bg-gray-50 dark:bg-neutral-950 overflow-hidden">
+  <div class="h-screen bg-gray-50 dark:bg-neutral-950 overflow-hidden flex flex-col" style="height: 100vh; max-height: 100vh;">
     <!-- Trading Header -->
     <div
-      class="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex-shrink-0"
+      class="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 px-4 py-2 flex-shrink-0"
     >
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
@@ -43,6 +43,7 @@
           </div>
         </div>
 
+
         <!-- Token Selector -->
         <div class="flex items-center space-x-2">
           <select
@@ -62,30 +63,40 @@
       </div>
     </div>
 
-    <div class="flex h-full">
+    <div class="flex flex-1 overflow-hidden min-h-0">
       <!-- Left Column - Chart and History -->
       <div class="flex-1 flex flex-col">
-        <!-- Chart Controls -->
-        <div
-          class="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 px-4 py-2 flex-shrink-0"
-        >
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <button
-                v-for="period in timePeriods"
-                :key="period.value"
-                :class="[
-                  'px-3 py-1 text-sm rounded-md transition-colors',
-                  selectedPeriod === period.value
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600',
-                ]"
-                @click="selectedPeriod = period.value"
-              >
-                {{ period.label }}
-              </button>
-            </div>
 
+        <!-- Chart Area -->
+        <div class="bg-white dark:bg-neutral-900 p-2 overflow-hidden" style="height: 60%;">
+          <LightweightPriceChart
+            :key="`trading-${selectedTokenSymbol}`"
+            :token-symbol="selectedTokenSymbol"
+            :default-chart-type="'candlesticks'"
+            :no-container="true"
+            class="h-full"
+          />
+        </div>
+
+        <!-- Transaction History -->
+        <div class="bg-white dark:bg-neutral-900 border-t border-gray-200 dark:border-gray-800 p-2 overflow-hidden" style="height: 40%;">
+          <h4 class="text-xs font-semibold text-gray-900 dark:text-white mb-1">Transaction History</h4>
+          <div class="overflow-y-auto scrollbar-hide" style="height: calc(100% - 1.5rem);">
+            <TransactionHistory />
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column - Trading Panel -->
+      <div
+        class="w-80 bg-white dark:bg-neutral-900 border-l border-gray-200 dark:border-gray-800 flex flex-col"
+      >
+        <!-- Trading Header -->
+        <div class="border-b border-gray-200 dark:border-gray-800 px-4 py-2">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Market Trading</h3>
+            
+            <!-- Chart Controls -->
             <div class="flex items-center space-x-2">
               <button
                 class="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
@@ -101,44 +112,12 @@
           </div>
         </div>
 
-        <!-- Chart and History Area -->
-        <div class="flex-1 bg-white dark:bg-neutral-900 flex overflow-hidden">
-          <!-- Chart Area -->
-          <div class="flex-1 p-4">
-            <LightweightPriceChart
-              :key="`trading-${selectedTokenSymbol}-${selectedPeriod}`"
-              :token-symbol="selectedTokenSymbol"
-              :default-chart-type="'candlesticks'"
-              :no-container="true"
-              class="h-full"
-            />
-          </div>
-          
-          <!-- Transaction History -->
-          <div class="w-80 border-l border-gray-200 dark:border-gray-800 p-3 overflow-hidden">
-            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Transaction History</h4>
-            <div class="h-full overflow-y-auto">
-              <TransactionHistory />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Column - Trading Panel -->
-      <div
-        class="w-80 bg-white dark:bg-neutral-900 border-l border-gray-200 dark:border-gray-800 flex flex-col"
-      >
-        <!-- Trading Header -->
-        <div class="border-b border-gray-200 dark:border-gray-800 px-4 py-3">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Market Trading</h3>
-        </div>
-
         <!-- Trading Form -->
-        <div class="flex-1 p-4">
+        <div class="flex-1 p-3">
           <!-- Market Trading -->
-          <div class="space-y-4">
+          <div class="space-y-3">
             <!-- Buy Section -->
-            <div class="space-y-3">
+            <div class="space-y-2">
               <div class="flex items-center justify-between">
                 <span
                   class="text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -190,7 +169,7 @@
 
             <!-- Sell Section -->
             <div
-              class="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700"
+              class="space-y-2 pt-3 border-t border-gray-200 dark:border-gray-700"
             >
               <div class="flex items-center justify-between">
                 <span
@@ -383,7 +362,6 @@
 
   // Reactive data
   const selectedTokenSymbol = ref('BTC')
-  const selectedPeriod = ref('1h')
   // Removed activeTab as tabs are no longer needed
   const loading = ref(false)
   const buyLoading = ref(false)
@@ -402,15 +380,6 @@
   const internalTokens = ref<any[]>([])
   const canisterServiceReady = ref(false)
 
-  // Time periods
-  const timePeriods = [
-    { label: '1m', value: '1m' },
-    { label: '5m', value: '5m' },
-    { label: '15m', value: '15m' },
-    { label: '1h', value: '1h' },
-    { label: '4h', value: '4h' },
-    { label: '1d', value: '1d' },
-  ]
 
   // Trading tabs (simplified)
   // Removed history tab as it's now below the chart
@@ -786,5 +755,22 @@
 </script>
 
 <style scoped>
-  /* All styles are inline classes */
+  /* Hide scrollbar for transaction history */
+  .scrollbar-hide {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+</style>
+
+<style>
+  /* Prevent page scrolling on trading page */
+  html, body {
+    overflow: hidden;
+    height: 100vh;
+    max-height: 100vh;
+  }
 </style>
