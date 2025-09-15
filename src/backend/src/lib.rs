@@ -964,6 +964,90 @@ pub async fn stake_tokens(token_symbol: String, amount: u64, dissolve_delay_seco
         amount, token_symbol, dissolve_delay_seconds / (24 * 3600)))
 }
 
+/// Claim accumulated fees from a liquidity position
+#[update]
+pub async fn claim_fees(position_id: String) -> Result<String, String> {
+    let caller = ic_cdk::api::msg_caller();
+    
+    // Get the position
+    let mut position = storage::LiquidityStorage::get_position(caller, &position_id)
+        .ok_or("Position not found or not owned by caller")?;
+    
+    // Check if position can earn fees (only Locked and Dissolving positions earn fees)
+    if position.state == icp::liquidity::NeuronState::Dissolved {
+        return Err("Dissolved positions cannot earn fees".to_string());
+    }
+    
+    // Get pool info to access global_fee_index
+    let pool = storage::LiquidityStorage::get_pool_info(&position.token_symbol)
+        .ok_or("Pool not found")?;
+    
+    // Calculate claimable fees using the fee index system
+    // claimable_fees = (current_global_fee_index - last_claimed_fee_index) × position_voting_power
+    let position_voting_power = calculate_position_voting_power(&position);
+    let fee_index_difference = pool.global_fee_index - position.last_fee_index;
+    let claimable_fees_raw = (fee_index_difference * position_voting_power) as u64;
+    
+    if claimable_fees_raw == 0 {
+        return Ok("No fees available to claim".to_string());
+    }
+    
+    // Check if canister has enough tokens to pay the fees
+    let canister_balance = icp::balances::get_balance(ic_cdk::api::canister_self(), &position.token_symbol);
+    if canister_balance < claimable_fees_raw {
+        return Err(format!("Insufficient liquidity to pay fees. Canister has {} {} but needs {}", 
+            canister_balance, position.token_symbol, claimable_fees_raw));
+    }
+    
+    // Transfer fees from canister to user
+    icp::balances::transfer_tokens(ic_cdk::api::canister_self(), caller, &position.token_symbol, claimable_fees_raw)
+        .map_err(|e| format!("Failed to transfer fees: {}", e))?;
+    
+    // Update position's last_fee_index
+    position.last_fee_index = pool.global_fee_index;
+    storage::LiquidityStorage::update_position(position.clone())
+        .map_err(|e| format!("Failed to update position: {}", e))?;
+    
+    // Record transaction
+    let transaction = icp::liquidity::LiquidityTransaction {
+        id: uuid::Uuid::new_v4().to_string(),
+        transaction_type: icp::liquidity::LiquidityTxType::ClaimFees,
+        token_symbol: position.token_symbol.clone(),
+        user: caller,
+        error_message: None,
+        before_state: Some(format!("Last fee index: {:.6}", position.last_fee_index - fee_index_difference)),
+        after_state: Some(format!("Claimed {} {} fees, new fee index: {:.6}", 
+            claimable_fees_raw, position.token_symbol, position.last_fee_index)),
+        timestamp: ic_cdk::api::time(),
+        success: true,
+        amount: claimable_fees_raw,
+        position_id: Some(position.id.clone()),
+    };
+    
+    storage::LiquidityStorage::store_transaction(transaction);
+    
+    ic_cdk::println!("💰 User {} claimed {} {} fees from position {}", 
+        caller, claimable_fees_raw, position.token_symbol, position_id);
+    
+    Ok(format!("Successfully claimed {} {} in fees", claimable_fees_raw, position.token_symbol))
+}
+
+/// Calculate voting power for a position (same logic as frontend)
+fn calculate_position_voting_power(position: &icp::liquidity::LiquidityNeuron) -> f64 {
+    let stake_amount = position.staked_amount as f64;
+    
+    // Delay multiplier: 1.0 + (delay_days / 365) * 3.0, capped at 4.0
+    let delay_days = position.dissolve_delay_seconds as f64 / (24.0 * 3600.0);
+    let delay_multiplier = (1.0 + (delay_days / 365.0) * 3.0).min(4.0);
+    
+    // Age multiplier: 1.0 + (age_years / 4) * 0.5, capped at 1.5
+    let age_seconds = position.current_age_seconds() as f64;
+    let age_years = age_seconds / (365.0 * 24.0 * 3600.0);
+    let age_multiplier = (1.0 + (age_years / 4.0) * 0.5).min(1.5);
+    
+    stake_amount * delay_multiplier * age_multiplier
+}
+
 /// Initialize liquidity pools for all supported tokens
 #[update]
 pub fn init_all_liquidity_pools() -> String {
@@ -1105,6 +1189,30 @@ pub fn get_fee_analytics(
 #[query]
 pub fn get_token_volatility(token_symbol: String) -> f64 {
     storage::LiquidityStorage::get_current_volatility(&token_symbol)
+}
+
+/// Debug function to check all positions for a token (testing function)
+#[query]
+pub fn debug_get_token_positions(token_symbol: String) -> Vec<icp::liquidity::LiquidityNeuron> {
+    let positions = storage::LiquidityStorage::get_token_positions(&token_symbol);
+    ic_cdk::println!("🔍 Debug: Found {} positions for token {}", positions.len(), token_symbol);
+    for (i, pos) in positions.iter().enumerate() {
+        ic_cdk::println!("  Position {}: user={}, amount={}, id={}", 
+            i, pos.user, pos.staked_amount, pos.id);
+    }
+    positions
+}
+
+/// Debug function to check all positions in the system (testing function)
+#[query]
+pub fn debug_get_all_positions() -> Vec<icp::liquidity::LiquidityNeuron> {
+    let mut all_positions = Vec::new();
+    for (symbol, _, _) in icp::config::SUPPORTED_TOKENS {
+        let positions = storage::LiquidityStorage::get_token_positions(symbol);
+        all_positions.extend(positions);
+    }
+    ic_cdk::println!("🔍 Debug: Found {} total positions in system", all_positions.len());
+    all_positions
 }
 
 // Enable Candid export

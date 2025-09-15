@@ -1213,6 +1213,26 @@ class CanisterService {
     }
   }
 
+  // Claim accumulated fees from a liquidity position
+  async claimFees(positionId: string): Promise<string> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.claim_fees(positionId)
+      
+      if (result.Ok) {
+        return result.Ok
+      } else {
+        throw new Error(result.Err)
+      }
+    } catch (error) {
+      console.error('Error claiming fees:', error)
+      throw error
+    }
+  }
+
   // Get fee analytics for a token and time period
   async getFeeAnalytics(
     tokenSymbol: string | null,

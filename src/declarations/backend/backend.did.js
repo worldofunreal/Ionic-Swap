@@ -6,6 +6,23 @@ export const idlFactory = ({ IDL }) => {
   });
   const InitArg = IDL.Record({ 'solana_network' : IDL.Opt(SolanaNetwork) });
   const Result = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
+  const NeuronState = IDL.Variant({
+    'Dissolved' : IDL.Null,
+    'Locked' : IDL.Null,
+    'Dissolving' : IDL.Null,
+  });
+  const LiquidityNeuron = IDL.Record({
+    'id' : IDL.Text,
+    'dissolve_delay_seconds' : IDL.Nat64,
+    'withdrawn_amount' : IDL.Nat64,
+    'staked_amount' : IDL.Nat64,
+    'token_symbol' : IDL.Text,
+    'user' : IDL.Principal,
+    'created_at' : IDL.Nat64,
+    'dissolving_started_at' : IDL.Opt(IDL.Nat64),
+    'state' : NeuronState,
+    'last_fee_index' : IDL.Float64,
+  });
   const UserError = IDL.Variant({
     'InvalidInput' : IDL.Text,
     'UsernameTaken' : IDL.Null,
@@ -104,23 +121,6 @@ export const idlFactory = ({ IDL }) => {
     'fee_rate_base' : IDL.Float64,
     'k_vol' : IDL.Float64,
     'max_hourly_volume_usdt' : IDL.Nat64,
-  });
-  const NeuronState = IDL.Variant({
-    'Dissolved' : IDL.Null,
-    'Locked' : IDL.Null,
-    'Dissolving' : IDL.Null,
-  });
-  const LiquidityNeuron = IDL.Record({
-    'id' : IDL.Text,
-    'dissolve_delay_seconds' : IDL.Nat64,
-    'withdrawn_amount' : IDL.Nat64,
-    'staked_amount' : IDL.Nat64,
-    'token_symbol' : IDL.Text,
-    'user' : IDL.Principal,
-    'created_at' : IDL.Nat64,
-    'dissolving_started_at' : IDL.Opt(IDL.Nat64),
-    'state' : NeuronState,
-    'last_fee_index' : IDL.Float64,
   });
   const LiquidityTxType = IDL.Variant({
     'FullWithdraw' : IDL.Null,
@@ -294,6 +294,17 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     'bootstrap_canister_liquidity' : IDL.Func([], [Result], []),
     'claim_faucet' : IDL.Func([], [Result], []),
+    'claim_fees' : IDL.Func([IDL.Text], [Result], []),
+    'debug_get_all_positions' : IDL.Func(
+        [],
+        [IDL.Vec(LiquidityNeuron)],
+        ['query'],
+      ),
+    'debug_get_token_positions' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(LiquidityNeuron)],
+        ['query'],
+      ),
     'debug_test_external_apis' : IDL.Func([], [Result], []),
     'debug_wallet_verification' : IDL.Func([], [Result], []),
     'delete_account' : IDL.Func([], [Result_1], []),

@@ -277,6 +277,12 @@ service : (InitArg) -> {
   bootstrap_canister_liquidity : () -> (Result);
   // Claim 2M USDT from faucet (one-time only per principal)
   claim_faucet : () -> (Result);
+  // Claim accumulated fees from a liquidity position
+  claim_fees : (text) -> (Result);
+  // Debug function to check all positions in the system (testing function)
+  debug_get_all_positions : () -> (vec LiquidityNeuron) query;
+  // Debug function to check all positions for a token (testing function)
+  debug_get_token_positions : (text) -> (vec LiquidityNeuron) query;
   // Debug function to test external API calls (for testing only)
   debug_test_external_apis : () -> (Result);
   // Debug function to verify wallet address matches signer

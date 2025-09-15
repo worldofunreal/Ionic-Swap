@@ -1094,8 +1094,14 @@ impl LiquidityStorage {
     /// Used for consistency checks and recovery
     pub fn recalculate_pool_aggregates(token_symbol: &str) -> Result<(), String> {
         let positions = Self::get_token_positions(token_symbol);
+        ic_cdk::println!("🔍 Recalculating aggregates for {}: found {} positions", token_symbol, positions.len());
+        
         let mut pool = Self::get_pool_info(token_symbol)
             .unwrap_or_else(|| PoolInfo::new(token_symbol.to_string()));
+
+        // Log current pool state before reset
+        ic_cdk::println!("📊 Pool {} before reset: staked={}, voting_power={:.2}, liquidity={}", 
+                        token_symbol, pool.total_staked, pool.total_voting_power, pool.available_liquidity);
 
         // Reset aggregates
         pool.total_staked = 0;
@@ -1103,7 +1109,10 @@ impl LiquidityStorage {
         pool.available_liquidity = 0;
 
         // Recalculate from positions
-        for position in positions {
+        for (i, position) in positions.iter().enumerate() {
+            ic_cdk::println!("  Position {}: user={}, amount={}, voting_power={:.2}", 
+                           i, position.user, position.staked_amount, position.locked_amount() as f64);
+            
             pool.total_staked += position.staked_amount;
             
             // Calculate voting power (simplified - will be enhanced in later stages)
@@ -1118,11 +1127,12 @@ impl LiquidityStorage {
         // Store values before update
         let total_staked = pool.total_staked;
         let total_voting_power = pool.total_voting_power;
+        let total_liquidity = pool.available_liquidity;
         
         // Update pool
         Self::update_pool_info(pool);
-        ic_cdk::println!("🔄 Recalculated aggregates for {}: {} staked, {:.2} voting power", 
-                        token_symbol, total_staked, total_voting_power);
+        ic_cdk::println!("🔄 Recalculated aggregates for {}: {} staked, {:.2} voting power, {} liquidity", 
+                        token_symbol, total_staked, total_voting_power, total_liquidity);
         
         Ok(())
     }
@@ -1222,17 +1232,27 @@ impl LiquidityStorage {
         let mut pool = Self::get_pool_info(token_symbol)
             .ok_or(format!("Liquidity pool not found for {}", token_symbol))?;
         
+        let total_fees = trading_fees + spread_fees + volatility_fees + depth_fees;
+        
+        // Update fee counters
         pool.fees_from_trading += trading_fees;
         pool.fees_from_spread += spread_fees;
         pool.fees_from_volatility += volatility_fees;
         pool.fees_from_depth += depth_fees;
-        pool.total_fees_collected += trading_fees + spread_fees + volatility_fees + depth_fees;
+        pool.total_fees_collected += total_fees;
         
+        // Update global_fee_index (cumulative fee per unit of voting power)
+        // Only update if there's voting power in the pool
+        if pool.total_voting_power > 0.0 {
+            let fee_per_voting_power = total_fees as f64 / pool.total_voting_power;
+            pool.global_fee_index += fee_per_voting_power;
+        }
+        
+        let final_fee_index = pool.global_fee_index;
         Self::update_pool_info(pool);
         
-        let total_added = trading_fees + spread_fees + volatility_fees + depth_fees;
-        ic_cdk::println!("💰 Added {} {} in fees to {} pool (trading: {}, spread: {}, volatility: {}, depth: {})", 
-            total_added, token_symbol, token_symbol, trading_fees, spread_fees, volatility_fees, depth_fees);
+        ic_cdk::println!("💰 Added {} {} in fees to {} pool (trading: {}, spread: {}, volatility: {}, depth: {}) - global_fee_index: {:.6}", 
+            total_fees, token_symbol, token_symbol, trading_fees, spread_fees, volatility_fees, depth_fees, final_fee_index);
         Ok(())
     }
 }

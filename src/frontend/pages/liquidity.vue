@@ -442,6 +442,18 @@
                   <div>
                     <div class="text-gray-500 dark:text-gray-400">Voting Power</div>
                     <div class="font-semibold text-foreground">{{ calculateVotingPower(position).toFixed(2) }}</div>
+                    <div class="text-xs text-gray-400 dark:text-gray-500">
+                      {{ calculateVotingPowerPercentage(position, selectedPool).toFixed(2) }}% of pool
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-gray-500 dark:text-gray-400">Claimable Fees</div>
+                    <div class="font-semibold text-foreground">
+                      {{ calculateClaimableFees(position, selectedPool).toFixed(6) }} {{ position.token_symbol }}
+                    </div>
+                    <div class="text-xs text-gray-400 dark:text-gray-500">
+                      ≈ ${{ (calculateClaimableFees(position, selectedPool) * (selectedPool?.current_price_usdt?.[0] || 0)).toFixed(2) }}
+                    </div>
                   </div>
                 </div>
 
@@ -775,9 +787,16 @@
   }
 
   const formatNeuronState = (state: any) => {
-    if (state.Locked) return 'Locked'
-    if (state.Dissolving) return 'Dissolving'
-    if (state.Dissolved) return 'Dissolved'
+    // Handle Candid enum format: {Locked: null}, {Dissolving: null}, etc.
+    if (state && typeof state === 'object') {
+      if ('Locked' in state) return 'Locked'
+      if ('Dissolving' in state) return 'Dissolving'
+      if ('Dissolved' in state) return 'Dissolved'
+    }
+    // Fallback for direct string values
+    if (state === 'Locked') return 'Locked'
+    if (state === 'Dissolving') return 'Dissolving'
+    if (state === 'Dissolved') return 'Dissolved'
     return 'Unknown'
   }
 
@@ -812,6 +831,41 @@
     const age = (Date.now() / 1000) - Number(position.created_at)
     const ageMultiplier = Math.min(1.5, 1.0 + (age / (4 * 365 * 24 * 3600)) * 0.5)
     return stakeAmount * delayMultiplier * ageMultiplier
+  }
+
+  const calculateVotingPowerPercentage = (position: any, pool: any) => {
+    const positionVP = calculateVotingPower(position)
+    const totalVP = pool?.total_voting_power || 0
+    if (totalVP === 0) return 0
+    return (positionVP / totalVP) * 100
+  }
+
+  const calculateClaimableFees = (position: any, pool: any) => {
+    if (!pool) return 0
+    
+    // Calculate raw voting power (in token's smallest units) for fee calculation
+    const stakeAmount = Number(position.staked_amount)
+    const delayMultiplier = Math.min(4.0, 1.0 + (Number(position.dissolve_delay_seconds) / (365 * 24 * 3600)) * 3.0)
+    const age = (Date.now() / 1000) - Number(position.created_at)
+    const ageMultiplier = Math.min(1.5, 1.0 + (age / (4 * 365 * 24 * 3600)) * 0.5)
+    const rawVotingPower = stakeAmount * delayMultiplier * ageMultiplier
+    
+    const feeIndexDifference = pool.global_fee_index - (position.last_fee_index || 0)
+    const claimableFeesRaw = feeIndexDifference * rawVotingPower
+    
+    // Debug logging
+    console.log(`🔍 Fee calculation for position ${position.id}:`, {
+      stakeAmount,
+      rawVotingPower,
+      globalFeeIndex: pool.global_fee_index,
+      lastFeeIndex: position.last_fee_index || 0,
+      feeIndexDifference,
+      claimableFeesRaw,
+      decimals: TokenService.getTokenDecimals(position.token_symbol),
+      finalAmount: claimableFeesRaw / Math.pow(10, TokenService.getTokenDecimals(position.token_symbol))
+    })
+    
+    return claimableFeesRaw / Math.pow(10, TokenService.getTokenDecimals(position.token_symbol))
   }
 
   const calculateExpectedVotingPower = () => {
@@ -1107,6 +1161,43 @@
     })
   }
 
+  const claimFees = async (position: any) => {
+    if (!canisterServiceReady.value) {
+      toast.add({
+        title: 'Service Not Ready',
+        description: 'Canister service is not ready. Please try again.',
+        color: 'error',
+      })
+      return
+    }
+
+    try {
+      const result = await canisterService.claimFees(position.id)
+      
+      toast.add({
+        title: 'Fees Claimed Successfully!',
+        description: result,
+        color: 'success',
+      })
+
+      // Refresh data
+      await Promise.all([
+        loadUserBalances(),
+        loadUserPositions(),
+        loadAllPools(),
+        loadSystemStats()
+      ])
+
+    } catch (error) {
+      console.error('Error claiming fees:', error)
+      toast.add({
+        title: 'Claim Failed',
+        description: error instanceof Error ? error.message : 'Please try again',
+        color: 'error',
+      })
+    }
+  }
+
   const stopDissolving = async (position: any) => {
     toast.add({
       title: 'Dissolving Management Coming Soon',
@@ -1123,13 +1214,6 @@
     })
   }
 
-  const claimFees = async (position: any) => {
-    toast.add({
-      title: 'Fee Claims Coming Soon',
-      description: 'Fee claiming functionality will be available soon',
-      color: 'info',
-    })
-  }
 
   // Watchers
   watch(() => auth.userProfile, async (newProfile) => {

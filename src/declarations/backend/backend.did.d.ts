@@ -294,6 +294,9 @@ export interface UserUpdate {
 export interface _SERVICE {
   'bootstrap_canister_liquidity' : ActorMethod<[], Result>,
   'claim_faucet' : ActorMethod<[], Result>,
+  'claim_fees' : ActorMethod<[string], Result>,
+  'debug_get_all_positions' : ActorMethod<[], Array<LiquidityNeuron>>,
+  'debug_get_token_positions' : ActorMethod<[string], Array<LiquidityNeuron>>,
   'debug_test_external_apis' : ActorMethod<[], Result>,
   'debug_wallet_verification' : ActorMethod<[], Result>,
   'delete_account' : ActorMethod<[], Result_1>,
