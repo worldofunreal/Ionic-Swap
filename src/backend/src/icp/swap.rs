@@ -170,8 +170,8 @@ pub async fn market_swap(
     crate::storage::LiquidityStorage::decrease_pool_liquidity(&request.to_token, final_to_amount)?;
     
     // 5. ⚡ NEW: Record fees in the destination pool's fee counters
-    let base_trading_fee = (request.amount as f64 * base_fee) as u64;
-    let volatility_fee = (request.amount as f64 * volatility_penalty) as u64;
+    let base_trading_fee = (to_amount as f64 * base_fee) as u64;
+    let volatility_fee = (to_amount as f64 * volatility_penalty) as u64;
     crate::storage::LiquidityStorage::add_pool_fees(
         &request.to_token,
         base_trading_fee,  // fees_from_trading
