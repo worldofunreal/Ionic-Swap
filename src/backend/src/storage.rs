@@ -865,6 +865,19 @@ impl LiquidityStorage {
                 .map(|(_, _, decimals)| decimals)
                 .unwrap_or(6);
             
+            // Calculate USDT equivalent values
+            let decimal_divisor = 10.0_f64.powi(decimals as i32);
+            pool.current_price_usdt = Some(price);
+            pool.tvl_usdt = Some((pool.total_staked as f64 / decimal_divisor) * price);
+            pool.available_liquidity_usdt = Some((pool.available_liquidity as f64 / decimal_divisor) * price);
+            pool.total_fees_collected_usdt = Some((pool.total_fees_collected as f64 / decimal_divisor) * price);
+            
+            // Calculate fee earnings USDT values
+            pool.fees_from_trading_usdt = Some((pool.fees_from_trading as f64 / decimal_divisor) * price);
+            pool.fees_from_spread_usdt = Some((pool.fees_from_spread as f64 / decimal_divisor) * price);
+            pool.fees_from_volatility_usdt = Some((pool.fees_from_volatility as f64 / decimal_divisor) * price);
+            pool.fees_from_depth_usdt = Some((pool.fees_from_depth as f64 / decimal_divisor) * price);
+            
             // Calculate threshold amounts in token units
             if let Some(token_thresholds) = config.token_thresholds.get(&pool.token_symbol) {
                 let healthy_amount = token_thresholds.get_healthy_amount(price, decimals);

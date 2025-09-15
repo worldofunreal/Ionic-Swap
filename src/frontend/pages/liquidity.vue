@@ -25,10 +25,10 @@
           <!-- System Stats -->
           <div class="flex items-center space-x-6 ml-8">
             <div class="text-center">
-              <div class="text-xl font-bold text-gray-900 dark:text-white">
-                {{ formatSystemStats.totalStaked }}
+              <div class="text-xl font-bold text-purple-600 dark:text-purple-400">
+                ${{ formatUSDTValue(systemStats.totalStaked) }}
               </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">Total Staked</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">Total TVL</div>
             </div>
             <div class="text-center">
               <div class="text-xl font-bold text-gray-900 dark:text-white">
@@ -38,9 +38,9 @@
             </div>
             <div class="text-center">
               <div class="text-xl font-bold text-green-600 dark:text-green-400">
-                {{ formatSystemStats.totalFees }}
+                ${{ formatUSDTValue(systemStats.totalFees) }}
               </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">Fees Collected</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">Fee Earnings</div>
             </div>
           </div>
         </div>
@@ -115,20 +115,28 @@
               ]"
               @click="selectPool(pool)"
             >
-              <div class="grid grid-cols-12 gap-4 items-center">
+              <div class="grid grid-cols-14 gap-1 items-center">
                 <!-- Token Info - Fixed Width -->
-                <div class="col-span-3 flex items-center space-x-3">
-                  <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
-                    <UIcon :name="getTokenIcon(pool.token_symbol)" class="w-8 h-8" />
+                <div class="col-span-2 flex items-center space-x-2">
+                  <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
+                    <UIcon :name="getTokenIcon(pool.token_symbol)" class="w-5 h-5" />
                   </div>
                   <div>
-                    <div class="font-semibold text-gray-900 dark:text-white">
+                    <div class="font-semibold text-gray-900 dark:text-white text-sm">
                       {{ pool.token_symbol }}
                     </div>
-                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
                       {{ TokenService.getTokenName(pool.token_symbol) }}
                     </div>
                   </div>
+                </div>
+
+                <!-- TVL USDT - Fixed Width -->
+                <div class="col-span-2 text-center">
+                  <div class="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                    ${{ formatUSDTValue(pool.tvl_usdt) }}
+                  </div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">TVL</div>
                 </div>
 
                 <!-- Total Staked - Fixed Width -->
@@ -147,7 +155,15 @@
                   <div class="text-xs text-gray-500 dark:text-gray-400">Available</div>
                 </div>
 
-                <!-- Fees - Fixed Width -->
+                <!-- Fee Earnings USDT - Fixed Width -->
+                <div class="col-span-2 text-center">
+                  <div class="text-sm font-semibold text-green-600 dark:text-green-400">
+                    ${{ formatUSDTValue(pool.total_fees_collected_usdt) }}
+                  </div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">Fee Earnings</div>
+                </div>
+
+                <!-- Fees (Token) - Fixed Width -->
                 <div class="col-span-2 text-center">
                   <div class="text-sm font-semibold text-green-600 dark:text-green-400">
                     {{ formatPoolFees(pool.total_fees_collected, pool.token_symbol) }}
@@ -155,16 +171,8 @@
                   <div class="text-xs text-gray-500 dark:text-gray-400">Fees</div>
                 </div>
 
-                <!-- Threshold - Fixed Width -->
-                <div class="col-span-2 text-center">
-                  <div class="text-sm font-semibold text-amber-600 dark:text-amber-400">
-                    {{ formatThresholdStatus(pool) }}
-                  </div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">Threshold</div>
-                </div>
-
                 <!-- Status - Fixed Width -->
-                <div class="col-span-1 flex flex-col items-center space-y-1">
+                <div class="col-span-2 flex flex-col items-center space-y-1">
                   <div 
                     :class="[
                       'px-2 py-1 text-xs rounded-full',
@@ -252,6 +260,9 @@
                   <div class="font-semibold text-green-600 dark:text-green-400">
                     {{ formatPoolFees(selectedPool.total_fees_collected, selectedPool.token_symbol) }}
                   </div>
+                  <div class="text-xs text-green-500 dark:text-green-400">
+                    ${{ formatUSDTValue(selectedPool.total_fees_collected_usdt) }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -262,27 +273,47 @@
               <div class="space-y-2">
                 <div class="flex justify-between items-center">
                   <span class="text-sm text-gray-500 dark:text-gray-400">Trading Fees</span>
-                  <span class="font-semibold text-foreground">
-                    {{ formatPoolFees(selectedPool.fees_from_trading, selectedPool.token_symbol) }}
-                  </span>
+                  <div class="text-right">
+                    <div class="font-semibold text-foreground">
+                      {{ formatPoolFees(selectedPool.fees_from_trading, selectedPool.token_symbol) }}
+                    </div>
+                    <div class="text-xs text-green-500 dark:text-green-400">
+                      ${{ formatUSDTValue(selectedPool.fees_from_trading_usdt) }}
+                    </div>
+                  </div>
                 </div>
                 <div class="flex justify-between items-center">
                   <span class="text-sm text-gray-500 dark:text-gray-400">Spread Fees</span>
-                  <span class="font-semibold text-foreground">
-                    {{ formatPoolFees(selectedPool.fees_from_spread, selectedPool.token_symbol) }}
-                  </span>
+                  <div class="text-right">
+                    <div class="font-semibold text-foreground">
+                      {{ formatPoolFees(selectedPool.fees_from_spread, selectedPool.token_symbol) }}
+                    </div>
+                    <div class="text-xs text-green-500 dark:text-green-400">
+                      ${{ formatUSDTValue(selectedPool.fees_from_spread_usdt) }}
+                    </div>
+                  </div>
                 </div>
                 <div class="flex justify-between items-center">
                   <span class="text-sm text-gray-500 dark:text-gray-400">Volatility Penalties</span>
-                  <span class="font-semibold text-foreground">
-                    {{ formatPoolFees(selectedPool.fees_from_volatility, selectedPool.token_symbol) }}
-                  </span>
+                  <div class="text-right">
+                    <div class="font-semibold text-foreground">
+                      {{ formatPoolFees(selectedPool.fees_from_volatility, selectedPool.token_symbol) }}
+                    </div>
+                    <div class="text-xs text-green-500 dark:text-green-400">
+                      ${{ formatUSDTValue(selectedPool.fees_from_volatility_usdt) }}
+                    </div>
+                  </div>
                 </div>
                 <div class="flex justify-between items-center">
                   <span class="text-sm text-gray-500 dark:text-gray-400">Depth Penalties</span>
-                  <span class="font-semibold text-foreground">
-                    {{ formatPoolFees(selectedPool.fees_from_depth, selectedPool.token_symbol) }}
-                  </span>
+                  <div class="text-right">
+                    <div class="font-semibold text-foreground">
+                      {{ formatPoolFees(selectedPool.fees_from_depth, selectedPool.token_symbol) }}
+                    </div>
+                    <div class="text-xs text-green-500 dark:text-green-400">
+                      ${{ formatUSDTValue(selectedPool.fees_from_depth_usdt) }}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -684,6 +715,34 @@
     
     // Format with token symbol for clarity
     return `${TokenService.formatBalance(feesNum, symbol)} ${symbol}`
+  }
+
+  const formatUSDTValue = (value: number[] | null | undefined) => {
+    // Handle Candid optional values: [] means None, [number] means Some(number)
+    let actualValue: number | null = null
+    
+    if (Array.isArray(value)) {
+      if (value.length === 1) {
+        actualValue = value[0]
+      }
+      // If array is empty ([]), actualValue remains null
+    } else if (typeof value === 'number') {
+      // Fallback for direct number values
+      actualValue = value
+    }
+    
+    // Handle null, undefined, or non-numeric values
+    if (actualValue === null || actualValue === undefined || typeof actualValue !== 'number' || isNaN(actualValue)) {
+      return '0.00'
+    }
+    
+    if (actualValue >= 1_000_000) {
+      return `${(actualValue / 1_000_000).toFixed(1)}M`
+    } else if (actualValue >= 1_000) {
+      return `${(actualValue / 1_000).toFixed(1)}K`
+    } else {
+      return actualValue.toFixed(2)
+    }
   }
 
   const formatPoolStatus = (status: any) => {

@@ -253,6 +253,32 @@ pub struct PoolInfo {
     
     /// Fees from depth penalties (large trade protection)
     pub fees_from_depth: u64,
+    
+    // **TVL ANALYTICS - USDT equivalent values**
+    /// Total Value Locked in USDT (total_staked converted to USDT)
+    pub tvl_usdt: Option<f64>,
+    
+    /// Available liquidity in USDT (available_liquidity converted to USDT)
+    pub available_liquidity_usdt: Option<f64>,
+    
+    /// Total fees collected in USDT (total_fees_collected converted to USDT)
+    pub total_fees_collected_usdt: Option<f64>,
+    
+    /// Current token price in USDT (for reference)
+    pub current_price_usdt: Option<f64>,
+    
+    // **FEE EARNINGS ANALYTICS - USDT equivalent values**
+    /// Fees from trading in USDT (fees_from_trading converted to USDT)
+    pub fees_from_trading_usdt: Option<f64>,
+    
+    /// Fees from spread protection in USDT (fees_from_spread converted to USDT)
+    pub fees_from_spread_usdt: Option<f64>,
+    
+    /// Fees from volatility penalties in USDT (fees_from_volatility converted to USDT)
+    pub fees_from_volatility_usdt: Option<f64>,
+    
+    /// Fees from depth penalties in USDT (fees_from_depth converted to USDT)
+    pub fees_from_depth_usdt: Option<f64>,
 }
 
 impl PoolInfo {
@@ -272,6 +298,14 @@ impl PoolInfo {
             fees_from_spread: 0,
             fees_from_volatility: 0,
             fees_from_depth: 0,
+            tvl_usdt: None,
+            available_liquidity_usdt: None,
+            total_fees_collected_usdt: None,
+            current_price_usdt: None,
+            fees_from_trading_usdt: None,
+            fees_from_spread_usdt: None,
+            fees_from_volatility_usdt: None,
+            fees_from_depth_usdt: None,
         }
     }
 }

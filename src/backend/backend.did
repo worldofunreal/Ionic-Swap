@@ -136,13 +136,21 @@ type PoolInfo = record {
   liquidity_status : LiquidityStatus;
   token_symbol : text;
   available_liquidity : nat64;
+  tvl_usdt : opt float64;
+  fees_from_volatility_usdt : opt float64;
   total_staked : nat64;
+  current_price_usdt : opt float64;
   fees_from_trading : nat64;
+  available_liquidity_usdt : opt float64;
   global_fee_index : float64;
+  fees_from_trading_usdt : opt float64;
+  fees_from_spread_usdt : opt float64;
   total_volume_1h : nat64;
   total_fees_collected : nat64;
   fees_from_spread : nat64;
+  fees_from_depth_usdt : opt float64;
   total_voting_power : float64;
+  total_fees_collected_usdt : opt float64;
   fees_from_depth : nat64;
 };
 type PortfolioData = record {
