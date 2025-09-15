@@ -1039,8 +1039,9 @@ impl LiquidityStorage {
             let base_voting_power = position.locked_amount() as f64;
             pool.total_voting_power += base_voting_power;
             
-            // Add dissolving amounts to available liquidity
-            pool.available_liquidity += position.available_to_withdraw();
+            // For trading liquidity: include ALL staked amounts (locked + dissolving)
+            // Users can't withdraw locked amounts, but they can be used for trading
+            pool.available_liquidity += position.staked_amount - position.withdrawn_amount;
         }
 
         // Store values before update
@@ -1070,5 +1071,38 @@ impl LiquidityStorage {
             .sum::<u64>();
 
         (total_positions, total_pools, total_staked_value, total_fees)
+    }
+
+    /// ⚡ NEW LIQUIDITY SYSTEM: Increase available liquidity in a pool (when users trade INTO a pool)
+    pub fn increase_pool_liquidity(token_symbol: &str, amount: u64) -> Result<(), String> {
+        let mut pool = Self::get_pool_info(token_symbol)
+            .ok_or(format!("Liquidity pool not found for {}", token_symbol))?;
+        
+        pool.available_liquidity += amount;
+        let new_total = pool.available_liquidity;
+        Self::update_pool_info(pool);
+        
+        ic_cdk::println!("📈 Increased {} pool liquidity by {} (new total: {})", 
+            token_symbol, amount, new_total);
+        Ok(())
+    }
+
+    /// ⚡ NEW LIQUIDITY SYSTEM: Decrease available liquidity in a pool (when users trade OUT of a pool)
+    pub fn decrease_pool_liquidity(token_symbol: &str, amount: u64) -> Result<(), String> {
+        let mut pool = Self::get_pool_info(token_symbol)
+            .ok_or(format!("Liquidity pool not found for {}", token_symbol))?;
+        
+        if pool.available_liquidity < amount {
+            return Err(format!("Insufficient liquidity in {} pool: has {}, needs {}", 
+                token_symbol, pool.available_liquidity, amount));
+        }
+        
+        pool.available_liquidity -= amount;
+        let new_total = pool.available_liquidity;
+        Self::update_pool_info(pool);
+        
+        ic_cdk::println!("📉 Decreased {} pool liquidity by {} (new total: {})", 
+            token_symbol, amount, new_total);
+        Ok(())
     }
 }

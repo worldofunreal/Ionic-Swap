@@ -406,9 +406,11 @@ pub struct LiquidityConfig {
 impl Default for LiquidityConfig {
     fn default() -> Self {
         let mut token_thresholds = HashMap::new();
-        token_thresholds.insert("ETH".to_string(), TokenThresholds::default_for_token("ETH"));
-        token_thresholds.insert("BTC".to_string(), TokenThresholds::default_for_token("BTC"));
-        token_thresholds.insert("USDT".to_string(), TokenThresholds::default_for_token("USDT"));
+        
+        // Add thresholds for all supported tokens
+        for (symbol, _, _) in crate::icp::config::SUPPORTED_TOKENS {
+            token_thresholds.insert(symbol.to_string(), TokenThresholds::default_for_token(symbol));
+        }
 
         Self {
             fee_rate_base: 0.003,                   // 0.3% base fee

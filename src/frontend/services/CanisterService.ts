@@ -1097,6 +1097,154 @@ class CanisterService {
     const backendCanisterId = getBackendCanisterId()
     return `http://${backendCanisterId}.localhost:4943${filePath}`
   }
+
+  // ============================================================================
+  // LIQUIDITY STAKING OPERATIONS
+  // ============================================================================
+
+  // Get all liquidity pools
+  async getAllLiquidityPools(): Promise<any[]> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.get_all_liquidity_pools()
+      return result
+    } catch (error) {
+      console.error('Error getting all liquidity pools:', error)
+      throw error
+    }
+  }
+
+  // Get liquidity pool info for a specific token
+  async getLiquidityPoolInfo(tokenSymbol: string): Promise<any | null> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.get_liquidity_pool_info(tokenSymbol)
+      // The backend returns [] | [PoolInfo] - handle optional correctly
+      return result.length > 0 ? result[0] : null
+    } catch (error) {
+      console.error('Error getting liquidity pool info:', error)
+      throw error
+    }
+  }
+
+  // Get user's liquidity positions
+  async getLiquidityPositions(userPrincipal: Principal): Promise<any[]> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.get_liquidity_positions(userPrincipal)
+      return result
+    } catch (error) {
+      console.error('Error getting liquidity positions:', error)
+      throw error
+    }
+  }
+
+  // Get liquidity system statistics
+  async getLiquiditySystemStats(): Promise<[bigint, bigint, number, bigint]> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.get_liquidity_system_stats()
+      return result
+    } catch (error) {
+      console.error('Error getting liquidity system stats:', error)
+      throw error
+    }
+  }
+
+  // Get liquidity configuration
+  async getLiquidityConfig(): Promise<any> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.get_liquidity_config()
+      return result
+    } catch (error) {
+      console.error('Error getting liquidity config:', error)
+      throw error
+    }
+  }
+
+  // Get user's liquidity transactions
+  async getLiquidityTransactions(userPrincipal: Principal): Promise<any[]> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.get_liquidity_transactions(userPrincipal)
+      return result
+    } catch (error) {
+      console.error('Error getting liquidity transactions:', error)
+      throw error
+    }
+  }
+
+  // Get fee analytics for a token and time period
+  async getFeeAnalytics(
+    tokenSymbol: string | null,
+    startTime: bigint,
+    endTime: bigint
+  ): Promise<[bigint, bigint, bigint, bigint, bigint]> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.get_fee_analytics(
+        tokenSymbol ? [tokenSymbol] : [],
+        startTime,
+        endTime
+      )
+      return result
+    } catch (error) {
+      console.error('Error getting fee analytics:', error)
+      throw error
+    }
+  }
+
+  // Get current volatility for a token
+  async getTokenVolatility(tokenSymbol: string): Promise<number> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.get_token_volatility(tokenSymbol)
+      return result
+    } catch (error) {
+      console.error('Error getting token volatility:', error)
+      throw error
+    }
+  }
+
+  // Set liquidity configuration (admin function)
+  async setLiquidityConfig(config: any): Promise<{ Ok?: string; Err?: string }> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.set_liquidity_config(config)
+      return result
+    } catch (error) {
+      console.error('Error setting liquidity config:', error)
+      throw error
+    }
+  }
 }
 
 // Export a singleton instance

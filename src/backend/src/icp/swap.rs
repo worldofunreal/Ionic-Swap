@@ -37,7 +37,8 @@ pub struct SwapResult {
 // SWAP OPERATIONS
 // ============================================================================
 
-/// Execute a market swap between two internal tokens (NEW LIQUIDITY SYSTEM)
+/// Execute a market swap using ONLY the new liquidity system
+/// Users trade against staked liquidity pools, NOT canister total supply
 pub async fn market_swap(
     caller: Principal,
     request: SwapRequest
@@ -60,7 +61,6 @@ pub async fn market_swap(
     }
     
     // Get current prices from oracle
-    // USDT has a fixed price of $1.00 since it's the base currency
     let from_price = if request.from_token == "USDT" {
         crate::oracle::types::TradingPair {
             base: "USDT".to_string(),
@@ -100,26 +100,26 @@ pub async fn market_swap(
         request.to_token, to_price.price
     );
     
-    // Calculate swap amount
-    // Formula: to_amount = (from_amount * from_price) / to_price
+    // Calculate base swap amount (before fees)
     let from_value_usd = request.amount as f64 * from_price.price / get_decimal_divisor(&request.from_token);
     let to_amount = (from_value_usd / to_price.price * get_decimal_divisor(&request.to_token)) as u64;
     
     ic_cdk::println!("   Swap calculation: {} {} (${})", 
         request.amount, request.from_token, from_value_usd
     );
-    ic_cdk::println!("   Will receive: {} {}", to_amount, request.to_token);
+    ic_cdk::println!("   Before fees: {} {}", to_amount, request.to_token);
     
-    // Check user has sufficient balance
+    // 🔍 NEW LIQUIDITY SYSTEM: Check user balance (still in old database for user accounts)
     let user_from_balance = IcpTokenDatabase::get_balance(caller, &request.from_token);
-    
     if user_from_balance < request.amount {
         return Err(format!("Insufficient balance. You have {} {} but trying to swap {}", 
             user_from_balance, request.from_token, request.amount));
     }
     
-    // Check staker liquidity pool has sufficient balance
-    let pool_info = crate::storage::LiquidityStorage::get_pool_info(&request.to_token)
+    // 🔍 NEW LIQUIDITY SYSTEM: Check STAKER liquidity pools (NOT canister balance)
+    let from_pool = crate::storage::LiquidityStorage::get_pool_info(&request.from_token)
+        .ok_or(format!("Liquidity pool not found for {}", request.from_token))?;
+    let to_pool = crate::storage::LiquidityStorage::get_pool_info(&request.to_token)
         .ok_or(format!("Liquidity pool not found for {}", request.to_token))?;
     
     // Get current configuration for fees and thresholds
@@ -127,40 +127,47 @@ pub async fn market_swap(
     let to_token_config = config.token_thresholds.get(&request.to_token)
         .ok_or(format!("Token thresholds not configured for {}", request.to_token))?;
     
-    // Check if trading is halted due to low liquidity
+    // Check if trading is halted due to low liquidity in destination pool
     let halt_amount = to_token_config.get_halt_amount(to_price.price, get_token_decimals(&request.to_token));
-    if pool_info.available_liquidity < halt_amount {
+    if to_pool.available_liquidity < halt_amount {
         return Err(format!("Trading halted for {} due to insufficient liquidity (${:.1}M remaining)", 
             request.to_token, 
-            pool_info.available_liquidity as f64 * to_price.price / get_decimal_divisor(&request.to_token) / 1_000_000.0
+            to_pool.available_liquidity as f64 * to_price.price / get_decimal_divisor(&request.to_token) / 1_000_000.0
         ));
     }
     
     // Apply fees and spreads to protect LPs
     let base_fee = config.fee_rate_base;
     let spread = config.spread_base;
-    let volatility_penalty = config.k_vol * pool_info.current_volatility_1h;
+    let volatility_penalty = config.k_vol * to_pool.current_volatility_1h;
     let total_fee_rate = base_fee + volatility_penalty;
     
-    // Adjust to_amount for fees and spreads
+    // Calculate fees and final amounts
     let fee_amount = (to_amount as f64 * total_fee_rate) as u64;
     let spread_amount = (to_amount as f64 * spread) as u64;
     let final_to_amount = to_amount.saturating_sub(fee_amount + spread_amount);
     
-    // Check if we have enough liquidity for the final amount
-    if pool_info.available_liquidity < final_to_amount {
+    ic_cdk::println!("   After fees ({:.2}%): {} {}", total_fee_rate * 100.0, final_to_amount, request.to_token);
+    
+    // Check if destination pool has enough liquidity for the final amount
+    if to_pool.available_liquidity < final_to_amount {
         return Err(format!("Insufficient staker liquidity. Pool has {} {} but needs {} (after fees)", 
-            pool_info.available_liquidity, request.to_token, final_to_amount));
+            to_pool.available_liquidity, request.to_token, final_to_amount));
     }
     
-    // Execute transfers with new liquidity system
-    let canister_id = ic_cdk::api::canister_self();
+    // 🚀 NEW LIQUIDITY SYSTEM: Execute with liquidity pool debiting
     
-    // 1. Transfer from_token from user to canister (liquidity pool)
-    IcpTokenDatabase::transfer_tokens(caller, canister_id, &request.from_token, request.amount)?;
+    // 1. Debit user's from_token balance (user accounts still use old database)
+    IcpTokenDatabase::transfer_tokens(caller, ic_cdk::api::canister_self(), &request.from_token, request.amount)?;
     
-    // 2. Transfer to_token from canister/staker pool to user (reduced amount due to fees)
-    IcpTokenDatabase::transfer_tokens(canister_id, caller, &request.to_token, final_to_amount)?;
+    // 2. Credit user's to_token balance (user accounts still use old database)
+    IcpTokenDatabase::transfer_tokens(ic_cdk::api::canister_self(), caller, &request.to_token, final_to_amount)?;
+    
+    // 3. ⚡ NEW: Add incoming tokens to the from_token liquidity pool
+    crate::storage::LiquidityStorage::increase_pool_liquidity(&request.from_token, request.amount)?;
+    
+    // 4. ⚡ NEW: Remove outgoing tokens from the to_token liquidity pool  
+    crate::storage::LiquidityStorage::decrease_pool_liquidity(&request.to_token, final_to_amount)?;
     
     let timestamp = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
     
@@ -187,19 +194,19 @@ pub async fn market_swap(
                 spread_rate: spread,
                 volatility_rate: volatility_penalty,
                 depth_rate: 0.0,
-                volatility_move_1h: pool_info.current_volatility_1h,
-                trade_vs_liquidity: final_to_amount as f64 / pool_info.available_liquidity as f64,
+                volatility_move_1h: to_pool.current_volatility_1h,
+                trade_vs_liquidity: final_to_amount as f64 / to_pool.available_liquidity as f64,
             },
         },
-        global_fee_index_before: pool_info.global_fee_index,
-        global_fee_index_after: pool_info.global_fee_index + (fee_amount + spread_amount) as f64,
+        global_fee_index_before: to_pool.global_fee_index,
+        global_fee_index_after: to_pool.global_fee_index + (fee_amount + spread_amount) as f64,
         stakers_benefited: 1, // Simplified for MVP - canister is the only LP initially
     };
     
     crate::storage::LiquidityStorage::store_fee_transaction(fee_transaction);
     
-    // Update pool aggregates and global fee index
-    crate::storage::LiquidityStorage::recalculate_pool_aggregates(&request.to_token)?;
+    // Note: We don't call recalculate_pool_aggregates here because we manually 
+    // updated liquidity with increase/decrease_pool_liquidity functions above
     
     let result = SwapResult {
         from_token: request.from_token.clone(),

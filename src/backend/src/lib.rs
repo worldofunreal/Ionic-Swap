@@ -898,31 +898,52 @@ pub fn init_all_liquidity_pools() -> String {
 pub async fn bootstrap_canister_liquidity() -> Result<String, String> {
     let canister_id = ic_cdk::api::canister_self();
     
-    // Check if canister already has staking positions
+    // Check existing positions to see what tokens we already have
     let existing_positions = storage::LiquidityStorage::get_user_positions(canister_id);
-    if !existing_positions.is_empty() {
-        ic_cdk::println!("⏭️ Canister already bootstrapped with {} positions", existing_positions.len());
-        let position_summary: Vec<String> = existing_positions.iter()
-            .map(|pos| format!("{} {} ({})", pos.staked_amount, pos.token_symbol, pos.id))
-            .collect();
-        return Ok(format!("Canister already bootstrapped with {} positions: {}", 
-            existing_positions.len(), position_summary.join(", ")));
-    }
+    let existing_tokens: std::collections::HashSet<String> = existing_positions.iter()
+        .map(|pos| pos.token_symbol.clone())
+        .collect();
+    
+    ic_cdk::println!("📊 Found {} existing positions for tokens: {:?}", 
+        existing_positions.len(), existing_tokens);
     
     let mut staked_tokens = Vec::new();
     let target_liquidity_usdt = 20_000_000.0; // $20M per token
     
     // Calculate appropriate staking amounts based on current prices
     for (symbol, _, decimals) in icp::config::SUPPORTED_TOKENS {
-        // Get current price from oracle
+        // Skip if this token already has a position
+        if existing_tokens.contains(*symbol) {
+            ic_cdk::println!("⏭️ Skipping {} - already has position", symbol);
+            continue;
+        }
+        // Get current price from oracle with fallback prices for MVP
         let price = if *symbol == "USDT" {
             1.0 // USDT is always $1
         } else {
+            // Try oracle first, then fallback to reasonable MVP prices
             match oracle::aggregator::get_pair_price(symbol).await {
-                Ok(trading_pair) => trading_pair.price,
+                Ok(trading_pair) => {
+                    ic_cdk::println!("✅ Got oracle price for {}: ${}", symbol, trading_pair.price);
+                    trading_pair.price
+                },
                 Err(e) => {
-                    ic_cdk::println!("⚠️ Failed to get price for {}: {}, skipping", symbol, e);
-                    continue;
+                    // Use fallback prices for MVP testing
+                    let fallback_price = match *symbol {
+                        "BTC" => 45000.0,
+                        "ETH" => 3000.0,
+                        "SOL" => 100.0,
+                        "BNB" => 300.0,
+                        "XRP" => 0.6,
+                        "DOGE" => 0.08,
+                        "ADA" => 0.5,
+                        "TRX" => 0.1,
+                        "ICP" => 12.0,
+                        _ => 1.0,
+                    };
+                    ic_cdk::println!("⚠️ Oracle failed for {}: {}, using fallback price: ${}", 
+                        symbol, e, fallback_price);
+                    fallback_price
                 }
             }
         };
@@ -961,8 +982,14 @@ pub async fn bootstrap_canister_liquidity() -> Result<String, String> {
         }
     }
     
-    ic_cdk::println!("✅ Canister bootstrap complete: {} tokens staked", staked_tokens.len());
-    Ok(format!("Canister bootstrapped as LP with: {}", staked_tokens.join(", ")))
+    if staked_tokens.is_empty() {
+        ic_cdk::println!("✅ Canister bootstrap complete: No new tokens staked (all already exist)");
+        Ok(format!("Canister already has all {} tokens staked", existing_tokens.len()))
+    } else {
+        ic_cdk::println!("✅ Canister bootstrap complete: {} new tokens staked", staked_tokens.len());
+        Ok(format!("Canister bootstrapped as LP with {} new tokens: {}", 
+            staked_tokens.len(), staked_tokens.join(", ")))
+    }
 }
 
 /// Get fee analytics for a time period (testing function)
