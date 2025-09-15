@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen bg-gray-50 dark:bg-neutral-950 overflow-hidden flex flex-col" style="height: 100vh; max-height: 100vh;">
+  <div class="trading-page h-screen bg-gray-50 dark:bg-neutral-950 overflow-hidden flex flex-col" style="height: 100vh; max-height: 100vh;">
     <!-- Trading Header -->
     <div
       class="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 px-4 py-2 flex-shrink-0"
@@ -7,10 +7,8 @@
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
           <div class="flex items-center space-x-2">
-            <div
-              class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold text-sm"
-            >
-              {{ selectedToken?.symbol?.charAt(0) || 'B' }}
+            <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
+              <UIcon :name="getTokenIcon(selectedTokenSymbol)" class="w-5 h-5" />
             </div>
             <div>
               <div class="font-semibold text-gray-900 dark:text-white">
@@ -48,7 +46,7 @@
         <div class="flex items-center space-x-2">
           <select
             v-model="selectedTokenSymbol"
-            class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="px-3 py-2 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-gray-700 rounded-md text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="" disabled>Select Token</option>
             <option
@@ -68,7 +66,7 @@
       <div class="flex-1 flex flex-col">
 
         <!-- Chart Area -->
-        <div class="bg-white dark:bg-neutral-900 p-2 overflow-hidden" style="height: 60%;">
+        <div class="bg-white dark:bg-neutral-900 p-2 overflow-hidden" style="height: 50%;">
           <LightweightPriceChart
             :key="`trading-${selectedTokenSymbol}`"
             :token-symbol="selectedTokenSymbol"
@@ -79,8 +77,7 @@
         </div>
 
         <!-- Transaction History -->
-        <div class="bg-white dark:bg-neutral-900 border-t border-gray-200 dark:border-gray-800 p-2 overflow-hidden" style="height: 40%;">
-          <h4 class="text-xs font-semibold text-gray-900 dark:text-white mb-1">Transaction History</h4>
+        <div class="bg-white dark:bg-neutral-900 border-t border-gray-200 dark:border-gray-800 p-2 overflow-hidden" style="height: 50%;">
           <div class="overflow-y-auto scrollbar-hide" style="height: calc(100% - 1.5rem);">
             <TransactionHistory />
           </div>
@@ -92,7 +89,7 @@
         class="w-80 bg-white dark:bg-neutral-900 border-l border-gray-200 dark:border-gray-800 flex flex-col"
       >
         <!-- Trading Header -->
-        <div class="border-b border-gray-200 dark:border-gray-800 px-4 py-2">
+        <div class="border-b border-gray-200 dark:border-gray-800 px-2 py-2">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Market Trading</h3>
             
@@ -139,7 +136,7 @@
                     class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                   <div
-                    class="absolute left-3 top-2 text-sm text-gray-500 dark:text-gray-400"
+                    class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400"
                   >
                     USDT
                   </div>
@@ -192,7 +189,7 @@
                     class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                   <div
-                    class="absolute left-3 top-2 text-sm text-gray-500 dark:text-gray-400"
+                    class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400"
                   >
                     {{ selectedTokenSymbol }}
                   </div>
@@ -441,6 +438,23 @@
   // Helper functions using TokenService
   const formatPrice = (price: number) => {
     return TokenService.formatPrice(price, selectedTokenSymbol.value)
+  }
+
+  // Get token icon for display (matching wallet.vue)
+  const getTokenIcon = (symbol: string) => {
+    const icons: Record<string, string> = {
+      'BTC': 'logos:bitcoin',
+      'ETH': 'token-branded:ethereum',
+      'XRP': 'cryptocurrency-color:xrp',
+      'USDT': 'cryptocurrency-color:usdt',
+      'BNB': 'token-branded:binance',
+      'SOL': 'token-branded:solana',
+      'DOGE': 'simple-icons:dogecoin',
+      'ADA': 'logos:cardano-icon',
+      'TRX': 'token-branded:tron',
+      'ICP': 'token-branded:icp',
+    }
+    return icons[symbol] || 'cryptocurrency-color:generic'
   }
 
   const setBuyAmount = (percent: number) => {
@@ -723,6 +737,11 @@
   onMounted(async () => {
     console.log('Trading page mounted, checking service status...')
     
+    // Prevent body scrolling on trading page
+    document.body.style.overflow = 'hidden'
+    document.body.style.height = '100vh'
+    document.body.style.maxHeight = '100vh'
+    
     // Check if CanisterService is already ready
     if (canisterService.isInitialized()) {
       console.log('CanisterService already ready')
@@ -748,6 +767,13 @@
     }
   })
 
+  onUnmounted(() => {
+    // Restore body scrolling when leaving trading page
+    document.body.style.overflow = ''
+    document.body.style.height = ''
+    document.body.style.maxHeight = ''
+  })
+
   // Page title
   useHead({
     title: 'Trading - Ionic Swap',
@@ -767,10 +793,18 @@
 </style>
 
 <style>
-  /* Prevent page scrolling on trading page */
-  html, body {
+  /* Prevent scrolling only on trading page */
+  .trading-page {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+  
+  /* Prevent body scrolling when on trading page */
+  body:has(.trading-page) {
     overflow: hidden;
     height: 100vh;
     max-height: 100vh;
   }
 </style>
+

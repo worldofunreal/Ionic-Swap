@@ -5,66 +5,13 @@
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
     </div>
 
-    <!-- Dashboard -->
-    <div v-else class="flex">
-      <!-- Left Sidebar Navigation -->
-      <div class="w-64 bg-card border-r border-gray-200 dark:border-gray-800 min-h-screen">
-        <div class="p-6">
-          <div class="flex items-center gap-3 mb-8">
-            <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-              <span class="text-white font-bold text-sm">I</span>
-            </div>
-            <span class="text-xl font-bold text-foreground">Ionic Swap</span>
-          </div>
-          
-          <nav class="space-y-2">
-            <div class="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
-              <UIcon name="i-heroicons-home-20-solid" class="w-5 h-5 text-primary" />
-              <span class="font-medium text-primary">Dashboard</span>
-            </div>
-            <div class="flex items-center gap-3 p-3 text-muted-foreground hover:bg-muted rounded-lg cursor-pointer">
-              <UIcon name="i-heroicons-wallet-20-solid" class="w-5 h-5" />
-              <span>Assets</span>
-              <UIcon name="i-heroicons-chevron-down-20-solid" class="w-4 h-4 ml-auto" />
-            </div>
-            <div class="flex items-center gap-3 p-3 text-muted-foreground hover:bg-muted rounded-lg cursor-pointer">
-              <UIcon name="i-heroicons-chart-bar-20-solid" class="w-5 h-5" />
-              <span>Orders</span>
-              <UIcon name="i-heroicons-chevron-down-20-solid" class="w-4 h-4 ml-auto" />
-            </div>
-            <div class="flex items-center gap-3 p-3 text-muted-foreground hover:bg-muted rounded-lg cursor-pointer">
-              <UIcon name="i-heroicons-gift-20-solid" class="w-5 h-5" />
-              <span>Rewards Hub</span>
-            </div>
-            <div class="flex items-center gap-3 p-3 text-muted-foreground hover:bg-muted rounded-lg cursor-pointer">
-              <UIcon name="i-heroicons-users-20-solid" class="w-5 h-5" />
-              <span>Referral</span>
-            </div>
-            <div class="flex items-center gap-3 p-3 text-muted-foreground hover:bg-muted rounded-lg cursor-pointer">
-              <UIcon name="i-heroicons-user-20-solid" class="w-5 h-5" />
-              <span>Account</span>
-              <UIcon name="i-heroicons-chevron-down-20-solid" class="w-4 h-4 ml-auto" />
-            </div>
-            <div class="flex items-center gap-3 p-3 text-muted-foreground hover:bg-muted rounded-lg cursor-pointer">
-              <UIcon name="i-heroicons-cog-6-tooth-20-solid" class="w-5 h-5" />
-              <span>Settings</span>
-            </div>
-          </nav>
-        </div>
-      </div>
-
-      <!-- Main Content Area -->
-      <div class="flex-1">
+    <!-- Wallet Portfolio Overview -->
+    <div v-else>
         <!-- Top Header -->
         <div class="bg-card border-b border-gray-200 dark:border-gray-800 px-6 py-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-              <h1 class="text-2xl font-bold text-foreground">Dashboard</h1>
-              <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Portfolio</span>
-                <UIcon name="i-heroicons-chevron-right-20-solid" class="w-4 h-4" />
-                <span>Overview</span>
-              </div>
+              <h1 class="text-2xl font-bold text-foreground">Wallet</h1>
             </div>
             
             <div class="flex items-center gap-4">
@@ -275,7 +222,7 @@
                           </button>
                           <button
                             @click="stakeToken(token.symbol)"
-                            class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                            class="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold rounded-lg transition-colors"
                           >
                             Stake
                           </button>
@@ -528,7 +475,6 @@
             </div>
           </div>
         </div>
-      </div>
     </div>
 
     <!-- Withdrawal Modal -->

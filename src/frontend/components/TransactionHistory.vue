@@ -1,20 +1,20 @@
 <template>
   <div class="transaction-history">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+    <div class="flex items-center justify-between mb-2">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
         Transaction History
       </h3>
       <div class="flex items-center space-x-2">
         <button
           @click="refreshHistory"
           :disabled="loading"
-          class="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-50"
+          class="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-50"
         >
           <UIcon 
             :name="loading ? 'i-heroicons-arrow-path' : 'i-heroicons-arrow-path'" 
             :class="loading ? 'animate-spin' : ''"
-            class="w-4 h-4"
+            class="w-3 h-3"
           />
         </button>
       </div>
@@ -36,58 +36,53 @@
     </div>
 
     <!-- Transaction List -->
-    <div v-else class="space-y-3">
+    <div v-else class="space-y-2">
       <div
         v-for="transaction in transactions"
         :key="transaction.id"
-        class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-sm transition-shadow"
+        class="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-gray-800 p-3 hover:shadow-sm transition-shadow"
       >
         <div class="flex items-center justify-between">
           <!-- Transaction Type & Pair -->
-          <div class="flex items-center space-x-3">
+          <div class="flex items-center space-x-2">
+            <div
+              :class="[
+                'w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs',
+                getTransactionTypeClass(transaction)
+              ]"
+            >
+              {{ getTransactionIcon(transaction) }}
+            </div>
             <div class="flex items-center space-x-2">
-              <div
-                :class="[
-                  'w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm',
-                  getTransactionTypeClass(transaction)
-                ]"
-              >
-                {{ getTransactionIcon(transaction) }}
+              <div class="font-semibold text-gray-900 dark:text-white text-sm">
+                {{ transaction.from_token }} → {{ transaction.to_token }}
               </div>
-              <div>
-                <div class="font-semibold text-gray-900 dark:text-white">
-                  {{ transaction.from_token }} → {{ transaction.to_token }}
-                </div>
-                <div class="text-sm text-gray-500 dark:text-gray-400">
-                  {{ formatTransactionType(transaction.transaction_type) }}
-                </div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">
+                {{ formatTransactionType(transaction.transaction_type) }}
               </div>
             </div>
           </div>
 
           <!-- Transaction Details -->
           <div class="text-right">
-            <div class="font-semibold text-gray-900 dark:text-white">
+            <div class="font-semibold text-gray-900 dark:text-white text-sm">
               {{ formatAmount(transaction.from_amount, transaction.from_token) }} 
-              {{ transaction.from_token }}
-            </div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">
-              → {{ formatAmount(transaction.to_amount, transaction.to_token) }} 
+              {{ transaction.from_token }} → {{ formatAmount(transaction.to_amount, transaction.to_token) }} 
               {{ transaction.to_token }}
             </div>
           </div>
         </div>
 
         <!-- Transaction Metadata -->
-        <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-          <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-            <div class="flex items-center space-x-4">
+        <div class="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+          <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+            <div class="flex items-center space-x-2">
               <span>{{ formatDate(transaction.timestamp) }}</span>
               <span>•</span>
-              <span>ID: {{ transaction.id.slice(0, 8) }}...</span>
+              <span>ID: {{ transaction.id }}</span>
             </div>
             <div class="text-right">
-              <div>Rate: {{ formatPrice(transaction.from_price) }} → {{ formatPrice(transaction.to_price) }}</div>
+              <div>Price: {{ formatPrice(transaction.to_price) }}</div>
             </div>
           </div>
         </div>
@@ -181,7 +176,7 @@ const loadMore = async () => {
 }
 
 const getTransactionTypeClass = (transaction: SwapTransaction) => {
-  return 'bg-blue-500' // Default to blue for market swaps
+  return 'bg-gray-600 dark:bg-gray-700' // Match dark theme
 }
 
 const getTransactionIcon = (transaction: SwapTransaction) => {
@@ -189,7 +184,10 @@ const getTransactionIcon = (transaction: SwapTransaction) => {
 }
 
 const formatTransactionType = (type: string) => {
-  return type.charAt(0).toUpperCase() + type.slice(1) + ' Swap'
+  if (type === 'Market with_fees') {
+    return 'Market order'
+  }
+  return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ')
 }
 
 const formatAmount = (amount: bigint, token: string) => {

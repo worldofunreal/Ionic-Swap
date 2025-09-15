@@ -3,40 +3,40 @@
     'w-full h-full flex flex-col',
     !noContainer ? 'bg-white dark:bg-neutral-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700' : ''
   ]">
-    <div class="flex justify-between items-center mb-4">
-      <div class="flex flex-col">
-        <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ tokenSymbol }}</div>
-        <div class="text-lg font-semibold flex items-center gap-2" :class="priceChangeClass">
+    <div class="flex justify-between items-center mb-2 px-4">
+      <div class="flex items-center gap-3">
+        <div class="text-lg font-bold text-gray-900 dark:text-white">{{ tokenSymbol }}</div>
+        <div class="text-sm font-semibold flex items-center gap-1" :class="priceChangeClass">
           ${{ formatPrice(currentPrice) }}
-          <span class="text-sm">
+          <span class="text-xs">
             {{ priceChange >= 0 ? '+' : '' }}{{ priceChange.toFixed(2) }}%
           </span>
         </div>
       </div>
-      <div class="flex gap-2">
+      <div class="flex gap-1">
         <!-- Chart Type Toggle -->
-        <div class="flex bg-gray-100 dark:bg-gray-700 rounded-md p-1">
+        <div class="flex bg-gray-100 dark:bg-gray-700 rounded-md p-0.5">
           <button
             :class="[
-              'px-3 py-1 text-sm rounded-md transition-colors',
+              'px-2 py-1 text-xs rounded-md transition-colors',
               chartType === 'candlesticks' 
                 ? 'bg-primary-500 text-white' 
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             ]"
             @click="chartType = 'candlesticks'"
           >
-            <UIcon name="i-heroicons-chart-bar-square" class="w-4 h-4" />
+            <UIcon name="i-heroicons-chart-bar-square" class="w-3 h-3" />
           </button>
           <button
             :class="[
-              'px-3 py-1 text-sm rounded-md transition-colors',
+              'px-2 py-1 text-xs rounded-md transition-colors',
               chartType === 'line' 
                 ? 'bg-primary-500 text-white' 
                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             ]"
             @click="chartType = 'line'"
           >
-            <UIcon name="i-heroicons-chart-bar" class="w-4 h-4" />
+            <UIcon name="i-heroicons-chart-bar" class="w-3 h-3" />
           </button>
         </div>
         
@@ -45,7 +45,7 @@
           v-for="period in timePeriods"
           :key="period.value"
           :class="[
-            'px-3 py-1 text-sm rounded-md transition-colors',
+            'px-2 py-1 text-xs rounded-md transition-colors',
             selectedPeriod === period.value 
               ? 'bg-primary-500 text-white' 
               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
