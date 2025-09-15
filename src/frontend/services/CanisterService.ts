@@ -1125,8 +1125,8 @@ class CanisterService {
 
     try {
       const result = await this.backendActor.get_liquidity_pool_info(tokenSymbol)
-      // The backend returns [] | [PoolInfo] - handle optional correctly
-      return result.length > 0 ? result[0] : null
+      // The backend returns Option<PoolInfo> which becomes null | PoolInfo in JS
+      return result || null
     } catch (error) {
       console.error('Error getting liquidity pool info:', error)
       throw error

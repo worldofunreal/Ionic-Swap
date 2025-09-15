@@ -169,6 +169,17 @@ pub async fn market_swap(
     // 4. ⚡ NEW: Remove outgoing tokens from the to_token liquidity pool  
     crate::storage::LiquidityStorage::decrease_pool_liquidity(&request.to_token, final_to_amount)?;
     
+    // 5. ⚡ NEW: Record fees in the destination pool's fee counters
+    let base_trading_fee = (request.amount as f64 * base_fee) as u64;
+    let volatility_fee = (request.amount as f64 * volatility_penalty) as u64;
+    crate::storage::LiquidityStorage::add_pool_fees(
+        &request.to_token,
+        base_trading_fee,  // fees_from_trading
+        spread_amount,     // fees_from_spread
+        volatility_fee,    // fees_from_volatility
+        0                  // fees_from_depth (not implemented)
+    )?;
+    
     let timestamp = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
     
     // Generate unique transaction ID

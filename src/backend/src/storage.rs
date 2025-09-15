@@ -1105,4 +1105,29 @@ impl LiquidityStorage {
             token_symbol, amount, new_total);
         Ok(())
     }
+
+    /// ⚡ NEW LIQUIDITY SYSTEM: Add fees to a pool's fee counters
+    pub fn add_pool_fees(
+        token_symbol: &str, 
+        trading_fees: u64, 
+        spread_fees: u64, 
+        volatility_fees: u64, 
+        depth_fees: u64
+    ) -> Result<(), String> {
+        let mut pool = Self::get_pool_info(token_symbol)
+            .ok_or(format!("Liquidity pool not found for {}", token_symbol))?;
+        
+        pool.fees_from_trading += trading_fees;
+        pool.fees_from_spread += spread_fees;
+        pool.fees_from_volatility += volatility_fees;
+        pool.fees_from_depth += depth_fees;
+        pool.total_fees_collected += trading_fees + spread_fees + volatility_fees + depth_fees;
+        
+        Self::update_pool_info(pool);
+        
+        let total_added = trading_fees + spread_fees + volatility_fees + depth_fees;
+        ic_cdk::println!("💰 Added {} {} in fees to {} pool (trading: {}, spread: {}, volatility: {}, depth: {})", 
+            total_added, token_symbol, token_symbol, trading_fees, spread_fees, volatility_fees, depth_fees);
+        Ok(())
+    }
 }

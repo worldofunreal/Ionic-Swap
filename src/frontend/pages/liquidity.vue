@@ -133,18 +133,24 @@
 
                 <!-- Pool Stats -->
                 <div class="text-right space-y-1">
-                  <div class="flex items-center space-x-4">
+                  <div class="grid grid-cols-3 gap-3 text-right">
                     <div>
                       <div class="text-sm font-semibold text-gray-900 dark:text-white">
-                        {{ TokenService.formatBalance(Number(pool.total_staked), pool.token_symbol) }}
+                        {{ TokenService.formatBalance(typeof pool.total_staked === 'bigint' ? Number(pool.total_staked) : pool.total_staked, pool.token_symbol) }}
                       </div>
                       <div class="text-xs text-gray-500 dark:text-gray-400">Total Staked</div>
+                    </div>
+                    <div>
+                      <div class="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                        {{ TokenService.formatBalance(typeof pool.available_liquidity === 'bigint' ? Number(pool.available_liquidity) : pool.available_liquidity, pool.token_symbol) }}
+                      </div>
+                      <div class="text-xs text-gray-500 dark:text-gray-400">Available</div>
                     </div>
                     <div>
                       <div class="text-sm font-semibold text-green-600 dark:text-green-400">
                         {{ formatPoolFees(pool.total_fees_collected, pool.token_symbol) }}
                       </div>
-                      <div class="text-xs text-gray-500 dark:text-gray-400">Fees Collected</div>
+                      <div class="text-xs text-gray-500 dark:text-gray-400">Fees</div>
                     </div>
                   </div>
                   
@@ -220,13 +226,13 @@
                 <div>
                   <div class="text-sm text-gray-500 dark:text-gray-400">Total Staked</div>
                   <div class="font-semibold text-foreground">
-                    {{ TokenService.formatBalance(Number(selectedPool.total_staked), selectedPool.token_symbol) }}
+                    {{ TokenService.formatBalance(typeof selectedPool.total_staked === 'bigint' ? Number(selectedPool.total_staked) : selectedPool.total_staked, selectedPool.token_symbol) }}
                   </div>
                 </div>
                 <div>
                   <div class="text-sm text-gray-500 dark:text-gray-400">Available Liquidity</div>
                   <div class="font-semibold text-foreground">
-                    {{ TokenService.formatBalance(Number(selectedPool.available_liquidity), selectedPool.token_symbol) }}
+                    {{ TokenService.formatBalance(typeof selectedPool.available_liquidity === 'bigint' ? Number(selectedPool.available_liquidity) : selectedPool.available_liquidity, selectedPool.token_symbol) }}
                   </div>
                 </div>
                 <div>
@@ -295,7 +301,7 @@
                 <div class="flex justify-between items-center">
                   <span class="text-sm text-gray-500 dark:text-gray-400">1h Volume</span>
                   <span class="font-semibold text-foreground">
-                    {{ TokenService.formatBalance(Number(selectedPool.total_volume_1h), selectedPool.token_symbol) }}
+                    {{ TokenService.formatBalance(typeof selectedPool.total_volume_1h === 'bigint' ? Number(selectedPool.total_volume_1h) : selectedPool.total_volume_1h, selectedPool.token_symbol) }}
                   </span>
                 </div>
               </div>
@@ -356,7 +362,7 @@
                   <div>
                     <div class="text-gray-500 dark:text-gray-400">Staked Amount</div>
                     <div class="font-semibold text-foreground">
-                      {{ TokenService.formatBalance(Number(position.staked_amount), position.token_symbol) }}
+                      {{ TokenService.formatBalance(typeof position.staked_amount === 'bigint' ? Number(position.staked_amount) : position.staked_amount, position.token_symbol) }}
                     </div>
                   </div>
                   <div>
@@ -545,7 +551,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, watch } from 'vue'
+  import { ref, computed, onMounted, onActivated, onUnmounted, watch } from 'vue'
   import { canisterService } from '@/services/CanisterService'
   import { useAuthStore } from '@/stores/auth'
   import { TokenService } from '@/services/TokenService'
@@ -756,28 +762,51 @@
   }
 
   const refreshData = async () => {
+    console.log('🔄 Refreshing liquidity data...')
     loading.value = true
-    await Promise.all([
-      loadAllPools(),
-      loadSystemStats(),
-      loadUserPositions()
-    ])
-    loading.value = false
+    try {
+      await Promise.all([
+        loadAllPools(),
+        loadSystemStats(),
+        loadUserPositions()
+      ])
+      console.log('✅ Liquidity data refreshed successfully')
+    } catch (error) {
+      console.error('❌ Error refreshing liquidity data:', error)
+    } finally {
+      loading.value = false
+    }
   }
 
   const loadAllPools = async () => {
     if (!canisterServiceReady.value) return
     
     try {
+      console.log('📊 Loading all liquidity pools...')
       const pools = await canisterService.getAllLiquidityPools()
+      console.log('📊 Loaded pools:', pools.length, pools)
+      
+      // Debug specific pool data
+      const adaPool = pools.find(p => p.token_symbol === 'ADA')
+      if (adaPool) {
+        console.log('🔍 ADA Pool Raw Data:', {
+          token_symbol: adaPool.token_symbol,
+          available_liquidity: adaPool.available_liquidity,
+          total_staked: adaPool.total_staked,
+          available_liquidity_type: typeof adaPool.available_liquidity,
+          total_staked_type: typeof adaPool.total_staked
+        })
+      }
+      
       allPools.value = pools
       
       // Auto-select first pool if none selected
       if (!selectedPool.value && pools.length > 0) {
         selectedPool.value = pools[0]
+        console.log('🎯 Auto-selected pool:', pools[0].token_symbol)
       }
     } catch (error) {
-      console.error('Error loading pools:', error)
+      console.error('❌ Error loading pools:', error)
     }
   }
 
@@ -893,6 +922,31 @@
           loading.value = false
         }
       }, 10000)
+    }
+  })
+
+  // Auto-refresh when entering the page
+  onActivated(async () => {
+    if (canisterServiceReady.value) {
+      await refreshData()
+    }
+  })
+
+  // Set up periodic refresh every 30 seconds
+  let refreshInterval: NodeJS.Timeout | null = null
+  
+  onMounted(() => {
+    refreshInterval = setInterval(async () => {
+      if (canisterServiceReady.value && !loading.value) {
+        console.log('🔄 Auto-refreshing liquidity data...')
+        await refreshData()
+      }
+    }, 30000) // Refresh every 30 seconds
+  })
+
+  onUnmounted(() => {
+    if (refreshInterval) {
+      clearInterval(refreshInterval)
     }
   })
 
