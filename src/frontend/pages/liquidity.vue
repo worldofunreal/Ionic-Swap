@@ -115,9 +115,9 @@
               ]"
               @click="selectPool(pool)"
             >
-              <div class="flex items-center justify-between">
-                <!-- Token Info -->
-                <div class="flex items-center space-x-3">
+              <div class="grid grid-cols-12 gap-4 items-center">
+                <!-- Token Info - Fixed Width -->
+                <div class="col-span-3 flex items-center space-x-3">
                   <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
                     <UIcon :name="getTokenIcon(pool.token_symbol)" class="w-8 h-8" />
                   </div>
@@ -131,48 +131,50 @@
                   </div>
                 </div>
 
-                <!-- Pool Stats -->
-                <div class="text-right space-y-1">
-                  <div class="grid grid-cols-4 gap-2 text-right">
-                    <div>
-                      <div class="text-sm font-semibold text-gray-900 dark:text-white">
-                        {{ TokenService.formatBalance(typeof pool.total_staked === 'bigint' ? Number(pool.total_staked) : pool.total_staked, pool.token_symbol) }}
-                      </div>
-                      <div class="text-xs text-gray-500 dark:text-gray-400">Total Staked</div>
-                    </div>
-                    <div>
-                      <div class="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                        {{ TokenService.formatBalance(typeof pool.available_liquidity === 'bigint' ? Number(pool.available_liquidity) : pool.available_liquidity, pool.token_symbol) }}
-                      </div>
-                      <div class="text-xs text-gray-500 dark:text-gray-400">Available</div>
-                    </div>
-                    <div>
-                      <div class="text-sm font-semibold text-green-600 dark:text-green-400">
-                        {{ formatPoolFees(pool.total_fees_collected, pool.token_symbol) }}
-                      </div>
-                      <div class="text-xs text-gray-500 dark:text-gray-400">Fees</div>
-                    </div>
-                    <div>
-                      <div class="text-sm font-semibold text-amber-600 dark:text-amber-400">
-                        {{ formatThresholdStatus(pool) }}
-                      </div>
-                      <div class="text-xs text-gray-500 dark:text-gray-400">Threshold</div>
-                    </div>
+                <!-- Total Staked - Fixed Width -->
+                <div class="col-span-2 text-center">
+                  <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                    {{ TokenService.formatBalance(typeof pool.total_staked === 'bigint' ? Number(pool.total_staked) : pool.total_staked, pool.token_symbol) }} {{ pool.token_symbol }}
                   </div>
-                  
-                  <!-- Pool Status -->
-                  <div class="flex items-center justify-end space-x-2">
-                    <div 
-                      :class="[
-                        'px-2 py-1 text-xs rounded-full',
-                        getPoolStatusClass(pool.liquidity_status)
-                      ]"
-                    >
-                      {{ formatPoolStatus(pool.liquidity_status) }}
-                    </div>
-                    <div v-if="pool.current_volatility_1h > 0.05" class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
-                      High Vol
-                    </div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">Total Staked</div>
+                </div>
+
+                <!-- Available - Fixed Width -->
+                <div class="col-span-2 text-center">
+                  <div class="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                    {{ TokenService.formatBalance(typeof pool.available_liquidity === 'bigint' ? Number(pool.available_liquidity) : pool.available_liquidity, pool.token_symbol) }} {{ pool.token_symbol }}
+                  </div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">Available</div>
+                </div>
+
+                <!-- Fees - Fixed Width -->
+                <div class="col-span-2 text-center">
+                  <div class="text-sm font-semibold text-green-600 dark:text-green-400">
+                    {{ formatPoolFees(pool.total_fees_collected, pool.token_symbol) }}
+                  </div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">Fees</div>
+                </div>
+
+                <!-- Threshold - Fixed Width -->
+                <div class="col-span-2 text-center">
+                  <div class="text-sm font-semibold text-amber-600 dark:text-amber-400">
+                    {{ formatThresholdStatus(pool) }}
+                  </div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">Threshold</div>
+                </div>
+
+                <!-- Status - Fixed Width -->
+                <div class="col-span-1 flex flex-col items-center space-y-1">
+                  <div 
+                    :class="[
+                      'px-2 py-1 text-xs rounded-full',
+                      getPoolStatusClass(pool.liquidity_status)
+                    ]"
+                  >
+                    {{ formatPoolStatus(pool.liquidity_status) }}
+                  </div>
+                  <div v-if="pool.current_volatility_1h > 0.05" class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-full">
+                    High Vol
                   </div>
                 </div>
               </div>
@@ -232,13 +234,13 @@
                 <div>
                   <div class="text-sm text-gray-500 dark:text-gray-400">Total Staked</div>
                   <div class="font-semibold text-foreground">
-                    {{ TokenService.formatBalance(typeof selectedPool.total_staked === 'bigint' ? Number(selectedPool.total_staked) : selectedPool.total_staked, selectedPool.token_symbol) }}
+                    {{ TokenService.formatBalance(typeof selectedPool.total_staked === 'bigint' ? Number(selectedPool.total_staked) : selectedPool.total_staked, selectedPool.token_symbol) }} {{ selectedPool.token_symbol }}
                   </div>
                 </div>
                 <div>
                   <div class="text-sm text-gray-500 dark:text-gray-400">Available Liquidity</div>
                   <div class="font-semibold text-foreground">
-                    {{ TokenService.formatBalance(typeof selectedPool.available_liquidity === 'bigint' ? Number(selectedPool.available_liquidity) : selectedPool.available_liquidity, selectedPool.token_symbol) }}
+                    {{ TokenService.formatBalance(typeof selectedPool.available_liquidity === 'bigint' ? Number(selectedPool.available_liquidity) : selectedPool.available_liquidity, selectedPool.token_symbol) }} {{ selectedPool.token_symbol }}
                   </div>
                 </div>
                 <div>
@@ -307,7 +309,7 @@
                 <div class="flex justify-between items-center">
                   <span class="text-sm text-gray-500 dark:text-gray-400">1h Volume</span>
                   <span class="font-semibold text-foreground">
-                    {{ TokenService.formatBalance(typeof selectedPool.total_volume_1h === 'bigint' ? Number(selectedPool.total_volume_1h) : selectedPool.total_volume_1h, selectedPool.token_symbol) }}
+                    {{ TokenService.formatBalance(typeof selectedPool.total_volume_1h === 'bigint' ? Number(selectedPool.total_volume_1h) : selectedPool.total_volume_1h, selectedPool.token_symbol) }} {{ selectedPool.token_symbol }}
                   </span>
                 </div>
               </div>
@@ -395,7 +397,7 @@
                   <div>
                     <div class="text-gray-500 dark:text-gray-400">Staked Amount</div>
                     <div class="font-semibold text-foreground">
-                      {{ TokenService.formatBalance(typeof position.staked_amount === 'bigint' ? Number(position.staked_amount) : position.staked_amount, position.token_symbol) }}
+                      {{ TokenService.formatBalance(typeof position.staked_amount === 'bigint' ? Number(position.staked_amount) : position.staked_amount, position.token_symbol) }} {{ position.token_symbol }}
                     </div>
                   </div>
                   <div>
@@ -673,10 +675,15 @@
 
   const formatPoolFees = (fees: number | bigint, symbol: string) => {
     const feesNum = Number(fees)
+    const decimals = TokenService.getTokenDecimals(symbol)
+    const formattedFees = feesNum / Math.pow(10, decimals)
+    
     if (symbol === 'USDT') {
-      return TokenService.formatCurrency(feesNum / Math.pow(10, TokenService.getTokenDecimals(symbol)))
+      return TokenService.formatCurrency(formattedFees)
     }
-    return TokenService.formatBalance(feesNum, symbol)
+    
+    // Format with token symbol for clarity
+    return `${TokenService.formatBalance(feesNum, symbol)} ${symbol}`
   }
 
   const formatPoolStatus = (status: any) => {

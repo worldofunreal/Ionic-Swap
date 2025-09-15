@@ -6,6 +6,16 @@
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
 use std::collections::HashMap;
+use uuid::Uuid;
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/// Generate a UUID v4 for transaction IDs
+fn generate_transaction_id() -> String {
+    Uuid::new_v4().to_string()
+}
 
 // ============================================================================
 // CORE NEURON TYPES
@@ -93,10 +103,9 @@ impl LiquidityNeuron {
         }
     }
     
-    /// Generate a unique position ID
-    pub fn generate_id(user: Principal, token_symbol: &str, timestamp: u64) -> String {
-        format!("{}_{}_{}_{}", user.to_text(), token_symbol, timestamp, 
-               &user.to_text()[..8]) // Add user prefix for uniqueness
+    /// Generate a unique position ID using UUID
+    pub fn generate_id(_user: Principal, _token_symbol: &str, _timestamp: u64) -> String {
+        generate_transaction_id()
     }
 
     /// Calculate current age in seconds (only counts time in Locked state)
@@ -632,9 +641,9 @@ pub struct LiquidityTransaction {
 }
 
 impl LiquidityTransaction {
-    /// Generate a unique transaction ID
-    pub fn generate_id(user: Principal, tx_type: &LiquidityTxType, timestamp: u64) -> String {
-        format!("{}_{:?}_{}", user.to_text(), tx_type, timestamp)
+    /// Generate a unique transaction ID using UUID
+    pub fn generate_id(_user: Principal, _tx_type: &LiquidityTxType, _timestamp: u64) -> String {
+        generate_transaction_id()
     }
 }
 

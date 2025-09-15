@@ -4,12 +4,22 @@
 
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
+use uuid::Uuid;
 
 use crate::icp::storage::IcpTokenDatabase;
 use crate::icp::config::is_supported_token;
 use crate::oracle::aggregator::get_pair_price;
 use crate::storage::{SwapTransactionStorage, PortfolioStorage};
 use crate::icp::types::SwapTransaction;
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/// Generate a UUID v4 for transaction IDs
+fn generate_transaction_id() -> String {
+    Uuid::new_v4().to_string()
+}
 
 // ============================================================================
 // SWAP TYPES
@@ -201,13 +211,13 @@ pub async fn market_swap(
     
     let timestamp = ic_cdk::api::time() / 1_000_000_000; // Convert nanoseconds to seconds
     
-    // Generate unique transaction ID
-    let transaction_id = format!("{}_{}_{}", timestamp, caller, request.amount);
+    // Generate unique transaction ID using UUID
+    let transaction_id = generate_transaction_id();
     
     // Record fee transaction for analytics
     let trade_notional = (request.amount as f64 * from_price.price / get_decimal_divisor(&request.from_token)) as u64;
     let fee_transaction = crate::icp::liquidity::FeeTransaction {
-        id: format!("fee_{}_{}", timestamp, caller),
+        id: format!("fee_{}", generate_transaction_id()),
         swap_transaction_id: transaction_id.clone(),
         token_pair: format!("{}/{}", request.from_token, request.to_token),
         trader: caller,
@@ -259,7 +269,7 @@ pub async fn market_swap(
         from_price: from_price.price,
         to_price: to_price.price,
         timestamp,
-        transaction_type: "market_with_fees".to_string(),
+        transaction_type: "Market Order".to_string(),
     };
     
     SwapTransactionStorage::store_transaction(swap_transaction);

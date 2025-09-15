@@ -449,7 +449,7 @@
                         <div class="flex items-center space-x-4">
                           <span>{{ formatDate(transaction.timestamp) }}</span>
                           <span>•</span>
-                          <span>ID: {{ transaction.id.slice(0, 8) }}...</span>
+                          <span>ID: {{ transaction.id.slice(0, 10) }}...</span>
                         </div>
                         <div class="text-right">
                           <div>Rate: {{ formatPrice(transaction.from_price) }} → {{ formatPrice(transaction.to_price) }}</div>

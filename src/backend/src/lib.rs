@@ -8,6 +8,26 @@ pub mod icp;
 pub mod user;
 pub mod storage;
 
+// ============================================================================
+// CUSTOM RANDOM SOURCE FOR GETRANDOM
+// ============================================================================
+
+use getrandom::{register_custom_getrandom, Error};
+
+fn custom_getrandom(buf: &mut [u8]) -> Result<(), Error> {
+    // Use IC CDK time as entropy source
+    let timestamp = ic_cdk::api::time();
+    
+    // Fill buffer with timestamp-based entropy
+    for (i, byte) in buf.iter_mut().enumerate() {
+        *byte = ((timestamp >> (i % 8 * 8)) & 0xFF) as u8;
+    }
+    
+    Ok(())
+}
+
+register_custom_getrandom!(custom_getrandom);
+
 use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::{init, post_upgrade, update, query};
 

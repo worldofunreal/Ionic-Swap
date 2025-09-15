@@ -184,9 +184,6 @@ const getTransactionIcon = (transaction: SwapTransaction) => {
 }
 
 const formatTransactionType = (type: string) => {
-  if (type === 'Market with_fees') {
-    return 'Market order'
-  }
   return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ')
 }
 
