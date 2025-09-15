@@ -840,10 +840,10 @@ pub fn set_liquidity_config(config: icp::liquidity::LiquidityConfig) -> Result<S
     Ok("Liquidity configuration updated successfully".to_string())
 }
 
-/// Get all liquidity pools (testing function)
-#[query]
-pub fn get_all_liquidity_pools() -> Vec<icp::liquidity::PoolInfo> {
-    storage::LiquidityStorage::get_all_pools()
+/// Get all liquidity pools with threshold data (testing function)
+#[update]
+pub async fn get_all_liquidity_pools() -> Vec<icp::liquidity::PoolInfo> {
+    storage::LiquidityStorage::get_all_pools().await
 }
 
 /// Get liquidity transactions for a user (testing function)
@@ -852,10 +852,10 @@ pub fn get_liquidity_transactions(user: Principal) -> Vec<icp::liquidity::Liquid
     storage::LiquidityStorage::get_user_transactions(user)
 }
 
-/// Get system-wide liquidity statistics (testing function)
-#[query]
-pub fn get_liquidity_system_stats() -> (u64, u64, f64, u64) {
-    storage::LiquidityStorage::get_system_stats()
+/// Get system-wide liquidity statistics with USDT conversion (testing function)
+#[update]
+pub async fn get_liquidity_system_stats() -> (u64, u64, f64, f64) {
+    storage::LiquidityStorage::get_system_stats_usdt().await
 }
 
 /// Initialize a liquidity pool for a token (testing function)

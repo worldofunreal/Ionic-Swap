@@ -822,13 +822,71 @@ impl LiquidityStorage {
         });
     }
 
-    /// Get all pool information
-    pub fn get_all_pools() -> Vec<PoolInfo> {
-        LIQUIDITY_POOLS.with(|pools| {
-            pools.borrow().iter()
+    /// Get all pool information with threshold data
+    pub async fn get_all_pools() -> Vec<PoolInfo> {
+        let config = Self::get_config();
+        let mut pools = Vec::new();
+        
+        // First collect all pools
+        let raw_pools: Vec<PoolInfo> = LIQUIDITY_POOLS.with(|pool_storage| {
+            pool_storage.borrow().iter()
                 .map(|entry| entry.value())
                 .collect()
-        })
+        });
+        
+        // Then process each pool with async price fetching
+        for mut pool in raw_pools {
+            // Get current price for threshold calculations
+            let price = if pool.token_symbol == "USDT" {
+                1.0
+            } else {
+                match crate::oracle::aggregator::get_pair_price(&pool.token_symbol).await {
+                    Ok(trading_pair) => trading_pair.price,
+                    Err(_) => {
+                        // Use fallback prices for MVP
+                        match pool.token_symbol.as_str() {
+                            "BTC" => 45000.0,
+                            "ETH" => 3000.0,
+                            "SOL" => 100.0,
+                            "BNB" => 300.0,
+                            "XRP" => 0.6,
+                            "DOGE" => 0.08,
+                            "ADA" => 0.5,
+                            "TRX" => 0.1,
+                            "ICP" => 12.0,
+                            _ => 1.0,
+                        }
+                    }
+                }
+            };
+            
+            // Get token decimals
+            let decimals = crate::icp::config::get_token_config(&pool.token_symbol)
+                .map(|(_, _, decimals)| decimals)
+                .unwrap_or(6);
+            
+            // Calculate threshold amounts in token units
+            if let Some(token_thresholds) = config.token_thresholds.get(&pool.token_symbol) {
+                let healthy_amount = token_thresholds.get_healthy_amount(price, decimals);
+                let rebalance_amount = token_thresholds.get_rebalance_amount(price, decimals);
+                let halt_amount = token_thresholds.get_halt_amount(price, decimals);
+                
+                // Update pool status based on current liquidity vs thresholds
+                pool.liquidity_status = if pool.available_liquidity >= healthy_amount {
+                    crate::icp::liquidity::LiquidityStatus::Healthy
+                } else if pool.available_liquidity >= rebalance_amount {
+                    crate::icp::liquidity::LiquidityStatus::NeedsRebalance
+                } else if pool.available_liquidity >= halt_amount {
+                    crate::icp::liquidity::LiquidityStatus::Critical
+                } else {
+                    crate::icp::liquidity::LiquidityStatus::Halted
+                };
+            }
+            
+            pools.push(pool);
+        }
+        
+        pools
     }
 
     /// Get pool names (token symbols)
@@ -1056,22 +1114,56 @@ impl LiquidityStorage {
         Ok(())
     }
 
-    /// Get system-wide statistics
-    pub fn get_system_stats() -> (u64, u64, f64, u64) { // (total_positions, total_pools, total_staked_value, total_fees)
+    /// Get system-wide statistics with USD conversion
+    pub async fn get_system_stats_usdt() -> (u64, u64, f64, f64) { // (total_positions, total_pools, total_staked_usd, total_fees_usd)
         let total_positions = Self::get_total_position_count();
-        let pools = Self::get_all_pools();
+        let pools = Self::get_all_pools().await;
         let total_pools = pools.len() as u64;
         
-        let total_staked_value = pools.iter()
-            .map(|pool| pool.total_staked as f64)
-            .sum::<f64>();
+        let mut total_staked_usd = 0.0;
+        let mut total_fees_usd = 0.0;
+        
+        for pool in pools {
+            // Get current price for this token
+            let price = if pool.token_symbol == "USDT" {
+                1.0
+            } else {
+                match crate::oracle::aggregator::get_pair_price(&pool.token_symbol).await {
+                    Ok(trading_pair) => trading_pair.price,
+                    Err(_) => {
+                        // Use fallback prices for MVP
+                        match pool.token_symbol.as_str() {
+                            "BTC" => 45000.0,
+                            "ETH" => 3000.0,
+                            "SOL" => 100.0,
+                            "BNB" => 300.0,
+                            "XRP" => 0.6,
+                            "DOGE" => 0.08,
+                            "ADA" => 0.5,
+                            "TRX" => 0.1,
+                            "ICP" => 12.0,
+                            _ => 1.0,
+                        }
+                    }
+                }
+            };
             
-        let total_fees = pools.iter()
-            .map(|pool| pool.total_fees_collected)
-            .sum::<u64>();
+            // Convert token amounts to USD
+            let decimals = crate::icp::config::get_token_config(&pool.token_symbol)
+                .map(|(_, _, decimals)| decimals)
+                .unwrap_or(6);
+            let decimal_divisor = 10.0_f64.powi(decimals as i32);
+            
+            let staked_usd = (pool.total_staked as f64 / decimal_divisor) * price;
+            let fees_usd = (pool.total_fees_collected as f64 / decimal_divisor) * price;
+            
+            total_staked_usd += staked_usd;
+            total_fees_usd += fees_usd;
+        }
 
-        (total_positions, total_pools, total_staked_value, total_fees)
+        (total_positions, total_pools, total_staked_usd, total_fees_usd)
     }
+
 
     /// ⚡ NEW LIQUIDITY SYSTEM: Increase available liquidity in a pool (when users trade INTO a pool)
     pub fn increase_pool_liquidity(token_symbol: &str, amount: u64) -> Result<(), String> {

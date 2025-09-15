@@ -109,6 +109,15 @@ pub async fn market_swap(
     );
     ic_cdk::println!("   Before fees: {} {}", to_amount, request.to_token);
     
+    // Get current configuration for fees and thresholds
+    let config = crate::storage::LiquidityStorage::get_config();
+    
+    // Check maximum trade amount limit
+    if from_value_usd > config.max_trade_amount_usdt as f64 {
+        return Err(format!("Trade amount exceeds maximum limit. Requested: ${:.2}, Maximum: ${}", 
+            from_value_usd, config.max_trade_amount_usdt));
+    }
+    
     // 🔍 NEW LIQUIDITY SYSTEM: Check user balance (still in old database for user accounts)
     let user_from_balance = IcpTokenDatabase::get_balance(caller, &request.from_token);
     if user_from_balance < request.amount {
@@ -122,15 +131,25 @@ pub async fn market_swap(
     let to_pool = crate::storage::LiquidityStorage::get_pool_info(&request.to_token)
         .ok_or(format!("Liquidity pool not found for {}", request.to_token))?;
     
-    // Get current configuration for fees and thresholds
-    let config = crate::storage::LiquidityStorage::get_config();
+    // Get token-specific thresholds from config for both tokens
+    let from_token_config = config.token_thresholds.get(&request.from_token)
+        .ok_or(format!("Token thresholds not configured for {}", request.from_token))?;
     let to_token_config = config.token_thresholds.get(&request.to_token)
         .ok_or(format!("Token thresholds not configured for {}", request.to_token))?;
     
-    // Check if trading is halted due to low liquidity in destination pool
-    let halt_amount = to_token_config.get_halt_amount(to_price.price, get_token_decimals(&request.to_token));
-    if to_pool.available_liquidity < halt_amount {
-        return Err(format!("Trading halted for {} due to insufficient liquidity (${:.1}M remaining)", 
+    // Check if source pool is halted
+    let from_halt_amount = from_token_config.get_halt_amount(from_price.price, get_token_decimals(&request.from_token));
+    if from_pool.available_liquidity < from_halt_amount {
+        return Err(format!("Trading halted for {} due to insufficient source liquidity (${:.1}M remaining)", 
+            request.from_token, 
+            from_pool.available_liquidity as f64 * from_price.price / get_decimal_divisor(&request.from_token) / 1_000_000.0
+        ));
+    }
+    
+    // Check if destination pool is halted
+    let to_halt_amount = to_token_config.get_halt_amount(to_price.price, get_token_decimals(&request.to_token));
+    if to_pool.available_liquidity < to_halt_amount {
+        return Err(format!("Trading halted for {} due to insufficient destination liquidity (${:.1}M remaining)", 
             request.to_token, 
             to_pool.available_liquidity as f64 * to_price.price / get_decimal_divisor(&request.to_token) / 1_000_000.0
         ));

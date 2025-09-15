@@ -133,7 +133,7 @@
 
                 <!-- Pool Stats -->
                 <div class="text-right space-y-1">
-                  <div class="grid grid-cols-3 gap-3 text-right">
+                  <div class="grid grid-cols-4 gap-2 text-right">
                     <div>
                       <div class="text-sm font-semibold text-gray-900 dark:text-white">
                         {{ TokenService.formatBalance(typeof pool.total_staked === 'bigint' ? Number(pool.total_staked) : pool.total_staked, pool.token_symbol) }}
@@ -151,6 +151,12 @@
                         {{ formatPoolFees(pool.total_fees_collected, pool.token_symbol) }}
                       </div>
                       <div class="text-xs text-gray-500 dark:text-gray-400">Fees</div>
+                    </div>
+                    <div>
+                      <div class="text-sm font-semibold text-amber-600 dark:text-amber-400">
+                        {{ formatThresholdStatus(pool) }}
+                      </div>
+                      <div class="text-xs text-gray-500 dark:text-gray-400">Threshold</div>
                     </div>
                   </div>
                   
@@ -303,6 +309,33 @@
                   <span class="font-semibold text-foreground">
                     {{ TokenService.formatBalance(typeof selectedPool.total_volume_1h === 'bigint' ? Number(selectedPool.total_volume_1h) : selectedPool.total_volume_1h, selectedPool.token_symbol) }}
                   </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Threshold Information -->
+            <div class="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4">
+              <h4 class="font-medium text-foreground mb-3">Liquidity Thresholds</h4>
+              <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-500 dark:text-gray-400">Current Liquidity (USDT)</span>
+                  <span class="font-semibold text-foreground">{{ formatThresholdStatus(selectedPool) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-500 dark:text-gray-400">Healthy Threshold</span>
+                  <span class="text-sm text-green-600 dark:text-green-400">≥ $10.0M</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-500 dark:text-gray-400">Rebalance Threshold</span>
+                  <span class="text-sm text-yellow-600 dark:text-yellow-400">≥ $7.0M</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-500 dark:text-gray-400">Critical Threshold</span>
+                  <span class="text-sm text-orange-600 dark:text-orange-400">≥ $5.0M</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-gray-500 dark:text-gray-400">Halt Threshold</span>
+                  <span class="text-sm text-red-600 dark:text-red-400">< $5.0M</span>
                 </div>
               </div>
             </div>
@@ -616,9 +649,9 @@
   })
 
   const formatSystemStats = computed(() => ({
-    totalStaked: `$${(Number(systemStats.value.totalStaked) / 1_000_000).toFixed(1)}M`,
+    totalStaked: `$${(systemStats.value.totalStaked / 1_000_000).toFixed(1)}M`,
     totalVotingPower: systemStats.value.totalVotingPower.toFixed(0),
-    totalFees: `$${(Number(systemStats.value.totalFees) / 1000).toFixed(1)}K`,
+    totalFees: `$${(systemStats.value.totalFees / 1000).toFixed(1)}K`,
   }))
 
   // Helper functions
@@ -647,18 +680,20 @@
   }
 
   const formatPoolStatus = (status: any) => {
-    if (status.Healthy) return 'Healthy'
-    if (status.NeedsRebalance) return 'Needs Rebalance'
-    if (status.Critical) return 'Critical'
-    if (status.Halted) return 'Halted'
+    if (!status) return 'Unknown'
+    if (status.Healthy !== undefined) return 'Healthy'
+    if (status.NeedsRebalance !== undefined) return 'Needs Rebalance'
+    if (status.Critical !== undefined) return 'Critical'
+    if (status.Halted !== undefined) return 'Halted'
     return 'Unknown'
   }
 
   const getPoolStatusClass = (status: any) => {
-    if (status.Healthy) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-    if (status.NeedsRebalance) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-    if (status.Critical) return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-    if (status.Halted) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+    if (!status) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+    if (status.Healthy !== undefined) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+    if (status.NeedsRebalance !== undefined) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+    if (status.Critical !== undefined) return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+    if (status.Halted !== undefined) return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
     return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
   }
 
@@ -721,6 +756,51 @@
     return '0.00'
   }
 
+  const formatThresholdStatus = (pool: any) => {
+    // Calculate threshold amounts based on current token price and configuration
+    // For display purposes, we'll show the current threshold level
+    const availableLiquidity = Number(pool.available_liquidity)
+    
+    // Default threshold values in USDT (these should match backend config)
+    const defaultThresholds = {
+      healthy: 10_000_000,    // $10M
+      rebalance: 7_000_000,   // $7M  
+      halt: 5_000_000         // $5M
+    }
+    
+    // Get approximate price for conversion (fallback prices)
+    const price = (() => {
+      switch (pool.token_symbol) {
+        case 'USDT': return 1.0
+        case 'BTC': return 45000.0
+        case 'ETH': return 3000.0
+        case 'SOL': return 100.0
+        case 'BNB': return 300.0
+        case 'XRP': return 0.6
+        case 'DOGE': return 0.08
+        case 'ADA': return 0.5
+        case 'TRX': return 0.1
+        case 'ICP': return 12.0
+        default: return 1.0
+      }
+    })()
+    
+    // Convert available liquidity to USDT value
+    const decimals = TokenService.getTokenDecimals(pool.token_symbol)
+    const liquidityUSDT = (availableLiquidity / Math.pow(10, decimals)) * price
+    
+    // Determine threshold status and format
+    if (liquidityUSDT >= defaultThresholds.healthy) {
+      return `$${(liquidityUSDT / 1_000_000).toFixed(1)}M`
+    } else if (liquidityUSDT >= defaultThresholds.rebalance) {
+      return `$${(liquidityUSDT / 1_000_000).toFixed(1)}M`
+    } else if (liquidityUSDT >= defaultThresholds.halt) {
+      return `$${(liquidityUSDT / 1_000_000).toFixed(1)}M`
+    } else {
+      return `$${(liquidityUSDT / 1_000).toFixed(0)}K`
+    }
+  }
+
   // Form helpers
   const parseFormattedNumber = (value: string): number => {
     const cleaned = value.replace(/,/g, '')
@@ -762,7 +842,6 @@
   }
 
   const refreshData = async () => {
-    console.log('🔄 Refreshing liquidity data...')
     loading.value = true
     try {
       await Promise.all([
@@ -770,9 +849,8 @@
         loadSystemStats(),
         loadUserPositions()
       ])
-      console.log('✅ Liquidity data refreshed successfully')
     } catch (error) {
-      console.error('❌ Error refreshing liquidity data:', error)
+      console.error('Error refreshing liquidity data:', error)
     } finally {
       loading.value = false
     }
@@ -782,31 +860,15 @@
     if (!canisterServiceReady.value) return
     
     try {
-      console.log('📊 Loading all liquidity pools...')
       const pools = await canisterService.getAllLiquidityPools()
-      console.log('📊 Loaded pools:', pools.length, pools)
-      
-      // Debug specific pool data
-      const adaPool = pools.find(p => p.token_symbol === 'ADA')
-      if (adaPool) {
-        console.log('🔍 ADA Pool Raw Data:', {
-          token_symbol: adaPool.token_symbol,
-          available_liquidity: adaPool.available_liquidity,
-          total_staked: adaPool.total_staked,
-          available_liquidity_type: typeof adaPool.available_liquidity,
-          total_staked_type: typeof adaPool.total_staked
-        })
-      }
-      
       allPools.value = pools
       
-      // Auto-select first pool if none selected
-      if (!selectedPool.value && pools.length > 0) {
+      // Auto-select first pool if none selected (URL watcher will handle URL-based selection)
+      if (!selectedPool.value && pools.length > 0 && !useRoute().query.token) {
         selectedPool.value = pools[0]
-        console.log('🎯 Auto-selected pool:', pools[0].token_symbol)
       }
     } catch (error) {
-      console.error('❌ Error loading pools:', error)
+      console.error('Error loading pools:', error)
     }
   }
 
@@ -816,10 +878,10 @@
     try {
       const stats = await canisterService.getLiquiditySystemStats()
       systemStats.value = {
-        totalStaked: Number(stats[0]),
-        totalVotingPower: Number(stats[2]),
-        totalFees: Number(stats[1]),
-        totalPools: Number(stats[3])
+        totalStaked: Number(stats[2]),      // total_staked_usdt (index 2)
+        totalVotingPower: Number(stats[0]), // total_positions (index 0) 
+        totalFees: Number(stats[3]),        // total_fees_usdt (index 3)
+        totalPools: Number(stats[1])        // total_pools (index 1)
       }
     } catch (error) {
       console.error('Error loading system stats:', error)
@@ -900,6 +962,34 @@
     }
   })
 
+  // Simple reactive computed to handle URL parameters when both conditions are met
+  const urlToken = computed(() => useRoute().query.token as string)
+  const urlAction = computed(() => useRoute().query.action as string)
+  
+  // Single watcher that handles URL parameters when pools are loaded
+  watch([urlToken, urlAction, allPools], async ([token, action, pools]) => {
+    if (token && pools.length > 0) {
+      console.log('🎯 Processing URL navigation:', { token, action })
+      
+      const targetPool = pools.find(pool => 
+        pool.token_symbol.toLowerCase() === token.toLowerCase()
+      )
+      
+      if (targetPool) {
+        selectedPool.value = targetPool
+        await loadUserPositions()
+        
+        if (action === 'stake') {
+          activeDetailTab.value = 'stake'
+        }
+        
+        console.log('✅ Successfully navigated to', targetPool.token_symbol, action ? `(${action} tab)` : '')
+      } else {
+        console.error('Token not found:', token, 'Available:', pools.map(p => p.token_symbol))
+      }
+    }
+  }, { immediate: true })
+
   // Lifecycle
   onMounted(async () => {
     // Check if CanisterService is already ready
@@ -918,7 +1008,7 @@
       setTimeout(() => {
         clearInterval(checkService)
         if (!canisterServiceReady.value) {
-          console.warn('CanisterService did not initialize within 10 seconds')
+          console.error('CanisterService did not initialize within 10 seconds')
           loading.value = false
         }
       }, 10000)
@@ -938,7 +1028,6 @@
   onMounted(() => {
     refreshInterval = setInterval(async () => {
       if (canisterServiceReady.value && !loading.value) {
-        console.log('🔄 Auto-refreshing liquidity data...')
         await refreshData()
       }
     }, 30000) // Refresh every 30 seconds

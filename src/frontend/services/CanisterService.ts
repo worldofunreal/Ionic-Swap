@@ -1148,8 +1148,8 @@ class CanisterService {
     }
   }
 
-  // Get liquidity system statistics
-  async getLiquiditySystemStats(): Promise<[bigint, bigint, number, bigint]> {
+  // Get liquidity system statistics with USDT conversion
+  async getLiquiditySystemStats(): Promise<[bigint, bigint, number, number]> {
     if (!this.backendActor) {
       throw new Error('CanisterService not initialized')
     }

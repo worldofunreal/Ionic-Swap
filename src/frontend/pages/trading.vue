@@ -63,7 +63,7 @@
     </div>
 
     <div class="flex h-full">
-      <!-- Left Column - Chart -->
+      <!-- Left Column - Chart and History -->
       <div class="flex-1 flex flex-col">
         <!-- Chart Controls -->
         <div
@@ -101,15 +101,26 @@
           </div>
         </div>
 
-        <!-- Chart Area -->
-        <div class="flex-1 bg-white dark:bg-neutral-900 p-4 overflow-hidden">
-          <LightweightPriceChart
-            :key="`trading-${selectedTokenSymbol}-${selectedPeriod}`"
-            :token-symbol="selectedTokenSymbol"
-            :default-chart-type="'candlesticks'"
-            :no-container="true"
-            class="h-full"
-          />
+        <!-- Chart and History Area -->
+        <div class="flex-1 bg-white dark:bg-neutral-900 flex overflow-hidden">
+          <!-- Chart Area -->
+          <div class="flex-1 p-4">
+            <LightweightPriceChart
+              :key="`trading-${selectedTokenSymbol}-${selectedPeriod}`"
+              :token-symbol="selectedTokenSymbol"
+              :default-chart-type="'candlesticks'"
+              :no-container="true"
+              class="h-full"
+            />
+          </div>
+          
+          <!-- Transaction History -->
+          <div class="w-80 border-l border-gray-200 dark:border-gray-800 p-3 overflow-hidden">
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Transaction History</h4>
+            <div class="h-full overflow-y-auto">
+              <TransactionHistory />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -117,36 +128,15 @@
       <div
         class="w-80 bg-white dark:bg-neutral-900 border-l border-gray-200 dark:border-gray-800 flex flex-col"
       >
-        <!-- Trading Tabs -->
-        <div class="flex border-b border-gray-200 dark:border-gray-800">
-          <button
-            v-for="tab in tradingTabs"
-            :key="tab.value"
-            :class="[
-              'flex-1 px-4 py-3 text-sm font-medium transition-colors',
-              activeTab === tab.value
-                ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300',
-            ]"
-            @click="activeTab = tab.value"
-          >
-            {{ tab.label }}
-          </button>
+        <!-- Trading Header -->
+        <div class="border-b border-gray-200 dark:border-gray-800 px-4 py-3">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Market Trading</h3>
         </div>
 
         <!-- Trading Form -->
         <div class="flex-1 p-4">
-          <!-- Debug Info -->
-          <div class="mb-4 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs">
-            <div>Tokens loaded: {{ internalTokens.length }}</div>
-            <div>Token options: {{ tokenOptions.length }}</div>
-            <div>USDT Balance: {{ usdtBalance }}</div>
-            <div>Selected: {{ selectedTokenSymbol }}</div>
-            <div>Auth user: {{ auth.userProfile?.id || 'Not logged in' }}</div>
-          </div>
-          
-          <!-- Market Tab -->
-          <div v-if="activeTab === 'market'" class="space-y-4">
+          <!-- Market Trading -->
+          <div class="space-y-4">
             <!-- Buy Section -->
             <div class="space-y-3">
               <div class="flex items-center justify-between">
@@ -191,7 +181,7 @@
               <button
                 @click="executeBuy"
                 :disabled="buyLoading || !buyAmount || parseFormattedNumber(buyAmount) <= 0"
-                class="w-full py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center"
+                class="w-full py-3 bg-green-500 hover:bg-green-600 disabled:bg-green-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center"
               >
                 <UIcon v-if="buyLoading" name="i-heroicons-arrow-path" class="w-4 h-4 mr-2 animate-spin" />
                 {{ buyLoading ? 'Buying...' : `Buy ${selectedTokenSymbol}` }}
@@ -244,7 +234,7 @@
               <button
                 @click="executeSell"
                 :disabled="sellLoading || !sellAmount || parseFormattedNumber(sellAmount) <= 0"
-                class="w-full py-3 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center"
+                class="w-full py-3 bg-red-500 hover:bg-red-600 disabled:bg-red-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center"
               >
                 <UIcon v-if="sellLoading" name="i-heroicons-arrow-path" class="w-4 h-4 mr-2 animate-spin" />
                 {{ sellLoading ? 'Selling...' : `Sell ${selectedTokenSymbol}` }}
@@ -252,8 +242,8 @@
             </div>
           </div>
 
-          <!-- Limit Tab -->
-          <div v-if="activeTab === 'limit'" class="space-y-4">
+          <!-- Limit Tab (Hidden for now) -->
+          <div v-if="false" class="space-y-4">
             <!-- Buy Section -->
             <div class="space-y-3">
               <div class="flex items-center justify-between">
@@ -372,11 +362,6 @@
               </button>
             </div>
           </div>
-
-          <!-- History Tab -->
-          <div v-if="activeTab === 'history'" class="space-y-4">
-            <TransactionHistory />
-          </div>
         </div>
       </div>
     </div>
@@ -399,7 +384,7 @@
   // Reactive data
   const selectedTokenSymbol = ref('BTC')
   const selectedPeriod = ref('1h')
-  const activeTab = ref('market')
+  // Removed activeTab as tabs are no longer needed
   const loading = ref(false)
   const buyLoading = ref(false)
   const sellLoading = ref(false)
@@ -427,11 +412,8 @@
     { label: '1d', value: '1d' },
   ]
 
-  // Trading tabs
-  const tradingTabs = [
-    { label: 'Market', value: 'market' },
-    { label: 'History', value: 'history' },
-  ]
+  // Trading tabs (simplified)
+  // Removed history tab as it's now below the chart
 
   // Token options - all internal tokens
   const tokenOptions = computed(() => {
@@ -605,11 +587,7 @@
           color: 'success',
         })
         
-        // Refresh transaction history if on history tab
-        if (activeTab.value === 'history') {
-          // Trigger refresh by emitting event to TransactionHistory component
-          // The component will automatically refresh when it detects the tab change
-        }
+        // Transaction history will automatically refresh as it's always visible
       } else {
         toast.add({
           title: 'Trade Failed',
@@ -674,11 +652,7 @@
           color: 'success',
         })
         
-        // Refresh transaction history if on history tab
-        if (activeTab.value === 'history') {
-          // Trigger refresh by emitting event to TransactionHistory component
-          // The component will automatically refresh when it detects the tab change
-        }
+        // Transaction history will automatically refresh as it's always visible
       } else {
         toast.add({
           title: 'Trade Failed',

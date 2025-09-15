@@ -282,8 +282,8 @@ service : (InitArg) -> {
   follow_user : (principal) -> (Result_3);
   // Get all internal tokens
   get_all_internal_tokens : () -> (vec InternalToken) query;
-  // Get all liquidity pools (testing function)
-  get_all_liquidity_pools : () -> (vec PoolInfo) query;
+  // Get all liquidity pools with threshold data (testing function)
+  get_all_liquidity_pools : () -> (vec PoolInfo);
   // Get all supported tokens with their chain deployments
   get_all_supported_tokens : () -> (Result) query;
   // Get all usernames for sitemap generation
@@ -315,8 +315,8 @@ service : (InitArg) -> {
   get_liquidity_pool_info : (text) -> (opt PoolInfo) query;
   // Get liquidity positions for a user (testing function)
   get_liquidity_positions : (principal) -> (vec LiquidityNeuron) query;
-  // Get system-wide liquidity statistics (testing function)
-  get_liquidity_system_stats : () -> (nat64, nat64, float64, nat64) query;
+  // Get system-wide liquidity statistics with USDT conversion (testing function)
+  get_liquidity_system_stats : () -> (nat64, nat64, float64, float64);
   // Get liquidity transactions for a user (testing function)
   get_liquidity_transactions : (principal) -> (vec LiquidityTransaction) query;
   // Get specific trading pair price

@@ -312,7 +312,7 @@ export interface _SERVICE {
   'get_liquidity_positions' : ActorMethod<[Principal], Array<LiquidityNeuron>>,
   'get_liquidity_system_stats' : ActorMethod<
     [],
-    [bigint, bigint, number, bigint]
+    [bigint, bigint, number, number]
   >,
   'get_liquidity_transactions' : ActorMethod<
     [Principal],

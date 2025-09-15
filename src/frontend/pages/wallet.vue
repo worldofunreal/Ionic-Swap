@@ -274,6 +274,12 @@
                             Trade
                           </button>
                           <button
+                            @click="stakeToken(token.symbol)"
+                            class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                          >
+                            Stake
+                          </button>
+                          <button
                             @click="openWithdrawModal(token.symbol)"
                             class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition-colors"
                           >
@@ -995,6 +1001,14 @@
       description: `Trading for ${symbol} will be available soon`,
       color: 'info',
     })
+  }
+
+  // Stake token function
+  const stakeToken = (symbol: string) => {
+    const url = `/liquidity?token=${symbol}&action=stake`
+    console.log('🚀 Navigating to:', url)
+    // Navigate to liquidity page with the token pre-selected for staking
+    navigateTo(url)
   }
 
   // Get token balance for withdrawal modal

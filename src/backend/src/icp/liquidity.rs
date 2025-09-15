@@ -419,7 +419,7 @@ impl Default for LiquidityConfig {
             volatility_window_seconds: 3600,        // 1 hour window
             k_depth: 0.5,                           // Depth multiplier
             oracle_failure_threshold: 3,            // 3 failures = halt
-            max_trade_amount_usdt: 50_000,          // $50k max trade
+            max_trade_amount_usdt: 2_000_000,       // $2M max trade
             max_hourly_volume_usdt: 500_000,        // $500k/hour limit
             min_dissolve_delay_seconds: 86_400,     // 1 day minimum
             max_dissolve_delay_seconds: 31_536_000, // 365 days maximum

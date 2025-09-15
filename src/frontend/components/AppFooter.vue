@@ -99,11 +99,6 @@
       </div>
       <!-- Right Side -->
       <div class="mr-12 flex items-center gap-3 flex-wrap">
-        <!-- ICP Price -->
-        <span class="flex items-center gap-1">
-          <UIcon name="token-branded:icp" class="text-base" /> $5.56
-        </span>
-        <span class="hidden md:inline">|</span>
         <!-- Support -->
         <NuxtLink
           to="/support"
