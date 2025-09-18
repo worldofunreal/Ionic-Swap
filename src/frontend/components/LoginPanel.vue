@@ -26,7 +26,27 @@
         <h2 class="text-2xl font-bold mb-6 text-center">
           Sign in to Ionic Swap
         </h2>
-        <div class="login-panel-buttons space-y-4">
+        
+        <!-- Primary Methods Section -->
+        <div class="space-y-4 mb-6">
+          <!-- Local Wallet -->
+          <UButton
+            id="local-btn"
+            block
+            size="xl"
+            color="primary"
+            variant="solid"
+            class="h-12 text-sm font-normal bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white justify-start"
+            :loading="loading && loginMethod === 'local'"
+            @click="login('local')"
+          >
+            <div class="flex items-center gap-3">
+              <img src="/wouid.svg" alt="Local Wallet" class="w-6 h-6" />
+              <span>Try Ionic Swap <span class="text-gray-400 text-xs">(Fastest)</span></span>
+            </div>
+          </UButton>
+
+          <!-- Internet Identity -->
           <UButton
             id="internet-identity-btn"
             block
@@ -38,92 +58,88 @@
             @click="login('internet-identity')"
           >
             <div class="flex items-center gap-3">
-              <UIcon name="token-branded:icp" class="text-2xl" />
+              <img src="/icp.svg" alt="Internet Identity" class="w-6 h-6" />
               <span
-                >Sign in with Internet Identity
+                >Continue with Internet Identity
                 <span class="text-gray-500 text-xs">(Recommended)</span></span
               >
             </div>
           </UButton>
-
-          <UButton
-            id="metamask-btn"
-            block
-            size="xl"
-            color="neutral"
-            variant="soft"
-            class="h-12 text-sm font-normal bg-gray-200 dark:bg-neutral-800 hover:bg-primary-400 dark:hover:bg-primary-600 text-gray-800 dark:text-gray-200 justify-start"
-            :loading="loading && loginMethod === 'metamask'"
-            @click="login('metamask')"
-          >
-            <div class="flex items-center gap-3">
-              <UIcon name="token-branded:metamask" class="text-2xl" />
-              <span>Sign in with MetaMask</span>
-            </div>
-          </UButton>
-
-          <UButton
-            id="rabby-btn"
-            block
-            size="xl"
-            color="neutral"
-            variant="soft"
-            class="h-12 text-sm font-normal bg-gray-200 dark:bg-neutral-800 hover:bg-primary-400 dark:hover:bg-primary-600 text-gray-800 dark:text-gray-200 justify-start"
-            :loading="loading && loginMethod === 'rabby'"
-            @click="login('rabby')"
-          >
-            <div class="flex items-center gap-3">
-              <img src="/rabby.svg" alt="Rabby" class="w-6 h-6" />
-              <span>Sign in with Rabby</span>
-            </div>
-          </UButton>
-
-          <UButton
-            id="magic-eden-btn"
-            block
-            size="xl"
-            color="neutral"
-            variant="soft"
-            class="h-12 text-sm font-normal bg-gray-200 dark:bg-neutral-800 hover:bg-primary-400 dark:hover:bg-primary-600 text-gray-800 dark:text-gray-200 justify-start"
-            :loading="loading && loginMethod === 'magic-eden'"
-            @click="login('magic-eden')"
-          >
-            <div class="flex items-center gap-3">
-              <img src="/magiceden.svg" alt="Magic Eden" class="w-6 h-6" />
-              <span>Sign in with Magic Eden</span>
-            </div>
-          </UButton>
-          <UButton
-            id="phantom-btn"
-            block
-            size="xl"
-            color="neutral"
-            variant="soft"
-            class="h-12 text-sm font-normal bg-gray-200 dark:bg-neutral-800 hover:bg-primary-400 dark:hover:bg-primary-600 text-gray-800 dark:text-gray-200 justify-start"
-            :loading="loading && loginMethod === 'phantom'"
-            @click="login('phantom')"
-          >
-            <div class="flex items-center gap-3">
-              <UIcon name="token-branded:phantom" class="text-2xl" />
-              <span>Sign in with Phantom</span>
-            </div>
-          </UButton>
-          <UButton
-            id="plug-btn"
-            block
-            size="xl"
-            color="neutral"
-            variant="soft"
-            class="h-12 text-sm font-normal bg-gray-200 dark:bg-neutral-800 hover:bg-primary-400 dark:hover:bg-primary-600 text-gray-800 dark:text-gray-200 justify-start"
-            :loading="loading && loginMethod === 'plug'"
-            @click="login('plug')"
-          >
-            <div class="flex items-center gap-3">
-              <img src="/plug.svg" alt="Plug" class="w-6 h-6" />
-              <span>Sign in with Plug</span>
-            </div>
-          </UButton>
         </div>
+
+        <!-- Divider -->
+        <div class="relative mb-6">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white dark:bg-neutral-900 text-gray-200">or connect with wallet</span>
+          </div>
+        </div>
+
+        <!-- Wallet Icons Grid -->
+        <div class="grid grid-cols-5 gap-2 mb-6">
+          <!-- MetaMask -->
+          <button
+            id="metamask-btn"
+            class="flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+            :class="{ 'opacity-50 pointer-events-none': loading && loginMethod === 'metamask' }"
+            @click="login('metamask')"
+            :disabled="loading && loginMethod === 'metamask'"
+          >
+            <img src="/metamask.svg" alt="MetaMask" class="w-6 h-6 mb-1" />
+            <span class="text-xs text-gray-600 dark:text-gray-400">MetaMask</span>
+          </button>
+
+          <!-- Phantom -->
+          <button
+            id="phantom-btn"
+            class="flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+            :class="{ 'opacity-50 pointer-events-none': loading && loginMethod === 'phantom' }"
+            @click="login('phantom')"
+            :disabled="loading && loginMethod === 'phantom'"
+          >
+            <img src="/phantom.svg" alt="Phantom" class="w-6 h-6 mb-1" />
+            <span class="text-xs text-gray-600 dark:text-gray-400">Phantom</span>
+          </button>
+
+          <!-- Rabby -->
+          <button
+            id="rabby-btn"
+            class="flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+            :class="{ 'opacity-50 pointer-events-none': loading && loginMethod === 'rabby' }"
+            @click="login('rabby')"
+            :disabled="loading && loginMethod === 'rabby'"
+          >
+            <img src="/rabby.svg" alt="Rabby" class="w-6 h-6 mb-1" />
+            <span class="text-xs text-gray-600 dark:text-gray-400">Rabby</span>
+          </button>
+
+          <!-- Magic Eden -->
+          <button
+            id="magic-eden-btn"
+            class="flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+            :class="{ 'opacity-50 pointer-events-none': loading && loginMethod === 'magic-eden' }"
+            @click="login('magic-eden')"
+            :disabled="loading && loginMethod === 'magic-eden'"
+          >
+            <img src="/magiceden.svg" alt="Magic Eden" class="w-6 h-6 mb-1" />
+            <span class="text-xs text-gray-600 dark:text-gray-400">Magic Eden</span>
+          </button>
+
+          <!-- Plug -->
+          <button
+            id="plug-btn"
+            class="flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+            :class="{ 'opacity-50 pointer-events-none': loading && loginMethod === 'plug' }"
+            @click="login('plug')"
+            :disabled="loading && loginMethod === 'plug'"
+          >
+            <img src="/plug.svg" alt="Plug" class="w-6 h-6 mb-1" />
+            <span class="text-xs text-gray-600 dark:text-gray-400">Plug</span>
+          </button>
+        </div>
+
         <hr class="my-6 border-gray-200 dark:border-gray-700" >
         <UButton
           block

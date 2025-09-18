@@ -515,21 +515,21 @@
     if (!walletType) return { type: 'UIcon', name: 'solar:wallet-bold' }
 
     switch (walletType.toLowerCase()) {
+      case 'local':
+        return { type: 'img', src: '/wouid.svg', alt: 'Local Wallet' }
       case 'metamask':
-        return { type: 'UIcon', name: 'token-branded:metamask' }
+        return { type: 'img', src: '/metamask.svg', alt: 'MetaMask' }
       case 'rabby':
         return { type: 'img', src: '/rabby.svg', alt: 'Rabby' }
       case 'magic-eden':
         return { type: 'img', src: '/magiceden.svg', alt: 'Magic Eden' }
       case 'phantom':
-        return { type: 'UIcon', name: 'token-branded:phantom' }
+        return { type: 'img', src: '/phantom.svg', alt: 'Phantom' }
       case 'plug':
         return { type: 'img', src: '/plug.svg', alt: 'Plug' }
-      case 'google':
-        return { type: 'UIcon', name: 'logos:google-icon' }
       case 'internetidentity':
       case 'icp':
-        return { type: 'UIcon', name: 'token-branded:icp' }
+        return { type: 'img', src: '/icp.svg', alt: 'Internet Identity' }
       default:
         return { type: 'UIcon', name: 'solar:wallet-bold' }
     }

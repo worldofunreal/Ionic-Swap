@@ -9,6 +9,7 @@ export type WalletType =
   | 'leather'
   | 'rabby'
   | 'magic-eden'
+  | 'local'
 
 export interface WalletCapabilities {
   icp: boolean

@@ -5,6 +5,7 @@ import { InternetIdentityAdapter } from './adapters/InternetIdentityAdapter'
 import { PlugAdapter } from './adapters/PlugAdapter'
 import { RabbyAdapter } from './adapters/RabbyAdapter'
 import { MagicEdenAdapter } from './adapters/MagicEdenAdapter'
+import { LocalWalletAdapter } from './adapters/LocalWalletAdapter'
 
 const adapters = new Map<WalletType, WalletAdapter>()
 
@@ -13,6 +14,7 @@ adapters.set('metamask', new MetaMaskAdapter())
 adapters.set('phantom', new PhantomAdapter())
 adapters.set('rabby', new RabbyAdapter())
 adapters.set('magic-eden', new MagicEdenAdapter())
+adapters.set('local', new LocalWalletAdapter())
 adapters.set('internet-identity', new InternetIdentityAdapter())
 adapters.set('plug', new PlugAdapter())
 
