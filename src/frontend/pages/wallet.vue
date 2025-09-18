@@ -8,60 +8,37 @@
     <!-- Wallet Portfolio Overview -->
     <div v-else>
         <!-- Top Header -->
-        <UCard class="border-b rounded-none">
+        <div class="bg-card border-b border-gray-200 dark:border-gray-800 px-6 py-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-              <h1 class="text-h1">Wallet</h1>
+              <h1 class="text-2xl font-bold text-foreground">Wallet</h1>
             </div>
             
             <div class="flex items-center gap-4">
-              <!-- Search Input -->
-              <UInput
-                placeholder="Search coins, tokens, or addresses..."
-                icon="i-heroicons-magnifying-glass-20-solid"
-                size="md"
-                class="w-80"
-              />
+              <div class="relative">
+                <UIcon name="i-heroicons-magnifying-glass-20-solid" class="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                <input 
+                  type="text" 
+                  placeholder="Search coins, tokens, or addresses..."
+                  class="pl-10 pr-4 py-2 w-80 bg-muted border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
               
-              <!-- Deposit Button -->
-              <UButton 
-                color="primary" 
-                size="lg" 
-                icon="i-heroicons-arrow-down-tray-20-solid"
-              >
+              <UButton color="primary" size="lg" class="text-base font-semibold px-6 py-3 text-white">
+                <UIcon name="i-heroicons-arrow-down-tray-20-solid" class="w-5 h-5 mr-2" />
                 Deposit
               </UButton>
               
-              <!-- Action Icons -->
-              <div class="flex items-center gap-1">
-                <UButton 
-                  color="neutral" 
-                  variant="ghost" 
-                  size="sm" 
-                  square
-                  icon="i-heroicons-bell-20-solid"
-                  aria-label="Notifications"
-                />
-                <UButton 
-                  color="neutral" 
-                  variant="ghost" 
-                  size="sm" 
-                  square
-                  icon="i-heroicons-chat-bubble-left-20-solid"
-                  aria-label="Messages"
-                />
-                <UButton 
-                  color="neutral" 
-                  variant="ghost" 
-                  size="sm" 
-                  square
-                  icon="i-heroicons-globe-alt-20-solid"
-                  aria-label="Network"
-                />
+              <div class="flex items-center gap-2">
+                <UIcon name="i-heroicons-bell-20-solid" class="w-5 h-5 text-muted-foreground cursor-pointer" />
+                <UIcon name="i-heroicons-chat-bubble-left-20-solid" class="w-5 h-5 text-muted-foreground cursor-pointer" />
+                <UIcon name="i-heroicons-arrow-down-tray-20-solid" class="w-5 h-5 text-muted-foreground cursor-pointer" />
+                <UIcon name="i-heroicons-globe-alt-20-solid" class="w-5 h-5 text-muted-foreground cursor-pointer" />
+                <UIcon name="i-heroicons-moon-20-solid" class="w-5 h-5 text-muted-foreground cursor-pointer" />
               </div>
             </div>
           </div>
-        </UCard>
+        </div>
 
         <!-- Main Dashboard Content -->
         <div class="p-6">
@@ -69,42 +46,34 @@
             <!-- Portfolio Overview & User Profile Section -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
               <!-- User Profile Card -->
-              <UCard>
-                <div class="flex items-center gap-4 mb-4">
-                  <UAvatar
-                    :alt="userProfile?.username || 'User'"
-                    size="lg"
-                    class="bg-gradient-to-br from-yellow-400 to-orange-500"
-                  >
-                    <span class="text-white font-bold">{{ userInitial }}</span>
-                  </UAvatar>
-                  <div class="flex-1">
-                    <h2 class="text-h4">
+              <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4">
+                <div class="flex items-center gap-3 mb-3">
+                  <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                    <span class="text-white font-bold text-sm">{{ userInitial }}</span>
+                  </div>
+                  <div>
+                    <h2 class="text-base font-semibold text-foreground">
                       {{ userProfile?.username || 'User' }}
                     </h2>
-                    <div class="flex items-center gap-3 mt-1">
-                      <UBadge size="xs" variant="soft">
-                        UID: {{ userProfile?.id?.toText().slice(-8) || 'N/A' }}
-                      </UBadge>
-                      <UBadge size="xs" color="primary">
-                        Regular User
-                      </UBadge>
+                    <div class="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span>UID: {{ userProfile?.id?.toText().slice(-8) || 'N/A' }}</span>
+                      <span>VIP Level: Regular User</span>
                     </div>
                   </div>
                 </div>
                 
                 <!-- Social Stats -->
-                <div class="flex items-center gap-6">
-                  <div class="text-center">
-                    <div class="text-h4">{{ userProfile?.following_count || 0 }}</div>
-                    <div class="text-caption">Following</div>
+                <div class="flex items-center gap-4 text-xs">
+                  <div class="flex items-center gap-1">
+                    <span class="font-semibold text-foreground">{{ userProfile?.following_count || 0 }}</span>
+                    <span class="text-muted-foreground">Following</span>
                   </div>
-                  <div class="text-center">
-                    <div class="text-h4">{{ userProfile?.followers_count || 0 }}</div>
-                    <div class="text-caption">Followers</div>
+                  <div class="flex items-center gap-1">
+                    <span class="font-semibold text-foreground">{{ userProfile?.followers_count || 0 }}</span>
+                    <span class="text-muted-foreground">Followers</span>
                   </div>
                 </div>
-              </UCard>
+              </div>
 
               <!-- Portfolio Overview Card -->
               <div class="lg:col-span-2">
@@ -121,34 +90,42 @@
 
 
             <!-- My Assets Section -->
-            <UCard class="mb-8">
-              <template #header>
+            <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 mb-8">
+              <div class="p-4 border-b border-gray-200 dark:border-gray-800">
                 <div class="flex items-center justify-between">
-                  <h3 class="text-h3">My Assets</h3>
-                  <div class="flex items-center gap-4">
+                  <h3 class="text-base font-semibold text-foreground">My Assets</h3>
+                  <div class="flex items-center gap-3">
                     <!-- Value Toggle -->
-                    <UButtonGroup size="xs">
-                      <UButton
-                        :color="valueDisplay === 'usd' ? 'primary' : 'neutral'"
-                        :variant="valueDisplay === 'usd' ? 'solid' : 'ghost'"
+                    <div class="flex bg-muted rounded-md p-1">
+                      <button
+                        :class="[
+                          'px-2 py-1 text-xs rounded-md transition-colors',
+                          valueDisplay === 'usd'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:bg-muted/80',
+                        ]"
                         @click="valueDisplay = 'usd'"
                       >
                         USD
-                      </UButton>
-                      <UButton
-                        :color="valueDisplay === 'btc' ? 'primary' : 'neutral'"
-                        :variant="valueDisplay === 'btc' ? 'solid' : 'ghost'"
+                      </button>
+                      <button
+                        :class="[
+                          'px-2 py-1 text-xs rounded-md transition-colors',
+                          valueDisplay === 'btc'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:bg-muted/80',
+                        ]"
                         @click="valueDisplay = 'btc'"
                       >
                         BTC
-                      </UButton>
-                    </UButtonGroup>
-                    <UBadge size="sm" variant="soft">
+                      </button>
+                    </div>
+                    <span class="text-xs text-muted-foreground">
                       {{ tokensWithBalances.length }} assets
-                    </UBadge>
+                    </span>
                   </div>
                 </div>
-              </template>
+              </div>
 
               <!-- Tokens Table -->
               <div class="overflow-x-auto">
@@ -237,128 +214,89 @@
                       <!-- Action Column -->
                       <td class="px-6 py-4 whitespace-nowrap text-right">
                         <div class="flex justify-end gap-2">
-                          <UButton
-                            color="primary"
-                            size="sm"
+                          <button
                             @click="tradeToken(token.symbol)"
+                            class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded-lg transition-colors"
                           >
                             Trade
-                          </UButton>
-                          <UButton
-                            color="neutral"
-                            size="sm"
+                          </button>
+                          <button
                             @click="stakeToken(token.symbol)"
+                            class="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold rounded-lg transition-colors"
                           >
                             Stake
-                          </UButton>
-                          <UButton
-                            color="neutral"
-                            size="sm"
+                          </button>
+                          <button
                             @click="openWithdrawModal(token.symbol)"
+                            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition-colors"
                           >
                             Withdraw
-                          </UButton>
+                          </button>
                         </div>
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-            </UCard>
+            </div>
 
             <!-- Bottom Section: Wallet Addresses & Portfolio Stats -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <!-- Wallet Addresses Card -->
-              <UCard>
-                <template #header>
-                  <h3 class="text-h3">Wallet Addresses</h3>
-                </template>
+              <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+                <h3 class="text-lg font-semibold text-foreground mb-4">
+                  Wallet Addresses
+                </h3>
                 
-                <div class="space-y-4">
+                <div class="space-y-3">
                   <!-- EVM Address -->
-                  <UCard v-if="userProfile?.evm_address?.[0]" class="bg-muted/50">
-                    <div class="flex items-center justify-between mb-2">
-                      <UBadge color="info" size="sm">EVM</UBadge>
-                      <UButton
-                        color="neutral"
-                        variant="ghost"
-                        size="xs"
-                        square
-                        icon="i-heroicons-document-duplicate-20-solid"
-                        @click="copyToClipboard(userProfile.evm_address[0], 'EVM')"
-                      />
+                  <div v-if="userProfile?.evm_address?.[0]" class="p-3 bg-muted rounded-lg">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded-full">EVM</span>
+                      <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-muted-foreground cursor-pointer" @click="copyToClipboard(userProfile.evm_address[0], 'EVM')" />
                     </div>
-                    <div class="text-mono">{{ formatAddress(userProfile.evm_address[0]) }}</div>
-                  </UCard>
+                    <div class="font-mono text-sm text-foreground">{{ formatAddress(userProfile.evm_address[0]) }}</div>
+                  </div>
 
                   <!-- Bitcoin Address -->
-                  <UCard v-if="userProfile?.bitcoin_address?.[0]" class="bg-muted/50">
-                    <div class="flex items-center justify-between mb-2">
-                      <UBadge color="warning" size="sm">BTC</UBadge>
-                      <UButton
-                        color="neutral"
-                        variant="ghost"
-                        size="xs"
-                        square
-                        icon="i-heroicons-document-duplicate-20-solid"
-                        @click="copyToClipboard(userProfile.bitcoin_address[0], 'Bitcoin')"
-                      />
+                  <div v-if="userProfile?.bitcoin_address?.[0]" class="p-3 bg-muted rounded-lg">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs font-semibold px-2 py-1 rounded-full">BTC</span>
+                      <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-muted-foreground cursor-pointer" @click="copyToClipboard(userProfile.bitcoin_address[0], 'Bitcoin')" />
                     </div>
-                    <div class="text-mono">{{ formatAddress(userProfile.bitcoin_address[0]) }}</div>
-                  </UCard>
+                    <div class="font-mono text-sm text-foreground">{{ formatAddress(userProfile.bitcoin_address[0]) }}</div>
+                  </div>
 
                   <!-- Solana Address -->
-                  <UCard v-if="userProfile?.solana_address?.[0]" class="bg-muted/50">
-                    <div class="flex items-center justify-between mb-2">
-                      <UBadge color="secondary" size="sm">SOL</UBadge>
-                      <UButton
-                        color="neutral"
-                        variant="ghost"
-                        size="xs"
-                        square
-                        icon="i-heroicons-document-duplicate-20-solid"
-                        @click="copyToClipboard(userProfile.solana_address[0], 'Solana')"
-                      />
+                  <div v-if="userProfile?.solana_address?.[0]" class="p-3 bg-muted rounded-lg">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs font-semibold px-2 py-1 rounded-full">SOL</span>
+                      <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-muted-foreground cursor-pointer" @click="copyToClipboard(userProfile.solana_address[0], 'Solana')" />
                     </div>
-                    <div class="text-mono">{{ formatAddress(userProfile.solana_address[0]) }}</div>
-                  </UCard>
+                    <div class="font-mono text-sm text-foreground">{{ formatAddress(userProfile.solana_address[0]) }}</div>
+                  </div>
 
                   <!-- ICP Principal -->
-                  <UCard v-if="userProfile?.id" class="bg-muted/50">
-                    <div class="flex items-center justify-between mb-2">
-                      <UBadge color="neutral" size="sm">ICP</UBadge>
-                      <UButton
-                        color="neutral"
-                        variant="ghost"
-                        size="xs"
-                        square
-                        icon="i-heroicons-document-duplicate-20-solid"
-                        @click="copyToClipboard(userProfile.id.toText(), 'ICP')"
-                      />
+                  <div v-if="userProfile?.id" class="p-3 bg-muted rounded-lg">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="bg-muted text-muted-foreground text-xs font-semibold px-2 py-1 rounded-full">ICP</span>
+                      <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-muted-foreground cursor-pointer" @click="copyToClipboard(userProfile.id.toText(), 'ICP')" />
                     </div>
-                    <div class="text-mono">{{ formatAddress(userProfile.id.toText()) }}</div>
-                  </UCard>
+                    <div class="font-mono text-sm text-foreground">{{ formatAddress(userProfile.id.toText()) }}</div>
+                  </div>
                 </div>
 
-                <template #footer>
-                  <UButton 
-                    color="primary" 
-                    variant="soft" 
-                    size="lg" 
-                    class="w-full" 
-                    icon="i-heroicons-plus-20-solid"
-                    @click="editAddresses"
-                  >
-                    Add/Edit Addresses
-                  </UButton>
-                </template>
-              </UCard>
+                <UButton color="primary" variant="soft" size="lg" class="w-full mt-4 text-base font-semibold py-3 text-white" @click="editAddresses">
+                  <UIcon name="i-heroicons-plus-20-solid" class="w-5 h-5 mr-2" />
+                  Add/Edit Addresses
+                </UButton>
+              </div>
 
               <!-- Portfolio Stats Card -->
-              <UCard>
-                <template #header>
-                  <h3 class="text-h3">Portfolio Stats</h3>
-                </template>
+              <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+                <h3 class="text-lg font-semibold text-foreground mb-4">
+                  Portfolio Stats
+                </h3>
                 
                 <div class="space-y-4">
                   <div class="flex justify-between items-center">
@@ -394,51 +332,52 @@
 
                 <!-- Portfolio Allocation Chart -->
                 <div class="mt-6">
-                  <h4 class="text-h4 mb-4">Token Holdings</h4>
-                  <div class="space-y-3">
+                  <h4 class="text-sm font-medium text-foreground mb-3">Token Holdings</h4>
+                  <div class="space-y-2">
                     <div v-for="(balance, symbol) in userBalances" :key="symbol" class="flex items-center justify-between">
-                      <div class="flex items-center gap-3">
-                        <UAvatar size="xs" :alt="symbol">
+                      <div class="flex items-center gap-2">
+                        <div class="w-4 h-4 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
                           <UIcon :name="getTokenIcon(symbol)" class="w-3 h-3" />
-                        </UAvatar>
-                        <span class="text-body text-muted-foreground">{{ symbol }}</span>
+                        </div>
+                        <span class="text-sm text-muted-foreground">{{ symbol }}</span>
                       </div>
-                      <span class="text-body font-medium">
+                      <span class="text-sm font-medium text-foreground">
                         <span v-if="balancesVisible">{{ formatTokenBalance(symbol) }}</span>
                         <span v-else>••••••</span>
                       </span>
                     </div>
-                    <div v-if="Object.keys(userBalances).length === 0" class="text-center py-8">
-                      <p class="text-body text-muted-foreground">No tokens yet</p>
-                      <p class="text-caption">Complete signup to receive your welcome bonus!</p>
+                    <div v-if="Object.keys(userBalances).length === 0" class="text-center py-4 text-muted-foreground">
+                      <p class="text-sm">No tokens yet</p>
+                      <p class="text-xs">Complete signup to receive your welcome bonus!</p>
                     </div>
                   </div>
                 </div>
-              </UCard>
+              </div>
             </div>
 
             <!-- Transaction History Section -->
-            <UCard class="mb-8">
-              <template #header>
+            <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 mb-8">
+              <div class="p-4 border-b border-gray-200 dark:border-gray-800">
                 <div class="flex items-center justify-between">
-                  <h3 class="text-h3">Recent Transactions</h3>
-                  <div class="flex items-center gap-3">
-                    <UButton
-                      color="neutral"
-                      variant="ghost"
-                      size="sm"
-                      square
-                      icon="i-heroicons-arrow-path"
-                      :class="{ 'animate-spin': transactionHistoryLoading }"
-                      :disabled="transactionHistoryLoading"
+                  <h3 class="text-lg font-semibold text-foreground">Recent Transactions</h3>
+                  <div class="flex items-center gap-2">
+                    <button
                       @click="refreshTransactionHistory"
-                    />
-                    <UBadge size="sm" variant="soft">
+                      :disabled="transactionHistoryLoading"
+                      class="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-50"
+                    >
+                      <UIcon 
+                        :name="transactionHistoryLoading ? 'i-heroicons-arrow-path' : 'i-heroicons-arrow-path'" 
+                        :class="transactionHistoryLoading ? 'animate-spin' : ''"
+                        class="w-4 h-4"
+                      />
+                    </button>
+                    <span class="text-xs text-muted-foreground">
                       {{ transactionHistory.length }} transactions
-                    </UBadge>
+                    </span>
                   </div>
                 </div>
-              </template>
+              </div>
 
               <!-- Transaction History Content -->
               <div class="p-4">
@@ -533,19 +472,19 @@
                   </UButton>
                 </div>
               </div>
-            </UCard>
+            </div>
           </div>
         </div>
     </div>
 
     <!-- Withdrawal Modal -->
     <UModal v-model="withdrawModalOpen">
-      <UCard :ui="{ divide: 'divide-y divide-gray-100 dark:divide-gray-800' }">
+      <UCard :ui="{ ring: '', divide: 'divide-y divide-gray-100 dark:divide-gray-800' }">
         <template #header>
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-foreground">Withdraw {{ selectedToken }}</h3>
             <UButton
-              color="neutral"
+              color="gray"
               variant="ghost"
               icon="i-heroicons-x-mark-20-solid"
               class="-my-1"
@@ -688,7 +627,7 @@
         <template #footer>
           <div class="flex justify-end gap-3">
             <UButton
-              color="neutral"
+              color="gray"
               variant="soft"
               @click="withdrawModalOpen = false"
             >

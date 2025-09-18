@@ -73,8 +73,24 @@
             @click="login('rabby')"
           >
             <div class="flex items-center gap-3">
-              <UIcon name="solar:wallet-bold" class="text-2xl" />
+              <img src="/rabby.svg" alt="Rabby" class="w-6 h-6" />
               <span>Sign in with Rabby</span>
+            </div>
+          </UButton>
+
+          <UButton
+            id="magic-eden-btn"
+            block
+            size="xl"
+            color="neutral"
+            variant="soft"
+            class="h-12 text-sm font-normal bg-gray-200 dark:bg-neutral-800 hover:bg-primary-400 dark:hover:bg-primary-600 text-gray-800 dark:text-gray-200 justify-start"
+            :loading="loading && loginMethod === 'magic-eden'"
+            @click="login('magic-eden')"
+          >
+            <div class="flex items-center gap-3">
+              <img src="/magiceden.svg" alt="Magic Eden" class="w-6 h-6" />
+              <span>Sign in with Magic Eden</span>
             </div>
           </UButton>
           <UButton
@@ -103,7 +119,7 @@
             @click="login('plug')"
           >
             <div class="flex items-center gap-3">
-              <UIcon name="fa6-solid:plug" class="text-2xl" />
+              <img src="/plug.svg" alt="Plug" class="w-6 h-6" />
               <span>Sign in with Plug</span>
             </div>
           </UButton>
@@ -148,22 +164,7 @@
   import { generateRandomUsername } from '@/utils/usernameGenerator'
   import type { WalletType } from '@/services/wallets/types'
 
-  // TypeScript declarations for wallet extensions
-  declare global {
-    interface Window {
-      ic?: {
-        plug?: {
-          isConnected(): Promise<boolean>
-          requestConnect(
-            options?: Record<string, unknown>
-          ): Promise<{ principal: string }>
-          agent: {
-            getPrincipal(): Promise<{ toText(): string }>
-          }
-        }
-      }
-    }
-  }
+  // TypeScript declarations are handled by global types
 
   const show = ref(false)
   const loading = ref(false)
@@ -283,12 +284,13 @@
       }
     } catch (err: unknown) {
       console.error(`${walletType} login error:`, err)
-      error.value = err?.message || `${walletType} login failed.`
+      const errorMessage = err instanceof Error ? err.message : `${walletType} login failed.`
+      error.value = errorMessage
 
       // Show error toast
       toast.add({
         title: 'Login Failed',
-        description: err?.message || `${walletType} login failed`,
+        description: errorMessage,
         color: 'error',
       })
     } finally {

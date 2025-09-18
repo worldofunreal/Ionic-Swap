@@ -23,8 +23,11 @@
         <div
           class="absolute -bottom-1 -right-1 w-5 h-5 bg-white dark:bg-neutral-800 rounded-full border-2 border-white dark:border-neutral-800 flex items-center justify-center"
         >
-          <UIcon
-            :name="getWalletIcon(authStore.nativeWallet)"
+          <component
+            :is="getWalletIcon(authStore.nativeWallet).type"
+            :src="getWalletIcon(authStore.nativeWallet).src"
+            :name="getWalletIcon(authStore.nativeWallet).name"
+            :alt="getWalletIcon(authStore.nativeWallet).alt"
             class="w-3 h-3 text-gray-700 dark:text-gray-300"
           />
         </div>
@@ -509,24 +512,26 @@
   }
 
   function getWalletIcon(walletType?: string) {
-    if (!walletType) return 'solar:wallet-bold'
+    if (!walletType) return { type: 'UIcon', name: 'solar:wallet-bold' }
 
     switch (walletType.toLowerCase()) {
       case 'metamask':
-        return 'token-branded:metamask'
+        return { type: 'UIcon', name: 'token-branded:metamask' }
       case 'rabby':
-        return 'solar:wallet-bold'
+        return { type: 'img', src: '/rabby.svg', alt: 'Rabby' }
+      case 'magic-eden':
+        return { type: 'img', src: '/magiceden.svg', alt: 'Magic Eden' }
       case 'phantom':
-        return 'token-branded:phantom'
+        return { type: 'UIcon', name: 'token-branded:phantom' }
       case 'plug':
-        return 'fa6-solid:plug'
+        return { type: 'img', src: '/plug.svg', alt: 'Plug' }
       case 'google':
-        return 'logos:google-icon'
+        return { type: 'UIcon', name: 'logos:google-icon' }
       case 'internetidentity':
       case 'icp':
-        return 'token-branded:icp'
+        return { type: 'UIcon', name: 'token-branded:icp' }
       default:
-        return 'solar:wallet-bold'
+        return { type: 'UIcon', name: 'solar:wallet-bold' }
     }
   }
 </script>
