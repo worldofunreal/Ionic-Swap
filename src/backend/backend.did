@@ -302,6 +302,8 @@ service : (InitArg) -> {
   get_all_supported_tokens : () -> (Result) query;
   // Get all usernames for sitemap generation
   get_all_usernames : () -> (vec text) query;
+  // Get API call statistics for CoinGecko
+  get_api_statistics : () -> (text) query;
   // Get the canister's own Ethereum address (always returns canister's wallet)
   get_canister_ethereum_address : () -> (text) query;
   // Get the canister's own public key (always returns canister's wallet)

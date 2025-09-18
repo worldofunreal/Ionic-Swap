@@ -5,7 +5,7 @@ use std::sync::{Mutex, OnceLock};
 // Store the timer ID so we can clear it later
 static TIMER_ID: OnceLock<Mutex<Option<ic_cdk_timers::TimerId>>> = OnceLock::new();
 
-/// Start the price update scheduler (runs every 2 seconds - Binance only)
+/// Start the price update scheduler (runs every 5 seconds - CoinGecko only)
 pub async fn start_price_scheduler() -> Result<String, String> {
     TIMER_ID.get_or_init(|| Mutex::new(None));
     
@@ -18,11 +18,11 @@ pub async fn start_price_scheduler() -> Result<String, String> {
         }
     }
     
-    ic_cdk::println!("🚀 Starting price update scheduler (2 second intervals - Binance only)...");
+    ic_cdk::println!("🚀 Starting price update scheduler (5 second intervals - CoinGecko only)...");
     
     // Use IC's built-in timer system
     let timer_id = ic_cdk_timers::set_timer_interval(
-        Duration::from_secs(2), // Every 2 seconds
+        Duration::from_secs(5), // Every 5 seconds
         || {
             ic_cdk::futures::spawn_017_compat(async {
                 match update_all_prices().await {
@@ -44,7 +44,7 @@ pub async fn start_price_scheduler() -> Result<String, String> {
         *stored_id = Some(timer_id);
     }
     
-    Ok("Price scheduler started successfully - updates every 2 seconds (Binance only)".to_string())
+    Ok("Price scheduler started successfully - updates every 5 seconds (CoinGecko only)".to_string())
 }
 
 /// Stop the price update scheduler

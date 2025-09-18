@@ -1215,5 +1215,11 @@ pub fn debug_get_all_positions() -> Vec<icp::liquidity::LiquidityNeuron> {
     all_positions
 }
 
+/// Get API call statistics for CoinGecko
+#[query]
+pub fn get_api_statistics() -> String {
+    oracle::aggregator::get_api_stats()
+}
+
 // Enable Candid export
 ic_cdk::export_candid!();

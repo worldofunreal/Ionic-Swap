@@ -7,7 +7,6 @@ pub async fn get_coingecko_prices() -> Result<Vec<PriceData>, String> {
     let request = ic_http_certification::HttpRequest::get(url)
         .with_headers(vec![
             ("User-Agent".to_string(), "ionic-swap-oracle".to_string()),
-            ("x-cg-demo-api-key".to_string(), "CG-PX6UAudGfavT5WuYtopQg7fc".to_string()),
         ])
         .build();
     

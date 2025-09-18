@@ -319,6 +319,7 @@ export const idlFactory = ({ IDL }) => {
     'get_all_liquidity_pools' : IDL.Func([], [IDL.Vec(PoolInfo)], []),
     'get_all_supported_tokens' : IDL.Func([], [Result], ['query']),
     'get_all_usernames' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
+    'get_api_statistics' : IDL.Func([], [IDL.Text], ['query']),
     'get_canister_ethereum_address' : IDL.Func([], [IDL.Text], ['query']),
     'get_canister_public_key' : IDL.Func([], [IDL.Text], []),
     'get_current_prices' : IDL.Func([], [Result], ['query']),

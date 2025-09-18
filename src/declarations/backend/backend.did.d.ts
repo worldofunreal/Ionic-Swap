@@ -307,6 +307,7 @@ export interface _SERVICE {
   'get_all_liquidity_pools' : ActorMethod<[], Array<PoolInfo>>,
   'get_all_supported_tokens' : ActorMethod<[], Result>,
   'get_all_usernames' : ActorMethod<[], Array<string>>,
+  'get_api_statistics' : ActorMethod<[], string>,
   'get_canister_ethereum_address' : ActorMethod<[], string>,
   'get_canister_public_key' : ActorMethod<[], string>,
   'get_current_prices' : ActorMethod<[], Result>,

@@ -3,3 +3,14 @@ members = [
     "src/backend"
 ]
 resolver = "2"
+
+[profile.release]
+# Optimize for size
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.release.package."*"]
+opt-level = "z"
