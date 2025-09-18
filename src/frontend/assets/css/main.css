@@ -6,77 +6,96 @@
   font-family: 'IBM Plex Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+/* Typography System */
+.text-h1 { @apply text-2xl font-bold tracking-tight text-gray-900 dark:text-white; }
+.text-h2 { @apply text-xl font-semibold tracking-tight text-gray-900 dark:text-white; }
+.text-h3 { @apply text-lg font-semibold text-gray-900 dark:text-white; }
+.text-h4 { @apply text-base font-semibold text-gray-900 dark:text-white; }
+.text-body { @apply text-sm text-gray-700 dark:text-gray-300; }
+.text-caption { @apply text-xs text-gray-500 dark:text-gray-400; }
+.text-mono { @apply font-mono text-sm text-gray-700 dark:text-gray-300; }
+
+/* Semantic color classes for consistency */
+.text-muted-foreground { @apply text-gray-500 dark:text-gray-400; }
+.text-foreground { @apply text-gray-900 dark:text-white; }
+.bg-card { @apply bg-white dark:bg-gray-900; }
+.bg-muted { @apply bg-gray-100 dark:bg-gray-800; }
+.text-primary { @apply text-primary-500; }
+.text-error { @apply text-red-500; }
+.text-success { @apply text-green-500; }
+
+/* Design system tokens - let Nuxt UI handle primary colors */
 :root {
-  --ui-primary: var(--ui-color-primary-500);
-  --color-primary: var(--emerald-500);
-  --color-primary-hover: var(--emerald-600);
-  --color-primary-light: var(--emerald-50);
-  --color-primary-dark: var(--emerald-900);
+  /* Custom radius scale */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 }
 
-.dark {
-  --ui-primary: var(--ui-color-primary-500);
-  --color-primary: var(--emerald-500);
-  --color-primary-hover: var(--emerald-600);
-  --color-primary-light: var(--emerald-50);
-  --color-primary-dark: var(--emerald-900);
-}
-
-/* Color theme classes */
+/* Color theme classes - integrated with Nuxt UI tokens */
 .theme-emerald {
-  --color-primary: var(--emerald-500);
-  --color-primary-hover: var(--emerald-600);
-  --color-primary-light: var(--emerald-50);
-  --color-primary-dark: var(--emerald-900);
+  --ui-color-primary-50: theme('colors.emerald.50');
+  --ui-color-primary-100: theme('colors.emerald.100');
+  --ui-color-primary-500: theme('colors.emerald.500');
+  --ui-color-primary-600: theme('colors.emerald.600');
+  --ui-color-primary-900: theme('colors.emerald.900');
 }
 
 .theme-pink {
-  --color-primary: var(--pink-500);
-  --color-primary-hover: var(--pink-600);
-  --color-primary-light: var(--pink-50);
-  --color-primary-dark: var(--pink-900);
+  --ui-color-primary-50: theme('colors.pink.50');
+  --ui-color-primary-100: theme('colors.pink.100');
+  --ui-color-primary-500: theme('colors.pink.500');
+  --ui-color-primary-600: theme('colors.pink.600');
+  --ui-color-primary-900: theme('colors.pink.900');
 }
 
 .theme-red {
-  --color-primary: var(--red-500);
-  --color-primary-hover: var(--red-600);
-  --color-primary-light: var(--red-50);
-  --color-primary-dark: var(--red-900);
+  --ui-color-primary-50: theme('colors.red.50');
+  --ui-color-primary-100: theme('colors.red.100');
+  --ui-color-primary-500: theme('colors.red.500');
+  --ui-color-primary-600: theme('colors.red.600');
+  --ui-color-primary-900: theme('colors.red.900');
 }
 
 .theme-orange {
-  --color-primary: var(--orange-500);
-  --color-primary-hover: var(--orange-600);
-  --color-primary-light: var(--orange-50);
-  --color-primary-dark: var(--orange-900);
+  --ui-color-primary-50: theme('colors.orange.50');
+  --ui-color-primary-100: theme('colors.orange.100');
+  --ui-color-primary-500: theme('colors.orange.500');
+  --ui-color-primary-600: theme('colors.orange.600');
+  --ui-color-primary-900: theme('colors.orange.900');
 }
 
 .theme-sky {
-  --color-primary: var(--sky-500);
-  --color-primary-hover: var(--sky-600);
-  --color-primary-light: var(--sky-50);
-  --color-primary-dark: var(--sky-900);
+  --ui-color-primary-50: theme('colors.sky.50');
+  --ui-color-primary-100: theme('colors.sky.100');
+  --ui-color-primary-500: theme('colors.sky.500');
+  --ui-color-primary-600: theme('colors.sky.600');
+  --ui-color-primary-900: theme('colors.sky.900');
 }
 
 .theme-fuchsia {
-  --color-primary: var(--fuchsia-500);
-  --color-primary-hover: var(--fuchsia-600);
-  --color-primary-light: var(--fuchsia-50);
-  --color-primary-dark: var(--fuchsia-900);
+  --ui-color-primary-50: theme('colors.fuchsia.50');
+  --ui-color-primary-100: theme('colors.fuchsia.100');
+  --ui-color-primary-500: theme('colors.fuchsia.500');
+  --ui-color-primary-600: theme('colors.fuchsia.600');
+  --ui-color-primary-900: theme('colors.fuchsia.900');
 }
 
 .theme-purple {
-  --color-primary: var(--purple-500);
-  --color-primary-hover: var(--purple-600);
-  --color-primary-light: var(--purple-50);
-  --color-primary-dark: var(--purple-900);
+  --ui-color-primary-50: theme('colors.purple.50');
+  --ui-color-primary-100: theme('colors.purple.100');
+  --ui-color-primary-500: theme('colors.purple.500');
+  --ui-color-primary-600: theme('colors.purple.600');
+  --ui-color-primary-900: theme('colors.purple.900');
 }
 
 .theme-teal {
-  --color-primary: var(--teal-500);
-  --color-primary-hover: var(--teal-600);
-  --color-primary-light: var(--teal-50);
-  --color-primary-dark: var(--teal-900);
+  --ui-color-primary-50: theme('colors.teal.50');
+  --ui-color-primary-100: theme('colors.teal.100');
+  --ui-color-primary-500: theme('colors.teal.500');
+  --ui-color-primary-600: theme('colors.teal.600');
+  --ui-color-primary-900: theme('colors.teal.900');
 }
 
 /* Color circle classes for the theme switcher */

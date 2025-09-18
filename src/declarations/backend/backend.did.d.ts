@@ -292,105 +292,316 @@ export interface UserUpdate {
   'location' : [] | [string],
 }
 export interface _SERVICE {
+  /**
+   * Bootstrap canister as initial liquidity provider (admin function)
+   * Stakes ~$20M worth of each token to provide initial liquidity
+   */
   'bootstrap_canister_liquidity' : ActorMethod<[], Result>,
+  /**
+   * Claim 2M USDT from faucet (one-time only per principal)
+   */
   'claim_faucet' : ActorMethod<[], Result>,
+  /**
+   * Claim accumulated fees from a liquidity position
+   */
   'claim_fees' : ActorMethod<[string], Result>,
+  /**
+   * Debug function to check all positions in the system (testing function)
+   */
   'debug_get_all_positions' : ActorMethod<[], Array<LiquidityNeuron>>,
+  /**
+   * Debug function to check all positions for a token (testing function)
+   */
   'debug_get_token_positions' : ActorMethod<[string], Array<LiquidityNeuron>>,
+  /**
+   * Debug function to test external API calls (for testing only)
+   */
   'debug_test_external_apis' : ActorMethod<[], Result>,
+  /**
+   * Debug function to verify wallet address matches signer
+   */
   'debug_wallet_verification' : ActorMethod<[], Result>,
+  /**
+   * Delete account (requires signed call, owner only)
+   */
   'delete_account' : ActorMethod<[], Result_1>,
+  /**
+   * Export complete token registry (admin function)
+   */
   'export_token_registry' : ActorMethod<[], Result>,
   'finalize_upload' : ActorMethod<[string], Result_2>,
+  /**
+   * Follow/Unfollow functionality
+   */
   'follow_user' : ActorMethod<[Principal], Result_3>,
+  /**
+   * Get all internal tokens
+   */
   'get_all_internal_tokens' : ActorMethod<[], Array<InternalToken>>,
+  /**
+   * Get all liquidity pools with threshold data (testing function)
+   */
   'get_all_liquidity_pools' : ActorMethod<[], Array<PoolInfo>>,
+  /**
+   * Get all supported tokens with their chain deployments
+   */
   'get_all_supported_tokens' : ActorMethod<[], Result>,
+  /**
+   * Get all usernames for sitemap generation
+   */
   'get_all_usernames' : ActorMethod<[], Array<string>>,
+  /**
+   * Get API call statistics for CoinGecko
+   */
   'get_api_statistics' : ActorMethod<[], string>,
+  /**
+   * Get the canister's own Ethereum address (always returns canister's wallet)
+   */
   'get_canister_ethereum_address' : ActorMethod<[], string>,
+  /**
+   * Get the canister's own public key (always returns canister's wallet)
+   */
   'get_canister_public_key' : ActorMethod<[], string>,
+  /**
+   * Get current prices from cache
+   */
   'get_current_prices' : ActorMethod<[], Result>,
+  /**
+   * Get faucet claim info for a principal
+   */
   'get_faucet_claim' : ActorMethod<[Principal], [] | [FaucetClaim]>,
+  /**
+   * Get faucet statistics
+   */
   'get_faucet_stats' : ActorMethod<[], [bigint, bigint]>,
+  /**
+   * Get fee analytics for a time period (testing function)
+   */
   'get_fee_analytics' : ActorMethod<
     [[] | [string], bigint, bigint],
     [bigint, bigint, bigint, bigint, bigint]
   >,
   'get_followers' : ActorMethod<[Principal], Array<CompactProfile>>,
+  /**
+   * Get following and followers lists
+   */
   'get_following' : ActorMethod<[Principal], Array<CompactProfile>>,
+  /**
+   * Get liquidity configuration (testing function)
+   */
   'get_liquidity_config' : ActorMethod<[], LiquidityConfig>,
+  /**
+   * Get pool information for a token (testing function)
+   */
   'get_liquidity_pool_info' : ActorMethod<[string], [] | [PoolInfo]>,
+  /**
+   * Get liquidity positions for a user (testing function)
+   */
   'get_liquidity_positions' : ActorMethod<[Principal], Array<LiquidityNeuron>>,
+  /**
+   * Get system-wide liquidity statistics with USDT conversion (testing function)
+   */
   'get_liquidity_system_stats' : ActorMethod<
     [],
     [bigint, bigint, number, number]
   >,
+  /**
+   * Get liquidity transactions for a user (testing function)
+   */
   'get_liquidity_transactions' : ActorMethod<
     [Principal],
     Array<LiquidityTransaction>
   >,
+  /**
+   * Get specific trading pair price
+   */
   'get_pair_price' : ActorMethod<[string], Result_4>,
+  /**
+   * Get complete portfolio data for a user
+   */
   'get_portfolio_data' : ActorMethod<[Principal], PortfolioData>,
+  /**
+   * Get comprehensive Solana token balances for all known tokens
+   */
   'get_solana_token_balances' : ActorMethod<[], Result>,
+  /**
+   * Get token address on specific chain
+   */
   'get_token_address' : ActorMethod<[string, string], Result>,
+  /**
+   * Get balance of a token for a user
+   */
   'get_token_balance' : ActorMethod<[Principal, string], bigint>,
+  /**
+   * Get token information by symbol
+   */
   'get_token_info' : ActorMethod<[string], Result>,
+  /**
+   * Get token registry statistics
+   */
   'get_token_registry_stats' : ActorMethod<[], Result>,
+  /**
+   * Get current volatility for a token (testing function)
+   */
   'get_token_volatility' : ActorMethod<[string], number>,
+  /**
+   * Get tokens deployed on specific chain
+   */
   'get_tokens_by_chain' : ActorMethod<[string], Result>,
+  /**
+   * Get user by principal
+   */
   'get_user' : ActorMethod<[Principal], Result_3>,
+  /**
+   * Get all token balances for a user
+   */
   'get_user_balances' : ActorMethod<[Principal], Array<[string, bigint]>>,
+  /**
+   * Get user by username
+   */
   'get_user_by_username' : ActorMethod<[string], Result_3>,
+  /**
+   * Get total user count
+   */
   'get_user_count' : ActorMethod<[], bigint>,
+  /**
+   * Personal user lookup with follow state
+   */
   'get_user_personal' : ActorMethod<[Principal, Principal], Result_5>,
+  /**
+   * Get swap transaction history for a user
+   */
   'get_user_swap_history' : ActorMethod<[Principal], Array<SwapTransaction>>,
+  /**
+   * Get swap transaction history for a user with pagination
+   */
   'get_user_swap_history_paginated' : ActorMethod<
     [Principal, number, number],
     Array<SwapTransaction>
   >,
+  /**
+   * Get transaction count for a user
+   */
   'get_user_transaction_count' : ActorMethod<[Principal], number>,
+  /**
+   * HTTP request handler for serving assets
+   */
   'http_request' : ActorMethod<[HttpRequest], HttpResponse>,
+  /**
+   * Initialize liquidity pools for all supported tokens
+   */
   'init_all_liquidity_pools' : ActorMethod<[], string>,
+  /**
+   * Initialize all missing tokens (admin function)
+   */
   'init_all_tokens' : ActorMethod<[], Result>,
+  /**
+   * Initialize canister token balances (admin function)
+   */
   'init_canister_balances' : ActorMethod<[], Result>,
+  /**
+   * Initialize a liquidity pool for a token (testing function)
+   */
   'init_liquidity_pool' : ActorMethod<[string], string>,
+  /**
+   * Asset upload functions (requires signed call, registered users only)
+   */
   'init_upload' : ActorMethod<
     [string, bigint, [] | [bigint], string],
     Result_1
   >,
+  /**
+   * Check if user is following another user
+   */
   'is_following' : ActorMethod<[Principal, Principal], boolean>,
+  /**
+   * Check if token is deployed on chain
+   */
   'is_token_deployed' : ActorMethod<[string, string], Result_6>,
+  /**
+   * Check if username is available
+   */
   'is_username_available' : ActorMethod<[string], boolean>,
+  /**
+   * Execute a market swap between internal tokens
+   */
   'market_swap' : ActorMethod<[SwapRequest], Result_7>,
+  /**
+   * Reload token registry from chain definitions (admin function)
+   */
   'reload_token_registry' : ActorMethod<[], Result>,
+  /**
+   * Search users
+   */
   'search_users' : ActorMethod<[string, number], Result_8>,
+  /**
+   * Personal search with follow state
+   */
   'search_users_personal' : ActorMethod<[string, number, Principal], Result_8>,
+  /**
+   * Set liquidity configuration (admin function for testing)
+   */
   'set_liquidity_config' : ActorMethod<[LiquidityConfig], Result>,
+  /**
+   * User registration (requires signed call)
+   */
   'signup' : ActorMethod<
     [string, [] | [string], [] | [string], [] | [string]],
     Result_3
   >,
+  /**
+   * Stake tokens in liquidity pool (user function)
+   */
   'stake_tokens' : ActorMethod<[string, bigint, bigint], Result>,
+  /**
+   * Start the price update scheduler (runs every second)
+   */
   'start_price_scheduler' : ActorMethod<[], Result>,
+  /**
+   * Stop the price update scheduler
+   */
   'stop_price_scheduler' : ActorMethod<[], Result>,
   'store_chunk' : ActorMethod<
     [bigint, Uint8Array | number[], string],
     Result_1
   >,
+  /**
+   * Submit atomic delegation + transfer transaction (gasless for user)
+   */
   'submit_delegation_transaction' : ActorMethod<
     [Uint8Array | number[]],
     Result
   >,
+  /**
+   * Submit gasless permit transaction (user signs permit, canister pays gas)
+   */
   'submit_gasless_permit' : ActorMethod<[PermitRequest], Result>,
+  /**
+   * Submit atomic EVM swap transaction (permit + immediate token transfer)
+   */
   'swap_evm' : ActorMethod<[PermitRequest, EvmSwapRequest], Result_9>,
+  /**
+   * Submit atomic swap transaction (delegation + immediate liquidity transfer)
+   */
   'swap_solana' : ActorMethod<
     [Uint8Array | number[], SwapRequest_1],
     Result_10
   >,
+  /**
+   * Test Ed25519 key generation and signing
+   */
   'test_ed25519' : ActorMethod<[], Result>,
+  /**
+   * Test secp256k1 key generation and signing
+   */
   'test_secp256k1' : ActorMethod<[], Result>,
+  /**
+   * Test simple EVM transaction (get nonce, etc.)
+   */
   'test_simple_evm_transaction' : ActorMethod<[], Result>,
+  /**
+   * Transfer tokens between users
+   */
   'transfer_tokens' : ActorMethod<
     [Principal, Principal, string, bigint],
     Result_11
@@ -400,10 +611,19 @@ export interface _SERVICE {
   'update_banner' : ActorMethod<[string], Result_3>,
   'update_bio' : ActorMethod<[string], Result_3>,
   'update_bitcoin_address' : ActorMethod<[string], Result_3>,
+  /**
+   * Individual field updates (requires signed call, owner only)
+   */
   'update_display_name' : ActorMethod<[string], Result_3>,
   'update_evm_address' : ActorMethod<[string], Result_3>,
   'update_location' : ActorMethod<[string], Result_3>,
+  /**
+   * Update all prices from all sources (manual trigger)
+   */
   'update_prices' : ActorMethod<[], Result_12>,
+  /**
+   * Update user profile (requires signed call, owner only)
+   */
   'update_profile' : ActorMethod<[UserUpdate], Result_3>,
   'update_solana_address' : ActorMethod<[string], Result_3>,
   'update_website' : ActorMethod<[string], Result_3>,

@@ -61,6 +61,22 @@
               <span>Sign in with MetaMask</span>
             </div>
           </UButton>
+
+          <UButton
+            id="rabby-btn"
+            block
+            size="xl"
+            color="neutral"
+            variant="soft"
+            class="h-12 text-sm font-normal bg-gray-200 dark:bg-neutral-800 hover:bg-primary-400 dark:hover:bg-primary-600 text-gray-800 dark:text-gray-200 justify-start"
+            :loading="loading && loginMethod === 'rabby'"
+            @click="login('rabby')"
+          >
+            <div class="flex items-center gap-3">
+              <UIcon name="solar:wallet-bold" class="text-2xl" />
+              <span>Sign in with Rabby</span>
+            </div>
+          </UButton>
           <UButton
             id="phantom-btn"
             block

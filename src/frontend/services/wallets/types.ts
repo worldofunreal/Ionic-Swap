@@ -7,6 +7,7 @@ export type WalletType =
   | 'xverse'
   | 'hiro'
   | 'leather'
+  | 'rabby'
 
 export interface WalletCapabilities {
   icp: boolean

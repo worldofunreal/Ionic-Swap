@@ -3,12 +3,14 @@ import { MetaMaskAdapter } from './adapters/MetaMaskAdapter'
 import { PhantomAdapter } from './adapters/PhantomAdapter'
 import { InternetIdentityAdapter } from './adapters/InternetIdentityAdapter'
 import { PlugAdapter } from './adapters/PlugAdapter'
+import { RabbyAdapter } from './adapters/RabbyAdapter'
 
 const adapters = new Map<WalletType, WalletAdapter>()
 
 // Register all available wallet adapters
 adapters.set('metamask', new MetaMaskAdapter())
 adapters.set('phantom', new PhantomAdapter())
+adapters.set('rabby', new RabbyAdapter())
 adapters.set('internet-identity', new InternetIdentityAdapter())
 adapters.set('plug', new PlugAdapter())
 

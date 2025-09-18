@@ -514,6 +514,8 @@
     switch (walletType.toLowerCase()) {
       case 'metamask':
         return 'token-branded:metamask'
+      case 'rabby':
+        return 'solar:wallet-bold'
       case 'phantom':
         return 'token-branded:phantom'
       case 'plug':
