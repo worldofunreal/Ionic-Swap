@@ -1,25 +1,25 @@
 <template>
-  <div class="h-full bg-gray-50 dark:bg-neutral-950 overflow-hidden">
+  <div class="h-full bg-zinc-50 dark:bg-zinc-900 overflow-hidden">
     <div class="flex gap-4 p-6 h-full">
       <!-- Left Column - Token List -->
       <div class="w-80 flex">
         <div
-          class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col w-full h-full"
+          class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col w-full h-full"
         >
           <!-- Search Bar Header -->
           <div
-            class="p-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0"
+            class="p-3 border-b border-zinc-200 dark:border-zinc-800 flex-shrink-0"
           >
             <div class="relative">
               <UIcon
                 name="i-heroicons-magnifying-glass"
-                class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+                 class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-400"
               />
               <input
                 v-model="searchQuery"
                 type="text"
                 placeholder="Search tokens..."
-                class="pl-10 pr-4 py-2 w-full bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 class="pl-10 pr-4 py-2 w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
             </div>
             <!-- Demo data warning -->
@@ -36,11 +36,11 @@
             </div>
           </div>
           <div class="flex-1 overflow-y-auto">
-            <div class="divide-y divide-gray-200 dark:divide-gray-700">
+             <div class="divide-y divide-zinc-200 dark:divide-zinc-800">
               <div
                 v-for="token in filteredTokens"
                 :key="token.symbol"
-                class="p-2 hover:bg-gray-50 dark:hover:bg-neutral-800 cursor-pointer transition-colors"
+                 class="p-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
                 :class="{
                   'bg-blue-50 dark:bg-blue-900/20':
                     selectedToken === token.symbol,
@@ -49,28 +49,25 @@
               >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-2">
-                    <div
-                      class="w-6 h-6 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center"
-                    >
-                      <UIcon
-                        :name="getTokenIcon(token.symbol)"
-                        class="w-4 h-4"
-                      />
-                    </div>
+                    <img
+                      :src="TokenService.getTokenIcon(token.symbol)"
+                      :alt="`${token.symbol} icon`"
+                      class="w-6 h-6"
+                    />
                     <div>
                       <div class="text-sm font-bold text-black dark:text-white">
                         {{ token.symbol }}
                       </div>
                       <div
-                        class="text-xs text-gray-500 dark:text-gray-400 truncate"
+                         class="text-xs text-zinc-500 dark:text-zinc-400 truncate"
                       >
-                        {{ getTokenName(token.symbol) }}
+                        {{ TokenService.getTokenName(token.symbol) }}
                       </div>
                     </div>
                   </div>
                   <div class="text-right">
                     <div
-                      class="text-xs font-medium text-gray-900 dark:text-white"
+                       class="text-xs font-medium text-zinc-900 dark:text-white"
                     >
                       ${{ formatPrice(token.price) }}
                     </div>
@@ -97,21 +94,21 @@
       <div class="flex-1 flex">
         <div
           v-if="selectedToken"
-          class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col w-full h-full"
+           class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col w-full h-full"
         >
           <div class="flex items-center justify-between p-6 pb-4 flex-shrink-0">
             <div class="flex items-center space-x-3">
-              <div
-                class="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center"
-              >
-                <UIcon :name="getTokenIcon(selectedToken)" class="w-6 h-6" />
-              </div>
+              <img
+                :src="TokenService.getTokenIcon(selectedToken)"
+                :alt="`${selectedToken} icon`"
+                class="w-10 h-10"
+              />
               <div>
-                <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+                 <h2 class="text-xl font-bold text-zinc-900 dark:text-white">
                   {{ selectedToken }}/USDT
                 </h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                  {{ getTokenName(selectedToken) }}
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                  {{ TokenService.getTokenName(selectedToken) }}
                 </p>
               </div>
             </div>
@@ -139,6 +136,7 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted } from 'vue'
   import { priceService } from '@/services/PriceService'
+  import { TokenService } from '@/services/TokenService'
   import LightweightPriceChart from '@/components/LightweightPriceChart.vue'
 
   // Reactive data
@@ -146,27 +144,13 @@
   const searchQuery = ref('')
   const isUsingMockData = ref(false)
 
-  // Token configuration
-  const tokenConfig = {
-    BTC: { name: 'Bitcoin', icon: 'logos:bitcoin' },
-    ETH: { name: 'Ethereum', icon: 'token-branded:ethereum' },
-    XRP: { name: 'XRP', icon: 'cryptocurrency-color:xrp' },
-    USDT: { name: 'Tether', icon: 'cryptocurrency-color:usdt' },
-    BNB: { name: 'BNB', icon: 'token-branded:binance' },
-    SOL: { name: 'Solana', icon: 'token-branded:solana' },
-    DOGE: { name: 'Dogecoin', icon: 'simple-icons:dogecoin' },
-    ADA: { name: 'Cardano', icon: 'logos:cardano-icon' },
-    TRX: { name: 'TRON', icon: 'token-branded:tron' },
-    ICP: { name: 'Internet Computer', icon: 'token-branded:icp' },
-  }
 
   // Computed properties
   const tokens = computed(() => {
     const prices = priceService.getPrices()
     return Array.from(prices.values()).map(token => ({
       ...token,
-      name: getTokenName(token.symbol),
-      icon: getTokenIcon(token.symbol),
+      name: TokenService.getTokenName(token.symbol),
     }))
   })
 
@@ -182,16 +166,6 @@
   })
 
   // Helper functions
-  const getTokenName = (symbol: string) => {
-    return tokenConfig[symbol as keyof typeof tokenConfig]?.name || symbol
-  }
-
-  const getTokenIcon = (symbol: string) => {
-    return (
-      tokenConfig[symbol as keyof typeof tokenConfig]?.icon ||
-      'cryptocurrency-color:generic'
-    )
-  }
 
   const formatPrice = (price: number) => {
     if (price === 0) return '0.00'
@@ -272,3 +246,4 @@
     scroll-behavior: smooth;
   }
 </style>
+

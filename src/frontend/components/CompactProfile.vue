@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-neutral-800 cursor-pointer transition-colors rounded-lg"
+    class="flex items-center gap-3 p-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors rounded-lg"
     @click="handleClick"
   >
     <!-- Avatar -->
@@ -35,7 +35,7 @@
       </p>
       <p
         v-if="user.bio?.[0]"
-        class="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-1"
+        class="text-xs text-zinc-600 dark:text-zinc-300 mt-1 line-clamp-1"
       >
         {{ user.bio[0] }}
       </p>

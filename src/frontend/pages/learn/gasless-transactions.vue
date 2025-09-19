@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+  <div class="min-h-screen bg-zinc-50 dark:bg-zinc-900">
     <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
       <div class="mb-8">
@@ -34,7 +34,7 @@
           </ol>
         </nav>
 
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           Gasless Transactions
         </h1>
         <p class="text-xl text-gray-600 dark:text-gray-400">
@@ -63,7 +63,7 @@
       <div class="space-y-8">
         <!-- How Gasless Works -->
         <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
-          <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+          <h2 class="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">
             How Gasless Transactions Work
           </h2>
 
@@ -78,7 +78,7 @@
                 />
               </div>
               <h3
-                class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
+                class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"
               >
                 1. Sign Permit
               </h3>
@@ -97,7 +97,7 @@
                 />
               </div>
               <h3
-                class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
+                class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"
               >
                 2. Submit Transaction
               </h3>
@@ -116,7 +116,7 @@
                 />
               </div>
               <h3
-                class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
+                class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"
               >
                 3. Transaction Complete
               </h3>
@@ -129,7 +129,7 @@
 
         <!-- Permit Technology -->
         <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
-          <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+          <h2 class="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">
             Permit Technology Explained
           </h2>
 
@@ -142,7 +142,7 @@
             </p>
 
             <h3
-              class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+              class="text-xl font-semibold mb-4 text-zinc-900 dark:text-white"
             >
               Key Components
             </h3>
@@ -150,7 +150,7 @@
               <div
                 class="p-6 rounded-lg border border-gray-200 dark:border-gray-700"
               >
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">
                   Digital Signature
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -166,7 +166,7 @@
               <div
                 class="p-6 rounded-lg border border-gray-200 dark:border-gray-700"
               >
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">
                   Transaction Data
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -185,7 +185,7 @@
 
         <!-- Supported Chains -->
         <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
-          <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+          <h2 class="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">
             Gasless Support Across Chains
           </h2>
 
@@ -205,7 +205,7 @@
                 </div>
                 <div>
                   <h3
-                    class="text-lg font-semibold text-gray-900 dark:text-white"
+                    class="text-lg font-semibold text-zinc-900 dark:text-white"
                   >
                     EVM Chains
                   </h3>
@@ -238,7 +238,7 @@
                 </div>
                 <div>
                   <h3
-                    class="text-lg font-semibold text-gray-900 dark:text-white"
+                    class="text-lg font-semibold text-zinc-900 dark:text-white"
                   >
                     Solana
                   </h3>
@@ -271,7 +271,7 @@
                 </div>
                 <div>
                   <h3
-                    class="text-lg font-semibold text-gray-900 dark:text-white"
+                    class="text-lg font-semibold text-zinc-900 dark:text-white"
                   >
                     Internet Computer
                   </h3>
@@ -293,7 +293,7 @@
 
         <!-- Benefits -->
         <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
-          <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+          <h2 class="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">
             Benefits of Gasless Transactions
           </h2>
 
@@ -308,7 +308,7 @@
                 />
               </div>
               <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Cost Savings
                 </h3>
                 <p class="text-gray-600 dark:text-gray-400">
@@ -327,7 +327,7 @@
                 />
               </div>
               <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Accessibility
                 </h3>
                 <p class="text-gray-600 dark:text-gray-400">
@@ -346,7 +346,7 @@
                 />
               </div>
               <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Security
                 </h3>
                 <p class="text-gray-600 dark:text-gray-400">
@@ -365,7 +365,7 @@
                 />
               </div>
               <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   User Experience
                 </h3>
                 <p class="text-gray-600 dark:text-gray-400">

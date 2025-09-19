@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+  <div class="min-h-screen bg-zinc-50 dark:bg-zinc-900">
     <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
       <div class="mb-8">
@@ -34,7 +34,7 @@
           </ol>
         </nav>
 
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           Crypto Wallets
         </h1>
         <p class="text-xl text-gray-600 dark:text-gray-400">
@@ -77,7 +77,7 @@
         <div class="lg:col-span-2 space-y-8">
           <!-- What is a Crypto Wallet -->
           <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               What is a Crypto Wallet?
             </h3>
             <p class="text-gray-600 dark:text-gray-400 mb-6">
@@ -90,7 +90,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="bg-neutral-50 dark:bg-neutral-700 p-4 rounded-lg">
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Private Key
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
@@ -104,7 +104,7 @@
                 </div>
               </div>
               <div class="bg-neutral-50 dark:bg-neutral-700 p-4 rounded-lg">
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Public Address
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
@@ -122,7 +122,7 @@
 
           <!-- Types of Wallets -->
           <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               Types of Crypto Wallets
             </h3>
             <div class="space-y-6">
@@ -150,7 +150,7 @@
                   </div>
                   <div>
                     <h4
-                      class="text-xl font-semibold text-gray-900 dark:text-white"
+                      class="text-xl font-semibold text-zinc-900 dark:text-white"
                     >
                       Hot Wallets
                     </h4>
@@ -162,7 +162,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <h5 class="font-medium text-gray-900 dark:text-white mb-2">
+                    <h5 class="font-medium text-zinc-900 dark:text-white mb-2">
                       Types
                     </h5>
                     <ul
@@ -174,7 +174,7 @@
                     </ul>
                   </div>
                   <div>
-                    <h5 class="font-medium text-gray-900 dark:text-white mb-2">
+                    <h5 class="font-medium text-zinc-900 dark:text-white mb-2">
                       Pros & Cons
                     </h5>
                     <div class="space-y-2">
@@ -239,7 +239,7 @@
                   </div>
                   <div>
                     <h4
-                      class="text-xl font-semibold text-gray-900 dark:text-white"
+                      class="text-xl font-semibold text-zinc-900 dark:text-white"
                     >
                       Cold Wallets
                     </h4>
@@ -251,7 +251,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <h5 class="font-medium text-gray-900 dark:text-white mb-2">
+                    <h5 class="font-medium text-zinc-900 dark:text-white mb-2">
                       Types
                     </h5>
                     <ul
@@ -263,7 +263,7 @@
                     </ul>
                   </div>
                   <div>
-                    <h5 class="font-medium text-gray-900 dark:text-white mb-2">
+                    <h5 class="font-medium text-zinc-900 dark:text-white mb-2">
                       Pros & Cons
                     </h5>
                     <div class="space-y-2">
@@ -308,7 +308,7 @@
 
           <!-- Popular Wallets -->
           <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               Popular Crypto Wallets
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -326,7 +326,7 @@
                     >
                   </div>
                   <div>
-                    <h4 class="font-semibold text-gray-900 dark:text-white">
+                    <h4 class="font-semibold text-zinc-900 dark:text-white">
                       MetaMask
                     </h4>
                     <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -394,7 +394,7 @@
                     >
                   </div>
                   <div>
-                    <h4 class="font-semibold text-gray-900 dark:text-white">
+                    <h4 class="font-semibold text-zinc-900 dark:text-white">
                       Trust Wallet
                     </h4>
                     <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -462,7 +462,7 @@
                     >
                   </div>
                   <div>
-                    <h4 class="font-semibold text-gray-900 dark:text-white">
+                    <h4 class="font-semibold text-zinc-900 dark:text-white">
                       Ledger
                     </h4>
                     <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -530,7 +530,7 @@
                     >
                   </div>
                   <div>
-                    <h4 class="font-semibold text-gray-900 dark:text-white">
+                    <h4 class="font-semibold text-zinc-900 dark:text-white">
                       Coinbase Wallet
                     </h4>
                     <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -588,13 +588,13 @@
 
           <!-- Security Best Practices -->
           <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               Security Best Practices
             </h3>
             <div class="space-y-6">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4">
-                  <h4 class="font-semibold text-gray-900 dark:text-white">
+                  <h4 class="font-semibold text-zinc-900 dark:text-white">
                     Essential Security
                   </h4>
                   <div class="space-y-3">
@@ -612,7 +612,7 @@
                       </svg>
                       <div>
                         <h5
-                          class="font-medium text-gray-900 dark:text-white text-sm"
+                          class="font-medium text-zinc-900 dark:text-white text-sm"
                         >
                           Never Share Private Keys
                         </h5>
@@ -636,7 +636,7 @@
                       </svg>
                       <div>
                         <h5
-                          class="font-medium text-gray-900 dark:text-white text-sm"
+                          class="font-medium text-zinc-900 dark:text-white text-sm"
                         >
                           Backup Seed Phrase
                         </h5>
@@ -660,7 +660,7 @@
                       </svg>
                       <div>
                         <h5
-                          class="font-medium text-gray-900 dark:text-white text-sm"
+                          class="font-medium text-zinc-900 dark:text-white text-sm"
                         >
                           Use Hardware Wallets
                         </h5>
@@ -674,7 +674,7 @@
                 </div>
 
                 <div class="space-y-4">
-                  <h4 class="font-semibold text-gray-900 dark:text-white">
+                  <h4 class="font-semibold text-zinc-900 dark:text-white">
                     Additional Tips
                   </h4>
                   <div class="space-y-3">
@@ -692,7 +692,7 @@
                       </svg>
                       <div>
                         <h5
-                          class="font-medium text-gray-900 dark:text-white text-sm"
+                          class="font-medium text-zinc-900 dark:text-white text-sm"
                         >
                           Verify URLs
                         </h5>
@@ -715,7 +715,7 @@
                       </svg>
                       <div>
                         <h5
-                          class="font-medium text-gray-900 dark:text-white text-sm"
+                          class="font-medium text-zinc-900 dark:text-white text-sm"
                         >
                           Enable 2FA
                         </h5>
@@ -738,7 +738,7 @@
                       </svg>
                       <div>
                         <h5
-                          class="font-medium text-gray-900 dark:text-white text-sm"
+                          class="font-medium text-zinc-900 dark:text-white text-sm"
                         >
                           Test Small Amounts
                         </h5>
@@ -787,7 +787,7 @@
           <!-- Quick Navigation -->
           <div class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3
-              class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
+              class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"
             >
               Learn More
             </h3>
@@ -822,7 +822,7 @@
           <!-- Wallet Comparison -->
           <div class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3
-              class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
+              class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"
             >
               Wallet Comparison
             </h3>

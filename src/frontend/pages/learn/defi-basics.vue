@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+  <div class="min-h-screen bg-zinc-50 dark:bg-zinc-900">
     <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
       <div class="mb-8">
@@ -34,7 +34,7 @@
           </ol>
         </nav>
 
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           DeFi Basics
         </h1>
         <p class="text-xl text-gray-600 dark:text-gray-400">
@@ -63,7 +63,7 @@
       <div class="space-y-8">
         <!-- What is DeFi -->
         <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
-          <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+          <h2 class="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">
             What is Decentralized Finance (DeFi)?
           </h2>
 
@@ -76,7 +76,7 @@
             </p>
 
             <h3
-              class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+              class="text-xl font-semibold mb-4 text-zinc-900 dark:text-white"
             >
               Key Principles
             </h3>
@@ -84,7 +84,7 @@
               <div
                 class="p-6 rounded-lg border border-gray-200 dark:border-gray-700"
               >
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">
                   Decentralization
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -95,7 +95,7 @@
               <div
                 class="p-6 rounded-lg border border-gray-200 dark:border-gray-700"
               >
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">
                   Transparency
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -106,7 +106,7 @@
               <div
                 class="p-6 rounded-lg border border-gray-200 dark:border-gray-700"
               >
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">
                   Permissionless
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -117,7 +117,7 @@
               <div
                 class="p-6 rounded-lg border border-gray-200 dark:border-gray-700"
               >
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">
                   Interoperability
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -131,7 +131,7 @@
 
         <!-- DeFi Services -->
         <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
-          <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+          <h2 class="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">
             Common DeFi Services
           </h2>
 
@@ -146,7 +146,7 @@
                 />
               </div>
               <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Decentralized Exchanges (DEXs)
                 </h3>
                 <p class="text-gray-600 dark:text-gray-400">
@@ -164,7 +164,7 @@
                 />
               </div>
               <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Lending & Borrowing
                 </h3>
                 <p class="text-gray-600 dark:text-gray-400">
@@ -182,7 +182,7 @@
                 />
               </div>
               <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Yield Farming
                 </h3>
                 <p class="text-gray-600 dark:text-gray-400">
@@ -200,7 +200,7 @@
                 />
               </div>
               <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Insurance
                 </h3>
                 <p class="text-gray-600 dark:text-gray-400">
@@ -213,7 +213,7 @@
 
         <!-- Liquidity and AMMs -->
         <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
-          <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+          <h2 class="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">
             Liquidity and Automated Market Makers (AMMs)
           </h2>
 
@@ -225,7 +225,7 @@
             </p>
 
             <h3
-              class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+              class="text-xl font-semibold mb-4 text-zinc-900 dark:text-white"
             >
               How AMMs Work
             </h3>
@@ -239,7 +239,7 @@
                     class="w-8 h-8 text-primary-600 dark:text-primary-400"
                   />
                 </div>
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Liquidity Providers
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -255,7 +255,7 @@
                     class="w-8 h-8 text-primary-600 dark:text-primary-400"
                   />
                 </div>
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Price Discovery
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -272,7 +272,7 @@
                     class="w-8 h-8 text-primary-600 dark:text-primary-400"
                   />
                 </div>
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Trading
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -286,7 +286,7 @@
 
         <!-- Risks and Considerations -->
         <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
-          <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+          <h2 class="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">
             Risks and Considerations
           </h2>
 

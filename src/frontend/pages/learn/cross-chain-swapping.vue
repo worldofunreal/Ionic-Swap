@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+  <div class="min-h-screen bg-zinc-50 dark:bg-zinc-900">
     <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
       <div class="mb-8">
@@ -34,7 +34,7 @@
           </ol>
         </nav>
 
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           Cross-Chain Swapping
         </h1>
         <p class="text-xl text-gray-600 dark:text-gray-400">
@@ -63,7 +63,7 @@
       <div class="space-y-8">
         <!-- How It Works -->
         <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
-          <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+          <h2 class="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">
             How Cross-Chain Swapping Works
           </h2>
 
@@ -78,7 +78,7 @@
                 />
               </div>
               <h3
-                class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
+                class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"
               >
                 1. Select Tokens
               </h3>
@@ -97,7 +97,7 @@
                 />
               </div>
               <h3
-                class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
+                class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"
               >
                 2. Smart Routing
               </h3>
@@ -116,7 +116,7 @@
                 />
               </div>
               <h3
-                class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
+                class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"
               >
                 3. Execute Swap
               </h3>
@@ -130,7 +130,7 @@
 
         <!-- Supported Chains -->
         <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
-          <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+          <h2 class="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">
             Supported Blockchain Networks
           </h2>
 
@@ -150,7 +150,7 @@
                 </div>
                 <div>
                   <h3
-                    class="text-lg font-semibold text-gray-900 dark:text-white"
+                    class="text-lg font-semibold text-zinc-900 dark:text-white"
                   >
                     EVM Chains
                   </h3>
@@ -183,7 +183,7 @@
                 </div>
                 <div>
                   <h3
-                    class="text-lg font-semibold text-gray-900 dark:text-white"
+                    class="text-lg font-semibold text-zinc-900 dark:text-white"
                   >
                     Solana
                   </h3>
@@ -216,7 +216,7 @@
                 </div>
                 <div>
                   <h3
-                    class="text-lg font-semibold text-gray-900 dark:text-white"
+                    class="text-lg font-semibold text-zinc-900 dark:text-white"
                   >
                     Internet Computer
                   </h3>
@@ -238,7 +238,7 @@
 
         <!-- Benefits -->
         <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
-          <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+          <h2 class="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">
             Benefits of Cross-Chain Swapping
           </h2>
 
@@ -253,7 +253,7 @@
                 />
               </div>
               <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Gasless Transactions
                 </h3>
                 <p class="text-gray-600 dark:text-gray-400">
@@ -272,7 +272,7 @@
                 />
               </div>
               <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Best Rates
                 </h3>
                 <p class="text-gray-600 dark:text-gray-400">
@@ -291,7 +291,7 @@
                 />
               </div>
               <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Secure
                 </h3>
                 <p class="text-gray-600 dark:text-gray-400">
@@ -310,7 +310,7 @@
                 />
               </div>
               <div>
-                <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Fast
                 </h3>
                 <p class="text-gray-600 dark:text-gray-400">

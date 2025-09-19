@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-screen bg-neutral-50 dark:bg-neutral-950 flex-col">
+  <div class="flex min-h-screen bg-zinc-50 dark:bg-zinc-900 flex-col">
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center min-h-screen">
       <div
@@ -16,7 +16,7 @@
         <div
           class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"
         />
-        <p class="text-gray-600 dark:text-gray-400">
+        <p class="text-zinc-600 dark:text-zinc-400">
           Redirecting to your profile...
         </p>
       </div>

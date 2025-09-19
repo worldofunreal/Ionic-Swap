@@ -168,14 +168,14 @@
                       <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
                           <div class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center mr-3">
-                            <UIcon :name="getTokenIcon(token.symbol)" class="w-6 h-6" />
+                            <img :src="TokenService.getTokenIcon(token.symbol)" :alt="`${token.symbol} icon`" class="w-6 h-6" />
                           </div>
                           <div>
                             <div class="text-sm font-semibold text-zinc-900 dark:text-white">
                               {{ token.symbol }}
                             </div>
                             <div class="text-sm text-zinc-500 dark:text-zinc-400">
-                              {{ token.name }}
+                              {{ TokenService.getTokenName(token.symbol) }}
                             </div>
                           </div>
                         </div>
@@ -337,7 +337,7 @@
                     <div v-for="(balance, symbol) in userBalances" :key="symbol" class="flex items-center justify-between">
                       <div class="flex items-center gap-2">
                         <div class="w-4 h-4 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
-                          <UIcon :name="getTokenIcon(symbol)" class="w-3 h-3" />
+                          <img :src="TokenService.getTokenIcon(symbol)" :alt="`${symbol} icon`" class="w-3 h-3" />
                         </div>
                         <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ symbol }}</span>
                       </div>
@@ -660,39 +660,6 @@
     return colors[symbol] || 'bg-gray-400'
   }
 
-  // Get token icon for display (matching markets.vue)
-  const getTokenIcon = (symbol: string) => {
-    const icons: Record<string, string> = {
-      'BTC': 'logos:bitcoin',
-      'ETH': 'token-branded:ethereum',
-      'XRP': 'cryptocurrency-color:xrp',
-      'USDT': 'cryptocurrency-color:usdt',
-      'BNB': 'token-branded:binance',
-      'SOL': 'token-branded:solana',
-      'DOGE': 'simple-icons:dogecoin',
-      'ADA': 'logos:cardano-icon',
-      'TRX': 'token-branded:tron',
-      'ICP': 'token-branded:icp',
-    }
-    return icons[symbol] || 'cryptocurrency-color:generic'
-  }
-
-  // Get token name for display
-  const getTokenName = (symbol: string) => {
-    const names: Record<string, string> = {
-      'USDT': 'Tether USD',
-      'BTC': 'Bitcoin',
-      'ETH': 'Ethereum',
-      'SOL': 'Solana',
-      'BNB': 'BNB',
-      'XRP': 'XRP',
-      'DOGE': 'Dogecoin',
-      'ADA': 'Cardano',
-      'TRX': 'TRON',
-      'ICP': 'Internet Computer',
-    }
-    return names[symbol] || symbol
-  }
 
 
   // Format token supply for display

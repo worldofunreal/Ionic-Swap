@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-screen bg-neutral-50 dark:bg-neutral-950 flex-col">
+  <div class="flex min-h-screen bg-zinc-50 dark:bg-zinc-900 flex-col">
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center min-h-screen">
       <div
@@ -13,10 +13,10 @@
       class="flex items-center justify-center min-h-screen"
     >
       <div class="text-center">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
           User Not Found
         </h1>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">
+        <p class="text-zinc-600 dark:text-zinc-400 mb-6">
           The user "{{ username }}" could not be found.
         </p>
         <UButton color="primary" @click="$router.push('/')"> Go Home </UButton>
@@ -26,10 +26,10 @@
     <!-- Profile Content -->
     <div
       v-else-if="userProfile"
-      class="flex flex-col lg:flex-row min-h-screen bg-neutral-50 dark:bg-neutral-950"
+      class="flex flex-col lg:flex-row min-h-screen bg-zinc-50 dark:bg-zinc-900"
     >
       <!-- Left Column: Fixed User Profile Header -->
-      <div class="w-full lg:w-80 xl:w-96 flex-shrink-0 bg-zinc-50 dark:bg-neutral-950 lg:border-r border-gray-200 dark:border-gray-800 lg:border-b-0 border-b">
+      <div class="w-full lg:w-80 xl:w-96 flex-shrink-0 bg-zinc-100 dark:bg-zinc-900 lg:border-r border-zinc-200 dark:border-zinc-800 lg:border-b-0 border-b">
         <UserProfileHeader
           :user-profile="userProfile"
           :is-own-profile="isOwnProfile"
@@ -40,7 +40,7 @@
       <!-- Right Column: Scrollable Tabs and Content -->
       <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
         <!-- Navigation Tabs -->
-        <div class="px-4 pt-4 pb-2 bg-zinc-50 dark:bg-neutral-950 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
+        <div class="px-4 pt-4 pb-2 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex-shrink-0">
           <ProfileTabs v-model="activeTab" />
         </div>
         

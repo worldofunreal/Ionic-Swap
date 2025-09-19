@@ -511,7 +511,7 @@
         return { type: 'img', src: '/plug.svg', alt: 'Plug' }
       case 'internetidentity':
       case 'icp':
-        return { type: 'img', src: '/icp.svg', alt: 'Internet Identity' }
+        return { type: 'img', src: '/icons/tokens/icp.svg', alt: 'Internet Identity' }
       default:
         return { type: 'UIcon', name: 'solar:wallet-bold' }
     }

@@ -3,7 +3,7 @@
     <!-- Activity Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
           Activity
         </h2>
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">

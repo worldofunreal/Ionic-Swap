@@ -5,20 +5,20 @@
     @click="close"
   >
     <div
-      class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto"
+      class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-lg w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto"
       @click.stop
     >
       <!-- Header -->
       <div
-        class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700"
+        class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800"
       >
         <button
-          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
           @click="close"
         >
           <UIcon name="i-heroicons-x-mark-20-solid" class="w-6 h-6" />
         </button>
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
           Edit profile
         </h2>
         <UButton
@@ -38,7 +38,7 @@
         <div class="relative">
           <!-- Banner -->
           <div
-            class="relative h-32 bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden"
+            class="relative h-32 bg-zinc-100 dark:bg-zinc-900 rounded-lg overflow-hidden"
           >
             <button
               class="w-full h-full flex items-center justify-center group cursor-pointer"
@@ -76,7 +76,7 @@
           <div class="absolute -bottom-8 left-4">
             <div class="relative">
               <button
-                class="w-16 h-16 rounded-full border-4 border-white dark:border-gray-900 overflow-hidden group cursor-pointer"
+                class="w-16 h-16 rounded-full border-4 border-white dark:border-zinc-900 overflow-hidden group cursor-pointer"
                 @click="triggerAvatarUpload"
               >
                 <img
@@ -133,7 +133,7 @@
           <!-- Display Name -->
           <div>
             <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"
             >
               Name
             </label>
@@ -142,14 +142,14 @@
               type="text"
               placeholder="Enter your display name"
               maxlength="50"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-zinc-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+              class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white"
             >
           </div>
 
           <!-- Bio -->
           <div>
             <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"
             >
               Bio
             </label>
@@ -159,9 +159,9 @@
                 placeholder="Tell us about yourself"
                 maxlength="160"
                 rows="3"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-zinc-50 dark:bg-gray-800 text-gray-900 dark:text-white resize-none"
+                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white resize-none"
               />
-              <div class="absolute bottom-2 right-2 text-xs text-gray-500">
+              <div class="absolute bottom-2 right-2 text-xs text-zinc-500">
                 {{ form.bio.length }} / 160
               </div>
             </div>
@@ -170,7 +170,7 @@
           <!-- Location -->
           <div>
             <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"
             >
               Location
             </label>
@@ -179,14 +179,14 @@
               type="text"
               placeholder="Where are you based?"
               maxlength="30"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-zinc-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+              class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white"
             >
           </div>
 
           <!-- Website -->
           <div>
             <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"
             >
               Website
             </label>
@@ -195,7 +195,7 @@
               type="url"
               placeholder="https://yourwebsite.com"
               maxlength="100"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-zinc-50 dark:bg-gray-800 text-gray-900 dark:text-white"
+              class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white"
             >
           </div>
         </div>

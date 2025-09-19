@@ -58,7 +58,7 @@
             @click="login('internet-identity')"
           >
             <div class="flex items-center gap-3">
-              <img src="/icp.svg" alt="Internet Identity" class="w-6 h-6" />
+              <img src="/icons/tokens/icp.svg" alt="Internet Identity" class="w-6 h-6" />
               <span
                 >Continue with Internet Identity
                 <span class="text-gray-500 text-xs">(Recommended)</span></span

@@ -29,13 +29,13 @@
             v-if="avatarUrl"
             :src="avatarUrl"
             alt="Avatar"
-            class="w-20 h-20 rounded-full border-4 border-white dark:border-gray-900 shadow-lg bg-zinc-50 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+            class="w-20 h-20 rounded-full border-4 border-white dark:border-zinc-900 shadow-lg bg-zinc-50 object-cover cursor-pointer hover:opacity-90 transition-opacity"
             crossorigin="anonymous"
             @click="openImageModal(avatarUrl, 'Avatar')"
           >
           <div
             v-else
-            class="w-20 h-20 rounded-full border-4 border-white dark:border-gray-900 shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
+            class="w-20 h-20 rounded-full border-4 border-white dark:border-zinc-900 shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
           >
             <span class="text-white font-bold text-2xl">{{
               avatarInitial
@@ -105,7 +105,7 @@
           <!-- Name and Username -->
           <div class="space-y-1">
             <div class="flex items-center gap-2">
-              <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+              <h1 class="text-xl font-bold text-zinc-900 dark:text-white">
                 {{ displayName }}
               </h1>
               <span v-if="userProfile?.is_verified" class="text-blue-500">
@@ -119,7 +119,7 @@
               v-if="
                 userProfile?.username && displayName !== userProfile.username
               "
-              class="text-gray-600 dark:text-gray-400 text-sm"
+              class="text-zinc-600 dark:text-zinc-400 text-sm"
             >
               @{{ userProfile.username }}
             </div>
@@ -128,16 +128,16 @@
           <!-- Social Stats -->
           <div class="flex items-center gap-6 text-sm">
             <div class="text-center">
-              <div class="font-semibold text-gray-900 dark:text-white text-lg">
+              <div class="font-semibold text-zinc-900 dark:text-white text-lg">
                 {{ userProfile?.following_count || 0 }}
               </div>
-              <div class="text-gray-600 dark:text-gray-400 text-xs">Following</div>
+              <div class="text-zinc-600 dark:text-zinc-400 text-xs">Following</div>
             </div>
             <div class="text-center">
-              <div class="font-semibold text-gray-900 dark:text-white text-lg">
+              <div class="font-semibold text-zinc-900 dark:text-white text-lg">
                 {{ userProfile?.followers_count || 0 }}
               </div>
-              <div class="text-gray-600 dark:text-gray-400 text-xs">Followers</div>
+              <div class="text-zinc-600 dark:text-zinc-400 text-xs">Followers</div>
             </div>
           </div>
         </div>
@@ -145,7 +145,7 @@
         <!-- Row 2: Bio -->
         <div
           v-if="bio"
-          class="text-gray-900 dark:text-white text-sm"
+          class="text-zinc-900 dark:text-white text-sm"
           @click="handleMentionClick"
         >
           <!-- eslint-disable-next-line vue/no-v-html -->
@@ -154,7 +154,7 @@
 
         <!-- Row 3: Location/Website/Join Date -->
         <div
-          class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400"
+          class="flex items-center gap-4 text-sm text-zinc-600 dark:text-zinc-400"
         >
           <div v-if="location" class="flex items-center gap-1">
             <UIcon name="i-heroicons-map-pin-20-solid" class="w-4 h-4" />
@@ -204,7 +204,7 @@
           class="max-w-full max-h-[80vh] object-contain rounded-lg"
           crossorigin="anonymous"
         >
-        <div class="mt-4 text-sm text-gray-600 dark:text-gray-400">
+        <div class="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
           {{ selectedImageTitle }}
         </div>
       </div>

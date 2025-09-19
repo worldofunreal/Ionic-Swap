@@ -10,6 +10,7 @@ export interface TokenConfig {
   displayDecimals: number  // How many decimals to show in UI
   formatType: 'currency' | 'crypto' | 'percentage'
   minDisplayValue: number  // Minimum value to show (for very small amounts)
+  iconPath: string  // Path to token icon in /public/icons/tokens/
 }
 
 // Token configurations matching the backend config.rs
@@ -20,7 +21,8 @@ export const TOKEN_CONFIGS: Record<string, TokenConfig> = {
     decimals: 6, 
     displayDecimals: 2, 
     formatType: 'currency',
-    minDisplayValue: 0.01
+    minDisplayValue: 0.01,
+    iconPath: '/icons/tokens/usdt.svg'
   },
   BTC: { 
     symbol: 'BTC', 
@@ -28,7 +30,8 @@ export const TOKEN_CONFIGS: Record<string, TokenConfig> = {
     decimals: 8, 
     displayDecimals: 6, 
     formatType: 'crypto',
-    minDisplayValue: 0.000001
+    minDisplayValue: 0.000001,
+    iconPath: '/icons/tokens/bitcoin.svg'
   },
   ETH: { 
     symbol: 'ETH', 
@@ -36,7 +39,8 @@ export const TOKEN_CONFIGS: Record<string, TokenConfig> = {
     decimals: 8, 
     displayDecimals: 6, 
     formatType: 'crypto',
-    minDisplayValue: 0.000001
+    minDisplayValue: 0.000001,
+    iconPath: '/icons/tokens/ethereum.svg'
   },
   SOL: { 
     symbol: 'SOL', 
@@ -44,7 +48,8 @@ export const TOKEN_CONFIGS: Record<string, TokenConfig> = {
     decimals: 9, 
     displayDecimals: 2, 
     formatType: 'crypto',
-    minDisplayValue: 0.01
+    minDisplayValue: 0.01,
+    iconPath: '/icons/tokens/solana.svg'
   },
   ICP: { 
     symbol: 'ICP', 
@@ -52,7 +57,8 @@ export const TOKEN_CONFIGS: Record<string, TokenConfig> = {
     decimals: 8, 
     displayDecimals: 2, 
     formatType: 'crypto',
-    minDisplayValue: 0.01
+    minDisplayValue: 0.01,
+    iconPath: '/icons/tokens/icp.svg'
   },
   XRP: { 
     symbol: 'XRP', 
@@ -60,7 +66,8 @@ export const TOKEN_CONFIGS: Record<string, TokenConfig> = {
     decimals: 6, 
     displayDecimals: 2, 
     formatType: 'crypto',
-    minDisplayValue: 0.01
+    minDisplayValue: 0.01,
+    iconPath: '/icons/tokens/xrp.svg'
   },
   BNB: { 
     symbol: 'BNB', 
@@ -68,7 +75,8 @@ export const TOKEN_CONFIGS: Record<string, TokenConfig> = {
     decimals: 8, 
     displayDecimals: 2, 
     formatType: 'crypto',
-    minDisplayValue: 0.01
+    minDisplayValue: 0.01,
+    iconPath: '/icons/tokens/bnb.svg'
   },
   DOGE: { 
     symbol: 'DOGE', 
@@ -76,7 +84,8 @@ export const TOKEN_CONFIGS: Record<string, TokenConfig> = {
     decimals: 8, 
     displayDecimals: 2, 
     formatType: 'crypto',
-    minDisplayValue: 0.01
+    minDisplayValue: 0.01,
+    iconPath: '/icons/tokens/dogecoin.svg'
   },
   ADA: { 
     symbol: 'ADA', 
@@ -84,7 +93,8 @@ export const TOKEN_CONFIGS: Record<string, TokenConfig> = {
     decimals: 6, 
     displayDecimals: 2, 
     formatType: 'crypto',
-    minDisplayValue: 0.01
+    minDisplayValue: 0.01,
+    iconPath: '/icons/tokens/cardano.svg'
   },
   TRX: { 
     symbol: 'TRX', 
@@ -92,7 +102,8 @@ export const TOKEN_CONFIGS: Record<string, TokenConfig> = {
     decimals: 6, 
     displayDecimals: 2, 
     formatType: 'crypto',
-    minDisplayValue: 0.01
+    minDisplayValue: 0.01,
+    iconPath: '/icons/tokens/tron.svg'
   },
 }
 
@@ -273,5 +284,32 @@ export class TokenService {
         symbol: config.symbol,
         name: config.name
       }))
+  }
+
+  /**
+   * Get token icon path by symbol
+   */
+  static getTokenIcon(tokenSymbol: string): string {
+    const config = this.getTokenConfig(tokenSymbol)
+    return config?.iconPath || '/icons/tokens/default.svg'
+  }
+
+  /**
+   * Get token icon component props for img tag
+   */
+  static getTokenIconProps(tokenSymbol: string): { src: string; alt: string } {
+    const config = this.getTokenConfig(tokenSymbol)
+    return {
+      src: config?.iconPath || '/icons/tokens/default.svg',
+      alt: `${config?.name || tokenSymbol} icon`
+    }
+  }
+
+  /**
+   * Check if token has a custom icon
+   */
+  static hasTokenIcon(tokenSymbol: string): boolean {
+    const config = this.getTokenConfig(tokenSymbol)
+    return !!config?.iconPath
   }
 }

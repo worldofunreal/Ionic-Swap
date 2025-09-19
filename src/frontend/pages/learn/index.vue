@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+  <div class="min-h-screen bg-zinc-50 dark:bg-zinc-900">
     <div class="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
       <div class="text-center mb-12">
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           Learn DeFi
         </h1>
         <p class="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
@@ -52,7 +52,7 @@
       <!-- Learning Paths -->
       <div class="mb-12">
         <h2
-          class="text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center"
+          class="text-2xl font-bold text-zinc-900 dark:text-white mb-8 text-center"
         >
           Choose Your Learning Path
         </h2>
@@ -72,7 +72,7 @@
                 />
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
                   Beginner
                 </h3>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -130,7 +130,7 @@
                 />
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
                   Intermediate
                 </h3>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -187,7 +187,7 @@
                 />
               </div>
               <div>
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
                   Advanced
                 </h3>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -221,7 +221,7 @@
       <!-- All Articles Grid -->
       <div class="mb-12">
         <h2
-          class="text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center"
+          class="text-2xl font-bold text-zinc-900 dark:text-white mb-8 text-center"
         >
           All Articles
         </h2>
@@ -245,7 +245,7 @@
               </div>
               <div class="flex-1">
                 <h3
-                  class="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors"
+                  class="text-lg font-semibold text-zinc-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors"
                 >
                   {{ article.title }}
                 </h3>
@@ -259,7 +259,7 @@
             </p>
             <div class="flex items-center justify-between">
               <div
-                class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"
+                class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400"
               >
                 <UIcon name="i-heroicons-clock" class="w-4 h-4" />
                 <span>{{ article.readTime }}</span>
@@ -278,7 +278,7 @@
         <div
           class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8 border border-gray-200 dark:border-gray-700"
         >
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
             Ready to Start Swapping?
           </h2>
           <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-2xl mx-auto">

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+  <div class="min-h-screen bg-zinc-50 dark:bg-zinc-900">
     <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
       <div class="mb-8">
@@ -34,7 +34,7 @@
           </ol>
         </nav>
 
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           What are Tokens?
         </h1>
         <p class="text-xl text-gray-600 dark:text-gray-400">
@@ -62,7 +62,7 @@
         <!-- Main Article -->
         <div class="lg:col-span-2">
           <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
-            <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+            <h2 class="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">
               What are Digital Tokens?
             </h2>
 
@@ -75,7 +75,7 @@
               </p>
 
               <h3
-                class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+                class="text-xl font-semibold mb-4 text-zinc-900 dark:text-white"
               >
                 Key Characteristics
               </h3>
@@ -105,7 +105,7 @@
               </ul>
 
               <h3
-                class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+                class="text-xl font-semibold mb-4 text-zinc-900 dark:text-white"
               >
                 Types of Tokens
               </h3>
@@ -113,7 +113,7 @@
                 <div
                   class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
                 >
-                  <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                  <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                     Utility Tokens
                   </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -124,7 +124,7 @@
                 <div
                   class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
                 >
-                  <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                  <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                     Payment Tokens
                   </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -134,7 +134,7 @@
                 <div
                   class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
                 >
-                  <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                  <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                     Governance Tokens
                   </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -144,7 +144,7 @@
                 <div
                   class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
                 >
-                  <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                  <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                     Stablecoins
                   </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -162,7 +162,7 @@
           <!-- Token Standards -->
           <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-6">
             <h3
-              class="text-lg font-semibold mb-4 text-gray-900 dark:text-white"
+              class="text-lg font-semibold mb-4 text-zinc-900 dark:text-white"
             >
               Token Standards
             </h3>
@@ -177,7 +177,7 @@
                   />
                 </div>
                 <div>
-                  <h4 class="font-medium text-gray-900 dark:text-white">
+                  <h4 class="font-medium text-zinc-900 dark:text-white">
                     ERC-20
                   </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -195,7 +195,7 @@
                   />
                 </div>
                 <div>
-                  <h4 class="font-medium text-gray-900 dark:text-white">SPL</h4>
+                  <h4 class="font-medium text-zinc-900 dark:text-white">SPL</h4>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
                     Solana Program Library tokens
                   </p>
@@ -211,7 +211,7 @@
                   />
                 </div>
                 <div>
-                  <h4 class="font-medium text-gray-900 dark:text-white">
+                  <h4 class="font-medium text-zinc-900 dark:text-white">
                     ICRC
                   </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -225,7 +225,7 @@
           <!-- Quick Links -->
           <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-6">
             <h3
-              class="text-lg font-semibold mb-4 text-gray-900 dark:text-white"
+              class="text-lg font-semibold mb-4 text-zinc-900 dark:text-white"
             >
               Learn More
             </h3>

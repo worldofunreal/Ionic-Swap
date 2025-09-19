@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+  <div class="min-h-screen bg-zinc-50 dark:bg-zinc-900">
     <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
       <div class="mb-8">
@@ -34,7 +34,7 @@
           </ol>
         </nav>
 
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           Web3 Basics
         </h1>
         <p class="text-xl text-gray-600 dark:text-gray-400">
@@ -76,7 +76,7 @@
         <div class="lg:col-span-2 space-y-8">
           <!-- What is Web3 -->
           <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               What is Web3?
             </h3>
             <p class="text-gray-600 dark:text-gray-400 mb-6">
@@ -88,7 +88,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="bg-neutral-50 dark:bg-neutral-700 p-4 rounded-lg">
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Key Characteristics
                 </h4>
                 <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
@@ -100,7 +100,7 @@
                 </ul>
               </div>
               <div class="bg-neutral-50 dark:bg-neutral-700 p-4 rounded-lg">
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Core Technologies
                 </h4>
                 <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
@@ -116,13 +116,13 @@
 
           <!-- Web Evolution -->
           <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               The Evolution of the Web
             </h3>
             <div class="space-y-6">
               <div class="border-l-4 border-gray-300 dark:border-gray-600 pl-6">
                 <h4
-                  class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
+                  class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"
                 >
                   Web1 (1990s - 2000s)
                 </h4>
@@ -141,7 +141,7 @@
 
               <div class="border-l-4 border-blue-500 pl-6">
                 <h4
-                  class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
+                  class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"
                 >
                   Web2 (2000s - Present)
                 </h4>
@@ -160,7 +160,7 @@
 
               <div class="border-l-4 border-purple-500 pl-6">
                 <h4
-                  class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
+                  class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"
                 >
                   Web3 (Emerging)
                 </h4>
@@ -181,7 +181,7 @@
 
           <!-- Blockchain Technology -->
           <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               Blockchain Technology
             </h3>
             <p class="text-gray-600 dark:text-gray-400 mb-6">
@@ -192,7 +192,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">
                   How Blockchain Works
                 </h4>
                 <div class="space-y-3">
@@ -207,7 +207,7 @@
                     </div>
                     <div>
                       <h5
-                        class="font-medium text-gray-900 dark:text-white text-sm"
+                        class="font-medium text-zinc-900 dark:text-white text-sm"
                       >
                         Transaction Creation
                       </h5>
@@ -227,7 +227,7 @@
                     </div>
                     <div>
                       <h5
-                        class="font-medium text-gray-900 dark:text-white text-sm"
+                        class="font-medium text-zinc-900 dark:text-white text-sm"
                       >
                         Validation
                       </h5>
@@ -247,7 +247,7 @@
                     </div>
                     <div>
                       <h5
-                        class="font-medium text-gray-900 dark:text-white text-sm"
+                        class="font-medium text-zinc-900 dark:text-white text-sm"
                       >
                         Block Creation
                       </h5>
@@ -267,7 +267,7 @@
                     </div>
                     <div>
                       <h5
-                        class="font-medium text-gray-900 dark:text-white text-sm"
+                        class="font-medium text-zinc-900 dark:text-white text-sm"
                       >
                         Chain Addition
                       </h5>
@@ -280,7 +280,7 @@
               </div>
 
               <div>
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">
                   Key Features
                 </h4>
                 <div class="space-y-3">
@@ -298,7 +298,7 @@
                     </svg>
                     <div>
                       <h5
-                        class="font-medium text-gray-900 dark:text-white text-sm"
+                        class="font-medium text-zinc-900 dark:text-white text-sm"
                       >
                         Decentralization
                       </h5>
@@ -321,7 +321,7 @@
                     </svg>
                     <div>
                       <h5
-                        class="font-medium text-gray-900 dark:text-white text-sm"
+                        class="font-medium text-zinc-900 dark:text-white text-sm"
                       >
                         Immutability
                       </h5>
@@ -344,7 +344,7 @@
                     </svg>
                     <div>
                       <h5
-                        class="font-medium text-gray-900 dark:text-white text-sm"
+                        class="font-medium text-zinc-900 dark:text-white text-sm"
                       >
                         Transparency
                       </h5>
@@ -367,7 +367,7 @@
                     </svg>
                     <div>
                       <h5
-                        class="font-medium text-gray-900 dark:text-white text-sm"
+                        class="font-medium text-zinc-900 dark:text-white text-sm"
                       >
                         Security
                       </h5>
@@ -383,7 +383,7 @@
 
           <!-- Smart Contracts -->
           <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               Smart Contracts
             </h3>
             <p class="text-gray-600 dark:text-gray-400 mb-6">
@@ -393,7 +393,7 @@
             </p>
 
             <div class="bg-neutral-50 dark:bg-neutral-700 rounded-lg p-4 mb-6">
-              <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+              <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                 Example: NFT Marketplace Smart Contract
               </h4>
               <div
@@ -442,7 +442,7 @@
                     />
                   </svg>
                 </div>
-                <h5 class="font-semibold text-gray-900 dark:text-white">
+                <h5 class="font-semibold text-zinc-900 dark:text-white">
                   Automated
                 </h5>
                 <p class="text-gray-600 dark:text-gray-400 text-sm">
@@ -469,7 +469,7 @@
                     />
                   </svg>
                 </div>
-                <h5 class="font-semibold text-gray-900 dark:text-white">
+                <h5 class="font-semibold text-zinc-900 dark:text-white">
                   Trustless
                 </h5>
                 <p class="text-gray-600 dark:text-gray-400 text-sm">
@@ -496,7 +496,7 @@
                     />
                   </svg>
                 </div>
-                <h5 class="font-semibold text-gray-900 dark:text-white">
+                <h5 class="font-semibold text-zinc-900 dark:text-white">
                   Programmable
                 </h5>
                 <p class="text-gray-600 dark:text-gray-400 text-sm">
@@ -508,7 +508,7 @@
 
           <!-- Web3 Applications -->
           <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               Web3 Applications
             </h3>
             <p class="text-gray-600 dark:text-gray-400 mb-6">
@@ -538,7 +538,7 @@
                     />
                   </svg>
                 </div>
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   DeFi (Decentralized Finance)
                 </h4>
                 <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">
@@ -572,7 +572,7 @@
                     />
                   </svg>
                 </div>
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   NFT Marketplaces
                 </h4>
                 <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">
@@ -606,7 +606,7 @@
                     />
                   </svg>
                 </div>
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   DAOs (Decentralized Autonomous Organizations)
                 </h4>
                 <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">
@@ -640,7 +640,7 @@
                     />
                   </svg>
                 </div>
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Gaming & Metaverse
                 </h4>
                 <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">
@@ -662,7 +662,7 @@
           <!-- Quick Navigation -->
           <div class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3
-              class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
+              class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"
             >
               Learn More
             </h3>
@@ -697,37 +697,37 @@
           <!-- Key Terms -->
           <div class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3
-              class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
+              class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"
             >
               Key Terms
             </h3>
             <div class="space-y-3">
               <div>
-                <dt class="font-medium text-gray-900 dark:text-white">dApp</dt>
+                <dt class="font-medium text-zinc-900 dark:text-white">dApp</dt>
                 <dd class="text-sm text-gray-600 dark:text-gray-400">
                   Decentralized application running on blockchain
                 </dd>
               </div>
               <div>
-                <dt class="font-medium text-gray-900 dark:text-white">DeFi</dt>
+                <dt class="font-medium text-zinc-900 dark:text-white">DeFi</dt>
                 <dd class="text-sm text-gray-600 dark:text-gray-400">
                   Decentralized finance applications
                 </dd>
               </div>
               <div>
-                <dt class="font-medium text-gray-900 dark:text-white">DAO</dt>
+                <dt class="font-medium text-zinc-900 dark:text-white">DAO</dt>
                 <dd class="text-sm text-gray-600 dark:text-gray-400">
                   Decentralized Autonomous Organization
                 </dd>
               </div>
               <div>
-                <dt class="font-medium text-gray-900 dark:text-white">Gas</dt>
+                <dt class="font-medium text-zinc-900 dark:text-white">Gas</dt>
                 <dd class="text-sm text-gray-600 dark:text-gray-400">
                   Fee paid for blockchain transactions
                 </dd>
               </div>
               <div>
-                <dt class="font-medium text-gray-900 dark:text-white">
+                <dt class="font-medium text-zinc-900 dark:text-white">
                   Consensus
                 </dt>
                 <dd class="text-sm text-gray-600 dark:text-gray-400">

@@ -38,7 +38,7 @@
           Terms of Service – Ionic-Swap (MVP)
         </h2>
         <p class="text-sm text-gray-600 dark:text-gray-400 mb-8">
-          Effective Date: September 2025
+          Effective Date: 16th September 2025
         </p>
 
         <div class="space-y-8">

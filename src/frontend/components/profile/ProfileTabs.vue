@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex gap-2 border-b border-gray-200 dark:border-gray-800 overflow-x-auto"
+    class="flex gap-2 border-b border-zinc-200 dark:border-zinc-800 overflow-x-auto"
   >
     <button
       v-for="tab in tabs"
@@ -9,7 +9,7 @@
       :class="
         modelValue === tab
           ? 'border-primary-600 text-primary-600 dark:text-primary-400'
-          : 'border-transparent text-gray-500 hover:text-primary-600 dark:hover:text-primary-400'
+          : 'border-transparent text-zinc-500 hover:text-primary-600 dark:hover:text-primary-400'
       "
       @click="$emit('update:modelValue', tab)"
     >

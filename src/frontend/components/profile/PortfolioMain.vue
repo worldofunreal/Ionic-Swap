@@ -2,11 +2,11 @@
   <div class="flex flex-col gap-6 p-4 w-full">
     <!-- Mobile Filter Button - Only visible on mobile -->
     <div class="md:hidden flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+      <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
         Portfolio
       </h2>
       <button
-        class="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
         @click="isDrawerOpen = true"
       >
         <UIcon name="heroicons:funnel" class="w-4 h-4" />
@@ -22,8 +22,8 @@
     <!-- Portfolio Content -->
     <div v-else class="space-y-6">
       <!-- Token Balances Section -->
-      <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
-        <div class="p-4 border-b border-gray-200 dark:border-gray-800">
+      <div class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800">
+        <div class="p-4 border-b border-zinc-200 dark:border-zinc-800">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-foreground">Token Balances</h3>
             <div class="flex items-center gap-3">
@@ -81,7 +81,7 @@
             </th>
           </tr>
         </thead>
-            <tbody class="bg-card divide-y divide-gray-200 dark:divide-gray-800">
+            <tbody class="bg-card divide-y divide-zinc-200 dark:divide-zinc-800">
               <tr v-if="tokensWithBalances.length === 0">
                 <td colspan="5" class="px-6 py-12 text-center text-muted-foreground">
                   <div class="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
@@ -99,7 +99,7 @@
                 <!-- Coin Column -->
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
-                    <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center mr-3">
+                    <div class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mr-3">
                       <UIcon :name="getTokenIcon(token.symbol)" class="w-6 h-6" />
                     </div>
                     <div>
@@ -147,8 +147,8 @@
       </div>
 
       <!-- Liquidity Positions Section -->
-      <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
-        <div class="p-4 border-b border-gray-200 dark:border-gray-800">
+      <div class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800">
+        <div class="p-4 border-b border-zinc-200 dark:border-zinc-800">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-foreground">Liquidity Positions</h3>
             <span class="text-xs text-muted-foreground">
@@ -194,7 +194,7 @@
             >
               <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center space-x-3">
-                  <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-700 flex items-center justify-center">
+                  <div class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
                     <UIcon :name="getTokenIcon(position.token_symbol)" class="w-6 h-6" />
                   </div>
                   <div>
@@ -234,7 +234,7 @@
               </div>
 
               <!-- Claimable Fees -->
-              <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+              <div class="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center justify-between">
                   <span class="text-sm text-muted-foreground">Claimable Fees</span>
                   <div class="text-right">
@@ -246,7 +246,7 @@
               </div>
 
               <!-- Position Actions (only for own profile) -->
-              <div v-if="isOwnProfile" class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+              <div v-if="isOwnProfile" class="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
                 <div class="flex gap-2">
                   <button
                     v-if="position.state.Locked"
@@ -294,7 +294,7 @@
 
       <!-- Drawer Content -->
       <div
-        class="absolute left-0 right-0 bg-zinc-50 dark:bg-neutral-950 rounded-t-2xl border-t border-gray-200 dark:border-gray-800 max-h-[80vh] flex flex-col transition-transform duration-300 ease-out"
+        class="absolute left-0 right-0 bg-zinc-50 dark:bg-neutral-950 rounded-t-2xl border-t border-zinc-200 dark:border-zinc-800 max-h-[80vh] flex flex-col transition-transform duration-300 ease-out"
         :class="
           isDrawerOpen ? 'bottom-0 translate-y-0' : 'bottom-0 translate-y-full'
         "
@@ -302,23 +302,23 @@
       >
         <!-- Drawer Handle -->
         <div class="flex justify-center pt-3 pb-2 flex-shrink-0">
-          <div class="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
+          <div class="w-12 h-1 bg-zinc-300 dark:bg-zinc-600 rounded-full" />
         </div>
 
         <!-- Drawer Header -->
         <div
-          class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0"
+          class="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex-shrink-0"
         >
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
             Filters
           </h3>
           <button
-            class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            class="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             @click="isDrawerOpen = false"
           >
             <UIcon
               name="heroicons:x-mark"
-              class="w-5 h-5 text-gray-500 dark:text-gray-400"
+              class="w-5 h-5 text-zinc-500 dark:text-zinc-400"
             />
           </button>
         </div>
@@ -327,7 +327,7 @@
         <div class="flex-1 overflow-y-auto p-6 space-y-6">
           <!-- Value Display Toggle -->
           <div>
-            <h4 class="font-semibold text-gray-900 dark:text-white mb-3">
+            <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">
               Value Display
             </h4>
             <div class="flex bg-muted rounded-md p-1">
@@ -359,7 +359,7 @@
 
         <!-- Drawer Footer -->
         <div
-          class="p-6 border-t border-gray-200 dark:border-gray-800 flex-shrink-0"
+          class="p-6 border-t border-zinc-200 dark:border-zinc-800 flex-shrink-0"
         >
             <button
             class="w-full px-4 py-3 rounded-lg bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors"
@@ -481,7 +481,7 @@
     if (state.Locked) return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
     if (state.Dissolving) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
     if (state.Dissolved) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-    return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+    return 'bg-zinc-100 text-zinc-800 dark:bg-zinc-900 dark:text-zinc-200'
   }
 
   const formatDuration = (seconds: number | bigint) => {

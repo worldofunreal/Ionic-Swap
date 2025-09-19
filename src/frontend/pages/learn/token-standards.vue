@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+  <div class="min-h-screen bg-zinc-50 dark:bg-zinc-900">
     <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
       <div class="mb-8">
@@ -34,7 +34,7 @@
           </ol>
         </nav>
 
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           Token Standards
         </h1>
         <p class="text-xl text-gray-600 dark:text-gray-400">
@@ -71,7 +71,7 @@
               />
             </div>
             <div>
-              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+              <h2 class="text-2xl font-bold text-zinc-900 dark:text-white">
                 ERC-20
               </h2>
               <p class="text-gray-600 dark:text-gray-400">
@@ -88,7 +88,7 @@
             </p>
 
             <h3
-              class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+              class="text-xl font-semibold mb-4 text-zinc-900 dark:text-white"
             >
               Key Features
             </h3>
@@ -111,7 +111,7 @@
             </ul>
 
             <h3
-              class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+              class="text-xl font-semibold mb-4 text-zinc-900 dark:text-white"
             >
               Popular ERC-20 Tokens
             </h3>
@@ -119,7 +119,7 @@
               <div
                 class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
               >
-                <h4 class="font-semibold text-gray-900 dark:text-white">
+                <h4 class="font-semibold text-zinc-900 dark:text-white">
                   USDT
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -129,7 +129,7 @@
               <div
                 class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
               >
-                <h4 class="font-semibold text-gray-900 dark:text-white">
+                <h4 class="font-semibold text-zinc-900 dark:text-white">
                   LINK
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
@@ -152,7 +152,7 @@
               />
             </div>
             <div>
-              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+              <h2 class="text-2xl font-bold text-zinc-900 dark:text-white">
                 SPL
               </h2>
               <p class="text-gray-600 dark:text-gray-400">
@@ -169,7 +169,7 @@
             </p>
 
             <h3
-              class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+              class="text-xl font-semibold mb-4 text-zinc-900 dark:text-white"
             >
               Key Features
             </h3>
@@ -193,7 +193,7 @@
             </ul>
 
             <h3
-              class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+              class="text-xl font-semibold mb-4 text-zinc-900 dark:text-white"
             >
               Popular SPL Tokens
             </h3>
@@ -201,7 +201,7 @@
               <div
                 class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
               >
-                <h4 class="font-semibold text-gray-900 dark:text-white">SOL</h4>
+                <h4 class="font-semibold text-zinc-900 dark:text-white">SOL</h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
                   Solana - Native token
                 </p>
@@ -209,7 +209,7 @@
               <div
                 class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
               >
-                <h4 class="font-semibold text-gray-900 dark:text-white">RAY</h4>
+                <h4 class="font-semibold text-zinc-900 dark:text-white">RAY</h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
                   Raydium - DEX token
                 </p>
@@ -230,7 +230,7 @@
               />
             </div>
             <div>
-              <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+              <h2 class="text-2xl font-bold text-zinc-900 dark:text-white">
                 ICRC
               </h2>
               <p class="text-gray-600 dark:text-gray-400">
@@ -247,7 +247,7 @@
             </p>
 
             <h3
-              class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+              class="text-xl font-semibold mb-4 text-zinc-900 dark:text-white"
             >
               Key Features
             </h3>
@@ -272,7 +272,7 @@
             </ul>
 
             <h3
-              class="text-xl font-semibold mb-4 text-gray-900 dark:text-white"
+              class="text-xl font-semibold mb-4 text-zinc-900 dark:text-white"
             >
               Popular ICRC Tokens
             </h3>
@@ -280,7 +280,7 @@
               <div
                 class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
               >
-                <h4 class="font-semibold text-gray-900 dark:text-white">ICP</h4>
+                <h4 class="font-semibold text-zinc-900 dark:text-white">ICP</h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
                   Internet Computer - Native token
                 </p>
@@ -288,7 +288,7 @@
               <div
                 class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
               >
-                <h4 class="font-semibold text-gray-900 dark:text-white">SNS</h4>
+                <h4 class="font-semibold text-zinc-900 dark:text-white">SNS</h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
                   Service Nervous System tokens
                 </p>
@@ -296,7 +296,7 @@
               <div
                 class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
               >
-                <h4 class="font-semibold text-gray-900 dark:text-white">
+                <h4 class="font-semibold text-zinc-900 dark:text-white">
                   ckBTC
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400">

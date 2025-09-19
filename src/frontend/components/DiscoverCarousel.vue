@@ -2,14 +2,14 @@
   <div class="relative w-full">
     <!-- Navigation Buttons -->
     <button
-      class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 p-0 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700 bg-zinc-50 dark:bg-neutral-950 hover:bg-primary-50 dark:hover:bg-primary-500 transition"
+      class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 p-0 rounded-full flex items-center justify-center border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 hover:bg-primary-50 dark:hover:bg-primary-500 transition"
       style="transform: translateY(-50%)"
       @click="scrollLeft"
     >
       <UIcon name="i-heroicons-chevron-left-20-solid" class="text-base" />
     </button>
     <button
-      class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 p-0 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700 bg-zinc-50 dark:bg-neutral-950 hover:bg-primary-50 dark:hover:bg-primary-500 transition"
+      class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 p-0 rounded-full flex items-center justify-center border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 hover:bg-primary-50 dark:hover:bg-primary-500 transition"
       style="transform: translateY(-50%)"
       @click="scrollRight"
     >
@@ -26,7 +26,7 @@
         <div
           v-for="feature in features"
           :key="feature.id"
-          class="w-full flex-shrink-0 bg-zinc-50 dark:bg-neutral-950 rounded-2xl shadow flex flex-col"
+          class="w-full flex-shrink-0 bg-zinc-100 dark:bg-zinc-900 rounded-2xl shadow flex flex-col"
           style="scroll-snap-align: start; min-width: 100%; max-width: 100%"
         >
           <!-- Feature Content -->
@@ -55,10 +55,10 @@
                     />
                   </div>
                   <div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                    <h3 class="text-xl font-bold text-zinc-900 dark:text-white">
                       {{ feature.title }}
                     </h3>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                    <p class="text-sm text-zinc-600 dark:text-zinc-400">
                       {{ feature.subtitle }}
                     </p>
                   </div>
@@ -69,7 +69,7 @@
                   >
                     {{ feature.stat }}
                   </div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">
+                  <div class="text-xs text-zinc-500 dark:text-zinc-400">
                     {{ feature.statLabel }}
                   </div>
                 </div>
@@ -79,11 +79,11 @@
               <div class="flex-1 flex items-center justify-center">
                 <div class="text-center">
                   <div
-                    class="text-4xl font-bold text-gray-900 dark:text-white mb-2"
+                    class="text-4xl font-bold text-zinc-900 dark:text-white mb-2"
                   >
                     {{ feature.mainValue }}
                   </div>
-                  <div class="text-lg text-gray-600 dark:text-gray-400 mb-4">
+                  <div class="text-lg text-zinc-600 dark:text-zinc-400 mb-4">
                     {{ feature.mainLabel }}
                   </div>
                   <div class="flex items-center justify-center gap-4">
@@ -97,7 +97,7 @@
                         :class="getChainColor(chain)"
                       />
                       <span
-                        class="text-xs font-medium text-gray-700 dark:text-gray-300"
+                        class="text-xs font-medium text-zinc-700 dark:text-zinc-300"
                         >{{ chain }}</span
                       >
                     </div>

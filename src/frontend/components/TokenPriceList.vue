@@ -1,7 +1,7 @@
 <template>
   <div class="p-4">
     <div class="flex items-center justify-between mb-3">
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+      <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
         Token Prices
       </h3>
       <UButton
@@ -24,7 +24,7 @@
       >
         <div class="flex items-center gap-2">
           <div
-            class="w-7 h-7 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center"
+            class="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center"
           >
             <UIcon :name="getTokenIcon(token.symbol)" class="w-4 h-4" />
           </div>
@@ -32,14 +32,14 @@
             <div class="font-bold text-black dark:text-white">
               {{ token.symbol }}
             </div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">
+            <div class="text-xs text-zinc-500 dark:text-zinc-400">
               {{ token.name }}
             </div>
           </div>
         </div>
 
         <div class="text-right">
-          <div class="font-semibold text-gray-900 dark:text-white tabular-nums">
+          <div class="font-semibold text-zinc-900 dark:text-white tabular-nums">
             ${{ formatPrice(token.price) }}
           </div>
           <div
