@@ -174,6 +174,11 @@ const refreshHistory = async () => {
   await loadTransactions(true)
 }
 
+// Expose methods to parent component
+defineExpose({
+  refreshHistory
+})
+
 const loadMore = async () => {
   await loadTransactions(false)
 }

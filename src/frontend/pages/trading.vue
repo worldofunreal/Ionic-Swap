@@ -79,7 +79,7 @@
         <!-- Transaction History -->
         <div class="bg-card border-t border-neutral-200 dark:border-neutral-700 p-2 overflow-hidden" style="height: 50%;">
           <div class="overflow-y-auto scrollbar-hide" style="height: calc(100% - 1.5rem);">
-            <TransactionHistory />
+            <TransactionHistory ref="transactionHistoryRef" />
           </div>
         </div>
       </div>
@@ -377,6 +377,9 @@
   const internalTokens = ref<any[]>([])
   const canisterServiceReady = ref(false)
 
+  // Template refs
+  const transactionHistoryRef = ref<any>(null)
+
 
   // Trading tabs (simplified)
   // Removed history tab as it's now below the chart
@@ -575,6 +578,11 @@
         // Clear form
         buyAmount.value = ''
         
+        // Refresh transaction history
+        if (transactionHistoryRef.value) {
+          await transactionHistoryRef.value.refreshHistory()
+        }
+        
         // Show success toast
         const receivedAmount = TokenService.formatBalance(Number(result.Ok.to_amount), selectedTokenSymbol.value)
         const paidAmount = TokenService.formatBalance(Number(result.Ok.from_amount), 'USDT')
@@ -583,8 +591,6 @@
           description: `Bought ${receivedAmount} ${selectedTokenSymbol.value} for ${paidAmount} USDT`,
           color: 'success',
         })
-        
-        // Transaction history will automatically refresh as it's always visible
       } else {
         toast.add({
           title: 'Trade Failed',
@@ -643,6 +649,11 @@
         // Clear form
         sellAmount.value = ''
         
+        // Refresh transaction history
+        if (transactionHistoryRef.value) {
+          await transactionHistoryRef.value.refreshHistory()
+        }
+        
         // Show success toast
         const soldAmount = TokenService.formatBalance(Number(result.Ok.from_amount), selectedTokenSymbol.value)
         const receivedAmount = TokenService.formatBalance(Number(result.Ok.to_amount), 'USDT')
@@ -651,8 +662,6 @@
           description: `Sold ${soldAmount} ${selectedTokenSymbol.value} for ${receivedAmount} USDT`,
           color: 'success',
         })
-        
-        // Transaction history will automatically refresh as it's always visible
       } else {
         toast.add({
           title: 'Trade Failed',
