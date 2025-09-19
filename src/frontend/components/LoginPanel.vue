@@ -14,7 +14,7 @@
     />
     <!-- Modal Content -->
     <div
-      class="relative bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-xl max-w-md w-full mx-4"
+      class="relative bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-xl max-w-md w-full mx-4"
     >
       <div class="p-8">
         <!-- Logo Section -->
@@ -42,7 +42,7 @@
           >
             <div class="flex items-center gap-3">
               <img src="/logo.svg" alt="Local Wallet" class="w-6 h-6" />
-              <span>Try Ionic Wallet <span class="text-gray-400 text-xs">(Fastest)</span></span>
+              <span>Try Ionic Wallet <span class="text-zinc-400 text-xs">(Fastest)</span></span>
             </div>
           </UButton>
 
@@ -53,7 +53,7 @@
             size="xl"
             color="neutral"
             variant="soft"
-            class="h-12 text-sm font-normal bg-gray-200 dark:bg-neutral-800 hover:bg-primary-400 dark:hover:bg-primary-600 text-gray-800 dark:text-gray-200 justify-start"
+            class="h-12 text-sm font-normal bg-zinc-200 dark:bg-zinc-800 hover:bg-primary-400 dark:hover:bg-primary-600 text-zinc-800 dark:text-zinc-200 justify-start"
             :loading="loading && loginMethod === 'internet-identity'"
             @click="login('internet-identity')"
           >
@@ -61,7 +61,7 @@
               <img src="/icons/tokens/icp.svg" alt="Internet Identity" class="w-6 h-6" />
               <span
                 >Continue with Internet Identity
-                <span class="text-gray-500 text-xs">(Recommended)</span></span
+                <span class="text-zinc-500 text-xs">(Recommended)</span></span
               >
             </div>
           </UButton>
@@ -70,10 +70,10 @@
         <!-- Divider -->
         <div class="relative mb-6">
           <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
+            <div class="w-full border-t border-zinc-300 dark:border-zinc-600"></div>
           </div>
           <div class="relative flex justify-center text-sm">
-            <span class="px-2 bg-zinc-50 dark:bg-neutral-900 text-gray-200">or connect with wallet</span>
+            <span class="px-2 bg-zinc-100 dark:bg-zinc-900 text-zinc-200">or connect with wallet</span>
           </div>
         </div>
 
@@ -82,65 +82,65 @@
           <!-- MetaMask -->
           <button
             id="metamask-btn"
-            class="flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+            class="flex flex-col items-center justify-center p-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"
             :class="{ 'opacity-50 pointer-events-none': loading && loginMethod === 'metamask' }"
             @click="login('metamask')"
             :disabled="loading && loginMethod === 'metamask'"
           >
             <img src="/metamask.svg" alt="MetaMask" class="w-6 h-6 mb-1" />
-            <span class="text-xs text-gray-600 dark:text-gray-400">MetaMask</span>
+            <span class="text-xs text-zinc-600 dark:text-zinc-400">MetaMask</span>
           </button>
 
           <!-- Phantom -->
           <button
             id="phantom-btn"
-            class="flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+            class="flex flex-col items-center justify-center p-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"
             :class="{ 'opacity-50 pointer-events-none': loading && loginMethod === 'phantom' }"
             @click="login('phantom')"
             :disabled="loading && loginMethod === 'phantom'"
           >
             <img src="/phantom.svg" alt="Phantom" class="w-6 h-6 mb-1" />
-            <span class="text-xs text-gray-600 dark:text-gray-400">Phantom</span>
+            <span class="text-xs text-zinc-600 dark:text-zinc-400">Phantom</span>
           </button>
 
           <!-- Rabby -->
           <button
             id="rabby-btn"
-            class="flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+            class="flex flex-col items-center justify-center p-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"
             :class="{ 'opacity-50 pointer-events-none': loading && loginMethod === 'rabby' }"
             @click="login('rabby')"
             :disabled="loading && loginMethod === 'rabby'"
           >
             <img src="/rabby.svg" alt="Rabby" class="w-6 h-6 mb-1" />
-            <span class="text-xs text-gray-600 dark:text-gray-400">Rabby</span>
+            <span class="text-xs text-zinc-600 dark:text-zinc-400">Rabby</span>
           </button>
 
           <!-- Magic Eden -->
           <button
             id="magic-eden-btn"
-            class="flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+            class="flex flex-col items-center justify-center p-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"
             :class="{ 'opacity-50 pointer-events-none': loading && loginMethod === 'magic-eden' }"
             @click="login('magic-eden')"
             :disabled="loading && loginMethod === 'magic-eden'"
           >
             <img src="/magiceden.svg" alt="Magic Eden" class="w-6 h-6 mb-1" />
-            <span class="text-xs text-gray-600 dark:text-gray-400">Magic Eden</span>
+            <span class="text-xs text-zinc-600 dark:text-zinc-400">Magic Eden</span>
           </button>
 
           <!-- Plug -->
           <button
             id="plug-btn"
-            class="flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+            class="flex flex-col items-center justify-center p-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"
             :class="{ 'opacity-50 pointer-events-none': loading && loginMethod === 'plug' }"
             @click="login('plug')"
             :disabled="loading && loginMethod === 'plug'"
           >
             <img src="/plug.svg" alt="Plug" class="w-6 h-6 mb-1" />
-            <span class="text-xs text-gray-600 dark:text-gray-400">Plug</span>
+            <span class="text-xs text-zinc-600 dark:text-zinc-400">Plug</span>
           </button>
         </div>
 
-        <hr class="my-6 border-gray-200 dark:border-gray-700" >
+        <hr class="my-6 border-zinc-200 dark:border-zinc-800" >
         <UButton
           block
           color="neutral"
@@ -157,7 +157,7 @@
 
         <!-- Terms and Privacy Policy -->
         <div
-          class="mt-6 text-xs text-gray-500 dark:text-gray-400 text-center leading-relaxed"
+          class="mt-6 text-xs text-zinc-500 dark:text-zinc-400 text-center leading-relaxed"
         >
           By signing in and using Ionic Swap, you agree to our
           <NuxtLink to="/terms" class="text-primary hover:underline"
