@@ -1,6 +1,6 @@
 <template>
   <div
-    class="bg-white dark:bg-neutral-950 rounded-lg shadow-lg overflow-hidden mb-8"
+    class="h-full overflow-y-auto"
   >
     <!-- Compact Banner Section -->
     <div
@@ -21,7 +21,7 @@
     </div>
 
     <!-- Profile Info Section -->
-    <div class="px-6 pb-6">
+    <div class="px-4 pb-4">
       <!-- Avatar Section -->
       <div class="flex justify-between items-start -mt-12 mb-4">
         <div class="relative">

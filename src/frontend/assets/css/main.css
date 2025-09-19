@@ -18,11 +18,117 @@
 /* Semantic color classes for consistency */
 .text-muted-foreground { @apply text-gray-500 dark:text-gray-400; }
 .text-foreground { @apply text-gray-900 dark:text-white; }
-.bg-card { @apply bg-white dark:bg-gray-900; }
-.bg-muted { @apply bg-gray-100 dark:bg-gray-800; }
+.bg-card { background-color: var(--background-elevated); }
+.bg-muted { background-color: var(--surface); }
+.bg-background { background-color: var(--background); }
+.bg-background-elevated { background-color: var(--background-elevated); }
+.bg-surface { background-color: var(--surface); }
+.bg-surface-elevated { background-color: var(--surface-elevated); }
+.bg-buy-surface { background-color: var(--buy-surface); }
+.bg-sell-surface { background-color: var(--sell-surface); }
+.border-subtle { border-color: var(--surface-elevated); }
+.border-themed { border-color: var(--border-color); }
+.border-themed-subtle { border-color: var(--border-color-subtle); }
+/* Semantic color tokens */
 .text-primary { @apply text-primary-500; }
-.text-error { @apply text-red-500; }
-.text-success { @apply text-green-500; }
+.text-success { @apply text-green-600 dark:text-green-400; }
+.text-error { @apply text-red-600 dark:text-red-400; }
+.text-warning { @apply text-yellow-600 dark:text-yellow-400; }
+.text-info { @apply text-blue-600 dark:text-blue-400; }
+.text-purple { @apply text-purple-600 dark:text-purple-400; }
+.text-orange { @apply text-orange-600 dark:text-orange-400; }
+.text-cyan { @apply text-cyan-600 dark:text-cyan-400; }
+
+/* Background semantic tokens */
+.bg-success { @apply bg-green-50 dark:bg-green-900/20; }
+.bg-error { @apply bg-red-50 dark:bg-red-900/20; }
+.bg-warning { @apply bg-yellow-50 dark:bg-yellow-900/20; }
+.bg-info { @apply bg-blue-50 dark:bg-blue-900/20; }
+.bg-purple { @apply bg-purple-50 dark:bg-purple-900/20; }
+.bg-orange { @apply bg-orange-50 dark:bg-orange-900/20; }
+
+/* Border semantic tokens */
+.border-success { @apply border-green-200 dark:border-green-800; }
+.border-error { @apply border-red-200 dark:border-red-800; }
+.border-warning { @apply border-yellow-200 dark:border-yellow-800; }
+.border-info { @apply border-blue-200 dark:border-blue-800; }
+
+/* Toast theming - ensure toasts use proper theme colors */
+.toast-container {
+  /* Toast container uses theme colors automatically through Nuxt UI */
+}
+
+/* Override any default toast styling to ensure theme consistency */
+[data-headlessui-state] .toast,
+.ui-notification,
+.notification {
+  background-color: var(--background-elevated) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-color) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Success toast specific styling */
+[data-headlessui-state] .toast[data-color="success"],
+.ui-notification[data-color="success"],
+.notification[data-color="success"] {
+  border-left: 4px solid theme('colors.green.500') !important;
+  background-color: var(--background-elevated) !important;
+}
+
+/* Error toast specific styling */
+[data-headlessui-state] .toast[data-color="error"],
+.ui-notification[data-color="error"],
+.notification[data-color="error"] {
+  border-left: 4px solid theme('colors.red.500') !important;
+  background-color: var(--background-elevated) !important;
+}
+
+/* Warning toast specific styling */
+[data-headlessui-state] .toast[data-color="warning"],
+.ui-notification[data-color="warning"],
+.notification[data-color="warning"] {
+  border-left: 4px solid theme('colors.yellow.500') !important;
+  background-color: var(--background-elevated) !important;
+}
+
+/* Info toast specific styling */
+[data-headlessui-state] .toast[data-color="info"],
+.ui-notification[data-color="info"],
+.notification[data-color="info"] {
+  border-left: 4px solid theme('colors.blue.500') !important;
+  background-color: var(--background-elevated) !important;
+}
+
+/* Primary toast specific styling */
+[data-headlessui-state] .toast[data-color="primary"],
+.ui-notification[data-color="primary"],
+.notification[data-color="primary"] {
+  border-left: 4px solid theme('colors.emerald.500') !important;
+  background-color: var(--background-elevated) !important;
+}
+
+/* Override Nuxt UI component colors to use our custom scheme */
+/* Light theme overrides */
+.nuxt-ui-input {
+  background-color: var(--surface) !important;
+  border-color: var(--surface-elevated) !important;
+}
+
+.nuxt-ui-input:focus {
+  border-color: var(--ui-color-primary-500) !important;
+  box-shadow: 0 0 0 1px var(--ui-color-primary-500) !important;
+}
+
+/* Target UInput specifically for both themes */
+[data-headlessui-state] input,
+.ui-input,
+input[type="text"],
+input[type="search"] {
+  background-color: var(--surface) !important;
+  border-color: var(--surface-elevated) !important;
+  color: var(--text-color) !important;
+}
 
 /* Design system tokens - let Nuxt UI handle primary colors */
 :root {
@@ -31,6 +137,34 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+  
+  /* Custom background colors */
+  --background: #FAFAFA;
+  --background-elevated: #FFFFFF;
+  --surface: #F0F0F0;
+  --surface-elevated: #FFFFFF;
+  --buy-surface: #F0F9FF;
+  --sell-surface: #FEF2F2;
+  --text-color: #1A1A1A;
+  
+  /* Themed border colors - visible in both light and dark modes */
+  --border-color: #E5E7EB; /* neutral-200 for light mode */
+  --border-color-subtle: #D1D5DB; /* neutral-300 for light mode */
+}
+
+/* Dark mode overrides */
+.dark {
+  --background: #202020;
+  --background-elevated: #2A2A2A;
+  --surface: #2A2A2A;
+  --surface-elevated: #333333;
+  --buy-surface: #1E3A3A;
+  --sell-surface: #3A1E1E;
+  --text-color: #FFFFFF;
+  
+  /* Themed border colors - more visible in dark mode */
+  --border-color: #404040; /* Much lighter than neutral-700 for better visibility */
+  --border-color-subtle: #4B5563; /* neutral-600 for subtle borders */
 }
 
 /* Color theme classes - integrated with Nuxt UI tokens */

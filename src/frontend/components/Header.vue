@@ -3,9 +3,9 @@
     :class="[
       'sticky z-50 top-0 left-0 w-full transition-all duration-500 ease-in-out',
       scrolled
-        ? 'bg-white/70 dark:bg-neutral-950/70 backdrop-blur-sm shadow-md'
+        ? 'bg-background/80 backdrop-blur-sm shadow-md'
         : 'bg-transparent',
-      'border-b border-gray-200 dark:border-gray-800',
+      'border-b border-themed',
     ]"
   >
     <div class="flex justify-between items-center h-14 mx-4 md:mx-4">
@@ -13,13 +13,13 @@
       <div class="flex items-center gap-2 flex-shrink-0">
         <!-- Mobile Menu Button -->
         <button
-          class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          class="md:hidden p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
           aria-label="Toggle mobile menu"
           @click="toggleMobileSidebar"
         >
           <UIcon
             name="i-heroicons-bars-3-20-solid"
-            class="w-6 h-6 text-gray-700 dark:text-gray-300"
+            class="w-6 h-6 text-neutral-700 dark:text-neutral-300"
           />
         </button>
         <!-- Search Bar -->
@@ -43,7 +43,7 @@
               showSearchResults &&
               (searchResults.length > 0 || searchLoading || searchError)
             "
-            class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-neutral-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto z-50"
+            class="absolute top-full left-0 right-0 mt-1 bg-card rounded-lg shadow-lg border border-themed max-h-96 overflow-y-auto z-50"
             @mousedown.prevent
           >
             <!-- Loading State -->
@@ -51,7 +51,7 @@
               <div
                 class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"
               />
-              <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+              <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
                 Searching...
               </p>
             </div>
@@ -83,9 +83,9 @@
             <div v-else-if="search.trim().length >= 2" class="p-4 text-center">
               <UIcon
                 name="i-heroicons-magnifying-glass-20-solid"
-                class="w-6 h-6 text-gray-400 mx-auto"
+                class="w-6 h-6 text-neutral-400 mx-auto"
               />
-              <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+              <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
                 No users found
               </p>
             </div>
@@ -97,7 +97,7 @@
         <!-- Theme Toggle Button - Client Only -->
         <ClientOnly>
           <button
-            class="relative w-10 h-6 rounded-full transition-colors duration-300 focus:outline-none border border-gray-300 dark:border-gray-700 flex mr-1"
+            class="relative w-10 h-6 rounded-full transition-colors duration-300 focus:outline-none border border-themed-subtle flex mr-1"
             :class="
               colorMode.value === 'dark' ? 'bg-primary-500' : 'bg-primary-600'
             "
@@ -130,7 +130,7 @@
         <!-- Color Theme Toggle Button - Client Only -->
         <ClientOnly>
           <button
-            class="relative w-7 h-7 rounded-lg transition-all duration-300 focus:outline-none border border-gray-300 dark:border-gray-700 flex items-center justify-center mr-1 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+            class="relative w-7 h-7 rounded-lg transition-all duration-300 focus:outline-none border border-themed-subtle flex items-center justify-center mr-1 bg-surface hover:bg-surface-elevated"
             aria-label="Toggle color theme"
             @click="toggleColorTheme"
           >

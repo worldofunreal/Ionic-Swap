@@ -1,8 +1,8 @@
 <template>
-  <div class="h-full bg-gray-50 dark:bg-neutral-950 overflow-hidden">
+  <div class="h-full bg-background overflow-hidden">
     <!-- Liquidity Header -->
     <div
-      class="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex-shrink-0"
+      class="bg-card border-b border-themed px-4 py-3 flex-shrink-0"
     >
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
@@ -25,7 +25,7 @@
           <!-- System Stats -->
           <div class="flex items-center space-x-6 ml-8">
             <div class="text-center">
-              <div class="text-xl font-bold text-purple-600 dark:text-purple-400">
+              <div class="text-xl font-bold text-purple">
                 ${{ formatUSDTSystemValue(systemStats.totalStaked) }}
               </div>
               <div class="text-xs text-gray-500 dark:text-gray-400">Total TVL</div>
@@ -37,7 +37,7 @@
               <div class="text-xs text-gray-500 dark:text-gray-400">Voting Power</div>
             </div>
             <div class="text-center">
-              <div class="text-xl font-bold text-green-600 dark:text-green-400">
+              <div class="text-xl font-bold text-success">
                 ${{ formatUSDTSystemValue(systemStats.totalFees) }}
               </div>
               <div class="text-xs text-gray-500 dark:text-gray-400">Fee Earnings</div>
@@ -67,7 +67,7 @@
       <div class="flex-1 flex flex-col">
         <!-- Pool Controls -->
         <div
-          class="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 px-4 py-2 flex-shrink-0"
+          class="bg-card border-b border-themed px-4 py-2 flex-shrink-0"
         >
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
@@ -78,7 +78,7 @@
                   'px-3 py-1 text-sm rounded-md transition-colors',
                   activePoolTab === tab.value
                     ? 'bg-primary-500 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600',
+                    : 'bg-surface text-gray-700 dark:text-gray-300 hover:bg-surface-elevated',
                 ]"
                 @click="activePoolTab = tab.value"
               >
@@ -95,7 +95,7 @@
         </div>
 
         <!-- Pool List -->
-        <div class="flex-1 bg-white dark:bg-neutral-900 overflow-auto">
+        <div class="flex-1 bg-background overflow-auto">
           <!-- Loading State -->
           <div v-if="loading && allPools.length === 0" class="p-8 text-center">
             <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 mx-auto mb-2 animate-spin text-gray-400" />
@@ -108,17 +108,17 @@
               v-for="pool in filteredPools"
               :key="pool.token_symbol"
               :class="[
-                'border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer transition-all',
+                'border border-themed rounded-lg p-4 cursor-pointer transition-all',
                 selectedPool?.token_symbol === pool.token_symbol
                   ? 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                  : 'hover:bg-gray-50 dark:hover:bg-neutral-800',
+                  : 'hover:bg-surface-elevated',
               ]"
               @click="selectPool(pool)"
             >
               <div class="grid grid-cols-14 gap-1 items-center">
                 <!-- Token Info - Fixed Width -->
                 <div class="col-span-2 flex items-center space-x-2">
-                  <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
+                  <div class="w-8 h-8 rounded-full bg-surface flex items-center justify-center">
                     <UIcon :name="getTokenIcon(pool.token_symbol)" class="w-5 h-5" />
                   </div>
                   <div>
@@ -133,7 +133,7 @@
 
                 <!-- TVL USDT - Fixed Width -->
                 <div class="col-span-2 text-center">
-                  <div class="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                  <div class="text-sm font-semibold text-purple">
                     ${{ formatUSDTValue(pool.tvl_usdt) }}
                   </div>
                   <div class="text-xs text-gray-500 dark:text-gray-400">TVL</div>
@@ -149,7 +149,7 @@
 
                 <!-- Available - Fixed Width -->
                 <div class="col-span-2 text-center">
-                  <div class="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                  <div class="text-sm font-semibold text-info">
                     {{ TokenService.formatBalance(typeof pool.available_liquidity === 'bigint' ? Number(pool.available_liquidity) : pool.available_liquidity, pool.token_symbol) }} {{ pool.token_symbol }}
                   </div>
                   <div class="text-xs text-gray-500 dark:text-gray-400">Available</div>
@@ -157,7 +157,7 @@
 
                 <!-- Fee Earnings USDT - Fixed Width -->
                 <div class="col-span-2 text-center">
-                  <div class="text-sm font-semibold text-green-600 dark:text-green-400">
+                  <div class="text-sm font-semibold text-success">
                     ${{ formatUSDTValue(pool.total_fees_collected_usdt) }}
                   </div>
                   <div class="text-xs text-gray-500 dark:text-gray-400">Fee Earnings</div>
@@ -165,7 +165,7 @@
 
                 <!-- Fees (Token) - Fixed Width -->
                 <div class="col-span-2 text-center">
-                  <div class="text-sm font-semibold text-green-600 dark:text-green-400">
+                  <div class="text-sm font-semibold text-success">
                     {{ formatPoolFees(pool.total_fees_collected, pool.token_symbol) }}
                   </div>
                   <div class="text-xs text-gray-500 dark:text-gray-400">Fees</div>
@@ -193,17 +193,17 @@
 
       <!-- Right Column - Pool Details & Actions -->
       <div
-        class="w-96 bg-white dark:bg-neutral-900 border-l border-gray-200 dark:border-gray-800 flex flex-col"
+        class="w-96 bg-background border-l border-themed flex flex-col"
       >
         <!-- Pool Details Tabs -->
-        <div class="flex border-b border-gray-200 dark:border-gray-800">
+        <div class="flex border-b border-themed">
           <button
             v-for="tab in detailTabs"
             :key="tab.value"
             :class="[
               'flex-1 px-4 py-3 text-sm font-medium transition-colors',
               activeDetailTab === tab.value
-                ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                ? 'text-info border-b-2 border-blue-600 dark:border-blue-400'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300',
             ]"
             @click="activeDetailTab = tab.value"
@@ -226,9 +226,9 @@
           <!-- Pool Overview Tab -->
           <div v-else-if="activeDetailTab === 'overview'" class="space-y-6">
             <!-- Pool Info -->
-            <div class="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4">
+            <div class="bg-surface rounded-lg p-4">
               <div class="flex items-center space-x-3 mb-4">
-                <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-neutral-700 flex items-center justify-center">
+                <div class="w-12 h-12 rounded-full bg-surface flex items-center justify-center">
                   <UIcon :name="getTokenIcon(selectedPool.token_symbol)" class="w-8 h-8" />
                 </div>
                 <div>
@@ -257,7 +257,7 @@
                 </div>
                 <div>
                   <div class="text-sm text-gray-500 dark:text-gray-400">Fees Collected</div>
-                  <div class="font-semibold text-green-600 dark:text-green-400">
+                  <div class="font-semibold text-success">
                     {{ formatPoolFees(selectedPool.total_fees_collected, selectedPool.token_symbol) }}
                   </div>
                   <div class="text-xs text-green-500 dark:text-green-400">
@@ -268,7 +268,7 @@
             </div>
 
             <!-- Fee Breakdown -->
-            <div class="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4">
+            <div class="bg-surface rounded-lg p-4">
               <h4 class="font-medium text-foreground mb-3">Fee Breakdown (24h)</h4>
               <div class="space-y-2">
                 <div class="flex justify-between items-center">
@@ -319,7 +319,7 @@
             </div>
 
             <!-- Current Conditions -->
-            <div class="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4">
+            <div class="bg-surface rounded-lg p-4">
               <h4 class="font-medium text-foreground mb-3">Current Conditions</h4>
               <div class="space-y-2">
                 <div class="flex justify-between items-center">
@@ -347,7 +347,7 @@
             </div>
 
             <!-- Threshold Information -->
-            <div class="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4">
+            <div class="bg-surface rounded-lg p-4">
               <h4 class="font-medium text-foreground mb-3">Liquidity Thresholds</h4>
               <div class="space-y-2">
                 <div class="flex justify-between items-center">
@@ -356,19 +356,19 @@
                 </div>
                 <div class="flex justify-between items-center">
                   <span class="text-sm text-gray-500 dark:text-gray-400">Healthy Threshold</span>
-                  <span class="text-sm text-green-600 dark:text-green-400">≥ $10.0M</span>
+                  <span class="text-sm text-success">≥ $10.0M</span>
                 </div>
                 <div class="flex justify-between items-center">
                   <span class="text-sm text-gray-500 dark:text-gray-400">Rebalance Threshold</span>
-                  <span class="text-sm text-yellow-600 dark:text-yellow-400">≥ $7.0M</span>
+                  <span class="text-sm text-warning">≥ $7.0M</span>
                 </div>
                 <div class="flex justify-between items-center">
                   <span class="text-sm text-gray-500 dark:text-gray-400">Critical Threshold</span>
-                  <span class="text-sm text-orange-600 dark:text-orange-400">≥ $5.0M</span>
+                  <span class="text-sm text-orange">≥ $5.0M</span>
                 </div>
                 <div class="flex justify-between items-center">
                   <span class="text-sm text-gray-500 dark:text-gray-400">Halt Threshold</span>
-                  <span class="text-sm text-red-600 dark:text-red-400">< $5.0M</span>
+                  <span class="text-sm text-error">< $5.0M</span>
                 </div>
               </div>
             </div>
@@ -389,12 +389,14 @@
               <p class="text-gray-500 dark:text-gray-400 mb-4">
                 You don't have any liquidity positions yet.
               </p>
-              <button
+              <UButton
                 @click="activeDetailTab = 'stake'"
-                class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                color="primary"
+                size="sm"
+                class="font-semibold"
               >
                 Start Staking
-              </button>
+              </UButton>
             </div>
 
             <!-- Position List -->
@@ -402,11 +404,11 @@
               <div
                 v-for="position in userPositions"
                 :key="position.id"
-                class="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4"
+                class="bg-surface rounded-lg p-4"
               >
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-700 flex items-center justify-center">
+                    <div class="w-8 h-8 rounded-full bg-surface flex items-center justify-center">
                       <UIcon :name="getTokenIcon(position.token_symbol)" class="w-5 h-5" />
                     </div>
                     <div>
@@ -458,35 +460,43 @@
                 </div>
 
                 <!-- Position Actions -->
-                <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <div class="mt-3 pt-3 border-t border-themed">
                   <div class="flex space-x-2">
-                    <button
+                    <UButton
                       v-if="position.state.Locked"
                       @click="startDissolving(position)"
-                      class="flex-1 px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-semibold rounded-md transition-colors"
+                      color="warning"
+                      size="xs"
+                      class="flex-1 font-semibold"
                     >
                       Start Dissolving
-                    </button>
-                    <button
+                    </UButton>
+                    <UButton
                       v-if="position.state.Dissolving"
                       @click="stopDissolving(position)"
-                      class="flex-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-md transition-colors"
+                      color="info"
+                      size="xs"
+                      class="flex-1 font-semibold"
                     >
                       Stop Dissolving
-                    </button>
-                    <button
+                    </UButton>
+                    <UButton
                       v-if="position.state.Dissolved"
                       @click="withdrawPosition(position)"
-                      class="flex-1 px-3 py-2 bg-green-500 hover:bg-green-600 text-white text-xs font-semibold rounded-md transition-colors"
+                      color="success"
+                      size="xs"
+                      class="flex-1 font-semibold"
                     >
                       Withdraw
-                    </button>
-                    <button
+                    </UButton>
+                    <UButton
                       @click="claimFees(position)"
-                      class="flex-1 px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold rounded-md transition-colors"
+                      color="purple"
+                      size="xs"
+                      class="flex-1 font-semibold"
                     >
                       Claim Fees
-                    </button>
+                    </UButton>
                   </div>
                 </div>
               </div>
@@ -515,7 +525,7 @@
                     placeholder="0.00"
                     @input="formatStakeAmount"
                     @blur="validateStakeAmount"
-                    class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 bg-surface border border-themed rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                   <div class="absolute left-3 top-2 text-sm text-gray-500 dark:text-gray-400">
                     {{ selectedPool?.token_symbol || 'TOKEN' }}
@@ -527,7 +537,7 @@
                   <button
                     v-for="percent in [25, 50, 75, 100]"
                     :key="percent"
-                    class="flex-1 px-2 py-1 text-xs bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-neutral-600"
+                    class="flex-1 px-2 py-1 text-xs bg-surface text-gray-700 dark:text-gray-300 rounded hover:bg-surface-elevated"
                     @click="setStakeAmount(percent)"
                   >
                     {{ percent }}%
@@ -540,7 +550,7 @@
                 <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Dissolve Delay</label>
                 <select
                   v-model="selectedDissolveDelay"
-                  class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 bg-surface border border-themed rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   <option v-for="option in dissolveDelayOptions" :key="option.value" :value="option.value">
                     {{ option.label }} ({{ option.multiplier }}x voting power)
@@ -549,7 +559,7 @@
               </div>
 
               <!-- Stake Preview -->
-              <div class="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4">
+              <div class="bg-surface rounded-lg p-4">
                 <h4 class="font-medium text-foreground mb-2">Staking Preview</h4>
                 <div class="space-y-1 text-sm">
                   <div class="flex justify-between">
@@ -568,20 +578,22 @@
               </div>
 
               <!-- Stake Button -->
-              <button
+              <UButton
                 @click="executeStake"
                 :disabled="stakeLoading || !stakeAmount || parseFormattedNumber(stakeAmount) <= 0"
-                class="w-full py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center"
+                color="success"
+                size="lg"
+                :loading="stakeLoading"
+                class="w-full font-semibold"
               >
-                <UIcon v-if="stakeLoading" name="i-heroicons-arrow-path" class="w-4 h-4 mr-2 animate-spin" />
                 {{ stakeLoading ? 'Staking...' : 'Stake Tokens' }}
-              </button>
+              </UButton>
 
               <!-- Info Note -->
-              <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+              <div class="bg-info border-info rounded-lg p-3">
                 <div class="flex items-start">
-                  <UIcon name="i-heroicons-information-circle" class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
-                  <div class="text-sm text-blue-700 dark:text-blue-300">
+                  <UIcon name="i-heroicons-information-circle" class="w-5 h-5 text-info mt-0.5 mr-2 flex-shrink-0" />
+                  <div class="text-sm text-info">
                     <p class="font-medium mb-1">Staking Information</p>
                     <p>Your staked tokens will earn fees from trading activity. Longer dissolve delays provide higher voting power and fee earnings. You can claim accumulated fees at any time.</p>
                   </div>
@@ -608,7 +620,7 @@
             </div>
             
             <!-- Basic Stats for now -->
-            <div v-if="selectedPool" class="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4">
+            <div v-if="selectedPool" class="bg-surface rounded-lg p-4">
               <h4 class="font-medium text-foreground mb-3">Quick Stats</h4>
               <div class="space-y-2 text-sm">
                 <div class="flex justify-between">

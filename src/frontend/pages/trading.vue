@@ -1,20 +1,20 @@
 <template>
-  <div class="trading-page h-screen bg-gray-50 dark:bg-neutral-950 overflow-hidden flex flex-col" style="height: 100vh; max-height: 100vh;">
+  <div class="trading-page h-screen bg-background overflow-hidden flex flex-col" style="height: 100vh; max-height: 100vh;">
     <!-- Trading Header -->
     <div
-      class="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 px-4 py-2 flex-shrink-0"
+      class="bg-card border-b border-themed px-4 py-2 flex-shrink-0"
     >
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
           <div class="flex items-center space-x-2">
-            <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-full bg-surface flex items-center justify-center">
               <UIcon :name="getTokenIcon(selectedTokenSymbol)" class="w-5 h-5" />
             </div>
             <div>
-              <div class="font-semibold text-gray-900 dark:text-white">
+              <div class="font-semibold text-foreground">
                 {{ selectedTokenSymbol }}/USDT
               </div>
-              <div class="text-sm text-gray-500 dark:text-gray-400">
+              <div class="text-sm text-muted-foreground">
                 {{ selectedTokenInfo?.name || selectedTokenSymbol }}
               </div>
             </div>
@@ -22,7 +22,7 @@
 
           <!-- Price Display -->
           <div class="flex items-center space-x-4">
-            <div class="text-2xl font-bold text-gray-900 dark:text-white">
+            <div class="text-2xl font-bold text-foreground">
               ${{ formatPrice(selectedToken?.price || 0) }}
             </div>
             <div class="flex items-center space-x-1" :class="priceChangeClass">
@@ -46,7 +46,7 @@
         <div class="flex items-center space-x-2">
           <select
             v-model="selectedTokenSymbol"
-            class="px-3 py-2 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-gray-700 rounded-md text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+            class="px-3 py-2 bg-surface border border-themed-subtle rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="" disabled>Select Token</option>
             <option
@@ -66,7 +66,7 @@
       <div class="flex-1 flex flex-col">
 
         <!-- Chart Area -->
-        <div class="bg-white dark:bg-neutral-900 p-2 overflow-hidden" style="height: 50%;">
+        <div class="bg-background p-2 overflow-hidden" style="height: 50%;">
           <LightweightPriceChart
             :key="`trading-${selectedTokenSymbol}`"
             :token-symbol="selectedTokenSymbol"
@@ -77,7 +77,7 @@
         </div>
 
         <!-- Transaction History -->
-        <div class="bg-white dark:bg-neutral-900 border-t border-gray-200 dark:border-gray-800 p-2 overflow-hidden" style="height: 50%;">
+        <div class="bg-background border-t border-themed p-2 overflow-hidden" style="height: 50%;">
           <div class="overflow-y-auto scrollbar-hide" style="height: calc(100% - 1.5rem);">
             <TransactionHistory />
           </div>
@@ -86,22 +86,22 @@
 
       <!-- Right Column - Trading Panel -->
       <div
-        class="w-80 bg-white dark:bg-neutral-900 border-l border-gray-200 dark:border-gray-800 flex flex-col"
+        class="w-80 bg-background border-l border-themed flex flex-col"
       >
         <!-- Trading Header -->
-        <div class="border-b border-gray-200 dark:border-gray-800 px-2 py-2">
+        <div class="border-b border-themed px-2 py-2">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Market Trading</h3>
+            <h3 class="text-lg font-semibold text-foreground">Market Trading</h3>
             
             <!-- Chart Controls -->
             <div class="flex items-center space-x-2">
               <button
-                class="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                class="p-2 text-muted-foreground hover:text-foreground"
               >
                 <UIcon name="i-heroicons-cog-6-tooth" class="w-4 h-4" />
               </button>
               <button
-                class="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                class="p-2 text-muted-foreground hover:text-foreground"
               >
                 <UIcon name="i-heroicons-arrows-pointing-out" class="w-4 h-4" />
               </button>
@@ -117,10 +117,10 @@
             <div class="space-y-2">
               <div class="flex items-center justify-between">
                 <span
-                  class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  class="text-sm font-medium text-foreground"
                   >Buy {{ selectedTokenSymbol }}</span
                 >
-                <span class="text-xs text-gray-500 dark:text-gray-400"
+                <span class="text-xs text-muted-foreground"
                   >Balance: {{ usdtBalance }}</span
                 >
               </div>
@@ -133,10 +133,10 @@
                     placeholder="0.00"
                     @input="formatBuyAmount"
                     @blur="validateBuyAmount"
-                    class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 bg-buy-surface border border-themed rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
                   <div
-                    class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400"
+                    class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground"
                   >
                     USDT
                   </div>
@@ -146,7 +146,7 @@
                   <button
                     v-for="percent in [25, 50, 75, 100]"
                     :key="percent"
-                    class="flex-1 px-2 py-1 text-xs bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-neutral-600"
+                    class="flex-1 px-2 py-1 text-xs bg-buy-surface text-foreground rounded hover:bg-surface-elevated"
                     @click="setBuyAmount(percent)"
                   >
                     {{ percent }}%
@@ -154,26 +154,28 @@
                 </div>
               </div>
 
-              <button
+              <UButton
                 @click="executeBuy"
                 :disabled="buyLoading || !buyAmount || parseFormattedNumber(buyAmount) <= 0"
-                class="w-full py-3 bg-green-500 hover:bg-green-600 disabled:bg-green-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center"
+                color="success"
+                size="lg"
+                :loading="buyLoading"
+                class="w-full font-semibold"
               >
-                <UIcon v-if="buyLoading" name="i-heroicons-arrow-path" class="w-4 h-4 mr-2 animate-spin" />
                 {{ buyLoading ? 'Buying...' : `Buy ${selectedTokenSymbol}` }}
-              </button>
+              </UButton>
             </div>
 
             <!-- Sell Section -->
             <div
-              class="space-y-2 pt-3 border-t border-gray-200 dark:border-gray-700"
+              class="space-y-2 pt-3 border-t border-themed"
             >
               <div class="flex items-center justify-between">
                 <span
-                  class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  class="text-sm font-medium text-foreground"
                   >Sell {{ selectedTokenSymbol }}</span
                 >
-                <span class="text-xs text-gray-500 dark:text-gray-400"
+                <span class="text-xs text-muted-foreground"
                   >Balance: {{ selectedTokenBalance }} {{ selectedTokenSymbol }}</span
                 >
               </div>
@@ -186,10 +188,10 @@
                     placeholder="0.00"
                     @input="formatSellAmount"
                     @blur="validateSellAmount"
-                    class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 bg-sell-surface border border-themed rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                   <div
-                    class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400"
+                    class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground"
                   >
                     {{ selectedTokenSymbol }}
                   </div>
@@ -199,7 +201,7 @@
                   <button
                     v-for="percent in [25, 50, 75, 100]"
                     :key="percent"
-                    class="flex-1 px-2 py-1 text-xs bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-neutral-600"
+                    class="flex-1 px-2 py-1 text-xs bg-sell-surface text-foreground rounded hover:bg-surface-elevated"
                     @click="setSellAmount(percent)"
                   >
                     {{ percent }}%
@@ -207,14 +209,16 @@
                 </div>
               </div>
 
-              <button
+              <UButton
                 @click="executeSell"
                 :disabled="sellLoading || !sellAmount || parseFormattedNumber(sellAmount) <= 0"
-                class="w-full py-3 bg-red-500 hover:bg-red-600 disabled:bg-red-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center"
+                color="error"
+                size="lg"
+                :loading="sellLoading"
+                class="w-full font-semibold"
               >
-                <UIcon v-if="sellLoading" name="i-heroicons-arrow-path" class="w-4 h-4 mr-2 animate-spin" />
                 {{ sellLoading ? 'Selling...' : `Sell ${selectedTokenSymbol}` }}
-              </button>
+              </UButton>
             </div>
           </div>
 
@@ -224,10 +228,10 @@
             <div class="space-y-3">
               <div class="flex items-center justify-between">
                 <span
-                  class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  class="text-sm font-medium text-foreground"
                   >Buy {{ selectedToken?.symbol || 'BTC' }}</span
                 >
-                <span class="text-xs text-gray-500 dark:text-gray-400"
+                <span class="text-xs text-muted-foreground"
                   >Balance: 0.00 USDT</span
                 >
               </div>
@@ -235,31 +239,31 @@
               <div class="space-y-2">
                 <div>
                   <label
-                    class="block text-xs text-gray-500 dark:text-gray-400 mb-1"
+                    class="block text-xs text-muted-foreground mb-1"
                     >Price (USDT)</label
                   >
                   <input
                     v-model="limitBuyPrice"
                     type="number"
                     placeholder="0.00"
-                    class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 bg-surface border border-themed rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                 </div>
 
                 <div>
                   <label
-                    class="block text-xs text-gray-500 dark:text-gray-400 mb-1"
+                    class="block text-xs text-muted-foreground mb-1"
                     >Amount ({{ selectedToken?.symbol || 'BTC' }})</label
                   >
                   <input
                     v-model="limitBuyAmount"
                     type="number"
                     placeholder="0.00"
-                    class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 bg-surface border border-themed rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                 </div>
 
-                <div class="text-xs text-gray-500 dark:text-gray-400">
+                <div class="text-xs text-muted-foreground">
                   Total:
                   {{
                     (
@@ -280,14 +284,14 @@
 
             <!-- Sell Section -->
             <div
-              class="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-700"
+              class="space-y-3 pt-4 border-t border-themed"
             >
               <div class="flex items-center justify-between">
                 <span
-                  class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  class="text-sm font-medium text-foreground"
                   >Sell {{ selectedToken?.symbol || 'BTC' }}</span
                 >
-                <span class="text-xs text-gray-500 dark:text-gray-400"
+                <span class="text-xs text-muted-foreground"
                   >Balance: 0.00 {{ selectedToken?.symbol || 'BTC' }}</span
                 >
               </div>
@@ -295,31 +299,31 @@
               <div class="space-y-2">
                 <div>
                   <label
-                    class="block text-xs text-gray-500 dark:text-gray-400 mb-1"
+                    class="block text-xs text-muted-foreground mb-1"
                     >Price (USDT)</label
                   >
                   <input
                     v-model="limitSellPrice"
                     type="number"
                     placeholder="0.00"
-                    class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 bg-surface border border-themed rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                 </div>
 
                 <div>
                   <label
-                    class="block text-xs text-gray-500 dark:text-gray-400 mb-1"
+                    class="block text-xs text-muted-foreground mb-1"
                     >Amount ({{ selectedToken?.symbol || 'BTC' }})</label
                   >
                   <input
                     v-model="limitSellAmount"
                     type="number"
                     placeholder="0.00"
-                    class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 bg-surface border border-themed rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                 </div>
 
-                <div class="text-xs text-gray-500 dark:text-gray-400">
+                <div class="text-xs text-muted-foreground">
                   Total:
                   {{
                     (
@@ -352,10 +356,19 @@
   import { TokenService } from '@/services/TokenService'
   import LightweightPriceChart from '@/components/LightweightPriceChart.vue'
   import TransactionHistory from '@/components/TransactionHistory.vue'
+  import { useColorTheme } from '@/composables/useColorTheme'
 
   // Stores
   const auth = useAuthStore()
   const toast = useToast()
+
+  // Theme
+  const { currentTheme } = useColorTheme()
+
+  // Map currentTheme to valid Nuxt UI color
+  const buttonColor = computed((): 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral' => {
+    return 'primary'
+  })
 
   // Reactive data
   const selectedTokenSymbol = ref('BTC')
@@ -404,9 +417,9 @@
   })
 
   const priceChangeClass = computed(() => {
-    if (priceChange.value > 0) return 'text-green-600 dark:text-green-400'
-    if (priceChange.value < 0) return 'text-red-600 dark:text-red-400'
-    return 'text-gray-600 dark:text-gray-400'
+    if (priceChange.value > 0) return 'text-success'
+    if (priceChange.value < 0) return 'text-error'
+    return 'text-muted-foreground'
   })
 
   // Balance calculations using TokenService

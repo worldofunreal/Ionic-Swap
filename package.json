@@ -11,7 +11,8 @@
     "test:local": "hardhat run scripts/test-bridgeless-token.js --network localhost",
     "test:sepolia": "hardhat run scripts/test-bridgeless-token.js --network sepolia",
     "node": "hardhat node",
-    "clean": "hardhat clean"
+    "clean": "hardhat clean",
+    "bots": "npx ts-node bots/index.ts"
   },
   "keywords": [
     "blockchain",
@@ -33,10 +34,15 @@
     "@dfinity/agent": "^3.2.3",
     "@dfinity/candid": "^3.2.3",
     "@dfinity/identity": "^3.2.4",
+    "@dfinity/principal": "^3.2.3",
     "@openzeppelin/contracts": "^5.0.0",
     "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4",
+    "@types/node": "^20.0.0",
     "bip39": "^3.1.0",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0",
+    "uuid": "^9.0.0"
   }
 }

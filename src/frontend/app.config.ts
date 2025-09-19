@@ -1,32 +1,32 @@
 export default defineAppConfig({
   ui: {
     colors: {
-      primary: 'lime',
+      primary: 'emerald',
       secondary: 'blue',
       success: 'green',
       info: 'sky',
       warning: 'amber',
       error: 'rose',
-      neutral: 'zinc',
+      neutral: 'slate',
     },
     // Global defaults for consistent styling
     button: {
-      default: {
+      defaultVariants: {
         size: 'md'
       }
     },
     card: {
-      default: {
+      defaultVariants: {
         shadow: 'sm'
       }
     },
     input: {
-      default: {
+      defaultVariants: {
         size: 'md'
       }
     },
     badge: {
-      default: {
+      defaultVariants: {
         size: 'sm'
       }
     },
@@ -47,6 +47,13 @@ export default defineAppConfig({
       md: 'gap-4',
       lg: 'gap-6',
       xl: 'gap-8'
+    },
+    // Toast/Notification theming
+    notification: {
+      defaultVariants: {
+        color: 'white',
+        position: 'top-right'
+      }
     }
   },
 })

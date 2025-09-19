@@ -1103,10 +1103,9 @@ impl LiquidityStorage {
         ic_cdk::println!("📊 Pool {} before reset: staked={}, voting_power={:.2}, liquidity={}", 
                         token_symbol, pool.total_staked, pool.total_voting_power, pool.available_liquidity);
 
-        // Reset aggregates
+        // Reset aggregates (do NOT reset available_liquidity — it's managed by trades/stakes)
         pool.total_staked = 0;
         pool.total_voting_power = 0.0;
-        pool.available_liquidity = 0;
 
         // Recalculate from positions
         for (i, position) in positions.iter().enumerate() {
@@ -1119,9 +1118,8 @@ impl LiquidityStorage {
             let base_voting_power = position.locked_amount() as f64;
             pool.total_voting_power += base_voting_power;
             
-            // For trading liquidity: include ALL staked amounts (locked + dissolving)
-            // Users can't withdraw locked amounts, but they can be used for trading
-            pool.available_liquidity += position.staked_amount - position.withdrawn_amount;
+            // NOTE: available_liquidity is intentionally not recalculated here.
+            // It is a live counter adjusted by swaps and stakes.
         }
 
         // Store values before update

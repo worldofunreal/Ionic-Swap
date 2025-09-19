@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+  <div class="min-h-screen bg-background">
     <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
       <div class="mb-8">
@@ -12,15 +12,15 @@
       </div>
 
       <!-- Settings Tabs -->
-      <div class="bg-white dark:bg-neutral-800 rounded-lg shadow">
-        <div class="border-b border-gray-200 dark:border-gray-700">
+      <div class="bg-card rounded-lg shadow border border-themed">
+        <div class="border-b border-themed">
           <nav class="-mb-px flex space-x-8 px-6">
             <button
               v-for="tab in tabs"
               :key="tab.id"
               :class="[
                 activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  ? 'border-primary-500 text-primary-600 dark:text-primary-400'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300',
                 'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm',
               ]"
@@ -47,7 +47,7 @@
 
             <!-- EVM Address -->
             <div class="space-y-4">
-              <div class="p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
+              <div class="p-4 bg-surface rounded-lg border border-themed-subtle">
                 <div class="flex items-center gap-3 mb-3">
                   <div
                     class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center"
@@ -81,7 +81,7 @@
                   />
                   <div class="flex gap-2">
                     <UButton
-                      color="primary"
+                      :color="buttonColor"
                       size="sm"
                       :loading="updatingWallet"
                       @click="updateWalletAddress('evm')"
@@ -101,7 +101,7 @@
 
                 <UButton
                   v-else
-                  color="primary"
+                  :color="buttonColor"
                   variant="soft"
                   size="sm"
                   @click="editWalletAddress('evm')"
@@ -111,7 +111,7 @@
               </div>
 
               <!-- Bitcoin Address -->
-              <div class="p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
+              <div class="p-4 bg-surface rounded-lg border border-themed-subtle">
                 <div class="flex items-center gap-3 mb-3">
                   <div
                     class="w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center"
@@ -145,7 +145,7 @@
                   />
                   <div class="flex gap-2">
                     <UButton
-                      color="primary"
+                      :color="buttonColor"
                       size="sm"
                       :loading="updatingWallet"
                       @click="updateWalletAddress('bitcoin')"
@@ -165,7 +165,7 @@
 
                 <UButton
                   v-else
-                  color="primary"
+                  :color="buttonColor"
                   variant="soft"
                   size="sm"
                   @click="editWalletAddress('bitcoin')"
@@ -175,7 +175,7 @@
               </div>
 
               <!-- Solana Address -->
-              <div class="p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
+              <div class="p-4 bg-surface rounded-lg border border-themed-subtle">
                 <div class="flex items-center gap-3 mb-3">
                   <div
                     class="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center"
@@ -209,7 +209,7 @@
                   />
                   <div class="flex gap-2">
                     <UButton
-                      color="primary"
+                      :color="buttonColor"
                       size="sm"
                       :loading="updatingWallet"
                       @click="updateWalletAddress('solana')"
@@ -229,7 +229,7 @@
 
                 <UButton
                   v-else
-                  color="primary"
+                  :color="buttonColor"
                   variant="soft"
                   size="sm"
                   @click="editWalletAddress('solana')"
@@ -314,7 +314,7 @@
                   </div>
                 </div>
                 <UButton
-                  :color="colorMode.value === 'dark' ? 'primary' : 'neutral'"
+                  :color="buttonColor"
                   variant="soft"
                   size="sm"
                   @click="toggleTheme"
@@ -543,7 +543,7 @@
                   </div>
                 </div>
                 <UButton
-                  color="primary"
+                  :color="buttonColor"
                   variant="soft"
                   size="sm"
                   @click="navigateToProfile"
@@ -590,7 +590,7 @@
         </div>
 
         <!-- Save Button -->
-        <div class="px-6 py-4 bg-neutral-50 dark:bg-neutral-700 rounded-b-lg">
+        <div class="px-6 py-4 bg-surface border-t border-themed rounded-b-lg">
           <div class="flex justify-between items-center">
             <p class="text-sm text-gray-500 dark:text-gray-400">
               {{ saveStatus }}
@@ -607,7 +607,7 @@
               </UButton>
               <UButton
                 v-if="hasUnsavedChanges"
-                color="primary"
+                :color="buttonColor"
                 size="sm"
                 :loading="saving"
                 @click="saveChanges"
@@ -636,7 +636,12 @@
 
   // Theme management
   const { theme: colorMode, setTheme: setThemeAction } = useTheme()
-  const { colorTheme, setColorTheme: setTheme, colorThemes } = useColorTheme()
+  const { colorTheme, setColorTheme: setTheme, colorThemes, currentTheme } = useColorTheme()
+
+  // Map currentTheme to valid Nuxt UI color
+  const buttonColor = computed((): 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral' => {
+    return 'primary'
+  })
 
   // UI state
   const activeTab = ref('wallets')

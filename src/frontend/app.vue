@@ -13,7 +13,7 @@
     </ClientOnly>
     <!-- End Google Tag Manager (noscript) -->
 
-    <div class="flex min-h-screen bg-neutral-50 dark:bg-neutral-950">
+    <div class="flex min-h-screen bg-background">
       <!-- Desktop Sidebar (hidden on mobile) -->
       <SidebarNav />
 

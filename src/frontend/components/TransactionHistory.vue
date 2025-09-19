@@ -115,10 +115,12 @@ import { TokenService } from '@/services/TokenService'
 // Props
 interface Props {
   limit?: number
+  targetUserId?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  limit: 20
+  limit: 20,
+  targetUserId: null
 })
 
 // Stores
@@ -132,11 +134,12 @@ const currentOffset = ref(0)
 
 // Computed
 const isAuthenticated = computed(() => !!auth.userProfile?.id)
+const userId = computed(() => props.targetUserId || auth.userProfile?.id?.toText?.())
 
 // Methods
 const loadTransactions = async (reset = false) => {
-  if (!isAuthenticated.value) {
-    console.log('User not authenticated, skipping transaction load')
+  if (!userId.value) {
+    console.log('No user ID available, skipping transaction load')
     return
   }
 
@@ -146,7 +149,7 @@ const loadTransactions = async (reset = false) => {
   try {
     const offset = reset ? 0 : currentOffset.value
     const newTransactions = await canisterService.getUserSwapHistoryPaginated(
-      auth.userProfile!.id.toString(),
+      userId.value,
       props.limit,
       offset
     )
@@ -202,14 +205,14 @@ const formatDate = (timestamp: bigint) => {
 
 // Lifecycle
 onMounted(async () => {
-  if (isAuthenticated.value) {
+  if (userId.value) {
     await loadTransactions(true)
   }
 })
 
-// Watch for authentication changes
-watch(() => auth.userProfile, async (newProfile) => {
-  if (newProfile?.id) {
+// Watch for user ID changes
+watch(userId, async (newUserId) => {
+  if (newUserId) {
     await loadTransactions(true)
   } else {
     transactions.value = []
@@ -217,6 +220,17 @@ watch(() => auth.userProfile, async (newProfile) => {
     hasMore.value = true
   }
 }, { immediate: true })
+
+// Watch for authentication changes (for backward compatibility)
+watch(() => auth.userProfile, async (newProfile) => {
+  if (newProfile?.id && !props.targetUserId) {
+    await loadTransactions(true)
+  } else if (!newProfile?.id && !props.targetUserId) {
+    transactions.value = []
+    currentOffset.value = 0
+    hasMore.value = true
+  }
+})
 </script>
 
 <style scoped>

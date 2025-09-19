@@ -1,9 +1,9 @@
 <template>
-  <div class="flex min-h-screen bg-neutral-50 dark:bg-neutral-950 flex-col">
+  <div class="flex min-h-screen bg-background flex-col">
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center min-h-screen">
       <div
-        class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"
       />
     </div>
 
@@ -13,10 +13,10 @@
       class="flex items-center justify-center min-h-screen"
     >
       <div class="text-center">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        <h1 class="text-2xl font-bold text-foreground mb-4">
           User Not Found
         </h1>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">
+        <p class="text-muted-foreground mb-6">
           The user "{{ username }}" could not be found.
         </p>
         <UButton color="primary" @click="$router.push('/')"> Go Home </UButton>
@@ -26,34 +26,34 @@
     <!-- Profile Content -->
     <div
       v-else-if="userProfile"
-      class="flex min-h-screen bg-neutral-50 dark:bg-neutral-950 flex-col"
+      class="flex flex-col lg:flex-row min-h-screen bg-background"
     >
-      <!-- Top User Info Header -->
-      <UserProfileHeader
-        :user-profile="userProfile"
-        :is-own-profile="isOwnProfile"
-        @tab-change="activeTab = $event"
-      />
-      <!-- Navigation Tabs -->
-      <div class="px-4 mt-4">
-        <ProfileTabs v-model="activeTab" />
-      </div>
-      <!-- Bottom Section: Tabbed Content -->
-      <div class="flex-1 flex w-full min-h-0">
-        <!-- Sidebar (except Following/Followers tabs) - Hidden on mobile -->
-        <component
-          :is="sidebarComponent"
-          v-if="!['Following', 'Followers'].includes(activeTab)"
-          :tab="activeTab"
-          class="hidden md:block"
+      <!-- Left Column: Fixed User Profile Header -->
+      <div class="w-full lg:w-80 xl:w-96 flex-shrink-0 bg-card lg:border-r border-themed lg:border-b-0 border-b">
+        <UserProfileHeader
+          :user-profile="userProfile"
+          :is-own-profile="isOwnProfile"
+          @tab-change="activeTab = $event"
         />
-        <!-- Main Content Area -->
-        <div class="w-0 flex-1 min-h-0">
-          <component
-            :is="tabComponent"
-            :target-user="userProfile"
-            :is-own-profile="isOwnProfile"
-          />
+      </div>
+
+      <!-- Right Column: Scrollable Tabs and Content -->
+      <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <!-- Navigation Tabs -->
+        <div class="px-4 pt-4 pb-2 bg-card border-b border-themed flex-shrink-0">
+          <ProfileTabs v-model="activeTab" />
+        </div>
+        
+        <!-- Tabbed Content Area -->
+        <div class="flex-1 flex w-full min-h-0 overflow-hidden">
+          <!-- Main Content Area - Full Width -->
+          <div class="w-full min-h-0 overflow-y-auto">
+            <component
+              :is="tabComponent"
+              :target-user="userProfile"
+              :is-own-profile="isOwnProfile"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -68,13 +68,7 @@
   import UserProfileHeader from '~/components/profile/UserProfileHeader.vue'
   import ProfileTabs from '~/components/profile/ProfileTabs.vue'
 
-  // Sidebar components for each tab
-  import TokensSidebar from '@/components/profile/TokensSidebar.vue'
-  import PortfolioSidebar from '@/components/profile/PortfolioSidebar.vue'
-  import ActivitySidebar from '@/components/profile/ActivitySidebar.vue'
-
   // Main area components for each tab
-  import TokensMain from '@/components/profile/TokensMain.vue'
   import PortfolioMain from '@/components/profile/PortfolioMain.vue'
   import FollowingMain from '@/components/profile/FollowingMain.vue'
   import FollowersMain from '@/components/profile/FollowersMain.vue'
@@ -98,7 +92,7 @@
   const loading = ref(true)
   const error = ref(false)
   const userProfile = ref<UserProfile | null>(null)
-  const activeTab = ref('Tokens')
+  const activeTab = ref('Portfolio')
 
   // Extract username from route (remove @ symbol)
   const username = computed(() => {
@@ -294,8 +288,6 @@
 
   const tabComponent = computed(() => {
     switch (activeTab.value) {
-      case 'Tokens':
-        return TokensMain
       case 'Portfolio':
         return PortfolioMain
       case 'Following':
@@ -305,22 +297,10 @@
       case 'Activity':
         return ActivityMain
       default:
-        return TokensMain
+        return PortfolioMain
     }
   })
 
-  const sidebarComponent = computed(() => {
-    switch (activeTab.value) {
-      case 'Tokens':
-        return TokensSidebar
-      case 'Portfolio':
-        return PortfolioSidebar
-      case 'Activity':
-        return ActivitySidebar
-      default:
-        return TokensSidebar
-    }
-  })
 
   // Load user profile (fallback for when SSR fails)
   const loadUserProfile = async () => {

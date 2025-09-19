@@ -8,7 +8,7 @@
     <!-- Wallet Portfolio Overview -->
     <div v-else>
         <!-- Top Header -->
-        <div class="bg-card border-b border-gray-200 dark:border-gray-800 px-6 py-4">
+        <div class="bg-card border-b border-themed px-6 py-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
               <h1 class="text-2xl font-bold text-foreground">Wallet</h1>
@@ -20,11 +20,11 @@
                 <input 
                   type="text" 
                   placeholder="Search coins, tokens, or addresses..."
-                  class="pl-10 pr-4 py-2 w-80 bg-muted border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  class="pl-10 pr-4 py-2 w-80 bg-muted border border-themed-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
               
-              <UButton color="primary" size="lg" class="text-base font-semibold px-6 py-3 text-white">
+              <UButton :color="buttonColor" size="lg" class="text-base font-semibold px-6 py-3">
                 <UIcon name="i-heroicons-arrow-down-tray-20-solid" class="w-5 h-5 mr-2" />
                 Deposit
               </UButton>
@@ -46,7 +46,7 @@
             <!-- Portfolio Overview & User Profile Section -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
               <!-- User Profile Card -->
-              <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4">
+              <div class="bg-card rounded-lg shadow-sm border border-themed p-4">
                 <div class="flex items-center gap-3 mb-3">
                   <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
                     <span class="text-white font-bold text-sm">{{ userInitial }}</span>
@@ -90,7 +90,7 @@
 
 
             <!-- My Assets Section -->
-            <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 mb-8">
+            <div class="bg-card rounded-lg shadow-sm border border-themed mb-8">
               <div class="p-4 border-b border-gray-200 dark:border-gray-800">
                 <div class="flex items-center justify-between">
                   <h3 class="text-base font-semibold text-foreground">My Assets</h3>
@@ -149,7 +149,7 @@
                       </th>
                     </tr>
                   </thead>
-                  <tbody class="bg-card divide-y divide-gray-200 dark:divide-gray-800">
+                  <tbody class="bg-card divide-y divide-themed">
                     <tr v-if="tokensWithBalances.length === 0">
                       <td colspan="5" class="px-6 py-12 text-center text-muted-foreground">
                         <div class="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
@@ -167,7 +167,7 @@
                       <!-- Coin Column -->
                       <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
-                          <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center mr-3">
+                          <div class="w-10 h-10 rounded-full bg-surface flex items-center justify-center mr-3">
                             <UIcon :name="getTokenIcon(token.symbol)" class="w-6 h-6" />
                           </div>
                           <div>
@@ -214,24 +214,30 @@
                       <!-- Action Column -->
                       <td class="px-6 py-4 whitespace-nowrap text-right">
                         <div class="flex justify-end gap-2">
-                          <button
+                          <UButton
                             @click="tradeToken(token.symbol)"
-                            class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                            :color="buttonColor"
+                            size="sm"
+                            class="text-sm font-semibold"
                           >
                             Trade
-                          </button>
-                          <button
+                          </UButton>
+                          <UButton
                             @click="stakeToken(token.symbol)"
-                            class="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold rounded-lg transition-colors"
+                            color="neutral"
+                            size="sm"
+                            class="text-sm font-semibold"
                           >
                             Stake
-                          </button>
-                          <button
+                          </UButton>
+                          <UButton
                             @click="openWithdrawModal(token.symbol)"
-                            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                            color="neutral"
+                            size="sm"
+                            class="text-sm font-semibold"
                           >
                             Withdraw
-                          </button>
+                          </UButton>
                         </div>
                       </td>
                     </tr>
@@ -243,7 +249,7 @@
             <!-- Bottom Section: Wallet Addresses & Portfolio Stats -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <!-- Wallet Addresses Card -->
-              <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+              <div class="bg-card rounded-lg shadow-sm border border-themed p-6">
                 <h3 class="text-lg font-semibold text-foreground mb-4">
                   Wallet Addresses
                 </h3>
@@ -286,14 +292,14 @@
                   </div>
                 </div>
 
-                <UButton color="primary" variant="soft" size="lg" class="w-full mt-4 text-base font-semibold py-3 text-white" @click="editAddresses">
+                <UButton :color="buttonColor" variant="soft" size="lg" class="w-full mt-4 text-base font-semibold py-3" @click="editAddresses">
                   <UIcon name="i-heroicons-plus-20-solid" class="w-5 h-5 mr-2" />
                   Add/Edit Addresses
                 </UButton>
               </div>
 
               <!-- Portfolio Stats Card -->
-              <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+              <div class="bg-card rounded-lg shadow-sm border border-themed p-6">
                 <h3 class="text-lg font-semibold text-foreground mb-4">
                   Portfolio Stats
                 </h3>
@@ -336,7 +342,7 @@
                   <div class="space-y-2">
                     <div v-for="(balance, symbol) in userBalances" :key="symbol" class="flex items-center justify-between">
                       <div class="flex items-center gap-2">
-                        <div class="w-4 h-4 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
+                        <div class="w-4 h-4 rounded-full bg-surface flex items-center justify-center">
                           <UIcon :name="getTokenIcon(symbol)" class="w-3 h-3" />
                         </div>
                         <span class="text-sm text-muted-foreground">{{ symbol }}</span>
@@ -356,7 +362,7 @@
             </div>
 
             <!-- Transaction History Section -->
-            <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 mb-8">
+            <div class="bg-card rounded-lg shadow-sm border border-themed mb-8">
               <div class="p-4 border-b border-gray-200 dark:border-gray-800">
                 <div class="flex items-center justify-between">
                   <h3 class="text-lg font-semibold text-foreground">Recent Transactions</h3>
@@ -444,7 +450,7 @@
                     </div>
 
                     <!-- Transaction Metadata -->
-                    <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <div class="mt-3 pt-3 border-t border-themed">
                       <div class="flex items-center justify-between text-sm text-muted-foreground">
                         <div class="flex items-center space-x-4">
                           <span>{{ formatDate(transaction.timestamp) }}</span>
@@ -479,12 +485,12 @@
 
     <!-- Withdrawal Modal -->
     <UModal v-model="withdrawModalOpen">
-      <UCard :ui="{ ring: '', divide: 'divide-y divide-gray-100 dark:divide-gray-800' }">
+      <UCard>
         <template #header>
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-foreground">Withdraw {{ selectedToken }}</h3>
             <UButton
-              color="gray"
+              color="neutral"
               variant="ghost"
               icon="i-heroicons-x-mark-20-solid"
               class="-my-1"
@@ -528,14 +534,14 @@
               <!-- EVM Wallet -->
               <div 
                 v-if="userProfile?.evm_address?.[0]" 
-                class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                class="border border-themed-subtle rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
                 :class="{ 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20': selectedWallet === 'evm' }"
                 @click="selectedWallet = 'evm'"
               >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-                      <UIcon name="i-heroicons-cube" class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      <UIcon name="i-heroicons-cube" class="w-5 h-5 text-info" />
                     </div>
                     <div>
                       <div class="font-medium text-foreground">EVM Wallet</div>
@@ -552,14 +558,14 @@
               <!-- Bitcoin Wallet -->
               <div 
                 v-if="userProfile?.bitcoin_address?.[0]" 
-                class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                class="border border-themed-subtle rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
                 :class="{ 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20': selectedWallet === 'bitcoin' }"
                 @click="selectedWallet = 'bitcoin'"
               >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
-                      <UIcon name="logos:bitcoin" class="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                      <UIcon name="logos:bitcoin" class="w-5 h-5 text-orange" />
                     </div>
                     <div>
                       <div class="font-medium text-foreground">Bitcoin Wallet</div>
@@ -576,14 +582,14 @@
               <!-- Solana Wallet -->
               <div 
                 v-if="userProfile?.solana_address?.[0]" 
-                class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                class="border border-themed-subtle rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
                 :class="{ 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20': selectedWallet === 'solana' }"
                 @click="selectedWallet = 'solana'"
               >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
-                      <UIcon name="token-branded:solana" class="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                      <UIcon name="token-branded:solana" class="w-5 h-5 text-purple" />
                     </div>
                     <div>
                       <div class="font-medium text-foreground">Solana Wallet</div>
@@ -600,7 +606,7 @@
               <!-- ICP Wallet -->
               <div 
                 v-if="userProfile?.id" 
-                class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                class="border border-themed-subtle rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
                 :class="{ 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20': selectedWallet === 'icp' }"
                 @click="selectedWallet = 'icp'"
               >
@@ -627,14 +633,14 @@
         <template #footer>
           <div class="flex justify-end gap-3">
             <UButton
-              color="gray"
+              color="neutral"
               variant="soft"
               @click="withdrawModalOpen = false"
             >
               Cancel
             </UButton>
             <UButton
-              color="primary"
+              :color="buttonColor"
               :disabled="!selectedWallet"
               @click="confirmWithdrawal"
             >
@@ -661,8 +667,13 @@
   const auth = useAuthStore()
   const loading = ref(true)
   const toast = useToast()
-  const { colorTheme } = useColorTheme()
+  const { currentTheme } = useColorTheme()
   const { theme } = useTheme()
+
+  // Map currentTheme to valid Nuxt UI color
+  const buttonColor = computed((): 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral' => {
+    return 'primary'
+  })
 
   // Get user profile from auth store
   const userProfile = computed(() => auth.userProfile)
@@ -881,8 +892,8 @@
     const price = tokenPrices.value[symbol]
     if (!price) return 'text-gray-600 dark:text-gray-400'
     
-    if (price.change24h > 0) return 'text-green-600 dark:text-green-400'
-    if (price.change24h < 0) return 'text-red-600 dark:text-red-400'
+    if (price.change24h > 0) return 'text-success'
+    if (price.change24h < 0) return 'text-error'
     return 'text-gray-600 dark:text-gray-400'
   }
 

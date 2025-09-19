@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-screen bg-neutral-50 dark:bg-neutral-950 grid grid-cols-1 md:grid-cols-4"
+    class="min-h-screen bg-background grid grid-cols-1 md:grid-cols-4"
   >
     <!-- Left Column (Main Content) -->
     <div

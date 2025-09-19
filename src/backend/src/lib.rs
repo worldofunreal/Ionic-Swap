@@ -934,6 +934,10 @@ pub async fn stake_tokens(token_symbol: String, amount: u64, dissolve_delay_seco
     // Store the position
     storage::LiquidityStorage::store_position(position.clone())
         .map_err(|e| format!("Failed to store position: {}", e))?;
+
+    // Increment pool available liquidity by staked amount (incremental accounting)
+    storage::LiquidityStorage::increase_pool_liquidity(&token_symbol, amount)
+        .map_err(|e| format!("Failed to update pool liquidity: {}", e))?;
     
     // Record transaction
     let transaction = icp::liquidity::LiquidityTransaction {
@@ -953,9 +957,7 @@ pub async fn stake_tokens(token_symbol: String, amount: u64, dissolve_delay_seco
     
     storage::LiquidityStorage::store_transaction(transaction);
     
-    // Recalculate pool aggregates
-    storage::LiquidityStorage::recalculate_pool_aggregates(&token_symbol)
-        .map_err(|e| format!("Failed to update pool aggregates: {}", e))?;
+    // Note: Do not recalc here; totals are already correct and liquidity is adjusted incrementally.
     
     ic_cdk::println!("🎯 User {} staked {} {} with {} day dissolve delay", 
         caller, amount, token_symbol, dissolve_delay_seconds / (24 * 3600));
@@ -1147,8 +1149,14 @@ pub async fn bootstrap_canister_liquidity() -> Result<String, String> {
                 365 * 24 * 3600 // 365 days in seconds
             );
             
+            // Ensure pool exists before updating it
+            storage::LiquidityStorage::init_pool_if_needed(symbol);
+
             // Store the position
             storage::LiquidityStorage::store_position(position.clone())?;
+
+            // Increment pool available liquidity by staked amount (incremental accounting)
+            storage::LiquidityStorage::increase_pool_liquidity(symbol, stake_amount)?;
             
             // Calculate USDT value for logging
             let usdt_value = stake_amount as f64 / decimal_multiplier * price;
@@ -1157,8 +1165,7 @@ pub async fn bootstrap_canister_liquidity() -> Result<String, String> {
                 stake_amount, symbol, usdt_value / 1_000_000.0);
             staked_tokens.push(format!("{} {} (${:.1}M)", stake_amount, symbol, usdt_value / 1_000_000.0));
             
-            // Recalculate pool aggregates
-            storage::LiquidityStorage::recalculate_pool_aggregates(symbol)?;
+            // No aggregate recalc: liquidity is adjusted incrementally; totals tracked via positions
         } else {
             ic_cdk::println!("⚠️ Insufficient {} balance: need {}, have {}", 
                 symbol, stake_amount, canister_balance);

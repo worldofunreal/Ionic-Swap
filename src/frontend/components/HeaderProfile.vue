@@ -21,26 +21,26 @@
         </UAvatar>
         <!-- Wallet Icon Overlay -->
         <div
-          class="absolute -bottom-1 -right-1 w-5 h-5 bg-white dark:bg-neutral-800 rounded-full border-2 border-white dark:border-neutral-800 flex items-center justify-center"
+          class="absolute -bottom-1 -right-1 w-5 h-5 bg-background-elevated rounded-full border-2 border-background-elevated flex items-center justify-center"
         >
           <component
             :is="getWalletIcon(authStore.nativeWallet).type"
             :src="getWalletIcon(authStore.nativeWallet).src"
             :name="getWalletIcon(authStore.nativeWallet).name"
             :alt="getWalletIcon(authStore.nativeWallet).alt"
-            class="w-3 h-3 text-gray-700 dark:text-gray-300"
+            class="w-3 h-3 text-muted-foreground"
           />
         </div>
       </div>
 
       <!-- Username and Arrow -->
       <div class="flex items-center gap-1">
-        <span class="text-sm font-medium text-gray-900 dark:text-white">
+        <span class="text-sm font-medium text-foreground">
           {{ authStore.userProfile?.username || 'User' }}
         </span>
         <UIcon
           :name="showUserMenu ? 'bxs:up-arrow' : 'bxs:down-arrow'"
-          class="w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform"
+          class="w-4 h-4 text-muted-foreground transition-transform"
         />
       </div>
     </div>
@@ -48,7 +48,7 @@
     <!-- User Menu Dropdown -->
     <div
       v-if="showUserMenu"
-      class="absolute right-0 mt-2 w-96 bg-white dark:bg-neutral-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+      class="absolute right-0 mt-2 w-96 bg-card rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 z-50"
     >
       <div class="p-4">
         <!-- User Info -->
@@ -70,10 +70,10 @@
             </template>
           </UAvatar>
           <div class="flex-1 min-w-0">
-            <div class="font-semibold text-gray-900 dark:text-white truncate">
+            <div class="font-semibold text-foreground truncate">
               {{ authStore.userProfile?.username || 'User' }}
             </div>
-            <div class="text-sm text-gray-500 dark:text-gray-400">
+            <div class="text-sm text-muted-foreground">
               {{ authStore.nativeWallet.toUpperCase() }}
             </div>
           </div>
@@ -105,7 +105,7 @@
         <!-- Cross-Chain Addresses Section -->
         <div class="mb-4">
           <div
-            class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2"
+            class="text-xs font-medium text-muted-foreground mb-2"
           >
             Cross-Chain Addresses
           </div>
@@ -114,21 +114,21 @@
           <div v-if="authStore.principal" class="mb-3">
             <div class="flex items-center gap-2 mb-1">
               <UIcon name="token-branded:icp" class="w-4 h-4 text-orange-500" />
-              <span class="text-xs font-medium text-gray-600 dark:text-gray-400"
+              <span class="text-xs font-medium text-muted-foreground"
                 >ICP</span
               >
             </div>
             <div
-              class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-neutral-800 rounded-md"
+              class="flex items-center gap-2 p-2 bg-muted rounded-md"
             >
               <span
-                class="text-sm font-mono text-gray-900 dark:text-white truncate"
+                class="text-sm font-mono text-foreground truncate"
               >
                 {{ authStore.principal }}
               </span>
               <UIcon
                 name="i-heroicons-document-duplicate-20-solid"
-                class="text-gray-400 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition flex-shrink-0"
+                class="text-muted-foreground cursor-pointer hover:text-foreground transition flex-shrink-0"
                 @click="copyToClipboard(authStore.principal, 'ICP')"
               />
             </div>
@@ -138,21 +138,21 @@
           <div v-if="authStore.evmAddress" class="mb-3">
             <div class="flex items-center gap-2 mb-1">
               <UIcon name="cryptocurrency:eth" class="w-4 h-4 text-blue-500" />
-              <span class="text-xs font-medium text-gray-600 dark:text-gray-400"
+              <span class="text-xs font-medium text-muted-foreground"
                 >EVM</span
               >
             </div>
             <div
-              class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-neutral-800 rounded-md"
+              class="flex items-center gap-2 p-2 bg-muted rounded-md"
             >
               <span
-                class="text-sm font-mono text-gray-900 dark:text-white truncate"
+                class="text-sm font-mono text-foreground truncate"
               >
                 {{ authStore.evmAddress }}
               </span>
               <UIcon
                 name="i-heroicons-document-duplicate-20-solid"
-                class="text-gray-400 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition flex-shrink-0"
+                class="text-muted-foreground cursor-pointer hover:text-foreground transition flex-shrink-0"
                 @click="copyToClipboard(authStore.evmAddress, 'EVM')"
               />
             </div>
@@ -165,21 +165,21 @@
                 name="cryptocurrency:sol"
                 class="w-4 h-4 text-purple-500"
               />
-              <span class="text-xs font-medium text-gray-600 dark:text-gray-400"
+              <span class="text-xs font-medium text-muted-foreground"
                 >SOL</span
               >
             </div>
             <div
-              class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-neutral-800 rounded-md"
+              class="flex items-center gap-2 p-2 bg-muted rounded-md"
             >
               <span
-                class="text-sm font-mono text-gray-900 dark:text-white truncate"
+                class="text-sm font-mono text-foreground truncate"
               >
                 {{ authStore.solAddress }}
               </span>
               <UIcon
                 name="i-heroicons-document-duplicate-20-solid"
-                class="text-gray-400 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition flex-shrink-0"
+                class="text-muted-foreground cursor-pointer hover:text-foreground transition flex-shrink-0"
                 @click="copyToClipboard(authStore.solAddress, 'Solana')"
               />
             </div>
@@ -192,21 +192,21 @@
                 name="cryptocurrency:btc"
                 class="w-4 h-4 text-orange-400"
               />
-              <span class="text-xs font-medium text-gray-600 dark:text-gray-400"
+              <span class="text-xs font-medium text-muted-foreground"
                 >BTC</span
               >
             </div>
             <div
-              class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-neutral-800 rounded-md"
+              class="flex items-center gap-2 p-2 bg-muted rounded-md"
             >
               <span
-                class="text-sm font-mono text-gray-900 dark:text-white truncate"
+                class="text-sm font-mono text-foreground truncate"
               >
                 {{ authStore.btcAddress }}
               </span>
               <UIcon
                 name="i-heroicons-document-duplicate-20-solid"
-                class="text-gray-400 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 transition flex-shrink-0"
+                class="text-muted-foreground cursor-pointer hover:text-foreground transition flex-shrink-0"
                 @click="copyToClipboard(authStore.btcAddress, 'Bitcoin')"
               />
             </div>
@@ -215,7 +215,7 @@
 
         <!-- Actions -->
         <div
-          class="border-t border-gray-200 dark:border-gray-700 pt-3 space-y-2"
+          class="border-t border-neutral-200 dark:border-neutral-700 pt-3 space-y-2"
         >
           <!-- Profile Button -->
           <UButton

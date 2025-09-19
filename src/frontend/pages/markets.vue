@@ -1,14 +1,14 @@
 <template>
-  <div class="h-full bg-gray-50 dark:bg-neutral-950 overflow-hidden">
+  <div class="h-full bg-background overflow-hidden">
     <div class="flex gap-4 p-6 h-full">
       <!-- Left Column - Token List -->
       <div class="w-80 flex">
         <div
-          class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col w-full h-full"
+          class="bg-card rounded-lg shadow-sm border border-themed flex flex-col w-full h-full"
         >
           <!-- Search Bar Header -->
           <div
-            class="p-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0"
+            class="p-3 border-b border-themed flex-shrink-0"
           >
             <div class="relative">
               <UIcon
@@ -19,7 +19,7 @@
                 v-model="searchQuery"
                 type="text"
                 placeholder="Search tokens..."
-                class="pl-10 pr-4 py-2 w-full bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="pl-10 pr-4 py-2 w-full bg-muted border border-themed-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
             </div>
             <!-- Demo data warning -->
@@ -36,13 +36,13 @@
             </div>
           </div>
           <div class="flex-1 overflow-y-auto">
-            <div class="divide-y divide-gray-200 dark:divide-gray-700">
+            <div class="divide-y divide-themed">
               <div
                 v-for="token in filteredTokens"
                 :key="token.symbol"
-                class="p-2 hover:bg-gray-50 dark:hover:bg-neutral-800 cursor-pointer transition-colors"
+                class="p-2 hover:bg-muted/50 cursor-pointer transition-colors"
                 :class="{
-                  'bg-blue-50 dark:bg-blue-900/20':
+                  'bg-primary-50 dark:bg-primary-900/20':
                     selectedToken === token.symbol,
                 }"
                 @click="selectToken(token.symbol)"
@@ -50,7 +50,7 @@
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-2">
                     <div
-                      class="w-6 h-6 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center"
+                      class="w-6 h-6 rounded-full bg-surface flex items-center justify-center"
                     >
                       <UIcon
                         :name="getTokenIcon(token.symbol)"
@@ -78,8 +78,8 @@
                       class="text-xs"
                       :class="
                         token.change24h >= 0
-                          ? 'text-green-600 dark:text-green-400'
-                          : 'text-red-600 dark:text-red-400'
+                          ? 'text-success'
+                          : 'text-error'
                       "
                     >
                       {{ token.change24h >= 0 ? '+' : ''
@@ -97,12 +97,12 @@
       <div class="flex-1 flex">
         <div
           v-if="selectedToken"
-          class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col w-full h-full"
+          class="bg-card rounded-lg shadow-sm border border-themed flex flex-col w-full h-full"
         >
           <div class="flex items-center justify-between p-6 pb-4 flex-shrink-0">
             <div class="flex items-center space-x-3">
               <div
-                class="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center"
+                class="w-10 h-10 rounded-full bg-surface flex items-center justify-center"
               >
                 <UIcon :name="getTokenIcon(selectedToken)" class="w-6 h-6" />
               </div>
@@ -115,12 +115,14 @@
                 </p>
               </div>
             </div>
-            <NuxtLink
-              :to="`/trading?token=${selectedToken}`"
-              class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium transition-colors"
+            <UButton
+              color="primary"
+              size="sm"
+              class="font-medium"
+              @click="navigateTo(`/trading?token=${selectedToken}`)"
             >
               Trade {{ selectedToken }}
-            </NuxtLink>
+            </UButton>
           </div>
           <div class="flex-1 px-6 pb-6 overflow-hidden">
             <LightweightPriceChart
@@ -140,6 +142,10 @@
   import { ref, computed, onMounted, onUnmounted } from 'vue'
   import { priceService } from '@/services/PriceService'
   import LightweightPriceChart from '@/components/LightweightPriceChart.vue'
+  import { useColorTheme } from '@/composables/useColorTheme'
+
+  // Theme
+  const { currentTheme } = useColorTheme()
 
   // Reactive data
   const selectedToken = ref<string | null>(null)
