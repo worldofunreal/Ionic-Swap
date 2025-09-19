@@ -10,7 +10,7 @@
         class="text-base font-semibold px-6 py-2 text-white"
         @click="handleTradeClick"
       >
-        <UIcon name="streamline-ultimate:trading-pattern-up-bold" class="w-5 h-5 mr-2" />
+        <UIcon name="i-heroicons-chart-bar-20-solid" class="w-5 h-5 mr-2" />
         Trade
       </UButton>
     </div>
@@ -23,17 +23,17 @@
         @click="selectToken(token)"
       >
         <div class="flex items-center gap-2">
-          <div
-            class="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center"
-          >
-            <UIcon :name="getTokenIcon(token.symbol)" class="w-4 h-4" />
-          </div>
+          <img
+            :src="TokenService.getTokenIcon(token.symbol)"
+            :alt="`${token.symbol} icon`"
+            class="w-7 h-7"
+          />
           <div>
             <div class="font-bold text-black dark:text-white">
               {{ token.symbol }}
             </div>
             <div class="text-xs text-zinc-500 dark:text-zinc-400">
-              {{ token.name }}
+              {{ TokenService.getTokenName(token.symbol) }}
             </div>
           </div>
         </div>
@@ -69,6 +69,7 @@
 <script setup lang="ts">
   import { ref, onMounted, onUnmounted, computed, inject, type Ref } from 'vue'
   import { priceService } from '@/services/PriceService'
+  import { TokenService } from '@/services/TokenService'
   import { useAuthStore } from '@/stores/auth'
 
   interface Token {
@@ -96,18 +97,6 @@
     }
   }
 
-  // Token configuration (same as markets page)
-  const tokenConfig = {
-    BTC: { name: 'Bitcoin', icon: 'logos:bitcoin' },
-    ETH: { name: 'Ethereum', icon: 'token-branded:ethereum' },
-    XRP: { name: 'XRP', icon: 'cryptocurrency-color:xrp' },
-    BNB: { name: 'BNB', icon: 'token-branded:binance' },
-    SOL: { name: 'Solana', icon: 'token-branded:solana' },
-    DOGE: { name: 'Dogecoin', icon: 'simple-icons:dogecoin' },
-    ADA: { name: 'Cardano', icon: 'logos:cardano-icon' },
-    TRX: { name: 'TRON', icon: 'token-branded:tron' },
-    ICP: { name: 'Internet Computer', icon: 'token-branded:icp' },
-  }
 
   // Token list from todo - these will be the tokens we support
   const tokenList = [
@@ -165,16 +154,6 @@
   ]
 
   // Helper functions
-  const getTokenName = (symbol: string) => {
-    return tokenConfig[symbol as keyof typeof tokenConfig]?.name || symbol
-  }
-
-  const getTokenIcon = (symbol: string) => {
-    return (
-      tokenConfig[symbol as keyof typeof tokenConfig]?.icon ||
-      'cryptocurrency-color:generic'
-    )
-  }
 
   const formatPrice = (price: number) => {
     if (price === 0) return '0.00'
@@ -196,7 +175,7 @@
       const priceData = prices.get(token.symbol)
       return {
         ...token,
-        name: getTokenName(token.symbol),
+        name: TokenService.getTokenName(token.symbol),
         price: priceData?.price || 0,
         change: priceData?.change24h || 0,
       }

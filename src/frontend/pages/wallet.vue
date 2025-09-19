@@ -167,9 +167,7 @@
                       <!-- Coin Column -->
                       <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
-                          <div class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center mr-3">
-                            <img :src="TokenService.getTokenIcon(token.symbol)" :alt="`${token.symbol} icon`" class="w-6 h-6" />
-                          </div>
+                          <img :src="TokenService.getTokenIcon(token.symbol)" :alt="`${token.symbol} icon`" class="w-10 h-10 mr-3" />
                           <div>
                             <div class="text-sm font-semibold text-zinc-900 dark:text-white">
                               {{ token.symbol }}
@@ -336,9 +334,7 @@
                   <div class="space-y-2">
                     <div v-for="(balance, symbol) in userBalances" :key="symbol" class="flex items-center justify-between">
                       <div class="flex items-center gap-2">
-                        <div class="w-4 h-4 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
-                          <img :src="TokenService.getTokenIcon(symbol)" :alt="`${symbol} icon`" class="w-3 h-3" />
-                        </div>
+                        <img :src="TokenService.getTokenIcon(symbol)" :alt="`${symbol} icon`" class="w-4 h-4" />
                         <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ symbol }}</span>
                       </div>
                       <span class="text-sm font-medium text-zinc-900 dark:text-white">

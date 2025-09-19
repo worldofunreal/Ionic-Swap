@@ -49,14 +49,11 @@
             <div class="space-y-4">
               <div class="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
                 <div class="flex items-center gap-3 mb-3">
-                  <div
-                    class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center"
-                  >
-                    <UIcon
-                      name="i-simple-icons-ethereum"
-                      class="w-6 h-6 text-blue-600 dark:text-blue-400"
-                    />
-                  </div>
+                  <img
+                    :src="TokenService.getTokenIcon('ETH')"
+                    alt="Ethereum icon"
+                    class="w-10 h-10"
+                  />
                   <div>
                     <h4
                       class="text-sm font-medium text-zinc-900 dark:text-white"
@@ -113,14 +110,11 @@
               <!-- Bitcoin Address -->
               <div class="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
                 <div class="flex items-center gap-3 mb-3">
-                  <div
-                    class="w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center"
-                  >
-                    <UIcon
-                      name="i-simple-icons-bitcoin"
-                      class="w-6 h-6 text-orange-600 dark:text-orange-400"
-                    />
-                  </div>
+                  <img
+                    :src="TokenService.getTokenIcon('BTC')"
+                    alt="Bitcoin icon"
+                    class="w-10 h-10"
+                  />
                   <div>
                     <h4
                       class="text-sm font-medium text-zinc-900 dark:text-white"
@@ -177,14 +171,11 @@
               <!-- Solana Address -->
               <div class="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
                 <div class="flex items-center gap-3 mb-3">
-                  <div
-                    class="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center"
-                  >
-                    <UIcon
-                      name="i-simple-icons-solana"
-                      class="w-6 h-6 text-purple-600 dark:text-purple-400"
-                    />
-                  </div>
+                  <img
+                    :src="TokenService.getTokenIcon('SOL')"
+                    alt="Solana icon"
+                    class="w-10 h-10"
+                  />
                   <div>
                     <h4
                       class="text-sm font-medium text-zinc-900 dark:text-white"
@@ -243,14 +234,11 @@
                 class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
               >
                 <div class="flex items-center gap-3">
-                  <div
-                    class="w-10 h-10 bg-zinc-100 dark:bg-zinc-700 rounded-lg flex items-center justify-center"
-                  >
-                    <UIcon
-                      name="i-simple-icons-internetcomputer"
-                      class="w-6 h-6 text-zinc-600 dark:text-zinc-400"
-                    />
-                  </div>
+                  <img
+                    :src="TokenService.getTokenIcon('ICP')"
+                    alt="ICP icon"
+                    class="w-10 h-10"
+                  />
                   <div>
                     <h4
                       class="text-sm font-medium text-zinc-900 dark:text-white"
@@ -628,6 +616,7 @@
   import { useColorTheme } from '@/composables/useColorTheme'
   import { useTheme } from '@/composables/useTheme'
   import { canisterService } from '@/services/CanisterService'
+  import { TokenService } from '@/services/TokenService'
   import { useToast } from '#imports'
 
   // Authentication and user data

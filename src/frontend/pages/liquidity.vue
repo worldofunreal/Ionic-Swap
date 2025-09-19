@@ -118,9 +118,7 @@
               <div class="grid grid-cols-14 gap-1 items-center">
                 <!-- Token Info - Fixed Width -->
                 <div class="col-span-2 flex items-center space-x-2">
-                  <div class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                    <UIcon :name="getTokenIcon(pool.token_symbol)" class="w-5 h-5" />
-                  </div>
+                  <img :src="TokenService.getTokenIcon(pool.token_symbol)" :alt="`${pool.token_symbol} icon`" class="w-8 h-8" />
                   <div>
                     <div class="font-semibold text-zinc-900 dark:text-white text-sm">
                       {{ pool.token_symbol }}
@@ -228,9 +226,7 @@
             <!-- Pool Info -->
             <div class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4">
               <div class="flex items-center space-x-3 mb-4">
-                <div class="w-12 h-12 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
-                  <UIcon :name="getTokenIcon(selectedPool.token_symbol)" class="w-8 h-8" />
-                </div>
+                <img :src="TokenService.getTokenIcon(selectedPool.token_symbol)" :alt="`${selectedPool.token_symbol} icon`" class="w-12 h-12" />
                 <div>
                   <h3 class="text-lg font-semibold text-foreground">{{ selectedPool.token_symbol }} Pool</h3>
                   <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ TokenService.getTokenName(selectedPool.token_symbol) }}</p>
@@ -406,9 +402,7 @@
               >
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
-                      <UIcon :name="getTokenIcon(position.token_symbol)" class="w-5 h-5" />
-                    </div>
+                    <img :src="TokenService.getTokenIcon(position.token_symbol)" :alt="`${position.token_symbol} icon`" class="w-8 h-8" />
                     <div>
                       <div class="font-semibold text-foreground">{{ position.token_symbol }}</div>
                       <div class="text-xs text-zinc-500 dark:text-zinc-400">ID: {{ position.id.slice(-8) }}</div>
@@ -701,21 +695,6 @@
   }))
 
   // Helper functions
-  const getTokenIcon = (symbol: string) => {
-    const icons: Record<string, string> = {
-      'BTC': 'logos:bitcoin',
-      'ETH': 'token-branded:ethereum',
-      'XRP': 'cryptocurrency-color:xrp',
-      'USDT': 'cryptocurrency-color:usdt',
-      'BNB': 'token-branded:binance',
-      'SOL': 'token-branded:solana',
-      'DOGE': 'simple-icons:dogecoin',
-      'ADA': 'logos:cardano-icon',
-      'TRX': 'token-branded:tron',
-      'ICP': 'token-branded:icp',
-    }
-    return icons[symbol] || 'cryptocurrency-color:generic'
-  }
 
   const formatPoolFees = (fees: number | bigint, symbol: string) => {
     const feesNum = Number(fees)

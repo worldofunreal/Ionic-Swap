@@ -112,12 +112,12 @@
                 </p>
               </div>
             </div>
-            <NuxtLink
-              :to="`/trading?token=${selectedToken}`"
+            <button
+              @click="handleTradeClick"
               class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium transition-colors"
             >
               Trade {{ selectedToken }}
-            </NuxtLink>
+            </button>
           </div>
           <div class="flex-1 px-6 pb-6 overflow-hidden">
             <LightweightPriceChart
@@ -134,15 +134,31 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, onUnmounted } from 'vue'
+  import { ref, computed, onMounted, onUnmounted, inject, type Ref } from 'vue'
   import { priceService } from '@/services/PriceService'
   import { TokenService } from '@/services/TokenService'
+  import { useAuthStore } from '@/stores/auth'
   import LightweightPriceChart from '@/components/LightweightPriceChart.vue'
 
   // Reactive data
   const selectedToken = ref<string | null>(null)
   const searchQuery = ref('')
   const isUsingMockData = ref(false)
+  const auth = useAuthStore()
+
+  // Inject the login panel ref from the app
+  const loginPanelRef = inject('loginPanelRef') as Ref<{
+    open: () => void
+  }> | null
+
+  const openLoginPanel = () => {
+    console.log('Markets: Opening login panel')
+    if (loginPanelRef?.value) {
+      loginPanelRef.value.open()
+    } else {
+      console.warn('LoginPanel ref not found')
+    }
+  }
 
 
   // Computed properties
@@ -184,6 +200,17 @@
 
   const selectToken = (symbol: string) => {
     selectedToken.value = symbol
+  }
+
+  // Handle trade button click - check auth status
+  const handleTradeClick = () => {
+    if (auth.authenticated && auth.userProfile) {
+      // User is logged in, navigate to trading page with selected token
+      navigateTo(`/trading?token=${selectedToken.value}`)
+    } else {
+      // User is not logged in, open login panel
+      openLoginPanel()
+    }
   }
 
   // Price service subscription

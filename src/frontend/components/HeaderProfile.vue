@@ -118,7 +118,7 @@
               class="flex items-center justify-between gap-2 p-2 bg-zinc-50 dark:bg-zinc-800 rounded-md"
             >
               <div class="flex items-center gap-2 min-w-0">
-                <UIcon name="token-branded:icp" class="w-3 h-3 text-orange-500 flex-shrink-0" />
+                <img :src="TokenService.getTokenIcon('ICP')" alt="ICP icon" class="w-3 h-3 flex-shrink-0" />
                 <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex-shrink-0">ICP</span>
                 <span class="text-xs font-mono text-zinc-900 dark:text-white truncate">
                   {{ formatCompactAddress(authStore.principal) }}
@@ -138,7 +138,7 @@
               class="flex items-center justify-between gap-2 p-2 bg-zinc-50 dark:bg-zinc-800 rounded-md"
             >
               <div class="flex items-center gap-2 min-w-0">
-                <UIcon name="cryptocurrency:eth" class="w-3 h-3 text-blue-500 flex-shrink-0" />
+                <img :src="TokenService.getTokenIcon('ETH')" alt="Ethereum icon" class="w-3 h-3 flex-shrink-0" />
                 <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex-shrink-0">EVM</span>
                 <span class="text-xs font-mono text-zinc-900 dark:text-white truncate">
                   {{ formatCompactAddress(authStore.evmAddress) }}
@@ -158,7 +158,7 @@
               class="flex items-center justify-between gap-2 p-2 bg-zinc-50 dark:bg-zinc-800 rounded-md"
             >
               <div class="flex items-center gap-2 min-w-0">
-                <UIcon name="cryptocurrency:sol" class="w-3 h-3 text-purple-500 flex-shrink-0" />
+                <img :src="TokenService.getTokenIcon('SOL')" alt="Solana icon" class="w-3 h-3 flex-shrink-0" />
                 <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex-shrink-0">SOL</span>
                 <span class="text-xs font-mono text-zinc-900 dark:text-white truncate">
                   {{ formatCompactAddress(authStore.solAddress) }}
@@ -178,7 +178,7 @@
               class="flex items-center justify-between gap-2 p-2 bg-zinc-50 dark:bg-zinc-800 rounded-md"
             >
               <div class="flex items-center gap-2 min-w-0">
-                <UIcon name="cryptocurrency:btc" class="w-3 h-3 text-orange-400 flex-shrink-0" />
+                <img :src="TokenService.getTokenIcon('BTC')" alt="Bitcoin icon" class="w-3 h-3 flex-shrink-0" />
                 <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex-shrink-0">BTC</span>
                 <span class="text-xs font-mono text-zinc-900 dark:text-white truncate">
                   {{ formatCompactAddress(authStore.btcAddress) }}
@@ -235,6 +235,7 @@
   import { canisterService } from '@/services/CanisterService'
   import { useRoute } from 'vue-router'
   import { useColorTheme } from '@/composables/useColorTheme'
+  import { TokenService } from '@/services/TokenService'
 
   defineOptions({
     name: 'HeaderProfile',
@@ -511,7 +512,7 @@
         return { type: 'img', src: '/plug.svg', alt: 'Plug' }
       case 'internetidentity':
       case 'icp':
-        return { type: 'img', src: '/icons/tokens/icp.svg', alt: 'Internet Identity' }
+        return { type: 'img', src: '/icp.svg', alt: 'Internet Identity' }
       default:
         return { type: 'UIcon', name: 'solar:wallet-bold' }
     }

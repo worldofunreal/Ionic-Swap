@@ -99,15 +99,13 @@
                 <!-- Coin Column -->
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
-                    <div class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mr-3">
-                      <UIcon :name="getTokenIcon(token.symbol)" class="w-6 h-6" />
-                    </div>
+                    <img :src="TokenService.getTokenIcon(token.symbol)" :alt="`${token.symbol} icon`" class="w-10 h-10 mr-3" />
                     <div>
                       <div class="text-sm font-semibold text-foreground">
                         {{ token.symbol }}
                       </div>
                       <div class="text-sm text-muted-foreground">
-                        {{ token.name }}
+                        {{ TokenService.getTokenName(token.symbol) }}
                       </div>
                 </div>
               </div>
@@ -194,9 +192,7 @@
             >
               <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center space-x-3">
-                  <div class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
-                    <UIcon :name="getTokenIcon(position.token_symbol)" class="w-6 h-6" />
-                  </div>
+                  <img :src="TokenService.getTokenIcon(position.token_symbol)" :alt="`${position.token_symbol} icon`" class="w-10 h-10" />
                   <div>
                     <div class="font-semibold text-foreground">{{ position.token_symbol }} Pool</div>
                     <div class="text-xs text-muted-foreground">ID: {{ position.id.slice(-8) }}</div>
@@ -439,21 +435,6 @@
   })
 
   // Helper functions
-  const getTokenIcon = (symbol: string) => {
-    const icons: Record<string, string> = {
-      'BTC': 'logos:bitcoin',
-      'ETH': 'token-branded:ethereum',
-      'XRP': 'cryptocurrency-color:xrp',
-      'USDT': 'cryptocurrency-color:usdt',
-      'BNB': 'token-branded:binance',
-      'SOL': 'token-branded:solana',
-      'DOGE': 'simple-icons:dogecoin',
-      'ADA': 'logos:cardano-icon',
-      'TRX': 'token-branded:tron',
-      'ICP': 'token-branded:icp',
-    }
-    return icons[symbol] || 'cryptocurrency-color:generic'
-  }
 
   const formatTokenAmount = (symbol: string, balance: number) => {
     return TokenService.formatBalance(balance, symbol)

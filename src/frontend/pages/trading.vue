@@ -7,9 +7,7 @@
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
           <div class="flex items-center space-x-2">
-            <div class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
-              <UIcon :name="getTokenIcon(selectedTokenSymbol)" class="w-5 h-5" />
-            </div>
+            <img :src="TokenService.getTokenIcon(selectedTokenSymbol)" :alt="`${selectedTokenSymbol} icon`" class="w-8 h-8" />
             <div>
               <div class="font-semibold text-zinc-900 dark:text-white">
                 {{ selectedTokenSymbol }}/USDT
@@ -452,22 +450,6 @@
     return TokenService.formatPrice(price, selectedTokenSymbol.value)
   }
 
-  // Get token icon for display (matching wallet.vue)
-  const getTokenIcon = (symbol: string) => {
-    const icons: Record<string, string> = {
-      'BTC': 'logos:bitcoin',
-      'ETH': 'token-branded:ethereum',
-      'XRP': 'cryptocurrency-color:xrp',
-      'USDT': 'cryptocurrency-color:usdt',
-      'BNB': 'token-branded:binance',
-      'SOL': 'token-branded:solana',
-      'DOGE': 'simple-icons:dogecoin',
-      'ADA': 'logos:cardano-icon',
-      'TRX': 'token-branded:tron',
-      'ICP': 'token-branded:icp',
-    }
-    return icons[symbol] || 'cryptocurrency-color:generic'
-  }
 
   const setBuyAmount = (percent: number) => {
     const balance = usdtBalanceDisplay.value
