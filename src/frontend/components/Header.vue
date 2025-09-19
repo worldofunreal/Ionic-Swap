@@ -3,7 +3,7 @@
     :class="[
       'sticky z-50 top-0 left-0 w-full transition-all duration-500 ease-in-out',
       scrolled
-        ? 'bg-background/80 backdrop-blur-sm shadow-md'
+        ? 'bg-zinc-50/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-md'
         : 'bg-transparent',
       'border-b border-neutral-200 dark:border-neutral-800',
     ]"
@@ -130,7 +130,7 @@
         <!-- Color Theme Toggle Button - Client Only -->
         <ClientOnly>
           <button
-            class="relative w-7 h-7 rounded-lg transition-all duration-300 focus:outline-none border border-neutral-300 dark:border-neutral-700 flex items-center justify-center mr-1 bg-surface hover:bg-surface-elevated"
+            class="relative w-7 h-7 rounded-lg transition-all duration-300 focus:outline-none border border-neutral-300 dark:border-neutral-700 flex items-center justify-center mr-1 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800"
             aria-label="Toggle color theme"
             @click="toggleColorTheme"
           >

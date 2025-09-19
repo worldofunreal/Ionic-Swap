@@ -189,7 +189,7 @@ const updateChartColors = () => {
       up: colors.up,
       down: colors.down,
       // Theme-reactive backgrounds and text
-      background: isDark ? '#0a0a0a' : '#ffffff',
+      background: isDark ? 'oklch(21% 0.006 285.885)' : '#ffffff',
       text: isDark ? '#ffffff' : '#000000',
       grid: isDark ? '#2a2a2a' : '#e5e7eb',
       border: isDark ? '#374151' : '#d1d5db',

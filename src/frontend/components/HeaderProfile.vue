@@ -28,19 +28,19 @@
             :src="getWalletIcon(authStore.nativeWallet).src"
             :name="getWalletIcon(authStore.nativeWallet).name"
             :alt="getWalletIcon(authStore.nativeWallet).alt"
-            class="w-3 h-3 text-muted-foreground"
+            class="w-3 h-3 text-zinc-500 dark:text-zinc-400"
           />
         </div>
       </div>
 
       <!-- Username and Arrow -->
       <div class="flex items-center gap-1">
-        <span class="text-sm font-medium text-foreground">
+        <span class="text-sm font-medium text-zinc-900 dark:text-white">
           {{ authStore.userProfile?.username || 'User' }}
         </span>
         <UIcon
           :name="showUserMenu ? 'bxs:up-arrow' : 'bxs:down-arrow'"
-          class="w-4 h-4 text-muted-foreground transition-transform"
+          class="w-4 h-4 text-zinc-500 dark:text-zinc-400 transition-transform"
         />
       </div>
     </div>
@@ -70,10 +70,10 @@
             </template>
           </UAvatar>
           <div class="flex-1 min-w-0">
-            <div class="font-semibold text-foreground truncate">
+            <div class="font-semibold text-zinc-900 dark:text-white truncate">
               {{ authStore.userProfile?.username || 'User' }}
             </div>
-            <div class="text-sm text-muted-foreground">
+            <div class="text-sm text-zinc-500 dark:text-zinc-400">
               {{ authStore.nativeWallet.toUpperCase() }}
             </div>
           </div>
@@ -105,7 +105,7 @@
         <!-- Cross-Chain Addresses Section -->
         <div class="mb-4">
           <div
-            class="text-xs font-medium text-muted-foreground mb-2"
+            class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2"
           >
             Cross-Chain Addresses
           </div>
@@ -114,7 +114,7 @@
           <div v-if="authStore.principal" class="mb-3">
             <div class="flex items-center gap-2 mb-1">
               <UIcon name="token-branded:icp" class="w-4 h-4 text-orange-500" />
-              <span class="text-xs font-medium text-muted-foreground"
+              <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400"
                 >ICP</span
               >
             </div>
@@ -122,13 +122,13 @@
               class="flex items-center gap-2 p-2 bg-muted rounded-md"
             >
               <span
-                class="text-sm font-mono text-foreground truncate"
+                class="text-sm font-mono text-zinc-900 dark:text-white truncate"
               >
                 {{ authStore.principal }}
               </span>
               <UIcon
                 name="i-heroicons-document-duplicate-20-solid"
-                class="text-muted-foreground cursor-pointer hover:text-foreground transition flex-shrink-0"
+                class="text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:text-white transition flex-shrink-0"
                 @click="copyToClipboard(authStore.principal, 'ICP')"
               />
             </div>
@@ -138,7 +138,7 @@
           <div v-if="authStore.evmAddress" class="mb-3">
             <div class="flex items-center gap-2 mb-1">
               <UIcon name="cryptocurrency:eth" class="w-4 h-4 text-blue-500" />
-              <span class="text-xs font-medium text-muted-foreground"
+              <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400"
                 >EVM</span
               >
             </div>
@@ -146,13 +146,13 @@
               class="flex items-center gap-2 p-2 bg-muted rounded-md"
             >
               <span
-                class="text-sm font-mono text-foreground truncate"
+                class="text-sm font-mono text-zinc-900 dark:text-white truncate"
               >
                 {{ authStore.evmAddress }}
               </span>
               <UIcon
                 name="i-heroicons-document-duplicate-20-solid"
-                class="text-muted-foreground cursor-pointer hover:text-foreground transition flex-shrink-0"
+                class="text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:text-white transition flex-shrink-0"
                 @click="copyToClipboard(authStore.evmAddress, 'EVM')"
               />
             </div>
@@ -165,7 +165,7 @@
                 name="cryptocurrency:sol"
                 class="w-4 h-4 text-purple-500"
               />
-              <span class="text-xs font-medium text-muted-foreground"
+              <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400"
                 >SOL</span
               >
             </div>
@@ -173,13 +173,13 @@
               class="flex items-center gap-2 p-2 bg-muted rounded-md"
             >
               <span
-                class="text-sm font-mono text-foreground truncate"
+                class="text-sm font-mono text-zinc-900 dark:text-white truncate"
               >
                 {{ authStore.solAddress }}
               </span>
               <UIcon
                 name="i-heroicons-document-duplicate-20-solid"
-                class="text-muted-foreground cursor-pointer hover:text-foreground transition flex-shrink-0"
+                class="text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:text-white transition flex-shrink-0"
                 @click="copyToClipboard(authStore.solAddress, 'Solana')"
               />
             </div>
@@ -192,7 +192,7 @@
                 name="cryptocurrency:btc"
                 class="w-4 h-4 text-orange-400"
               />
-              <span class="text-xs font-medium text-muted-foreground"
+              <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400"
                 >BTC</span
               >
             </div>
@@ -200,13 +200,13 @@
               class="flex items-center gap-2 p-2 bg-muted rounded-md"
             >
               <span
-                class="text-sm font-mono text-foreground truncate"
+                class="text-sm font-mono text-zinc-900 dark:text-white truncate"
               >
                 {{ authStore.btcAddress }}
               </span>
               <UIcon
                 name="i-heroicons-document-duplicate-20-solid"
-                class="text-muted-foreground cursor-pointer hover:text-foreground transition flex-shrink-0"
+                class="text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:text-white transition flex-shrink-0"
                 @click="copyToClipboard(authStore.btcAddress, 'Bitcoin')"
               />
             </div>

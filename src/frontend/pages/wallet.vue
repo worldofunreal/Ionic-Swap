@@ -8,19 +8,19 @@
     <!-- Wallet Portfolio Overview -->
     <div v-else>
         <!-- Top Header -->
-        <div class="bg-card border-b border-gray-200 dark:border-gray-800 px-6 py-4">
+        <div class="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-500 dark:border-zinc-800 px-6 py-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-              <h1 class="text-2xl font-bold text-foreground">Wallet</h1>
+              <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Wallet</h1>
             </div>
             
             <div class="flex items-center gap-4">
               <div class="relative">
-                <UIcon name="i-heroicons-magnifying-glass-20-solid" class="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                <UIcon name="i-heroicons-magnifying-glass-20-solid" class="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500 dark:text-zinc-400" />
                 <input 
                   type="text" 
                   placeholder="Search coins, tokens, or addresses..."
-                  class="pl-10 pr-4 py-2 w-80 bg-muted border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  class="pl-10 pr-4 py-2 w-80 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               
@@ -30,11 +30,11 @@
               </UButton>
               
               <div class="flex items-center gap-2">
-                <UIcon name="i-heroicons-bell-20-solid" class="w-5 h-5 text-muted-foreground cursor-pointer" />
-                <UIcon name="i-heroicons-chat-bubble-left-20-solid" class="w-5 h-5 text-muted-foreground cursor-pointer" />
-                <UIcon name="i-heroicons-arrow-down-tray-20-solid" class="w-5 h-5 text-muted-foreground cursor-pointer" />
-                <UIcon name="i-heroicons-globe-alt-20-solid" class="w-5 h-5 text-muted-foreground cursor-pointer" />
-                <UIcon name="i-heroicons-moon-20-solid" class="w-5 h-5 text-muted-foreground cursor-pointer" />
+                <UIcon name="i-heroicons-bell-20-solid" class="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer" />
+                <UIcon name="i-heroicons-chat-bubble-left-20-solid" class="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer" />
+                <UIcon name="i-heroicons-arrow-down-tray-20-solid" class="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer" />
+                <UIcon name="i-heroicons-globe-alt-20-solid" class="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer" />
+                <UIcon name="i-heroicons-moon-20-solid" class="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer" />
               </div>
             </div>
           </div>
@@ -46,16 +46,16 @@
             <!-- Portfolio Overview & User Profile Section -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
               <!-- User Profile Card -->
-              <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4">
+              <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 p-4">
                 <div class="flex items-center gap-3 mb-3">
                   <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
                     <span class="text-white font-bold text-sm">{{ userInitial }}</span>
                   </div>
                   <div>
-                    <h2 class="text-base font-semibold text-foreground">
+                    <h2 class="text-base font-semibold text-zinc-900 dark:text-white">
                       {{ userProfile?.username || 'User' }}
                     </h2>
-                    <div class="flex items-center gap-3 text-xs text-muted-foreground">
+                    <div class="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
                       <span>UID: {{ userProfile?.id?.toText().slice(-8) || 'N/A' }}</span>
                       <span>VIP Level: Regular User</span>
                     </div>
@@ -65,12 +65,12 @@
                 <!-- Social Stats -->
                 <div class="flex items-center gap-4 text-xs">
                   <div class="flex items-center gap-1">
-                    <span class="font-semibold text-foreground">{{ userProfile?.following_count || 0 }}</span>
-                    <span class="text-muted-foreground">Following</span>
+                    <span class="font-semibold text-zinc-900 dark:text-white">{{ userProfile?.following_count || 0 }}</span>
+                    <span class="text-zinc-500 dark:text-zinc-400">Following</span>
                   </div>
                   <div class="flex items-center gap-1">
-                    <span class="font-semibold text-foreground">{{ userProfile?.followers_count || 0 }}</span>
-                    <span class="text-muted-foreground">Followers</span>
+                    <span class="font-semibold text-zinc-900 dark:text-white">{{ userProfile?.followers_count || 0 }}</span>
+                    <span class="text-zinc-500 dark:text-zinc-400">Followers</span>
                   </div>
                 </div>
               </div>
@@ -90,19 +90,19 @@
 
 
             <!-- My Assets Section -->
-            <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 mb-8">
-              <div class="p-4 border-b border-gray-200 dark:border-gray-800">
+            <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 mb-8">
+              <div class="p-4 border-b border-zinc-200 dark:border-zinc-800">
                 <div class="flex items-center justify-between">
-                  <h3 class="text-base font-semibold text-foreground">My Assets</h3>
+                  <h3 class="text-base font-semibold text-zinc-900 dark:text-white">My Assets</h3>
                   <div class="flex items-center gap-3">
                     <!-- Value Toggle -->
-                    <div class="flex bg-muted rounded-md p-1">
+                    <div class="flex bg-zinc-50 dark:bg-zinc-900 rounded-md p-1">
                       <button
                         :class="[
                           'px-2 py-1 text-xs rounded-md transition-colors',
                           valueDisplay === 'usd'
                             ? 'bg-primary text-primary-foreground'
-                            : 'text-muted-foreground hover:bg-muted/80',
+                            : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800',
                         ]"
                         @click="valueDisplay = 'usd'"
                       >
@@ -113,14 +113,14 @@
                           'px-2 py-1 text-xs rounded-md transition-colors',
                           valueDisplay === 'btc'
                             ? 'bg-primary text-primary-foreground'
-                            : 'text-muted-foreground hover:bg-muted/80',
+                            : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800',
                         ]"
                         @click="valueDisplay = 'btc'"
                       >
                         BTC
                       </button>
                     </div>
-                    <span class="text-xs text-muted-foreground">
+                    <span class="text-xs text-zinc-500 dark:text-zinc-400">
                       {{ tokensWithBalances.length }} assets
                     </span>
                   </div>
@@ -130,29 +130,29 @@
               <!-- Tokens Table -->
               <div class="overflow-x-auto">
                 <table class="w-full">
-                  <thead class="bg-muted">
+                  <thead class="bg-zinc-50 dark:bg-zinc-900">
                     <tr>
-                      <th class="px-6 py-3 text-left text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                      <th class="px-6 py-3 text-left text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                         Coin
                       </th>
-                      <th class="px-6 py-3 text-right text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                      <th class="px-6 py-3 text-right text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                         Amount
                       </th>
-                      <th class="px-6 py-3 text-right text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                      <th class="px-6 py-3 text-right text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                         Price
                       </th>
-                      <th class="px-6 py-3 text-right text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                      <th class="px-6 py-3 text-right text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                         Today's PnL
                       </th>
-                      <th class="px-6 py-3 text-right text-sm font-bold text-muted-foreground uppercase tracking-wider">
+                      <th class="px-6 py-3 text-right text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                         Action
                       </th>
                     </tr>
                   </thead>
-                  <tbody class="bg-card divide-y divide-gray-200 dark:divide-gray-800">
+                  <tbody class="bg-zinc-50 dark:bg-zinc-900 divide-y divide-default">
                     <tr v-if="tokensWithBalances.length === 0">
-                      <td colspan="5" class="px-6 py-12 text-center text-muted-foreground">
-                        <div class="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                      <td colspan="5" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
+                        <div class="w-16 h-16 bg-zinc-50 dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-4">
                           <UIcon name="i-heroicons-currency-dollar-20-solid" class="w-8 h-8" />
                         </div>
                         <p class="text-base font-medium">Loading Assets...</p>
@@ -162,19 +162,19 @@
                     <tr
                       v-for="token in tokensWithBalances"
                       :key="token.symbol"
-                      class="hover:bg-muted/50 transition-colors"
+                      class="hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                     >
                       <!-- Coin Column -->
                       <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
-                          <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center mr-3">
+                          <div class="w-10 h-10 rounded-full bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center mr-3">
                             <UIcon :name="getTokenIcon(token.symbol)" class="w-6 h-6" />
                           </div>
                           <div>
-                            <div class="text-sm font-semibold text-foreground">
+                            <div class="text-sm font-semibold text-zinc-900 dark:text-white">
                               {{ token.symbol }}
                             </div>
-                            <div class="text-sm text-muted-foreground">
+                            <div class="text-sm text-zinc-500 dark:text-zinc-400">
                               {{ token.name }}
                             </div>
                           </div>
@@ -183,11 +183,11 @@
 
                       <!-- Amount Column -->
                       <td class="px-6 py-4 whitespace-nowrap text-right">
-                        <div class="text-sm font-bold text-foreground">
+                        <div class="text-sm font-bold text-zinc-900 dark:text-white">
                           <span v-if="balancesVisible">{{ formatTokenAmount(token.symbol, token.balance) }}</span>
                           <span v-else>••••••••</span>
                         </div>
-                        <div class="text-xs text-muted-foreground">
+                        <div class="text-xs text-zinc-500 dark:text-zinc-400">
                           <span v-if="balancesVisible">{{ formatTokenValue(token.value) }}</span>
                           <span v-else>••••••</span>
                         </div>
@@ -195,7 +195,7 @@
 
                       <!-- Coin Price / Cost Price Column -->
                       <td class="px-6 py-4 whitespace-nowrap text-right">
-                        <div class="text-sm font-semibold text-foreground">
+                        <div class="text-sm font-semibold text-zinc-900 dark:text-white">
                           <span v-if="balancesVisible">{{ formatTokenPrice(token.price) }}</span>
                           <span v-else>••••••</span>
                         </div>
@@ -243,46 +243,46 @@
             <!-- Bottom Section: Wallet Addresses & Portfolio Stats -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <!-- Wallet Addresses Card -->
-              <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-                <h3 class="text-lg font-semibold text-foreground mb-4">
+              <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
+                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
                   Wallet Addresses
                 </h3>
                 
                 <div class="space-y-3">
                   <!-- EVM Address -->
-                  <div v-if="userProfile?.evm_address?.[0]" class="p-3 bg-muted rounded-lg">
+                  <div v-if="userProfile?.evm_address?.[0]" class="p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
                     <div class="flex items-center gap-2 mb-2">
                       <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded-full">EVM</span>
-                      <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-muted-foreground cursor-pointer" @click="copyToClipboard(userProfile.evm_address[0], 'EVM')" />
+                      <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.evm_address[0], 'EVM')" />
                     </div>
-                    <div class="font-mono text-sm text-foreground">{{ formatAddress(userProfile.evm_address[0]) }}</div>
+                    <div class="font-mono text-sm text-zinc-900 dark:text-white">{{ formatAddress(userProfile.evm_address[0]) }}</div>
                   </div>
 
                   <!-- Bitcoin Address -->
-                  <div v-if="userProfile?.bitcoin_address?.[0]" class="p-3 bg-muted rounded-lg">
+                  <div v-if="userProfile?.bitcoin_address?.[0]" class="p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
                     <div class="flex items-center gap-2 mb-2">
                       <span class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs font-semibold px-2 py-1 rounded-full">BTC</span>
-                      <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-muted-foreground cursor-pointer" @click="copyToClipboard(userProfile.bitcoin_address[0], 'Bitcoin')" />
+                      <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.bitcoin_address[0], 'Bitcoin')" />
                     </div>
-                    <div class="font-mono text-sm text-foreground">{{ formatAddress(userProfile.bitcoin_address[0]) }}</div>
+                    <div class="font-mono text-sm text-zinc-900 dark:text-white">{{ formatAddress(userProfile.bitcoin_address[0]) }}</div>
                   </div>
 
                   <!-- Solana Address -->
-                  <div v-if="userProfile?.solana_address?.[0]" class="p-3 bg-muted rounded-lg">
+                  <div v-if="userProfile?.solana_address?.[0]" class="p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
                     <div class="flex items-center gap-2 mb-2">
                       <span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs font-semibold px-2 py-1 rounded-full">SOL</span>
-                      <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-muted-foreground cursor-pointer" @click="copyToClipboard(userProfile.solana_address[0], 'Solana')" />
+                      <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.solana_address[0], 'Solana')" />
                     </div>
-                    <div class="font-mono text-sm text-foreground">{{ formatAddress(userProfile.solana_address[0]) }}</div>
+                    <div class="font-mono text-sm text-zinc-900 dark:text-white">{{ formatAddress(userProfile.solana_address[0]) }}</div>
                   </div>
 
                   <!-- ICP Principal -->
-                  <div v-if="userProfile?.id" class="p-3 bg-muted rounded-lg">
+                  <div v-if="userProfile?.id" class="p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
                     <div class="flex items-center gap-2 mb-2">
-                      <span class="bg-muted text-muted-foreground text-xs font-semibold px-2 py-1 rounded-full">ICP</span>
-                      <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-muted-foreground cursor-pointer" @click="copyToClipboard(userProfile.id.toText(), 'ICP')" />
+                      <span class="bg-muted text-zinc-500 dark:text-zinc-400 text-xs font-semibold px-2 py-1 rounded-full">ICP</span>
+                      <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.id.toText(), 'ICP')" />
                     </div>
-                    <div class="font-mono text-sm text-foreground">{{ formatAddress(userProfile.id.toText()) }}</div>
+                    <div class="font-mono text-sm text-zinc-900 dark:text-white">{{ formatAddress(userProfile.id.toText()) }}</div>
                   </div>
                 </div>
 
@@ -293,15 +293,15 @@
               </div>
 
               <!-- Portfolio Stats Card -->
-              <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-                <h3 class="text-lg font-semibold text-foreground mb-4">
+              <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
+                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
                   Portfolio Stats
                 </h3>
                 
                 <div class="space-y-4">
                   <div class="flex justify-between items-center">
-                    <span class="text-muted-foreground">Total Value</span>
-                    <span class="font-semibold text-foreground">
+                    <span class="text-zinc-500 dark:text-zinc-400">Total Value</span>
+                    <span class="font-semibold text-zinc-900 dark:text-white">
                       <span v-if="balancesVisible">
                         {{ valueDisplay === 'usd' ? `$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `${(totalValue / btcPrice).toFixed(8)} BTC` }}
                       </span>
@@ -309,44 +309,44 @@
                     </span>
                   </div>
                   <div class="flex justify-between items-center">
-                    <span class="text-muted-foreground">Tokens Held</span>
-                    <span class="font-semibold text-foreground">{{ Object.keys(userBalances).length }}</span>
+                    <span class="text-zinc-500 dark:text-zinc-400">Tokens Held</span>
+                    <span class="font-semibold text-zinc-900 dark:text-white">{{ Object.keys(userBalances).length }}</span>
                   </div>
                   <div class="flex justify-between items-center">
-                    <span class="text-muted-foreground">Networks</span>
-                    <span class="font-semibold text-foreground">4</span>
+                    <span class="text-zinc-500 dark:text-zinc-400">Networks</span>
+                    <span class="font-semibold text-zinc-900 dark:text-white">4</span>
                   </div>
                   <div class="flex justify-between items-center">
-                    <span class="text-muted-foreground">Faucet Status</span>
+                    <span class="text-zinc-500 dark:text-zinc-400">Faucet Status</span>
                     <span class="font-semibold text-green-500">{{ faucetClaimed ? 'Claimed' : 'Available' }}</span>
                   </div>
                   <div class="flex justify-between items-center">
-                    <span class="text-muted-foreground">USDT Balance</span>
-                    <span class="font-semibold text-foreground">{{ formatTokenBalance('USDT') }}</span>
+                    <span class="text-zinc-500 dark:text-zinc-400">USDT Balance</span>
+                    <span class="font-semibold text-zinc-900 dark:text-white">{{ formatTokenBalance('USDT') }}</span>
                   </div>
                   <div class="flex justify-between items-center">
-                    <span class="text-muted-foreground">Account Age</span>
-                    <span class="font-semibold text-foreground">New User</span>
+                    <span class="text-zinc-500 dark:text-zinc-400">Account Age</span>
+                    <span class="font-semibold text-zinc-900 dark:text-white">New User</span>
                   </div>
                 </div>
 
                 <!-- Portfolio Allocation Chart -->
                 <div class="mt-6">
-                  <h4 class="text-sm font-medium text-foreground mb-3">Token Holdings</h4>
+                  <h4 class="text-sm font-medium text-zinc-900 dark:text-white mb-3">Token Holdings</h4>
                   <div class="space-y-2">
                     <div v-for="(balance, symbol) in userBalances" :key="symbol" class="flex items-center justify-between">
                       <div class="flex items-center gap-2">
-                        <div class="w-4 h-4 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
+                        <div class="w-4 h-4 rounded-full bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center">
                           <UIcon :name="getTokenIcon(symbol)" class="w-3 h-3" />
                         </div>
-                        <span class="text-sm text-muted-foreground">{{ symbol }}</span>
+                        <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ symbol }}</span>
                       </div>
-                      <span class="text-sm font-medium text-foreground">
+                      <span class="text-sm font-medium text-zinc-900 dark:text-white">
                         <span v-if="balancesVisible">{{ formatTokenBalance(symbol) }}</span>
                         <span v-else>••••••</span>
                       </span>
                     </div>
-                    <div v-if="Object.keys(userBalances).length === 0" class="text-center py-4 text-muted-foreground">
+                    <div v-if="Object.keys(userBalances).length === 0" class="text-center py-4 text-zinc-500 dark:text-zinc-400">
                       <p class="text-sm">No tokens yet</p>
                       <p class="text-xs">Complete signup to receive your welcome bonus!</p>
                     </div>
@@ -356,15 +356,15 @@
             </div>
 
             <!-- Transaction History Section -->
-            <div class="bg-card rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 mb-8">
-              <div class="p-4 border-b border-gray-200 dark:border-gray-800">
+            <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 mb-8">
+              <div class="p-4 border-b border-zinc-200 dark:border-zinc-800">
                 <div class="flex items-center justify-between">
-                  <h3 class="text-lg font-semibold text-foreground">Recent Transactions</h3>
+                  <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">Recent Transactions</h3>
                   <div class="flex items-center gap-2">
                     <button
                       @click="refreshTransactionHistory"
                       :disabled="transactionHistoryLoading"
-                      class="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-50"
+                      class="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-white disabled:opacity-50"
                     >
                       <UIcon 
                         :name="transactionHistoryLoading ? 'i-heroicons-arrow-path' : 'i-heroicons-arrow-path'" 
@@ -372,7 +372,7 @@
                         class="w-4 h-4"
                       />
                     </button>
-                    <span class="text-xs text-muted-foreground">
+                    <span class="text-xs text-zinc-500 dark:text-zinc-400">
                       {{ transactionHistory.length }} transactions
                     </span>
                   </div>
@@ -383,15 +383,15 @@
               <div class="p-4">
                 <!-- Loading State -->
                 <div v-if="transactionHistoryLoading && transactionHistory.length === 0" class="text-center py-8">
-                  <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 mx-auto mb-2 animate-spin text-gray-400" />
-                  <p class="text-gray-500 dark:text-gray-400">Loading transaction history...</p>
+                  <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 mx-auto mb-2 animate-spin text-zinc-500 dark:text-zinc-400" />
+                  <p class="text-zinc-500 dark:text-zinc-400">Loading transaction history...</p>
                 </div>
 
                 <!-- Empty State -->
                 <div v-else-if="!transactionHistoryLoading && transactionHistory.length === 0" class="text-center py-8">
-                  <UIcon name="i-heroicons-document-text" class="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-                  <h4 class="text-lg font-medium text-foreground mb-2">No transactions yet</h4>
-                  <p class="text-gray-500 dark:text-gray-400 mb-4">
+                  <UIcon name="i-heroicons-document-text" class="w-12 h-12 mx-auto mb-4 text-zinc-500 dark:text-zinc-400" />
+                  <h4 class="text-lg font-medium text-zinc-900 dark:text-white mb-2">No transactions yet</h4>
+                  <p class="text-zinc-500 dark:text-zinc-400 mb-4">
                     Your trading history will appear here once you make your first swap.
                   </p>
                   <UButton 
@@ -410,7 +410,7 @@
                   <div
                     v-for="transaction in transactionHistory.slice(0, 5)"
                     :key="transaction.id"
-                    class="bg-muted/50 rounded-lg p-4 hover:bg-muted transition-colors"
+                    class="bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-4 hover:bg-zinc-50 dark:bg-zinc-900-elevated transition-colors"
                   >
                     <div class="flex items-center justify-between">
                       <!-- Transaction Type & Pair -->
@@ -420,10 +420,10 @@
                             ↔
                           </div>
                           <div>
-                            <div class="font-semibold text-foreground">
+                            <div class="font-semibold text-zinc-900 dark:text-white">
                               {{ transaction.from_token }} → {{ transaction.to_token }}
                             </div>
-                            <div class="text-sm text-muted-foreground">
+                            <div class="text-sm text-zinc-500 dark:text-zinc-400">
                               {{ formatTransactionType(transaction.transaction_type) }}
                             </div>
                           </div>
@@ -432,11 +432,11 @@
 
                       <!-- Transaction Details -->
                       <div class="text-right">
-                        <div class="font-semibold text-foreground">
+                        <div class="font-semibold text-zinc-900 dark:text-white">
                           {{ formatAmount(transaction.from_amount, transaction.from_token) }} 
                           {{ transaction.from_token }}
                         </div>
-                        <div class="text-sm text-muted-foreground">
+                        <div class="text-sm text-zinc-500 dark:text-zinc-400">
                           → {{ formatAmount(transaction.to_amount, transaction.to_token) }} 
                           {{ transaction.to_token }}
                         </div>
@@ -444,8 +444,8 @@
                     </div>
 
                     <!-- Transaction Metadata -->
-                    <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                      <div class="flex items-center justify-between text-sm text-muted-foreground">
+                    <div class="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                      <div class="flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400">
                         <div class="flex items-center space-x-4">
                           <span>{{ formatDate(transaction.timestamp) }}</span>
                           <span>•</span>
@@ -478,172 +478,13 @@
     </div>
 
     <!-- Withdrawal Modal -->
-    <UModal v-model="withdrawModalOpen">
-      <UCard :ui="{ ring: '', divide: 'divide-y divide-gray-100 dark:divide-gray-800' }">
-        <template #header>
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-foreground">Withdraw {{ selectedToken }}</h3>
-            <UButton
-              color="gray"
-              variant="ghost"
-              icon="i-heroicons-x-mark-20-solid"
-              class="-my-1"
-              @click="withdrawModalOpen = false"
-            />
-          </div>
-        </template>
-
-        <div class="space-y-6">
-          <!-- Development Notice -->
-          <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-            <div class="flex items-start">
-              <UIcon name="i-heroicons-exclamation-triangle" class="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 mr-3 flex-shrink-0" />
-              <div>
-                <h4 class="text-sm font-medium text-amber-800 dark:text-amber-200">Withdrawals in Development</h4>
-                <p class="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                  Withdrawal functionality is currently under development. This feature will be available soon.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Available Balance -->
-          <div class="bg-muted rounded-lg p-4">
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-muted-foreground">Available Balance</span>
-              <span class="text-lg font-semibold text-foreground">
-                <span v-if="balancesVisible">
-                  {{ formatTokenAmount(selectedToken, getTokenBalance(selectedToken)) }} {{ selectedToken }}
-                </span>
-                <span v-else>•••••• {{ selectedToken }}</span>
-              </span>
-            </div>
-          </div>
-
-          <!-- Wallet Selection -->
-          <div class="space-y-4">
-            <h4 class="text-sm font-medium text-foreground">Select Withdrawal Wallet</h4>
-            
-            <div class="space-y-3">
-              <!-- EVM Wallet -->
-              <div 
-                v-if="userProfile?.evm_address?.[0]" 
-                class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                :class="{ 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20': selectedWallet === 'evm' }"
-                @click="selectedWallet = 'evm'"
-              >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-                      <UIcon name="i-heroicons-cube" class="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div>
-                      <div class="font-medium text-foreground">EVM Wallet</div>
-                      <div class="text-sm text-muted-foreground">Ethereum, BSC, Polygon</div>
-                    </div>
-                  </div>
-                  <div class="text-right">
-                    <div class="text-xs text-muted-foreground">Address</div>
-                    <div class="text-sm font-mono text-foreground">{{ formatAddress(userProfile.evm_address[0]) }}</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Bitcoin Wallet -->
-              <div 
-                v-if="userProfile?.bitcoin_address?.[0]" 
-                class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                :class="{ 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20': selectedWallet === 'bitcoin' }"
-                @click="selectedWallet = 'bitcoin'"
-              >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
-                      <UIcon name="logos:bitcoin" class="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                    </div>
-                    <div>
-                      <div class="font-medium text-foreground">Bitcoin Wallet</div>
-                      <div class="text-sm text-muted-foreground">Bitcoin Network</div>
-                    </div>
-                  </div>
-                  <div class="text-right">
-                    <div class="text-xs text-muted-foreground">Address</div>
-                    <div class="text-sm font-mono text-foreground">{{ formatAddress(userProfile.bitcoin_address[0]) }}</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Solana Wallet -->
-              <div 
-                v-if="userProfile?.solana_address?.[0]" 
-                class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                :class="{ 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20': selectedWallet === 'solana' }"
-                @click="selectedWallet = 'solana'"
-              >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
-                      <UIcon name="token-branded:solana" class="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <div>
-                      <div class="font-medium text-foreground">Solana Wallet</div>
-                      <div class="text-sm text-muted-foreground">Solana Network</div>
-                    </div>
-                  </div>
-                  <div class="text-right">
-                    <div class="text-xs text-muted-foreground">Address</div>
-                    <div class="text-sm font-mono text-foreground">{{ formatAddress(userProfile.solana_address[0]) }}</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- ICP Wallet -->
-              <div 
-                v-if="userProfile?.id" 
-                class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                :class="{ 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20': selectedWallet === 'icp' }"
-                @click="selectedWallet = 'icp'"
-              >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-cyan-100 dark:bg-cyan-900 rounded-lg flex items-center justify-center">
-                      <UIcon name="token-branded:icp" class="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
-                    </div>
-                    <div>
-                      <div class="font-medium text-foreground">ICP Wallet</div>
-                      <div class="text-sm text-muted-foreground">Internet Computer</div>
-                    </div>
-                  </div>
-                  <div class="text-right">
-                    <div class="text-xs text-muted-foreground">Principal</div>
-                    <div class="text-sm font-mono text-foreground">{{ formatAddress(userProfile.id.toText()) }}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <template #footer>
-          <div class="flex justify-end gap-3">
-            <UButton
-              color="gray"
-              variant="soft"
-              @click="withdrawModalOpen = false"
-            >
-              Cancel
-            </UButton>
-            <UButton
-              color="primary"
-              :disabled="!selectedWallet"
-              @click="confirmWithdrawal"
-            >
-              Continue Withdrawal
-            </UButton>
-          </div>
-        </template>
-      </UCard>
-    </UModal>
+    <WithdrawalModal
+      ref="withdrawalModal"
+      :selected-token="selectedToken"
+      :user-profile="userProfile"
+      :balances-visible="balancesVisible"
+      :user-balances="userBalances"
+    />
   </div>
 </template>
 
@@ -657,6 +498,7 @@
   import { useTheme } from '@/composables/useTheme'
   import { TokenService } from '@/services/TokenService'
   import PortfolioTracker from '@/components/PortfolioTracker.vue'
+  import WithdrawalModal from '@/components/WithdrawalModal.vue'
 
   const auth = useAuthStore()
   const loading = ref(true)
@@ -697,9 +539,8 @@
   let refreshInterval: NodeJS.Timeout | null = null
   
   // Withdrawal modal state
-  const withdrawModalOpen = ref(false)
+  const withdrawalModal = ref<InstanceType<typeof WithdrawalModal>>()
   const selectedToken = ref('')
-  const selectedWallet = ref('')
   
   // Toggle balance visibility
   const toggleBalanceVisibility = () => {
@@ -965,21 +806,7 @@
   // Open withdrawal modal
   const openWithdrawModal = (tokenSymbol: string) => {
     selectedToken.value = tokenSymbol
-    selectedWallet.value = ''
-    withdrawModalOpen.value = true
-  }
-
-  // Confirm withdrawal
-  const confirmWithdrawal = () => {
-    if (!selectedWallet.value) return
-    
-    toast.add({
-      title: 'Withdrawals Coming Soon',
-      description: `Withdrawal functionality for ${selectedToken.value} is currently under development`,
-      color: 'info',
-    })
-    
-    withdrawModalOpen.value = false
+    withdrawalModal.value?.open()
   }
 
   // View token details

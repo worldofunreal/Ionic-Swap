@@ -12,173 +12,29 @@
 .text-h3 { @apply text-lg font-semibold text-gray-900 dark:text-white; }
 .text-h4 { @apply text-base font-semibold text-gray-900 dark:text-white; }
 .text-body { @apply text-sm text-gray-700 dark:text-gray-300; }
-.text-caption { @apply text-xs text-gray-500 dark:text-gray-400; }
-.text-mono { @apply font-mono text-sm text-gray-700 dark:text-gray-300; }
+.text-caption { @apply text-xs text-zinc-500 dark:text-zinc-400; }
+.text-mono { @apply font-mono text-sm text-zinc-900 dark:text-white; }
 
-/* Semantic color classes for consistency */
-.text-muted-foreground { @apply text-gray-500 dark:text-gray-400; }
-.text-foreground { @apply text-gray-900 dark:text-white; }
-.bg-card { background-color: var(--background-elevated); }
-.bg-muted { background-color: var(--surface); }
-.bg-background { background-color: var(--background); }
-.bg-background-elevated { background-color: var(--background-elevated); }
-.bg-surface { background-color: var(--surface); }
-.bg-surface-elevated { background-color: var(--surface-elevated); }
-.bg-buy-surface { background-color: var(--buy-surface); }
-.bg-sell-surface { background-color: var(--sell-surface); }
-.border-subtle { border-color: var(--surface-elevated); }
+/* ===== SIMPLE ZINC SYSTEM ===== */
+
+/* Background classes - simple zinc colors */
+.bg-background { @apply bg-zinc-50 dark:bg-zinc-900; }
+.bg-card { @apply bg-white dark:bg-zinc-800; }
+
+/* Simple utility classes */
 .text-primary { @apply text-primary-500; }
 .text-error { @apply text-red-500; }
 .text-success { @apply text-green-500; }
 
-/* Override Nuxt UI component colors to use our custom scheme */
-/* Light theme overrides */
-.nuxt-ui-input {
-  background-color: var(--surface) !important;
-  border-color: var(--surface-elevated) !important;
-}
-
-.nuxt-ui-input:focus {
-  border-color: var(--ui-color-primary-500) !important;
-  box-shadow: 0 0 0 1px var(--ui-color-primary-500) !important;
-}
-
-/* Target UInput specifically for both themes */
-[data-headlessui-state] input,
-.ui-input,
-input[type="text"],
-input[type="search"] {
-  background-color: var(--surface) !important;
-  border-color: var(--surface-elevated) !important;
-  color: var(--text-color) !important;
-}
-
-/* Design system tokens - let Nuxt UI handle primary colors */
-:root {
-  /* Custom radius scale */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  
-  /* Custom background colors */
-  --background: #FAFAFA;
-  --background-elevated: #FFFFFF;
-  --surface: #F0F0F0;
-  --surface-elevated: #FFFFFF;
-  --buy-surface: #F0F9FF;
-  --sell-surface: #FEF2F2;
-  --text-color: #1A1A1A;
-}
-
-/* Dark mode overrides */
-.dark {
-  --background: #202020;
-  --background-elevated: #2A2A2A;
-  --surface: #2A2A2A;
-  --surface-elevated: #333333;
-  --buy-surface: #1E3A3A;
-  --sell-surface: #3A1E1E;
-  --text-color: #FFFFFF;
-}
-
-/* Color theme classes - integrated with Nuxt UI tokens */
-.theme-emerald {
-  --ui-color-primary-50: theme('colors.emerald.50');
-  --ui-color-primary-100: theme('colors.emerald.100');
-  --ui-color-primary-500: theme('colors.emerald.500');
-  --ui-color-primary-600: theme('colors.emerald.600');
-  --ui-color-primary-900: theme('colors.emerald.900');
-}
-
-.theme-pink {
-  --ui-color-primary-50: theme('colors.pink.50');
-  --ui-color-primary-100: theme('colors.pink.100');
-  --ui-color-primary-500: theme('colors.pink.500');
-  --ui-color-primary-600: theme('colors.pink.600');
-  --ui-color-primary-900: theme('colors.pink.900');
-}
-
-.theme-red {
-  --ui-color-primary-50: theme('colors.red.50');
-  --ui-color-primary-100: theme('colors.red.100');
-  --ui-color-primary-500: theme('colors.red.500');
-  --ui-color-primary-600: theme('colors.red.600');
-  --ui-color-primary-900: theme('colors.red.900');
-}
-
-.theme-orange {
-  --ui-color-primary-50: theme('colors.orange.50');
-  --ui-color-primary-100: theme('colors.orange.100');
-  --ui-color-primary-500: theme('colors.orange.500');
-  --ui-color-primary-600: theme('colors.orange.600');
-  --ui-color-primary-900: theme('colors.orange.900');
-}
-
-.theme-sky {
-  --ui-color-primary-50: theme('colors.sky.50');
-  --ui-color-primary-100: theme('colors.sky.100');
-  --ui-color-primary-500: theme('colors.sky.500');
-  --ui-color-primary-600: theme('colors.sky.600');
-  --ui-color-primary-900: theme('colors.sky.900');
-}
-
-.theme-fuchsia {
-  --ui-color-primary-50: theme('colors.fuchsia.50');
-  --ui-color-primary-100: theme('colors.fuchsia.100');
-  --ui-color-primary-500: theme('colors.fuchsia.500');
-  --ui-color-primary-600: theme('colors.fuchsia.600');
-  --ui-color-primary-900: theme('colors.fuchsia.900');
-}
-
-.theme-purple {
-  --ui-color-primary-50: theme('colors.purple.50');
-  --ui-color-primary-100: theme('colors.purple.100');
-  --ui-color-primary-500: theme('colors.purple.500');
-  --ui-color-primary-600: theme('colors.purple.600');
-  --ui-color-primary-900: theme('colors.purple.900');
-}
-
-.theme-teal {
-  --ui-color-primary-50: theme('colors.teal.50');
-  --ui-color-primary-100: theme('colors.teal.100');
-  --ui-color-primary-500: theme('colors.teal.500');
-  --ui-color-primary-600: theme('colors.teal.600');
-  --ui-color-primary-900: theme('colors.teal.900');
-}
-
 /* Color circle classes for the theme switcher */
-.color-circle-emerald {
-  background-color: #10b981;
-}
-
-.color-circle-pink {
-  background-color: #ec4899;
-}
-
-.color-circle-red {
-  background-color: #ef4444;
-}
-
-.color-circle-orange {
-  background-color: #f97316;
-}
-
-.color-circle-sky {
-  background-color: #0ea5e9;
-}
-
-.color-circle-fuchsia {
-  background-color: #a855f7;
-}
-
-.color-circle-purple {
-  background-color: #8b5cf6;
-}
-
-.color-circle-teal {
-  background-color: #14b8a6;
-}
+.color-circle-emerald { background-color: #10b981; }
+.color-circle-pink { background-color: #ec4899; }
+.color-circle-red { background-color: #ef4444; }
+.color-circle-orange { background-color: #f97316; }
+.color-circle-sky { background-color: #0ea5e9; }
+.color-circle-fuchsia { background-color: #a855f7; }
+.color-circle-purple { background-color: #8b5cf6; }
+.color-circle-teal { background-color: #14b8a6; }
 
 /* Minimalist Scrollbar Styles */
 ::-webkit-scrollbar {
@@ -238,122 +94,3 @@ input[type="search"] {
   scrollbar-width: none;
 }
 
-
-.welcome-tooltip {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary) 0%,
-    var(--color-primary-hover) 100%
-  ) !important;
-  color: white !important;
-  border-radius: 12px !important;
-  padding: 24px !important;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
-  max-width: 400px !important;
-  font-size: 16px !important;
-  line-height: 1.6 !important;
-  text-align: center !important;
-  font-weight: 500 !important;
-  border: none !important;
-}
-
-.dark .welcome-tooltip {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary) 0%,
-    var(--color-primary-hover) 100%
-  ) !important;
-  color: white !important;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
-}
-
-.registration-tooltip {
-  background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%) !important;
-  color: #000000 !important;
-  border-radius: 12px !important;
-  padding: 20px !important;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;
-  max-width: 350px !important;
-  font-size: 15px !important;
-  line-height: 1.5 !important;
-  text-align: center !important;
-  border: none !important;
-}
-
-.login-panel-tooltip {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
-  color: white !important;
-  border-radius: 12px !important;
-  padding: 20px !important;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;
-  max-width: 350px !important;
-  font-size: 15px !important;
-  line-height: 1.5 !important;
-  text-align: center !important;
-  border: none !important;
-}
-
-.wallet-btn-tooltip {
-  background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%) !important;
-  color: #000000 !important;
-  border-radius: 10px !important;
-  padding: 16px !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
-  max-width: 300px !important;
-  font-size: 14px !important;
-  line-height: 1.4 !important;
-  text-align: center !important;
-  border: none !important;
-}
-
-.registration-step-tooltip {
-  background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%) !important;
-  color: #000000 !important;
-  border-radius: 10px !important;
-  padding: 16px !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
-  max-width: 300px !important;
-  font-size: 14px !important;
-  line-height: 1.4 !important;
-  text-align: center !important;
-  border: none !important;
-}
-
-.create-profile-tooltip {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-  color: white !important;
-  border-radius: 10px !important;
-  padding: 16px !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
-  max-width: 300px !important;
-  font-size: 14px !important;
-  line-height: 1.4 !important;
-  text-align: center !important;
-  font-weight: 600 !important;
-  border: none !important;
-}
-
-.custom-highlight {
-  box-shadow: 0 0 0 4px var(--color-primary);
-  border-radius: 8px;
-  z-index: 1000;
-  opacity: 0.5;
-}
-
-.dark .custom-highlight {
-  box-shadow: 0 0 0 4px var(--color-primary);
-  opacity: 0.6;
-}
-
-/* Mobile-friendly adjustments */
-@media (max-width: 768px) {
-  .introjs-tooltip {
-    max-width: 280px !important;
-    margin: 10px !important;
-  }
-
-  .introjs-button {
-    padding: 10px 12px !important;
-    font-size: 13px !important;
-  }
-}

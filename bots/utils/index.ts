@@ -84,25 +84,22 @@ export const callCanister = (canisterId: string, method: string, args: string = 
 
 export const parseCanisterResult = <T>(result: string): T => {
   try {
-    console.log('🔧 DEBUG: Raw canister result:', result.slice(0, 200) + '...');
-    
-    // Handle variant { Ok = "..." } wrapper
-    const variantMatch = result.match(/variant\s*\{\s*Ok\s*=\s*"([^"]+)"\s*\}/);
+    // Handle variant { Ok = "..." } wrapper - capture everything between quotes
+    const variantMatch = result.match(/variant\s*\{\s*Ok\s*=\s*"((?:[^"\\]|\\.)*)"/s);
     if (variantMatch) {
       const jsonStr = variantMatch[1]!.replace(/\\\"/g, '"');
-      console.log('🔧 DEBUG: Extracted JSON:', jsonStr.slice(0, 100) + '...');
       return JSON.parse(jsonStr);
     }
     
     // Handle Ok() wrapper
-    const okMatch = result.match(/Ok\s*\(\s*"([^"]+)"\s*\)/);
+    const okMatch = result.match(/Ok\s*\(\s*"((?:[^"\\]|\\.)*)"\s*\)/s);
     if (okMatch) {
       const jsonStr = okMatch[1]!.replace(/\\\"/g, '"');
       return JSON.parse(jsonStr);
     }
     
     // Handle direct JSON
-    const jsonMatch = result.match(/"([^"]+)"/);
+    const jsonMatch = result.match(/"((?:[^"\\]|\\.)*)"/s);
     if (jsonMatch) {
       const jsonStr = jsonMatch[1]!.replace(/\\\"/g, '"');
       return JSON.parse(jsonStr);
@@ -110,7 +107,6 @@ export const parseCanisterResult = <T>(result: string): T => {
     
     throw new Error('Could not parse canister result');
   } catch (error) {
-    console.log('🔧 DEBUG: Parse error:', error);
     throw new Error(`Failed to parse canister result: ${error}`);
   }
 };

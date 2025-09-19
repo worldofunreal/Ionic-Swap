@@ -1,9 +1,9 @@
 <template>
   <footer
-    class="w-full border-t border-neutral-200 dark:border-neutral-700 bg-background fixed bottom-0 left-0 z-30"
+    class="w-full border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 fixed bottom-0 left-0 z-30"
   >
     <div
-      class="ml-12 flex justify-between items-center py-2 px-4 md:px-8 text-xs text-muted-foreground w-full"
+      class="ml-12 flex justify-between items-center py-2 px-4 md:px-8 text-xs text-zinc-500 dark:text-zinc-400 w-full"
     >
       <!-- Left Side -->
       <div class="flex items-center gap-3 flex-wrap">
@@ -111,7 +111,7 @@
         <ClientOnly>
           <button
             aria-label="Toggle theme"
-            class="flex items-center gap-1 px-2 py-1 rounded transition-colors border border-neutral-200 dark:border-neutral-700 bg-surface"
+            class="flex items-center gap-1 px-2 py-1 rounded transition-colors border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900"
             @click="toggleTheme"
           >
             <UIcon
@@ -127,7 +127,7 @@
         <span class="hidden md:inline">|</span>
         <!-- Fiat/Crypto Switch -->
         <button
-          class="px-2 py-1 rounded border border-neutral-200 dark:border-neutral-700 bg-surface"
+          class="px-2 py-1 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900"
           @click="toggleFiat"
         >
           {{ showFiat ? 'USD' : 'Crypto' }}

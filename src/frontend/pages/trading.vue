@@ -7,14 +7,14 @@
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
           <div class="flex items-center space-x-2">
-            <div class="w-8 h-8 rounded-full bg-surface flex items-center justify-center">
+            <div class="w-8 h-8 rounded-full bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center">
               <UIcon :name="getTokenIcon(selectedTokenSymbol)" class="w-5 h-5" />
             </div>
             <div>
-              <div class="font-semibold text-foreground">
+              <div class="font-semibold text-zinc-900 dark:text-white">
                 {{ selectedTokenSymbol }}/USDT
               </div>
-              <div class="text-sm text-muted-foreground">
+              <div class="text-sm text-zinc-500 dark:text-zinc-400">
                 {{ selectedTokenInfo?.name || selectedTokenSymbol }}
               </div>
             </div>
@@ -22,7 +22,7 @@
 
           <!-- Price Display -->
           <div class="flex items-center space-x-4">
-            <div class="text-2xl font-bold text-foreground">
+            <div class="text-2xl font-bold text-zinc-900 dark:text-white">
               ${{ formatPrice(selectedToken?.price || 0) }}
             </div>
             <div class="flex items-center space-x-1" :class="priceChangeClass">
@@ -46,7 +46,7 @@
         <div class="flex items-center space-x-2">
           <select
             v-model="selectedTokenSymbol"
-            class="px-3 py-2 bg-surface border border-neutral-300 dark:border-neutral-700 rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
+            class="px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-neutral-300 dark:border-neutral-700 rounded-md text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="" disabled>Select Token</option>
             <option
@@ -91,17 +91,17 @@
         <!-- Trading Header -->
         <div class="border-b border-neutral-200 dark:border-neutral-700 px-2 py-2">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-foreground">Market Trading</h3>
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">Market Trading</h3>
             
             <!-- Chart Controls -->
             <div class="flex items-center space-x-2">
               <button
-                class="p-2 text-muted-foreground hover:text-foreground"
+                class="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-white"
               >
                 <UIcon name="i-heroicons-cog-6-tooth" class="w-4 h-4" />
               </button>
               <button
-                class="p-2 text-muted-foreground hover:text-foreground"
+                class="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-white"
               >
                 <UIcon name="i-heroicons-arrows-pointing-out" class="w-4 h-4" />
               </button>
@@ -117,10 +117,10 @@
             <div class="space-y-2">
               <div class="flex items-center justify-between">
                 <span
-                  class="text-sm font-medium text-foreground"
+                  class="text-sm font-medium text-zinc-900 dark:text-white"
                   >Buy {{ selectedTokenSymbol }}</span
                 >
-                <span class="text-xs text-muted-foreground"
+                <span class="text-xs text-zinc-500 dark:text-zinc-400"
                   >Balance: {{ usdtBalance }}</span
                 >
               </div>
@@ -136,7 +136,7 @@
                     class="w-full px-3 py-2 bg-buy-surface border border-neutral-200 dark:border-neutral-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
                   <div
-                    class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground"
+                    class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-zinc-500 dark:text-zinc-400"
                   >
                     USDT
                   </div>
@@ -146,7 +146,7 @@
                   <button
                     v-for="percent in [25, 50, 75, 100]"
                     :key="percent"
-                    class="flex-1 px-2 py-1 text-xs bg-buy-surface text-foreground rounded hover:bg-surface-elevated"
+                    class="flex-1 px-2 py-1 text-xs bg-buy-surface text-zinc-900 dark:text-white rounded hover:bg-zinc-50 dark:bg-zinc-900-elevated"
                     @click="setBuyAmount(percent)"
                   >
                     {{ percent }}%
@@ -170,10 +170,10 @@
             >
               <div class="flex items-center justify-between">
                 <span
-                  class="text-sm font-medium text-foreground"
+                  class="text-sm font-medium text-zinc-900 dark:text-white"
                   >Sell {{ selectedTokenSymbol }}</span
                 >
-                <span class="text-xs text-muted-foreground"
+                <span class="text-xs text-zinc-500 dark:text-zinc-400"
                   >Balance: {{ selectedTokenBalance }} {{ selectedTokenSymbol }}</span
                 >
               </div>
@@ -189,7 +189,7 @@
                     class="w-full px-3 py-2 bg-sell-surface border border-neutral-200 dark:border-neutral-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                   <div
-                    class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground"
+                    class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-zinc-500 dark:text-zinc-400"
                   >
                     {{ selectedTokenSymbol }}
                   </div>
@@ -199,7 +199,7 @@
                   <button
                     v-for="percent in [25, 50, 75, 100]"
                     :key="percent"
-                    class="flex-1 px-2 py-1 text-xs bg-sell-surface text-foreground rounded hover:bg-surface-elevated"
+                    class="flex-1 px-2 py-1 text-xs bg-sell-surface text-zinc-900 dark:text-white rounded hover:bg-zinc-50 dark:bg-zinc-900-elevated"
                     @click="setSellAmount(percent)"
                   >
                     {{ percent }}%
@@ -224,10 +224,10 @@
             <div class="space-y-3">
               <div class="flex items-center justify-between">
                 <span
-                  class="text-sm font-medium text-foreground"
+                  class="text-sm font-medium text-zinc-900 dark:text-white"
                   >Buy {{ selectedToken?.symbol || 'BTC' }}</span
                 >
-                <span class="text-xs text-muted-foreground"
+                <span class="text-xs text-zinc-500 dark:text-zinc-400"
                   >Balance: 0.00 USDT</span
                 >
               </div>
@@ -235,31 +235,31 @@
               <div class="space-y-2">
                 <div>
                   <label
-                    class="block text-xs text-muted-foreground mb-1"
+                    class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"
                     >Price (USDT)</label
                   >
                   <input
                     v-model="limitBuyPrice"
                     type="number"
                     placeholder="0.00"
-                    class="w-full px-3 py-2 bg-surface border border-neutral-200 dark:border-neutral-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-neutral-200 dark:border-neutral-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                 </div>
 
                 <div>
                   <label
-                    class="block text-xs text-muted-foreground mb-1"
+                    class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"
                     >Amount ({{ selectedToken?.symbol || 'BTC' }})</label
                   >
                   <input
                     v-model="limitBuyAmount"
                     type="number"
                     placeholder="0.00"
-                    class="w-full px-3 py-2 bg-surface border border-neutral-200 dark:border-neutral-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-neutral-200 dark:border-neutral-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                 </div>
 
-                <div class="text-xs text-muted-foreground">
+                <div class="text-xs text-zinc-500 dark:text-zinc-400">
                   Total:
                   {{
                     (
@@ -284,10 +284,10 @@
             >
               <div class="flex items-center justify-between">
                 <span
-                  class="text-sm font-medium text-foreground"
+                  class="text-sm font-medium text-zinc-900 dark:text-white"
                   >Sell {{ selectedToken?.symbol || 'BTC' }}</span
                 >
-                <span class="text-xs text-muted-foreground"
+                <span class="text-xs text-zinc-500 dark:text-zinc-400"
                   >Balance: 0.00 {{ selectedToken?.symbol || 'BTC' }}</span
                 >
               </div>
@@ -295,31 +295,31 @@
               <div class="space-y-2">
                 <div>
                   <label
-                    class="block text-xs text-muted-foreground mb-1"
+                    class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"
                     >Price (USDT)</label
                   >
                   <input
                     v-model="limitSellPrice"
                     type="number"
                     placeholder="0.00"
-                    class="w-full px-3 py-2 bg-surface border border-neutral-200 dark:border-neutral-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-neutral-200 dark:border-neutral-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                 </div>
 
                 <div>
                   <label
-                    class="block text-xs text-muted-foreground mb-1"
+                    class="block text-xs text-zinc-500 dark:text-zinc-400 mb-1"
                     >Amount ({{ selectedToken?.symbol || 'BTC' }})</label
                   >
                   <input
                     v-model="limitSellAmount"
                     type="number"
                     placeholder="0.00"
-                    class="w-full px-3 py-2 bg-surface border border-neutral-200 dark:border-neutral-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-neutral-200 dark:border-neutral-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                 </div>
 
-                <div class="text-xs text-muted-foreground">
+                <div class="text-xs text-zinc-500 dark:text-zinc-400">
                   Total:
                   {{
                     (
@@ -409,7 +409,7 @@
   const priceChangeClass = computed(() => {
     if (priceChange.value > 0) return 'text-green-600 dark:text-green-400'
     if (priceChange.value < 0) return 'text-red-600 dark:text-red-400'
-    return 'text-muted-foreground'
+    return 'text-zinc-500 dark:text-zinc-400'
   })
 
   // Balance calculations using TokenService

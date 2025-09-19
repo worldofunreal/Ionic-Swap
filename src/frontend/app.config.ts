@@ -11,7 +11,7 @@ export default defineAppConfig({
     },
     toast: {
       slots: {
-        root: 'relative group overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-lg rounded-lg ring-1 ring-gray-200 dark:ring-gray-700 p-4 flex gap-2.5'
+        root: 'relative group overflow-hidden bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg rounded-lg p-4 flex gap-2.5'
       }
     },
     // Global defaults for consistent styling
@@ -37,13 +37,13 @@ export default defineAppConfig({
     },
     // Typography scale
     typography: {
-      h1: 'text-2xl font-bold tracking-tight',
-      h2: 'text-xl font-semibold tracking-tight',
-      h3: 'text-lg font-semibold',
-      h4: 'text-base font-semibold',
-      body: 'text-sm',
-      caption: 'text-xs text-muted-foreground',
-      mono: 'font-mono text-sm'
+      h1: 'text-2xl font-bold tracking-tight text-zinc-900 dark:text-white',
+      h2: 'text-xl font-semibold tracking-tight text-zinc-900 dark:text-white',
+      h3: 'text-lg font-semibold text-zinc-900 dark:text-white',
+      h4: 'text-base font-semibold text-zinc-900 dark:text-white',
+      body: 'text-sm text-zinc-900 dark:text-white',
+      caption: 'text-xs text-zinc-500 dark:text-zinc-400',
+      mono: 'font-mono text-sm text-zinc-900 dark:text-white'
     },
     // Spacing scale
     spacing: {

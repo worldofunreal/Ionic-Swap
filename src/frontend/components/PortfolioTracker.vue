@@ -1,16 +1,16 @@
 <template>
-  <div class="bg-card rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+  <div class="bg-white dark:bg-zinc-900 rounded-lg p-4 border border-zinc-500 dark:border-zinc-800">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-semibold text-foreground">Portfolio Overview</h3>
+      <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">Portfolio Overview</h3>
       <div class="flex items-center gap-2">
         <!-- Value Toggle -->
-        <div class="flex bg-muted rounded-md p-1">
+        <div class="flex bg-zinc-100 dark:bg-zinc-700 rounded-md p-1">
           <button
             :class="[
               'px-3 py-1 text-sm rounded-md transition-colors',
               valueDisplay === 'usd'
                 ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted/80',
+                : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-600',
             ]"
             @click="updateValueDisplay('usd')"
           >
@@ -21,7 +21,7 @@
               'px-3 py-1 text-sm rounded-md transition-colors',
               valueDisplay === 'btc'
                 ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted/80',
+                : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-600',
             ]"
             @click="updateValueDisplay('btc')"
           >
@@ -30,7 +30,7 @@
         </div>
         <UIcon 
           :name="balancesVisible ? 'i-heroicons-eye-20-solid' : 'i-heroicons-eye-slash-20-solid'" 
-          class="w-5 h-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" 
+          class="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:text-white transition-colors" 
           @click="toggleBalanceVisibility"
         />
       </div>
@@ -46,8 +46,8 @@
       <!-- Portfolio Value -->
       <div class="flex items-center justify-between">
         <div class="flex flex-col">
-          <span class="text-sm text-muted-foreground mb-1">Estimated Balance</span>
-          <span class="text-2xl font-bold text-foreground">
+          <span class="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Estimated Balance</span>
+          <span class="text-2xl font-bold text-zinc-900 dark:text-white">
             <span v-if="balancesVisible">
               {{ valueDisplay === 'usd' ? `$${formatNumber(localPortfolioValue, 2)}` : `${(localPortfolioValue / btcPrice).toFixed(8)} BTC` }}
             </span>
@@ -73,7 +73,7 @@
               <span v-else>••••••</span>
             </span>
           </div>
-          <span class="text-xs text-muted-foreground">24h</span>
+          <span class="text-xs text-zinc-500 dark:text-zinc-400">24h</span>
         </div>
       </div>
 
@@ -105,7 +105,7 @@
 
     <div v-else class="flex flex-col items-center justify-center py-8 text-center">
       <UIcon name="i-heroicons-chart-bar" class="text-gray-400 text-2xl mb-2" />
-      <p class="text-muted-foreground text-sm">No portfolio data available</p>
+      <p class="text-zinc-500 dark:text-zinc-400 text-sm">No portfolio data available</p>
     </div>
   </div>
 </template>

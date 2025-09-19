@@ -9,7 +9,7 @@
   >
     <!-- Backdrop -->
     <div
-      class="absolute inset-0 bg-white/80 dark:bg-black/90"
+      class="absolute inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md"
       @click="show = false"
     />
     <!-- Modal Content -->
@@ -315,3 +315,4 @@
     }
   }
 </script>
+

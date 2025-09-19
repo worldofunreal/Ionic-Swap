@@ -9,12 +9,12 @@
         v-if="avatarUrl"
         :src="avatarUrl"
         :alt="user.username || 'User avatar'"
-        class="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+        class="w-10 h-10 rounded-full object-cover border-2 border-zinc-200 dark:border-zinc-800"
         crossorigin="anonymous"
       >
       <div
         v-else
-        class="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm border-2 border-gray-200 dark:border-gray-700"
+        class="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm border-2 border-zinc-200 dark:border-zinc-800"
       >
         {{ user.username?.charAt(0).toUpperCase() || 'U' }}
       </div>
@@ -23,14 +23,14 @@
     <!-- User Info -->
     <div class="flex-1 min-w-0">
       <div class="flex items-center gap-2">
-        <span class="font-semibold text-gray-900 dark:text-white truncate">
+        <span class="font-semibold text-zinc-900 dark:text-white truncate">
           {{ displayName }}
         </span>
         <span v-if="user.is_verified" class="text-blue-500">
           <UIcon name="i-heroicons-check-badge-20-solid" class="w-4 h-4" />
         </span>
       </div>
-      <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
+      <p class="text-sm text-zinc-500 dark:text-zinc-400 truncate">
         @{{ user.username }}
       </p>
       <p
