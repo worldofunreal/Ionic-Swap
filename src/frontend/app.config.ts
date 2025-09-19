@@ -6,8 +6,13 @@ export default defineAppConfig({
       success: 'green',
       info: 'sky',
       warning: 'amber',
-      error: 'rose',
+      error: 'red',
       neutral: 'slate',
+    },
+    toast: {
+      slots: {
+        root: 'relative group overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-lg rounded-lg ring-1 ring-gray-200 dark:ring-gray-700 p-4 flex gap-2.5'
+      }
     },
     // Global defaults for consistent styling
     button: {
