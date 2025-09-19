@@ -878,19 +878,15 @@ impl LiquidityStorage {
             pool.fees_from_volatility_usdt = Some((pool.fees_from_volatility as f64 / decimal_divisor) * price);
             pool.fees_from_depth_usdt = Some((pool.fees_from_depth as f64 / decimal_divisor) * price);
             
-            // Calculate threshold amounts in token units
-            if let Some(token_thresholds) = config.token_thresholds.get(&pool.token_symbol) {
-                let healthy_amount = token_thresholds.get_healthy_amount(price, decimals);
-                let rebalance_amount = token_thresholds.get_rebalance_amount(price, decimals);
-                let halt_amount = token_thresholds.get_halt_amount(price, decimals);
-                
-                // Update pool status based on current liquidity vs thresholds
-                pool.liquidity_status = if pool.available_liquidity >= healthy_amount {
+            // Ratio-based thresholds: halt < 50% of total_staked, rebalance < 75%, else healthy
+            if pool.total_staked == 0 {
+                pool.liquidity_status = crate::icp::liquidity::LiquidityStatus::Halted;
+            } else {
+                let ratio = pool.available_liquidity as f64 / pool.total_staked as f64;
+                pool.liquidity_status = if ratio >= 0.75 {
                     crate::icp::liquidity::LiquidityStatus::Healthy
-                } else if pool.available_liquidity >= rebalance_amount {
+                } else if ratio >= 0.50 {
                     crate::icp::liquidity::LiquidityStatus::NeedsRebalance
-                } else if pool.available_liquidity >= halt_amount {
-                    crate::icp::liquidity::LiquidityStatus::Critical
                 } else {
                     crate::icp::liquidity::LiquidityStatus::Halted
                 };

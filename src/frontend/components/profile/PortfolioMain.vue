@@ -22,8 +22,8 @@
     <!-- Portfolio Content -->
     <div v-else class="space-y-6">
       <!-- Token Balances Section -->
-      <div class="bg-card rounded-lg shadow-sm border border-themed">
-        <div class="p-4 border-b border-themed">
+      <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-800">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-foreground">Token Balances</h3>
             <div class="flex items-center gap-3">
@@ -147,8 +147,8 @@
       </div>
 
       <!-- Liquidity Positions Section -->
-      <div class="bg-card rounded-lg shadow-sm border border-themed">
-        <div class="p-4 border-b border-themed">
+      <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-800">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-foreground">Liquidity Positions</h3>
             <span class="text-xs text-muted-foreground">
@@ -307,7 +307,7 @@
 
         <!-- Drawer Header -->
         <div
-          class="flex items-center justify-between px-6 py-4 border-b border-themed flex-shrink-0"
+          class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0"
         >
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
             Filters

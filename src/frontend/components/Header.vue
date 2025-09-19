@@ -5,7 +5,7 @@
       scrolled
         ? 'bg-background/80 backdrop-blur-sm shadow-md'
         : 'bg-transparent',
-      'border-b border-themed',
+      'border-b border-neutral-200 dark:border-neutral-800',
     ]"
   >
     <div class="flex justify-between items-center h-14 mx-4 md:mx-4">
@@ -43,7 +43,7 @@
               showSearchResults &&
               (searchResults.length > 0 || searchLoading || searchError)
             "
-            class="absolute top-full left-0 right-0 mt-1 bg-card rounded-lg shadow-lg border border-themed max-h-96 overflow-y-auto z-50"
+            class="absolute top-full left-0 right-0 mt-1 bg-card rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 max-h-96 overflow-y-auto z-50"
             @mousedown.prevent
           >
             <!-- Loading State -->
@@ -97,7 +97,7 @@
         <!-- Theme Toggle Button - Client Only -->
         <ClientOnly>
           <button
-            class="relative w-10 h-6 rounded-full transition-colors duration-300 focus:outline-none border border-themed-subtle flex mr-1"
+            class="relative w-10 h-6 rounded-full transition-colors duration-300 focus:outline-none border border-neutral-300 dark:border-neutral-700 flex mr-1"
             :class="
               colorMode.value === 'dark' ? 'bg-primary-500' : 'bg-primary-600'
             "
@@ -130,7 +130,7 @@
         <!-- Color Theme Toggle Button - Client Only -->
         <ClientOnly>
           <button
-            class="relative w-7 h-7 rounded-lg transition-all duration-300 focus:outline-none border border-themed-subtle flex items-center justify-center mr-1 bg-surface hover:bg-surface-elevated"
+            class="relative w-7 h-7 rounded-lg transition-all duration-300 focus:outline-none border border-neutral-300 dark:border-neutral-700 flex items-center justify-center mr-1 bg-surface hover:bg-surface-elevated"
             aria-label="Toggle color theme"
             @click="toggleColorTheme"
           >

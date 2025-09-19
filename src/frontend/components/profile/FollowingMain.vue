@@ -3,10 +3,10 @@
     <div class="max-w-4xl mx-auto">
       <!-- Header -->
       <div class="mb-6">
-        <h2 class="text-2xl font-bold text-foreground">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
           Following
         </h2>
-        <p class="text-muted-foreground mt-1">
+        <p class="text-gray-600 dark:text-gray-400 mt-1">
           {{
             isOwnProfile
               ? 'People you follow'
@@ -24,19 +24,19 @@
 
       <!-- Empty State -->
       <div v-else-if="following.length === 0" class="text-center py-12">
-        <div class="text-muted-foreground">
+        <div class="text-gray-400 dark:text-gray-500">
           <UIcon
             name="i-heroicons-user-group-20-solid"
             class="w-12 h-12 mx-auto mb-4"
           />
-          <h3 class="text-lg font-medium text-foreground mb-2">
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
             {{
               isOwnProfile
                 ? 'Not following anyone yet'
                 : `@${targetUser?.username} is not following anyone yet`
             }}
           </h3>
-          <p class="text-muted-foreground">
+          <p class="text-gray-500 dark:text-gray-400">
             {{
               isOwnProfile
                 ? "When you follow people, they'll appear here."

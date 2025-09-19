@@ -298,6 +298,10 @@ export interface _SERVICE {
    */
   'bootstrap_canister_liquidity' : ActorMethod<[], Result>,
   /**
+   * Cancel dissolving (return to Locked)
+   */
+  'cancel_dissolving' : ActorMethod<[string], Result>,
+  /**
    * Claim 2M USDT from faucet (one-time only per principal)
    */
   'claim_faucet' : ActorMethod<[], Result>,
@@ -554,6 +558,10 @@ export interface _SERVICE {
    */
   'stake_tokens' : ActorMethod<[string, bigint, bigint], Result>,
   /**
+   * Start dissolving a position
+   */
+  'start_dissolving' : ActorMethod<[string], Result>,
+  /**
    * Start the price update scheduler (runs every second)
    */
   'start_price_scheduler' : ActorMethod<[], Result>,
@@ -627,6 +635,10 @@ export interface _SERVICE {
   'update_profile' : ActorMethod<[UserUpdate], Result_3>,
   'update_solana_address' : ActorMethod<[string], Result_3>,
   'update_website' : ActorMethod<[string], Result_3>,
+  /**
+   * Withdraw available amount from a dissolving or dissolved position
+   */
+  'withdraw' : ActorMethod<[string, bigint], Result>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

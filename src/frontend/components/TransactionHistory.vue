@@ -2,14 +2,14 @@
   <div class="transaction-history">
     <!-- Header -->
     <div class="flex items-center justify-between mb-2">
-      <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
+      <h3 class="text-sm font-semibold text-foreground">
         Transaction History
       </h3>
       <div class="flex items-center space-x-2">
         <button
           @click="refreshHistory"
           :disabled="loading"
-          class="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-50"
+          class="p-1 text-muted-foreground hover:text-foreground disabled:opacity-50"
         >
           <UIcon 
             :name="loading ? 'i-heroicons-arrow-path' : 'i-heroicons-arrow-path'" 
@@ -22,15 +22,15 @@
 
     <!-- Loading State -->
     <div v-if="loading && transactions.length === 0" class="text-center py-8">
-      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 mx-auto mb-2 animate-spin text-gray-400" />
-      <p class="text-gray-500 dark:text-gray-400">Loading transaction history...</p>
+      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 mx-auto mb-2 animate-spin text-muted-foreground" />
+      <p class="text-muted-foreground">Loading transaction history...</p>
     </div>
 
     <!-- Empty State -->
     <div v-else-if="!loading && transactions.length === 0" class="text-center py-8">
-      <UIcon name="i-heroicons-document-text" class="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-      <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No transactions yet</h4>
-      <p class="text-gray-500 dark:text-gray-400">
+      <UIcon name="i-heroicons-document-text" class="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+      <h4 class="text-lg font-medium text-foreground mb-2">No transactions yet</h4>
+      <p class="text-muted-foreground">
         Your trading history will appear here once you make your first swap.
       </p>
     </div>
@@ -40,7 +40,7 @@
       <div
         v-for="transaction in transactions"
         :key="transaction.id"
-        class="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-gray-800 p-3 hover:shadow-sm transition-shadow"
+        class="bg-card rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 hover:shadow-sm transition-shadow"
       >
         <div class="flex items-center justify-between">
           <!-- Transaction Type & Pair -->
@@ -54,10 +54,10 @@
               {{ getTransactionIcon(transaction) }}
             </div>
             <div class="flex items-center space-x-2">
-              <div class="font-semibold text-gray-900 dark:text-white text-sm">
+              <div class="font-semibold text-foreground text-sm">
                 {{ transaction.from_token }} → {{ transaction.to_token }}
               </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">
+              <div class="text-xs text-muted-foreground">
                 {{ formatTransactionType(transaction.transaction_type) }}
               </div>
             </div>
@@ -65,7 +65,7 @@
 
           <!-- Transaction Details -->
           <div class="text-right">
-            <div class="font-semibold text-gray-900 dark:text-white text-sm">
+            <div class="font-semibold text-foreground text-sm">
               {{ formatAmount(transaction.from_amount, transaction.from_token) }} 
               {{ transaction.from_token }} → {{ formatAmount(transaction.to_amount, transaction.to_token) }} 
               {{ transaction.to_token }}
@@ -74,8 +74,8 @@
         </div>
 
         <!-- Transaction Metadata -->
-        <div class="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-          <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        <div class="mt-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
+          <div class="flex items-center justify-between text-xs text-muted-foreground">
             <div class="flex items-center space-x-2">
               <span>{{ formatDate(transaction.timestamp) }}</span>
               <span>•</span>
@@ -93,7 +93,7 @@
     <div v-if="hasMore && !loading" class="mt-6 text-center">
       <button
         @click="loadMore"
-        class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+        class="px-4 py-2 bg-surface text-foreground rounded-md hover:bg-surface-elevated transition-colors"
       >
         Load More
       </button>
@@ -101,7 +101,7 @@
 
     <!-- Loading More State -->
     <div v-if="loading && transactions.length > 0" class="mt-4 text-center">
-      <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 mx-auto animate-spin text-gray-400" />
+      <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 mx-auto animate-spin text-muted-foreground" />
     </div>
   </div>
 </template>
@@ -179,7 +179,7 @@ const loadMore = async () => {
 }
 
 const getTransactionTypeClass = (transaction: SwapTransaction) => {
-  return 'bg-gray-600 dark:bg-gray-700' // Match dark theme
+  return 'bg-neutral-600 dark:bg-neutral-700' // Match dark theme
 }
 
 const getTransactionIcon = (transaction: SwapTransaction) => {

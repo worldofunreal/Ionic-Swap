@@ -1,9 +1,9 @@
 <template>
-  <div class="flex min-h-screen bg-background flex-col">
+  <div class="flex min-h-screen bg-neutral-50 dark:bg-neutral-950 flex-col">
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center min-h-screen">
       <div
-        class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"
       />
     </div>
 
@@ -14,7 +14,7 @@
     >
       <div class="text-center">
         <div
-          class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"
+          class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"
         />
         <p class="text-gray-600 dark:text-gray-400">
           Redirecting to your profile...

@@ -938,6 +938,19 @@ pub async fn stake_tokens(token_symbol: String, amount: u64, dissolve_delay_seco
     // Increment pool available liquidity by staked amount (incremental accounting)
     storage::LiquidityStorage::increase_pool_liquidity(&token_symbol, amount)
         .map_err(|e| format!("Failed to update pool liquidity: {}", e))?;
+
+    // Snapshot fee index for this new position and update pool totals
+    if let Some(mut pool) = storage::LiquidityStorage::get_pool_info(&token_symbol) {
+        let mut pos = position.clone();
+        pos.last_fee_index = pool.global_fee_index;
+        storage::LiquidityStorage::update_position(pos.clone())
+            .map_err(|e| format!("Failed to update position fee index: {}", e))?;
+
+        let vp = calculate_position_voting_power(&pos);
+        pool.total_staked = pool.total_staked.saturating_add(amount);
+        pool.total_voting_power += vp;
+        storage::LiquidityStorage::update_pool_info(pool);
+    }
     
     // Record transaction
     let transaction = icp::liquidity::LiquidityTransaction {
@@ -1034,9 +1047,105 @@ pub async fn claim_fees(position_id: String) -> Result<String, String> {
     Ok(format!("Successfully claimed {} {} in fees", claimable_fees_raw, position.token_symbol))
 }
 
+/// Start dissolving a position
+#[update]
+pub async fn start_dissolving(position_id: String) -> Result<String, String> {
+    let caller = ic_cdk::api::msg_caller();
+    let mut position = storage::LiquidityStorage::get_position(caller, &position_id)
+        .ok_or("Position not found or not owned by caller")?;
+
+    if position.state != icp::liquidity::NeuronState::Locked {
+        return Err("Position is not in Locked state".to_string());
+    }
+
+    position.state = icp::liquidity::NeuronState::Dissolving;
+    position.dissolving_started_at = Some(ic_cdk::api::time() / 1_000_000_000);
+    storage::LiquidityStorage::update_position(position)
+        .map_err(|e| format!("Failed to update position: {}", e))?;
+
+    Ok("Dissolving started".to_string())
+}
+
+/// Cancel dissolving (return to Locked)
+#[update]
+pub async fn cancel_dissolving(position_id: String) -> Result<String, String> {
+    let caller = ic_cdk::api::msg_caller();
+    let mut position = storage::LiquidityStorage::get_position(caller, &position_id)
+        .ok_or("Position not found or not owned by caller")?;
+
+    if position.state != icp::liquidity::NeuronState::Dissolving {
+        return Err("Position is not dissolving".to_string());
+    }
+
+    position.state = icp::liquidity::NeuronState::Locked;
+    position.dissolving_started_at = None;
+    storage::LiquidityStorage::update_position(position)
+        .map_err(|e| format!("Failed to update position: {}", e))?;
+
+    Ok("Dissolving cancelled".to_string())
+}
+
+/// Withdraw available amount from a dissolving or dissolved position
+#[update]
+pub async fn withdraw(position_id: String, amount: u64) -> Result<String, String> {
+    let caller = ic_cdk::api::msg_caller();
+    let mut position = storage::LiquidityStorage::get_position(caller, &position_id)
+        .ok_or("Position not found or not owned by caller")?;
+
+    if position.state == icp::liquidity::NeuronState::Locked {
+        return Err("Position must be dissolving or dissolved to withdraw".to_string());
+    }
+
+    let available = position.available_to_withdraw();
+    if amount == 0 || amount > available {
+        return Err(format!("Invalid withdraw amount. Available: {}", available));
+    }
+
+    // Transfer tokens to user
+    icp::balances::transfer_tokens(ic_cdk::api::canister_self(), caller, &position.token_symbol, amount)
+        .map_err(|e| format!("Failed to transfer tokens: {}", e))?;
+
+    // Update position and pool
+    let locked_before = position.locked_amount();
+    position.withdrawn_amount = position.withdrawn_amount.saturating_add(amount);
+
+    // If fully withdrawn, mark dissolved
+    if position.withdrawn_amount >= position.staked_amount {
+        position.state = icp::liquidity::NeuronState::Dissolved;
+    }
+
+    // Update pool totals
+    if let Some(mut pool) = storage::LiquidityStorage::get_pool_info(&position.token_symbol) {
+        // Decrease totals by withdrawn amount proportionally
+        pool.total_staked = pool.total_staked.saturating_sub(amount);
+
+        // Recompute voting power delta from locked change
+        let locked_after = position.locked_amount();
+        let vp_before = locked_before as f64; // multipliers roughly cancel in delta if small; acceptable MVP
+        let vp_after = locked_after as f64;
+        let vp_delta = vp_before - vp_after;
+        if vp_delta > 0.0 {
+            pool.total_voting_power = (pool.total_voting_power - vp_delta).max(0.0);
+        }
+
+        // Liquidity is leaving the pool (user withdraws to wallet)
+        if pool.available_liquidity < amount {
+            return Err("Insufficient pool liquidity to honor withdrawal".to_string());
+        }
+        pool.available_liquidity -= amount;
+        storage::LiquidityStorage::update_pool_info(pool);
+    }
+
+    storage::LiquidityStorage::update_position(position.clone())
+        .map_err(|e| format!("Failed to update position: {}", e))?;
+
+    Ok(format!("Withdrew {} {}", amount, position.token_symbol))
+}
+
 /// Calculate voting power for a position (same logic as frontend)
 fn calculate_position_voting_power(position: &icp::liquidity::LiquidityNeuron) -> f64 {
-    let stake_amount = position.staked_amount as f64;
+    // Use currently locked amount to reflect dissolving state
+    let stake_amount = position.locked_amount() as f64;
     
     // Delay multiplier: 1.0 + (delay_days / 365) * 3.0, capped at 4.0
     let delay_days = position.dissolve_delay_seconds as f64 / (24.0 * 3600.0);
@@ -1154,6 +1263,19 @@ pub async fn bootstrap_canister_liquidity() -> Result<String, String> {
 
             // Store the position
             storage::LiquidityStorage::store_position(position.clone())?;
+
+            // Snapshot fee index for this seeded position and update pool totals
+            if let Some(mut pool) = storage::LiquidityStorage::get_pool_info(symbol) {
+                let mut pos = position.clone();
+                pos.last_fee_index = pool.global_fee_index;
+                storage::LiquidityStorage::update_position(pos.clone())?;
+
+                // Add totals
+                let vp = calculate_position_voting_power(&pos);
+                pool.total_staked = pool.total_staked.saturating_add(stake_amount);
+                pool.total_voting_power += vp;
+                storage::LiquidityStorage::update_pool_info(pool);
+            }
 
             // Increment pool available liquidity by staked amount (incremental accounting)
             storage::LiquidityStorage::increase_pool_liquidity(symbol, stake_amount)?;

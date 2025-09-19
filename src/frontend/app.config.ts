@@ -47,13 +47,6 @@ export default defineAppConfig({
       md: 'gap-4',
       lg: 'gap-6',
       xl: 'gap-8'
-    },
-    // Toast/Notification theming
-    notification: {
-      defaultVariants: {
-        color: 'white',
-        position: 'top-right'
-      }
     }
   },
 })

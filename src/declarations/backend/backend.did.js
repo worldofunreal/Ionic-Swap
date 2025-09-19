@@ -293,6 +293,7 @@ export const idlFactory = ({ IDL }) => {
   });
   return IDL.Service({
     'bootstrap_canister_liquidity' : IDL.Func([], [Result], []),
+    'cancel_dissolving' : IDL.Func([IDL.Text], [Result], []),
     'claim_faucet' : IDL.Func([], [Result], []),
     'claim_fees' : IDL.Func([IDL.Text], [Result], []),
     'debug_get_all_positions' : IDL.Func(
@@ -438,6 +439,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'stake_tokens' : IDL.Func([IDL.Text, IDL.Nat64, IDL.Nat64], [Result], []),
+    'start_dissolving' : IDL.Func([IDL.Text], [Result], []),
     'start_price_scheduler' : IDL.Func([], [Result], []),
     'stop_price_scheduler' : IDL.Func([], [Result], []),
     'store_chunk' : IDL.Func(
@@ -477,6 +479,7 @@ export const idlFactory = ({ IDL }) => {
     'update_profile' : IDL.Func([UserUpdate], [Result_3], []),
     'update_solana_address' : IDL.Func([IDL.Text], [Result_3], []),
     'update_website' : IDL.Func([IDL.Text], [Result_3], []),
+    'withdraw' : IDL.Func([IDL.Text, IDL.Nat64], [Result], []),
   });
 };
 export const init = ({ IDL }) => {

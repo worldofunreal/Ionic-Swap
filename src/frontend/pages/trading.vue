@@ -2,7 +2,7 @@
   <div class="trading-page h-screen bg-background overflow-hidden flex flex-col" style="height: 100vh; max-height: 100vh;">
     <!-- Trading Header -->
     <div
-      class="bg-card border-b border-themed px-4 py-2 flex-shrink-0"
+      class="bg-card border-b border-neutral-200 dark:border-neutral-700 px-4 py-2 flex-shrink-0"
     >
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
@@ -46,7 +46,7 @@
         <div class="flex items-center space-x-2">
           <select
             v-model="selectedTokenSymbol"
-            class="px-3 py-2 bg-surface border border-themed-subtle rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
+            class="px-3 py-2 bg-surface border border-neutral-300 dark:border-neutral-700 rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="" disabled>Select Token</option>
             <option
@@ -66,7 +66,7 @@
       <div class="flex-1 flex flex-col">
 
         <!-- Chart Area -->
-        <div class="bg-background p-2 overflow-hidden" style="height: 50%;">
+        <div class="bg-card p-2 overflow-hidden" style="height: 50%;">
           <LightweightPriceChart
             :key="`trading-${selectedTokenSymbol}`"
             :token-symbol="selectedTokenSymbol"
@@ -77,7 +77,7 @@
         </div>
 
         <!-- Transaction History -->
-        <div class="bg-background border-t border-themed p-2 overflow-hidden" style="height: 50%;">
+        <div class="bg-card border-t border-neutral-200 dark:border-neutral-700 p-2 overflow-hidden" style="height: 50%;">
           <div class="overflow-y-auto scrollbar-hide" style="height: calc(100% - 1.5rem);">
             <TransactionHistory />
           </div>
@@ -86,10 +86,10 @@
 
       <!-- Right Column - Trading Panel -->
       <div
-        class="w-80 bg-background border-l border-themed flex flex-col"
+        class="w-80 bg-card border-l border-neutral-200 dark:border-neutral-700 flex flex-col"
       >
         <!-- Trading Header -->
-        <div class="border-b border-themed px-2 py-2">
+        <div class="border-b border-neutral-200 dark:border-neutral-700 px-2 py-2">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-foreground">Market Trading</h3>
             
@@ -133,7 +133,7 @@
                     placeholder="0.00"
                     @input="formatBuyAmount"
                     @blur="validateBuyAmount"
-                    class="w-full px-3 py-2 bg-buy-surface border border-themed rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500"
+                    class="w-full px-3 py-2 bg-buy-surface border border-neutral-200 dark:border-neutral-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
                   <div
                     class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground"
@@ -154,21 +154,19 @@
                 </div>
               </div>
 
-              <UButton
+              <button
                 @click="executeBuy"
                 :disabled="buyLoading || !buyAmount || parseFormattedNumber(buyAmount) <= 0"
-                color="success"
-                size="lg"
-                :loading="buyLoading"
-                class="w-full font-semibold"
+                class="w-full py-3 bg-green-500 hover:bg-green-600 disabled:bg-green-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center"
               >
+                <UIcon v-if="buyLoading" name="i-heroicons-arrow-path" class="w-4 h-4 mr-2 animate-spin" />
                 {{ buyLoading ? 'Buying...' : `Buy ${selectedTokenSymbol}` }}
-              </UButton>
+              </button>
             </div>
 
             <!-- Sell Section -->
             <div
-              class="space-y-2 pt-3 border-t border-themed"
+              class="space-y-2 pt-3 border-t border-neutral-200 dark:border-neutral-700"
             >
               <div class="flex items-center justify-between">
                 <span
@@ -188,7 +186,7 @@
                     placeholder="0.00"
                     @input="formatSellAmount"
                     @blur="validateSellAmount"
-                    class="w-full px-3 py-2 bg-sell-surface border border-themed rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-red-500"
+                    class="w-full px-3 py-2 bg-sell-surface border border-neutral-200 dark:border-neutral-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                   <div
                     class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground"
@@ -209,16 +207,14 @@
                 </div>
               </div>
 
-              <UButton
+              <button
                 @click="executeSell"
                 :disabled="sellLoading || !sellAmount || parseFormattedNumber(sellAmount) <= 0"
-                color="error"
-                size="lg"
-                :loading="sellLoading"
-                class="w-full font-semibold"
+                class="w-full py-3 bg-red-500 hover:bg-red-600 disabled:bg-red-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center"
               >
+                <UIcon v-if="sellLoading" name="i-heroicons-arrow-path" class="w-4 h-4 mr-2 animate-spin" />
                 {{ sellLoading ? 'Selling...' : `Sell ${selectedTokenSymbol}` }}
-              </UButton>
+              </button>
             </div>
           </div>
 
@@ -246,7 +242,7 @@
                     v-model="limitBuyPrice"
                     type="number"
                     placeholder="0.00"
-                    class="w-full px-3 py-2 bg-surface border border-themed rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    class="w-full px-3 py-2 bg-surface border border-neutral-200 dark:border-neutral-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                 </div>
 
@@ -259,7 +255,7 @@
                     v-model="limitBuyAmount"
                     type="number"
                     placeholder="0.00"
-                    class="w-full px-3 py-2 bg-surface border border-themed rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    class="w-full px-3 py-2 bg-surface border border-neutral-200 dark:border-neutral-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                 </div>
 
@@ -284,7 +280,7 @@
 
             <!-- Sell Section -->
             <div
-              class="space-y-3 pt-4 border-t border-themed"
+              class="space-y-3 pt-4 border-t border-neutral-200 dark:border-neutral-700"
             >
               <div class="flex items-center justify-between">
                 <span
@@ -306,7 +302,7 @@
                     v-model="limitSellPrice"
                     type="number"
                     placeholder="0.00"
-                    class="w-full px-3 py-2 bg-surface border border-themed rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    class="w-full px-3 py-2 bg-surface border border-neutral-200 dark:border-neutral-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                 </div>
 
@@ -319,7 +315,7 @@
                     v-model="limitSellAmount"
                     type="number"
                     placeholder="0.00"
-                    class="w-full px-3 py-2 bg-surface border border-themed rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    class="w-full px-3 py-2 bg-surface border border-neutral-200 dark:border-neutral-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                 </div>
 
@@ -356,19 +352,10 @@
   import { TokenService } from '@/services/TokenService'
   import LightweightPriceChart from '@/components/LightweightPriceChart.vue'
   import TransactionHistory from '@/components/TransactionHistory.vue'
-  import { useColorTheme } from '@/composables/useColorTheme'
 
   // Stores
   const auth = useAuthStore()
   const toast = useToast()
-
-  // Theme
-  const { currentTheme } = useColorTheme()
-
-  // Map currentTheme to valid Nuxt UI color
-  const buttonColor = computed((): 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral' => {
-    return 'primary'
-  })
 
   // Reactive data
   const selectedTokenSymbol = ref('BTC')
@@ -417,8 +404,8 @@
   })
 
   const priceChangeClass = computed(() => {
-    if (priceChange.value > 0) return 'text-success'
-    if (priceChange.value < 0) return 'text-error'
+    if (priceChange.value > 0) return 'text-green-600 dark:text-green-400'
+    if (priceChange.value < 0) return 'text-red-600 dark:text-red-400'
     return 'text-muted-foreground'
   })
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-background">
+  <div class="min-h-screen bg-neutral-50 dark:bg-neutral-950">
     <div class="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
       <div class="text-center mb-12">
@@ -60,7 +60,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <!-- Beginner Path -->
           <div
-            class="bg-card rounded-lg shadow-sm p-6 border border-themed"
+            class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700"
           >
             <div class="flex items-center gap-3 mb-4">
               <div
@@ -118,7 +118,7 @@
 
           <!-- Intermediate Path -->
           <div
-            class="bg-card rounded-lg shadow-sm p-6 border border-themed"
+            class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700"
           >
             <div class="flex items-center gap-3 mb-4">
               <div
@@ -175,7 +175,7 @@
 
           <!-- Advanced Path -->
           <div
-            class="bg-card rounded-lg shadow-sm p-6 border border-themed"
+            class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700"
           >
             <div class="flex items-center gap-3 mb-4">
               <div
@@ -231,7 +231,7 @@
             v-for="article in articles"
             :key="article.slug"
             :to="`/learn/${article.slug}`"
-            class="group bg-card rounded-lg shadow-sm p-6 border border-themed hover:shadow-md transition-all duration-200 hover:scale-105"
+            class="group bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-200 hover:scale-105"
           >
             <div class="flex items-center gap-3 mb-4">
               <div
@@ -276,7 +276,7 @@
       <!-- Call to Action -->
       <div class="text-center">
         <div
-          class="bg-card rounded-lg shadow-sm p-8 border border-themed"
+          class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8 border border-gray-200 dark:border-gray-700"
         >
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             Ready to Start Swapping?
@@ -285,15 +285,14 @@
             Now that you understand the basics, try swapping tokens across
             different blockchain networks with our gasless transaction system.
           </p>
-          <UButton
-            :color="buttonColor"
-            size="lg"
-            class="font-semibold"
-            @click="navigateTo('/')"
+          <NuxtLink
+            to="/"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white transition-colors"
+            :class="`bg-${currentTheme}-600 hover:bg-${currentTheme}-700`"
           >
-            <UIcon name="i-heroicons-arrow-path" class="w-5 h-5 mr-2" />
+            <UIcon name="i-heroicons-arrow-path" class="w-5 h-5" />
             Start Swapping
-          </UButton>
+          </NuxtLink>
         </div>
       </div>
     </div>
@@ -304,11 +303,6 @@
   import { useColorTheme } from '@/composables/useColorTheme'
 
   const { currentTheme } = useColorTheme()
-
-  // Map currentTheme to valid Nuxt UI color
-  const buttonColor = computed((): 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral' => {
-    return 'primary'
-  })
 
   const articles = [
     {

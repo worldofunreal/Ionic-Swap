@@ -1,6 +1,6 @@
 <template>
   <aside
-    class="hidden md:block z-100 fixed top-0 left-0 h-screen bg-background border-r border-themed overflow-hidden group backdrop-blur-sm"
+    class="hidden md:block z-100 fixed top-0 left-0 h-screen bg-background border-r border-neutral-200 dark:border-neutral-700 overflow-hidden group backdrop-blur-sm"
     :style="{
       width: collapsed ? '4rem' : '13rem',
       transition: 'width 0.2s cubic-bezier(0.4,0,0.2,1)',

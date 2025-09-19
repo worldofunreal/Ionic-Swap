@@ -275,6 +275,8 @@ service : (InitArg) -> {
   // Bootstrap canister as initial liquidity provider (admin function)
   // Stakes ~$20M worth of each token to provide initial liquidity
   bootstrap_canister_liquidity : () -> (Result);
+  // Cancel dissolving (return to Locked)
+  cancel_dissolving : (text) -> (Result);
   // Claim 2M USDT from faucet (one-time only per principal)
   claim_faucet : () -> (Result);
   // Claim accumulated fees from a liquidity position
@@ -403,6 +405,8 @@ service : (InitArg) -> {
   signup : (text, opt text, opt text, opt text) -> (Result_3);
   // Stake tokens in liquidity pool (user function)
   stake_tokens : (text, nat64, nat64) -> (Result);
+  // Start dissolving a position
+  start_dissolving : (text) -> (Result);
   // Start the price update scheduler (runs every second)
   start_price_scheduler : () -> (Result);
   // Stop the price update scheduler
@@ -439,4 +443,6 @@ service : (InitArg) -> {
   update_profile : (UserUpdate) -> (Result_3);
   update_solana_address : (text) -> (Result_3);
   update_website : (text) -> (Result_3);
+  // Withdraw available amount from a dissolving or dissolved position
+  withdraw : (text, nat64) -> (Result);
 }

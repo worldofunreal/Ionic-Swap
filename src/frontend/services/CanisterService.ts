@@ -541,6 +541,32 @@ class CanisterService {
     }
   }
 
+  async updateUsername(newUsername: string): Promise<User> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      // First check if username is available
+      const isAvailable = await this.isUsernameAvailable(newUsername)
+      if (!isAvailable) {
+        throw new Error('Username is already taken')
+      }
+
+      // Update username
+      const result = await this.backendActor.update_username(newUsername)
+      const user = handleUserResult(result)
+
+      // Invalidate cache for this user
+      appCacheService.invalidateUserCache(user)
+
+      return user
+    } catch (error) {
+      console.error('Error updating username:', error)
+      throw error
+    }
+  }
+
   async deleteAccount(): Promise<void> {
     if (!this.backendActor) {
       throw new Error('CanisterService not initialized')
@@ -1229,6 +1255,63 @@ class CanisterService {
       }
     } catch (error) {
       console.error('Error claiming fees:', error)
+      throw error
+    }
+  }
+
+  // Start dissolving a position
+  async startDissolving(positionId: string): Promise<string> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.start_dissolving(positionId)
+      if (result.Ok) {
+        return result.Ok
+      } else {
+        throw new Error(result.Err)
+      }
+    } catch (error) {
+      console.error('Error starting dissolving:', error)
+      throw error
+    }
+  }
+
+  // Cancel dissolving (return to Locked)
+  async cancelDissolving(positionId: string): Promise<string> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.cancel_dissolving(positionId)
+      if (result.Ok) {
+        return result.Ok
+      } else {
+        throw new Error(result.Err)
+      }
+    } catch (error) {
+      console.error('Error cancelling dissolving:', error)
+      throw error
+    }
+  }
+
+  // Withdraw available amount from a dissolving or dissolved position
+  async withdraw(positionId: string, amount: bigint): Promise<string> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.withdraw(positionId, amount)
+      if (result.Ok) {
+        return result.Ok
+      } else {
+        throw new Error(result.Err)
+      }
+    } catch (error) {
+      console.error('Error withdrawing position amount:', error)
       throw error
     }
   }
