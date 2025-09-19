@@ -9,12 +9,12 @@
   >oklch(21% 0.006 285.885)
     <!-- Backdrop -->
     <div
-      class="absolute inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md"
+      class="absolute inset-0 bg-zinc-50/20 dark:bg-black/20 backdrop-blur-md"
       @click="close"
     />
     <!-- Modal Content -->
     <div
-      class="relative bg-white dark:bg-zinc-900 rounded-lg shadow-xl max-w-lg w-full mx-4"
+      class="relative bg-zinc-50 dark:bg-zinc-900 rounded-lg shadow-xl max-w-lg w-full mx-4"
     >
       <div class="p-6">
         <!-- Header -->
@@ -46,7 +46,7 @@
           </div>
 
           <!-- Available Balance -->
-          <div class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700">
+          <div class="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700">
             <div class="flex items-center justify-between">
               <span class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Available Balance</span>
               <span class="text-lg font-semibold text-zinc-900 dark:text-white">
@@ -66,7 +66,7 @@
               <!-- EVM Wallet -->
               <div 
                 v-if="userProfile?.evm_address?.[0]" 
-                class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
+                class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-4 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
                 :class="{ 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20': selectedWallet === 'evm' }"
                 @click="selectedWallet = 'evm'"
               >
@@ -90,7 +90,7 @@
               <!-- Bitcoin Wallet -->
               <div 
                 v-if="userProfile?.bitcoin_address?.[0]" 
-                class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
+                class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-4 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
                 :class="{ 'ring-2 ring-orange-500 bg-orange-50 dark:bg-orange-900/20': selectedWallet === 'bitcoin' }"
                 @click="selectedWallet = 'bitcoin'"
               >
@@ -114,7 +114,7 @@
               <!-- Solana Wallet -->
               <div 
                 v-if="userProfile?.solana_address?.[0]" 
-                class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
+                class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-4 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
                 :class="{ 'ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-900/20': selectedWallet === 'solana' }"
                 @click="selectedWallet = 'solana'"
               >
@@ -138,7 +138,7 @@
               <!-- ICP Wallet -->
               <div 
                 v-if="userProfile?.id" 
-                class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
+                class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-4 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
                 :class="{ 'ring-2 ring-cyan-500 bg-cyan-50 dark:bg-cyan-900/20': selectedWallet === 'icp' }"
                 @click="selectedWallet = 'icp'"
               >

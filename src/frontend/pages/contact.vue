@@ -79,7 +79,7 @@
       <!-- Form Section -->
       <div class="flex-1 flex items-center justify-center">
         <div
-          class="bg-white dark:bg-neutral-800 rounded-2xl shadow-xl p-8 md:p-12 flex flex-col gap-8 border border-gray-200 dark:border-gray-700 w-full max-w-lg mx-auto"
+          class="bg-zinc-50 dark:bg-neutral-800 rounded-2xl shadow-xl p-8 md:p-12 flex flex-col gap-8 border border-gray-200 dark:border-gray-700 w-full max-w-lg mx-auto"
         >
           <div class="text-center md:text-left">
             <h2

@@ -2,14 +2,14 @@
   <div class="relative w-full">
     <!-- Navigation Buttons -->
     <button
-      class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 p-0 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-950 hover:bg-primary-50 dark:hover:bg-primary-500 transition"
+      class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 p-0 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700 bg-zinc-50 dark:bg-neutral-950 hover:bg-primary-50 dark:hover:bg-primary-500 transition"
       style="transform: translateY(-50%)"
       @click="scrollLeft"
     >
       <UIcon name="i-heroicons-chevron-left-20-solid" class="text-base" />
     </button>
     <button
-      class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 p-0 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-950 hover:bg-primary-50 dark:hover:bg-primary-500 transition"
+      class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 p-0 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700 bg-zinc-50 dark:bg-neutral-950 hover:bg-primary-50 dark:hover:bg-primary-500 transition"
       style="transform: translateY(-50%)"
       @click="scrollRight"
     >
@@ -26,7 +26,7 @@
         <div
           v-for="feature in features"
           :key="feature.id"
-          class="w-full flex-shrink-0 bg-white dark:bg-neutral-950 rounded-2xl shadow flex flex-col"
+          class="w-full flex-shrink-0 bg-zinc-50 dark:bg-neutral-950 rounded-2xl shadow flex flex-col"
           style="scroll-snap-align: start; min-width: 100%; max-width: 100%"
         >
           <!-- Feature Content -->

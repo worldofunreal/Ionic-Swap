@@ -9,12 +9,12 @@
   >
     <!-- Backdrop -->
     <div
-      class="absolute inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-md"
+      class="absolute inset-0 bg-zinc-50/20 dark:bg-black/20 backdrop-blur-md"
       @click="show = false"
     />
     <!-- Modal Content -->
     <div
-      class="relative bg-white dark:bg-neutral-900 rounded-lg shadow-xl max-w-md w-full mx-4"
+      class="relative bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-xl max-w-md w-full mx-4"
     >
       <div class="p-8">
         <!-- Logo Section -->
@@ -41,8 +41,8 @@
             @click="login('local')"
           >
             <div class="flex items-center gap-3">
-              <img src="/wouid.svg" alt="Local Wallet" class="w-6 h-6" />
-              <span>Try Ionic Swap <span class="text-gray-400 text-xs">(Fastest)</span></span>
+              <img src="/logo.svg" alt="Local Wallet" class="w-6 h-6" />
+              <span>Try Ionic Wallet <span class="text-gray-400 text-xs">(Fastest)</span></span>
             </div>
           </UButton>
 
@@ -73,7 +73,7 @@
             <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
           </div>
           <div class="relative flex justify-center text-sm">
-            <span class="px-2 bg-white dark:bg-neutral-900 text-gray-200">or connect with wallet</span>
+            <span class="px-2 bg-zinc-50 dark:bg-neutral-900 text-gray-200">or connect with wallet</span>
           </div>
         </div>
 

@@ -61,7 +61,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Main Article -->
         <div class="lg:col-span-2">
-          <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8">
+          <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
             <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
               What are Digital Tokens?
             </h2>
@@ -160,7 +160,7 @@
         <!-- Sidebar -->
         <div class="space-y-6">
           <!-- Token Standards -->
-          <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-6">
+          <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-6">
             <h3
               class="text-lg font-semibold mb-4 text-gray-900 dark:text-white"
             >
@@ -223,7 +223,7 @@
           </div>
 
           <!-- Quick Links -->
-          <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-6">
+          <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-6">
             <h3
               class="text-lg font-semibold mb-4 text-gray-900 dark:text-white"
             >

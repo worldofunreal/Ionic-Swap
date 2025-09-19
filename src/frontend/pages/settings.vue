@@ -1,19 +1,19 @@
 <template>
-  <div class="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+  <div class="min-h-screen bg-zinc-50 dark:bg-zinc-900">
     <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
       <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">
           Settings
         </h1>
-        <p class="mt-2 text-gray-600 dark:text-gray-400">
+        <p class="mt-2 text-zinc-600 dark:text-zinc-400">
           Manage your wallet addresses, theme preferences, and privacy settings
         </p>
       </div>
 
       <!-- Settings Tabs -->
-      <div class="bg-white dark:bg-neutral-800 rounded-lg shadow">
-        <div class="border-b border-gray-200 dark:border-gray-700">
+      <div class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow">
+        <div class="border-b border-zinc-200 dark:border-zinc-800">
           <nav class="-mb-px flex space-x-8 px-6">
             <button
               v-for="tab in tabs"
@@ -21,7 +21,7 @@
               :class="[
                 activeTab === tab.id
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300',
+                  : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300 dark:text-zinc-400 dark:hover:text-zinc-300',
                 'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm',
               ]"
               @click="activeTab = tab.id"
@@ -36,10 +36,10 @@
           <!-- Wallet Management -->
           <div v-if="activeTab === 'wallets'" class="space-y-6">
             <div>
-              <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+              <h3 class="text-lg font-medium text-zinc-900 dark:text-white">
                 Wallet Addresses
               </h3>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
                 Manage your connected wallet addresses for cross-chain
                 functionality
               </p>
@@ -47,7 +47,7 @@
 
             <!-- EVM Address -->
             <div class="space-y-4">
-              <div class="p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
+              <div class="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
                 <div class="flex items-center gap-3 mb-3">
                   <div
                     class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center"
@@ -59,11 +59,11 @@
                   </div>
                   <div>
                     <h4
-                      class="text-sm font-medium text-gray-900 dark:text-white"
+                      class="text-sm font-medium text-zinc-900 dark:text-white"
                     >
                       Ethereum Address
                     </h4>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
                       {{
                         userProfile?.evm_address?.[0]
                           ? formatAddress(userProfile.evm_address[0])
@@ -111,7 +111,7 @@
               </div>
 
               <!-- Bitcoin Address -->
-              <div class="p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
+              <div class="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
                 <div class="flex items-center gap-3 mb-3">
                   <div
                     class="w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center"
@@ -123,11 +123,11 @@
                   </div>
                   <div>
                     <h4
-                      class="text-sm font-medium text-gray-900 dark:text-white"
+                      class="text-sm font-medium text-zinc-900 dark:text-white"
                     >
                       Bitcoin Address
                     </h4>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
                       {{
                         userProfile?.bitcoin_address?.[0]
                           ? formatAddress(userProfile.bitcoin_address[0])
@@ -175,7 +175,7 @@
               </div>
 
               <!-- Solana Address -->
-              <div class="p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
+              <div class="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
                 <div class="flex items-center gap-3 mb-3">
                   <div
                     class="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center"
@@ -187,11 +187,11 @@
                   </div>
                   <div>
                     <h4
-                      class="text-sm font-medium text-gray-900 dark:text-white"
+                      class="text-sm font-medium text-zinc-900 dark:text-white"
                     >
                       Solana Address
                     </h4>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
                       {{
                         userProfile?.solana_address?.[0]
                           ? formatAddress(userProfile.solana_address[0])
@@ -240,24 +240,24 @@
 
               <!-- ICP Principal -->
               <div
-                class="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg"
+                class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
               >
                 <div class="flex items-center gap-3">
                   <div
-                    class="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center"
+                    class="w-10 h-10 bg-zinc-100 dark:bg-zinc-700 rounded-lg flex items-center justify-center"
                   >
                     <UIcon
                       name="i-simple-icons-internetcomputer"
-                      class="w-6 h-6 text-gray-600 dark:text-gray-400"
+                      class="w-6 h-6 text-zinc-600 dark:text-zinc-400"
                     />
                   </div>
                   <div>
                     <h4
-                      class="text-sm font-medium text-gray-900 dark:text-white"
+                      class="text-sm font-medium text-zinc-900 dark:text-white"
                     >
                       ICP Principal
                     </h4>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
                       {{
                         userProfile?.id
                           ? formatAddress(userProfile.id.toText())
@@ -276,10 +276,10 @@
           <!-- Theme Preferences -->
           <div v-if="activeTab === 'theme'" class="space-y-6">
             <div>
-              <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+              <h3 class="text-lg font-medium text-zinc-900 dark:text-white">
                 Theme Preferences
               </h3>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
                 Customize your visual experience with dark mode and color themes
               </p>
             </div>
@@ -287,11 +287,11 @@
             <!-- Dark Mode Toggle -->
             <div class="space-y-4">
               <div
-                class="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg"
+                class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
               >
                 <div class="flex items-center gap-3">
                   <div
-                    class="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center"
+                    class="w-10 h-10 bg-zinc-100 dark:bg-zinc-700 rounded-lg flex items-center justify-center"
                   >
                     <UIcon
                       :name="
@@ -299,16 +299,16 @@
                           ? 'i-heroicons-moon-20-solid'
                           : 'i-heroicons-sun-20-solid'
                       "
-                      class="w-6 h-6 text-gray-600 dark:text-gray-400"
+                      class="w-6 h-6 text-zinc-600 dark:text-zinc-400"
                     />
                   </div>
                   <div>
                     <h4
-                      class="text-sm font-medium text-gray-900 dark:text-white"
+                      class="text-sm font-medium text-zinc-900 dark:text-white"
                     >
                       Dark Mode
                     </h4>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
                       Switch between light and dark themes
                     </p>
                   </div>
@@ -325,7 +325,7 @@
 
               <!-- Color Theme -->
               <div class="space-y-4">
-                <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+                <h4 class="text-sm font-medium text-zinc-900 dark:text-white">
                   Color Theme
                 </h4>
                 <div class="grid grid-cols-4 gap-3">
@@ -336,7 +336,7 @@
                     :class="[
                       colorTheme === theme
                         ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                        : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800',
+                        : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-gray-800',
                     ]"
                     @click="setTheme(theme as any)"
                   >
@@ -345,7 +345,7 @@
                       :class="`bg-${theme}-500`"
                     />
                     <span
-                      class="text-xs font-medium text-gray-700 dark:text-gray-300 capitalize"
+                      class="text-xs font-medium text-zinc-700 dark:text-zinc-300 capitalize"
                     >
                       {{ theme }}
                     </span>
@@ -367,10 +367,10 @@
           <!-- Privacy Settings -->
           <div v-if="activeTab === 'privacy'" class="space-y-6">
             <div>
-              <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+              <h3 class="text-lg font-medium text-zinc-900 dark:text-white">
                 Privacy Settings
               </h3>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
                 Control your privacy and data sharing preferences
               </p>
             </div>
@@ -378,13 +378,13 @@
             <div class="space-y-4">
               <!-- Profile Visibility -->
               <div
-                class="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg"
+                class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
               >
                 <div>
-                  <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+                  <h4 class="text-sm font-medium text-zinc-900 dark:text-white">
                     Profile Visibility
                   </h4>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-zinc-500 dark:text-zinc-400">
                     Control who can see your profile information
                   </p>
                 </div>
@@ -402,13 +402,13 @@
 
               <!-- Activity Visibility -->
               <div
-                class="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg"
+                class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
               >
                 <div>
-                  <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+                  <h4 class="text-sm font-medium text-zinc-900 dark:text-white">
                     Activity Visibility
                   </h4>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-zinc-500 dark:text-zinc-400">
                     Control who can see your activity and transactions
                   </p>
                 </div>
@@ -426,13 +426,13 @@
 
               <!-- Wallet Address Visibility -->
               <div
-                class="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg"
+                class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
               >
                 <div>
-                  <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+                  <h4 class="text-sm font-medium text-zinc-900 dark:text-white">
                     Wallet Address Visibility
                   </h4>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p class="text-sm text-zinc-500 dark:text-zinc-400">
                     Control who can see your wallet addresses
                   </p>
                 </div>
@@ -450,20 +450,20 @@
 
               <!-- Data Sharing -->
               <div class="space-y-4">
-                <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+                <h4 class="text-sm font-medium text-zinc-900 dark:text-white">
                   Data Sharing Preferences
                 </h4>
 
                 <div
-                  class="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg"
+                  class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
                 >
                   <div>
                     <h5
-                      class="text-sm font-medium text-gray-900 dark:text-white"
+                      class="text-sm font-medium text-zinc-900 dark:text-white"
                     >
                       Analytics & Usage Data
                     </h5>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
                       Help us improve by sharing anonymous usage data
                     </p>
                   </div>
@@ -471,15 +471,15 @@
                 </div>
 
                 <div
-                  class="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg"
+                  class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
                 >
                   <div>
                     <h5
-                      class="text-sm font-medium text-gray-900 dark:text-white"
+                      class="text-sm font-medium text-zinc-900 dark:text-white"
                     >
                       Marketing Communications
                     </h5>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
                       Receive updates about new features and promotions
                     </p>
                   </div>
@@ -487,15 +487,15 @@
                 </div>
 
                 <div
-                  class="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg"
+                  class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
                 >
                   <div>
                     <h5
-                      class="text-sm font-medium text-gray-900 dark:text-white"
+                      class="text-sm font-medium text-zinc-900 dark:text-white"
                     >
                       Third-Party Integrations
                     </h5>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
                       Allow data sharing with trusted third-party services
                     </p>
                   </div>
@@ -508,10 +508,10 @@
           <!-- Account Management -->
           <div v-if="activeTab === 'account'" class="space-y-6">
             <div>
-              <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+              <h3 class="text-lg font-medium text-zinc-900 dark:text-white">
                 Account Management
               </h3>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
                 Manage your account settings and profile information
               </p>
             </div>
@@ -519,7 +519,7 @@
             <div class="space-y-4">
               <!-- Profile Management -->
               <div
-                class="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg"
+                class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
               >
                 <div class="flex items-center gap-3">
                   <div
@@ -532,11 +532,11 @@
                   </div>
                   <div>
                     <h4
-                      class="text-sm font-medium text-gray-900 dark:text-white"
+                      class="text-sm font-medium text-zinc-900 dark:text-white"
                     >
                       Profile Information
                     </h4>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
                       Edit your display name, bio, avatar, and other profile
                       details
                     </p>
@@ -590,9 +590,9 @@
         </div>
 
         <!-- Save Button -->
-        <div class="px-6 py-4 bg-neutral-50 dark:bg-neutral-700 rounded-b-lg">
+        <div class="px-6 py-4 bg-zinc-50 dark:bg-zinc-800 rounded-b-lg">
           <div class="flex justify-between items-center">
-            <p class="text-sm text-gray-500 dark:text-gray-400">
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">
               {{ saveStatus }}
             </p>
             <div class="flex gap-3">

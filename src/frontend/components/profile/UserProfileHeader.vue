@@ -29,7 +29,7 @@
             v-if="avatarUrl"
             :src="avatarUrl"
             alt="Avatar"
-            class="w-20 h-20 rounded-full border-4 border-white dark:border-gray-900 shadow-lg bg-white object-cover cursor-pointer hover:opacity-90 transition-opacity"
+            class="w-20 h-20 rounded-full border-4 border-white dark:border-gray-900 shadow-lg bg-zinc-50 object-cover cursor-pointer hover:opacity-90 transition-opacity"
             crossorigin="anonymous"
             @click="openImageModal(avatarUrl, 'Avatar')"
           >
@@ -193,7 +193,7 @@
     @click="imageModalOpen = false"
   >
     <div
-      class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-4xl mx-4"
+      class="bg-zinc-50 dark:bg-gray-800 rounded-lg p-6 max-w-4xl mx-4"
       @click.stop
     >
       <div class="text-center">

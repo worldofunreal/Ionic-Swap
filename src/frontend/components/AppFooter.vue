@@ -1,6 +1,6 @@
 <template>
   <footer
-    class="w-full border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 fixed bottom-0 left-0 z-30"
+    class="w-full border-t border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 fixed bottom-0 left-0 z-30"
   >
     <div
       class="ml-12 flex justify-between items-center py-2 px-4 md:px-8 text-xs text-zinc-500 dark:text-zinc-400 w-full"
@@ -111,7 +111,7 @@
         <ClientOnly>
           <button
             aria-label="Toggle theme"
-            class="flex items-center gap-1 px-2 py-1 rounded transition-colors border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900"
+            class="flex items-center gap-1 px-2 py-1 rounded transition-colors border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900"
             @click="toggleTheme"
           >
             <UIcon
@@ -125,13 +125,19 @@
           </button>
         </ClientOnly>
         <span class="hidden md:inline">|</span>
-        <!-- Fiat/Crypto Switch -->
-        <button
-          class="px-2 py-1 rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900"
-          @click="toggleFiat"
-        >
-          {{ showFiat ? 'USD' : 'Crypto' }}
-        </button>
+        <!-- Color Theme Switcher -->
+        <ClientOnly>
+          <button
+            class="relative w-7 h-7 rounded-lg transition-all duration-300 focus:outline-none border border-zinc-200 dark:border-zinc-800 flex items-center justify-center bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+            aria-label="Toggle color theme"
+            @click="toggleColorTheme"
+          >
+            <div
+              class="w-2.5 h-2.5 rounded-full transition-all duration-300"
+              :class="`color-circle-${colorTheme}`"
+            />
+          </button>
+        </ClientOnly>
       </div>
     </div>
   </footer>
@@ -141,10 +147,11 @@
   import { ref } from 'vue'
   import { useNuxtApp } from '#imports'
   import { useTheme } from '@/composables/useTheme'
+  import { useColorTheme } from '@/composables/useColorTheme'
 
   const { theme: colorMode, toggleTheme: toggleThemeAction } = useTheme()
+  const { colorTheme, nextColorTheme } = useColorTheme()
   const { $trackButtonClick } = useNuxtApp()
-  const showFiat = ref(false)
 
   function toggleTheme() {
     toggleThemeAction()
@@ -153,10 +160,20 @@
       location: 'footer',
     })
   }
-  function toggleFiat() {
-    showFiat.value = !showFiat.value
-    $trackButtonClick('Fiat/Crypto Toggle', {
-      showFiat: showFiat.value,
+
+  const toggleColorTheme = (): void => {
+    nextColorTheme()
+
+    // Dispatch custom event for chart components to listen to
+    window.dispatchEvent(
+      new CustomEvent('color-theme-changed', {
+        detail: { newTheme: colorTheme.value },
+      })
+    )
+
+    $trackButtonClick('Color Theme Toggle', {
+      newColorTheme: colorTheme.value,
+      location: 'footer',
     })
   }
 </script>

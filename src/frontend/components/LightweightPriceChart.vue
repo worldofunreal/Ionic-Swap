@@ -1,7 +1,7 @@
 <template>
   <div :class="[
     'w-full h-full flex flex-col',
-    !noContainer ? 'bg-white dark:bg-neutral-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700' : ''
+    !noContainer ? 'bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700' : ''
   ]">
     <div class="flex justify-between items-center mb-2 px-4">
       <div class="flex items-center gap-3">

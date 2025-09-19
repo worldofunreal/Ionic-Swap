@@ -4,7 +4,7 @@
     class="fixed inset-0 bg-black bg-opacity-10 dark:bg-black/10 flex items-center justify-center z-[9999]"
   >
     <div
-      class="bg-white dark:bg-neutral-950 rounded-lg shadow-lg p-6 max-w-sm mx-4 text-center"
+      class="bg-zinc-50 dark:bg-neutral-950 rounded-lg shadow-lg p-6 max-w-sm mx-4 text-center"
     >
       <!-- Spinner -->
       <div class="flex justify-center mb-4">

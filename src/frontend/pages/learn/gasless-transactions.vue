@@ -62,7 +62,7 @@
       <!-- Main Content -->
       <div class="space-y-8">
         <!-- How Gasless Works -->
-        <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8">
+        <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
           <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             How Gasless Transactions Work
           </h2>
@@ -128,7 +128,7 @@
         </div>
 
         <!-- Permit Technology -->
-        <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8">
+        <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
           <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             Permit Technology Explained
           </h2>
@@ -184,7 +184,7 @@
         </div>
 
         <!-- Supported Chains -->
-        <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8">
+        <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
           <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             Gasless Support Across Chains
           </h2>
@@ -292,7 +292,7 @@
         </div>
 
         <!-- Benefits -->
-        <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8">
+        <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
           <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             Benefits of Gasless Transactions
           </h2>

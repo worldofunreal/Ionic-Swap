@@ -8,14 +8,14 @@
     </div>
     <div class="relative">
       <button
-        class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 p-0 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-950 hover:bg-primary-50 dark:hover:bg-primary-500 transition"
+        class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 p-0 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700 bg-zinc-50 dark:bg-neutral-950 hover:bg-primary-50 dark:hover:bg-primary-500 transition"
         style="transform: translateY(-50%)"
         @click="scrollLeft"
       >
         <UIcon name="i-heroicons-chevron-left-20-solid" class="text-base" />
       </button>
       <button
-        class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 p-0 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700 bg-white dark:bg-neutral-950 hover:bg-primary-50 dark:hover:bg-primary-500 transition"
+        class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 p-0 rounded-full flex items-center justify-center border border-gray-200 dark:border-gray-700 bg-zinc-50 dark:bg-neutral-950 hover:bg-primary-50 dark:hover:bg-primary-500 transition"
         style="transform: translateY(-50%)"
         @click="scrollRight"
       >
@@ -30,7 +30,7 @@
           v-for="article in articles"
           :key="article.slug"
           :to="`/learn/${article.slug}`"
-          class="min-w-[220px] max-w-xs bg-white dark:bg-neutral-950 rounded-xl shadow p-4 flex flex-col gap-2 hover:scale-105 transition-transform cursor-pointer"
+          class="min-w-[220px] max-w-xs bg-zinc-50 dark:bg-neutral-950 rounded-xl shadow p-4 flex flex-col gap-2 hover:scale-105 transition-transform cursor-pointer"
           style="scroll-snap-align: start"
         >
           <!-- Article Icon with dynamic color -->

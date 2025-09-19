@@ -40,7 +40,7 @@
       <div
         v-for="transaction in transactions"
         :key="transaction.id"
-        class="bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-3 hover:shadow-sm transition-shadow"
+        class="bg-zinc-100 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-3 hover:shadow-sm transition-shadow"
       >
         <div class="flex items-center justify-between">
           <!-- Transaction Type & Pair -->
@@ -74,7 +74,7 @@
         </div>
 
         <!-- Transaction Metadata -->
-        <div class="mt-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
+        <div class="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
           <div class="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
             <div class="flex items-center space-x-2">
               <span>{{ formatDate(transaction.timestamp) }}</span>
@@ -93,7 +93,7 @@
     <div v-if="hasMore && !loading" class="mt-6 text-center">
       <button
         @click="loadMore"
-        class="px-4 py-2 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+        class="px-4 py-2 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
       >
         Load More
       </button>
@@ -184,7 +184,7 @@ const loadMore = async () => {
 }
 
 const getTransactionTypeClass = (transaction: SwapTransaction) => {
-  return 'bg-neutral-600 dark:bg-neutral-700' // Match dark theme
+  return 'bg-zinc-600 dark:bg-zinc-700' // Match zinc theme
 }
 
 const getTransactionIcon = (transaction: SwapTransaction) => {

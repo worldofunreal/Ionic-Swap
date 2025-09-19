@@ -4,11 +4,11 @@
     class="fixed inset-0 z-[9999] flex items-center justify-center"
   >
     <!-- Backdrop -->
-    <div class="absolute inset-0 bg-white/80 dark:bg-black/90" @click="close" />
+    <div class="absolute inset-0 bg-zinc-50/80 dark:bg-black/90" @click="close" />
 
     <!-- Modal Content -->
     <div
-      class="relative bg-white dark:bg-neutral-900 rounded-lg shadow-xl max-w-md w-full mx-4"
+      class="relative bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-xl max-w-md w-full mx-4"
     >
       <div class="p-8">
         <!-- Header -->
@@ -25,7 +25,7 @@
             </label>
             <textarea
               v-model="mnemonic"
-              class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-neutral-800 text-gray-900 dark:text-gray-100"
+              class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-zinc-50 dark:bg-neutral-800 text-gray-900 dark:text-gray-100"
               rows="3"
               placeholder="Enter your recovery phrase..."
             />

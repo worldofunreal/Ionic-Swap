@@ -1,13 +1,13 @@
 <template>
-  <div class="trading-page h-screen bg-background overflow-hidden flex flex-col" style="height: 100vh; max-height: 100vh;">
+  <div class="trading-page h-screen bg-zinc-50 dark:bg-zinc-900 overflow-hidden flex flex-col" style="height: 100vh; max-height: 100vh;">
     <!-- Trading Header -->
     <div
-      class="bg-card border-b border-neutral-200 dark:border-neutral-700 px-4 py-2 flex-shrink-0"
+      class="bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 py-2 flex-shrink-0"
     >
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
           <div class="flex items-center space-x-2">
-            <div class="w-8 h-8 rounded-full bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
               <UIcon :name="getTokenIcon(selectedTokenSymbol)" class="w-5 h-5" />
             </div>
             <div>
@@ -46,7 +46,7 @@
         <div class="flex items-center space-x-2">
           <select
             v-model="selectedTokenSymbol"
-            class="px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-neutral-300 dark:border-neutral-700 rounded-md text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+            class="px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-md text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="" disabled>Select Token</option>
             <option
@@ -66,7 +66,7 @@
       <div class="flex-1 flex flex-col">
 
         <!-- Chart Area -->
-        <div class="bg-card p-2 overflow-hidden" style="height: 50%;">
+        <div class="bg-zinc-100 dark:bg-zinc-900 p-2 overflow-hidden" style="height: 50%;">
           <LightweightPriceChart
             :key="`trading-${selectedTokenSymbol}`"
             :token-symbol="selectedTokenSymbol"
@@ -77,7 +77,7 @@
         </div>
 
         <!-- Transaction History -->
-        <div class="bg-card border-t border-neutral-200 dark:border-neutral-700 p-2 overflow-hidden" style="height: 50%;">
+        <div class="bg-zinc-100 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 p-2 overflow-hidden" style="height: 50%;">
           <div class="overflow-y-auto scrollbar-hide" style="height: calc(100% - 1.5rem);">
             <TransactionHistory ref="transactionHistoryRef" />
           </div>
@@ -86,10 +86,10 @@
 
       <!-- Right Column - Trading Panel -->
       <div
-        class="w-80 bg-card border-l border-neutral-200 dark:border-neutral-700 flex flex-col"
+        class="w-80 bg-zinc-100 dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 flex flex-col"
       >
         <!-- Trading Header -->
-        <div class="border-b border-neutral-200 dark:border-neutral-700 px-2 py-2">
+        <div class="border-b border-zinc-200 dark:border-zinc-800 px-2 py-2">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">Market Trading</h3>
             
@@ -133,7 +133,7 @@
                     placeholder="0.00"
                     @input="formatBuyAmount"
                     @blur="validateBuyAmount"
-                    class="w-full px-3 py-2 bg-buy-surface border border-neutral-200 dark:border-neutral-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500"
+                    class="w-full px-3 py-2 bg-buy-surface border border-zinc-200 dark:border-zinc-800 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
                   <div
                     class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-zinc-500 dark:text-zinc-400"
@@ -146,7 +146,7 @@
                   <button
                     v-for="percent in [25, 50, 75, 100]"
                     :key="percent"
-                    class="flex-1 px-2 py-1 text-xs bg-buy-surface text-zinc-900 dark:text-white rounded hover:bg-zinc-50 dark:bg-zinc-900-elevated"
+                    class="flex-1 px-2 py-1 text-xs bg-buy-surface text-zinc-900 dark:text-white rounded hover:bg-zinc-100 dark:hover:bg-zinc-800"
                     @click="setBuyAmount(percent)"
                   >
                     {{ percent }}%
@@ -166,7 +166,7 @@
 
             <!-- Sell Section -->
             <div
-              class="space-y-2 pt-3 border-t border-neutral-200 dark:border-neutral-700"
+              class="space-y-2 pt-3 border-t border-zinc-200 dark:border-zinc-800"
             >
               <div class="flex items-center justify-between">
                 <span
@@ -186,7 +186,7 @@
                     placeholder="0.00"
                     @input="formatSellAmount"
                     @blur="validateSellAmount"
-                    class="w-full px-3 py-2 bg-sell-surface border border-neutral-200 dark:border-neutral-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-red-500"
+                    class="w-full px-3 py-2 bg-sell-surface border border-zinc-200 dark:border-zinc-800 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                   <div
                     class="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-zinc-500 dark:text-zinc-400"
@@ -199,7 +199,7 @@
                   <button
                     v-for="percent in [25, 50, 75, 100]"
                     :key="percent"
-                    class="flex-1 px-2 py-1 text-xs bg-sell-surface text-zinc-900 dark:text-white rounded hover:bg-zinc-50 dark:bg-zinc-900-elevated"
+                    class="flex-1 px-2 py-1 text-xs bg-sell-surface text-zinc-900 dark:text-white rounded hover:bg-zinc-100 dark:hover:bg-zinc-800"
                     @click="setSellAmount(percent)"
                   >
                     {{ percent }}%
@@ -242,7 +242,7 @@
                     v-model="limitBuyPrice"
                     type="number"
                     placeholder="0.00"
-                    class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-neutral-200 dark:border-neutral-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    class="w-full px-3 py-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                 </div>
 
@@ -255,7 +255,7 @@
                     v-model="limitBuyAmount"
                     type="number"
                     placeholder="0.00"
-                    class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-neutral-200 dark:border-neutral-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    class="w-full px-3 py-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                 </div>
 
@@ -280,7 +280,7 @@
 
             <!-- Sell Section -->
             <div
-              class="space-y-3 pt-4 border-t border-neutral-200 dark:border-neutral-700"
+              class="space-y-3 pt-4 border-t border-zinc-200 dark:border-zinc-800"
             >
               <div class="flex items-center justify-between">
                 <span
@@ -302,7 +302,7 @@
                     v-model="limitSellPrice"
                     type="number"
                     placeholder="0.00"
-                    class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-neutral-200 dark:border-neutral-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    class="w-full px-3 py-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                 </div>
 
@@ -315,7 +315,7 @@
                     v-model="limitSellAmount"
                     type="number"
                     placeholder="0.00"
-                    class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-neutral-200 dark:border-neutral-700 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    class="w-full px-3 py-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-right focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                 </div>
 

@@ -55,15 +55,15 @@
             accessible.
           </p>
           <div class="flex flex-wrap gap-4">
-            <div class="bg-white bg-opacity-20 rounded-lg p-4">
+            <div class="bg-zinc-50 bg-opacity-20 rounded-lg p-4">
               <div class="text-2xl font-bold">Secure</div>
               <div class="text-sm">Private key protection</div>
             </div>
-            <div class="bg-white bg-opacity-20 rounded-lg p-4">
+            <div class="bg-zinc-50 bg-opacity-20 rounded-lg p-4">
               <div class="text-2xl font-bold">Accessible</div>
               <div class="text-sm">24/7 global access</div>
             </div>
-            <div class="bg-white bg-opacity-20 rounded-lg p-4">
+            <div class="bg-zinc-50 bg-opacity-20 rounded-lg p-4">
               <div class="text-2xl font-bold">Versatile</div>
               <div class="text-sm">Multiple crypto support</div>
             </div>
@@ -76,7 +76,7 @@
         <!-- Main Content -->
         <div class="lg:col-span-2 space-y-8">
           <!-- What is a Crypto Wallet -->
-          <section class="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               What is a Crypto Wallet?
             </h3>
@@ -121,7 +121,7 @@
           </section>
 
           <!-- Types of Wallets -->
-          <section class="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Types of Crypto Wallets
             </h3>
@@ -307,7 +307,7 @@
           </section>
 
           <!-- Popular Wallets -->
-          <section class="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Popular Crypto Wallets
             </h3>
@@ -587,7 +587,7 @@
           </section>
 
           <!-- Security Best Practices -->
-          <section class="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Security Best Practices
             </h3>
@@ -785,7 +785,7 @@
         <!-- Sidebar -->
         <div class="space-y-6">
           <!-- Quick Navigation -->
-          <div class="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <div class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3
               class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
             >
@@ -820,7 +820,7 @@
           </div>
 
           <!-- Wallet Comparison -->
-          <div class="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <div class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3
               class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
             >

@@ -29,7 +29,7 @@
       class="flex flex-col lg:flex-row min-h-screen bg-neutral-50 dark:bg-neutral-950"
     >
       <!-- Left Column: Fixed User Profile Header -->
-      <div class="w-full lg:w-80 xl:w-96 flex-shrink-0 bg-white dark:bg-neutral-950 lg:border-r border-gray-200 dark:border-gray-800 lg:border-b-0 border-b">
+      <div class="w-full lg:w-80 xl:w-96 flex-shrink-0 bg-zinc-50 dark:bg-neutral-950 lg:border-r border-gray-200 dark:border-gray-800 lg:border-b-0 border-b">
         <UserProfileHeader
           :user-profile="userProfile"
           :is-own-profile="isOwnProfile"
@@ -40,7 +40,7 @@
       <!-- Right Column: Scrollable Tabs and Content -->
       <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
         <!-- Navigation Tabs -->
-        <div class="px-4 pt-4 pb-2 bg-white dark:bg-neutral-950 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
+        <div class="px-4 pt-4 pb-2 bg-zinc-50 dark:bg-neutral-950 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
           <ProfileTabs v-model="activeTab" />
         </div>
         

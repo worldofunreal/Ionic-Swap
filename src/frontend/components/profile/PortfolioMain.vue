@@ -22,7 +22,7 @@
     <!-- Portfolio Content -->
     <div v-else class="space-y-6">
       <!-- Token Balances Section -->
-      <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
+      <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
         <div class="p-4 border-b border-gray-200 dark:border-gray-800">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-foreground">Token Balances</h3>
@@ -147,7 +147,7 @@
       </div>
 
       <!-- Liquidity Positions Section -->
-      <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
+      <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
         <div class="p-4 border-b border-gray-200 dark:border-gray-800">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-foreground">Liquidity Positions</h3>
@@ -294,7 +294,7 @@
 
       <!-- Drawer Content -->
       <div
-        class="absolute left-0 right-0 bg-white dark:bg-neutral-950 rounded-t-2xl border-t border-gray-200 dark:border-gray-800 max-h-[80vh] flex flex-col transition-transform duration-300 ease-out"
+        class="absolute left-0 right-0 bg-zinc-50 dark:bg-neutral-950 rounded-t-2xl border-t border-gray-200 dark:border-gray-800 max-h-[80vh] flex flex-col transition-transform duration-300 ease-out"
         :class="
           isDrawerOpen ? 'bottom-0 translate-y-0' : 'bottom-0 translate-y-full'
         "

@@ -62,7 +62,7 @@
       <!-- Main Content -->
       <div class="space-y-8">
         <!-- What is DeFi -->
-        <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8">
+        <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
           <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             What is Decentralized Finance (DeFi)?
           </h2>
@@ -130,7 +130,7 @@
         </div>
 
         <!-- DeFi Services -->
-        <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8">
+        <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
           <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             Common DeFi Services
           </h2>
@@ -212,7 +212,7 @@
         </div>
 
         <!-- Liquidity and AMMs -->
-        <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8">
+        <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
           <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             Liquidity and Automated Market Makers (AMMs)
           </h2>
@@ -285,7 +285,7 @@
         </div>
 
         <!-- Risks and Considerations -->
-        <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8">
+        <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
           <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             Risks and Considerations
           </h2>

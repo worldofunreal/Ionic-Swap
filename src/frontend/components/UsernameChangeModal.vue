@@ -5,7 +5,7 @@
     @click="close"
   >
     <div
-      class="bg-white dark:bg-neutral-900 rounded-lg shadow-lg w-full max-w-md mx-4"
+      class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-lg w-full max-w-md mx-4"
       @click.stop
     >
       <!-- Header -->

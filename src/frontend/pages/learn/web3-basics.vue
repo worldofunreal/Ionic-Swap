@@ -54,15 +54,15 @@
             ownership, and trustless interactions.
           </p>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+            <div class="bg-zinc-50 bg-opacity-20 rounded-lg p-4 text-center">
               <div class="text-2xl font-bold">Web1</div>
               <div class="text-sm">Read-only</div>
             </div>
-            <div class="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+            <div class="bg-zinc-50 bg-opacity-20 rounded-lg p-4 text-center">
               <div class="text-2xl font-bold">Web2</div>
               <div class="text-sm">Read-write</div>
             </div>
-            <div class="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+            <div class="bg-zinc-50 bg-opacity-20 rounded-lg p-4 text-center">
               <div class="text-2xl font-bold">Web3</div>
               <div class="text-sm">Read-write-own</div>
             </div>
@@ -75,7 +75,7 @@
         <!-- Main Content -->
         <div class="lg:col-span-2 space-y-8">
           <!-- What is Web3 -->
-          <section class="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               What is Web3?
             </h3>
@@ -115,7 +115,7 @@
           </section>
 
           <!-- Web Evolution -->
-          <section class="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               The Evolution of the Web
             </h3>
@@ -180,7 +180,7 @@
           </section>
 
           <!-- Blockchain Technology -->
-          <section class="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Blockchain Technology
             </h3>
@@ -382,7 +382,7 @@
           </section>
 
           <!-- Smart Contracts -->
-          <section class="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Smart Contracts
             </h3>
@@ -507,7 +507,7 @@
           </section>
 
           <!-- Web3 Applications -->
-          <section class="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Web3 Applications
             </h3>
@@ -660,7 +660,7 @@
         <!-- Sidebar -->
         <div class="space-y-6">
           <!-- Quick Navigation -->
-          <div class="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <div class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3
               class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
             >
@@ -695,7 +695,7 @@
           </div>
 
           <!-- Key Terms -->
-          <div class="bg-white dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <div class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
             <h3
               class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
             >

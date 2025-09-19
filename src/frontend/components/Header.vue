@@ -3,9 +3,9 @@
     :class="[
       'sticky z-50 top-0 left-0 w-full transition-all duration-500 ease-in-out',
       scrolled
-        ? 'bg-zinc-50/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-md'
+        ? 'bg-zinc-100/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-md'
         : 'bg-transparent',
-      'border-b border-neutral-200 dark:border-neutral-800',
+      'border-b border-zinc-200 dark:border-zinc-800',
     ]"
   >
     <div class="flex justify-between items-center h-14 mx-4 md:mx-4">
@@ -13,13 +13,13 @@
       <div class="flex items-center gap-2 flex-shrink-0">
         <!-- Mobile Menu Button -->
         <button
-          class="md:hidden p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+          class="md:hidden p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           aria-label="Toggle mobile menu"
           @click="toggleMobileSidebar"
         >
           <UIcon
             name="i-heroicons-bars-3-20-solid"
-            class="w-6 h-6 text-neutral-700 dark:text-neutral-300"
+            class="w-6 h-6 text-zinc-700 dark:text-zinc-300"
           />
         </button>
         <!-- Search Bar -->
@@ -43,7 +43,7 @@
               showSearchResults &&
               (searchResults.length > 0 || searchLoading || searchError)
             "
-            class="absolute top-full left-0 right-0 mt-1 bg-card rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 max-h-96 overflow-y-auto z-50"
+            class="absolute top-full left-0 right-0 mt-1 bg-card rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-800 max-h-96 overflow-y-auto z-50"
             @mousedown.prevent
           >
             <!-- Loading State -->
@@ -51,7 +51,7 @@
               <div
                 class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"
               />
-              <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
+              <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
                 Searching...
               </p>
             </div>
@@ -69,7 +69,7 @@
             <div v-else-if="searchResults.length > 0" class="py-2">
               <CompactProfile
                 v-for="user in searchResults"
-                :key="user.id"
+                :key="user.id.toText()"
                 :user="user"
                 :show-follow-button="true"
                 :clickable="true"
@@ -83,9 +83,9 @@
             <div v-else-if="search.trim().length >= 2" class="p-4 text-center">
               <UIcon
                 name="i-heroicons-magnifying-glass-20-solid"
-                class="w-6 h-6 text-neutral-400 mx-auto"
+                class="w-6 h-6 text-zinc-400 mx-auto"
               />
-              <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
+              <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
                 No users found
               </p>
             </div>
@@ -94,52 +94,6 @@
       </div>
       <!-- Right: Actions -->
       <div class="flex items-center gap-2 ml-auto">
-        <!-- Theme Toggle Button - Client Only -->
-        <ClientOnly>
-          <button
-            class="relative w-10 h-6 rounded-full transition-colors duration-300 focus:outline-none border border-neutral-300 dark:border-neutral-700 flex mr-1"
-            :class="
-              colorMode.value === 'dark' ? 'bg-primary-500' : 'bg-primary-600'
-            "
-            aria-label="Toggle theme"
-            @click="toggleTheme"
-          >
-            <span
-              class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-300 flex items-center justify-center"
-              :class="
-                colorMode.value === 'dark' ? 'translate-x-4' : 'translate-x-0'
-              "
-            >
-              <UIcon
-                :name="
-                  colorMode.value === 'dark'
-                    ? 'ix:sun-filled'
-                    : 'tabler:moon-filled'
-                "
-                class="w-4 h-4 transition-colors duration-300"
-                :class="
-                  colorMode.value === 'dark'
-                    ? 'text-primary-500'
-                    : 'text-primary-600'
-                "
-              />
-            </span>
-          </button>
-        </ClientOnly>
-
-        <!-- Color Theme Toggle Button - Client Only -->
-        <ClientOnly>
-          <button
-            class="relative w-7 h-7 rounded-lg transition-all duration-300 focus:outline-none border border-neutral-300 dark:border-neutral-700 flex items-center justify-center mr-1 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-            aria-label="Toggle color theme"
-            @click="toggleColorTheme"
-          >
-            <div
-              class="w-2.5 h-2.5 rounded-full transition-all duration-300"
-              :class="`color-circle-${colorTheme}`"
-            />
-          </button>
-        </ClientOnly>
 
         <!-- Connect Wallet Button -->
         <UButton
@@ -171,15 +125,11 @@
   import { useAuthStore } from '@/stores/auth'
   import { canisterService } from '@/services/CanisterService'
   import CompactProfile from '@/components/CompactProfile.vue'
-  import { useColorTheme } from '@/composables/useColorTheme'
-  import { useTheme } from '@/composables/useTheme'
 
   defineOptions({
     name: 'AppHeader',
   })
 
-  const { theme: colorMode, toggleTheme: toggleThemeAction } = useTheme()
-  const { colorTheme, nextColorTheme } = useColorTheme()
   const authStore = useAuthStore()
   const { $trackButtonClick } = useNuxtApp()
 
@@ -208,30 +158,6 @@
     scrolled.value = window.scrollY > 10
   }
 
-  function toggleTheme() {
-    toggleThemeAction()
-
-    $trackButtonClick('Theme Toggle', {
-      newTheme: colorMode.value,
-      location: 'header',
-    })
-  }
-
-  const toggleColorTheme = (): void => {
-    nextColorTheme()
-
-    // Dispatch custom event for chart components to listen to
-    window.dispatchEvent(
-      new CustomEvent('color-theme-changed', {
-        detail: { newTheme: colorTheme.value },
-      })
-    )
-
-    $trackButtonClick('Color Theme Toggle', {
-      newColorTheme: colorTheme.value,
-      location: 'header',
-    })
-  }
 
   const toggleMobileSidebar = (): void => {
     // Emit event to parent component to control mobile sidebar visibility
@@ -339,8 +265,8 @@
 
   const handleFollow = (user: SearchUser) => {
     // Update the user's following status in search results
-    const userIndex = searchResults.value.findIndex(u => u.id === user.id)
-    if (userIndex !== -1) {
+    const userIndex = searchResults.value.findIndex(u => u.id.toText() === user.id.toText())
+    if (userIndex !== -1 && searchResults.value[userIndex]) {
       searchResults.value[userIndex].am_following_them = true
     }
 
@@ -353,8 +279,8 @@
 
   const handleUnfollow = (user: SearchUser) => {
     // Update the user's following status in search results
-    const userIndex = searchResults.value.findIndex(u => u.id === user.id)
-    if (userIndex !== -1) {
+    const userIndex = searchResults.value.findIndex(u => u.id.toText() === user.id.toText())
+    if (userIndex !== -1 && searchResults.value[userIndex]) {
       searchResults.value[userIndex].am_following_them = false
     }
 

@@ -3,7 +3,7 @@
 
   <!-- Mobile Sidebar -->
   <aside
-    class="fixed inset-0 bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 z-[9999] md:hidden transition-transform duration-300 ease-in-out"
+    class="fixed inset-0 bg-zinc-100 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 z-[9999] md:hidden transition-transform duration-300 ease-in-out"
     :class="isOpen ? 'translate-x-0' : '-translate-x-full'"
   >
     <!-- Header with close button -->

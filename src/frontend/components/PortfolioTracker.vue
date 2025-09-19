@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white dark:bg-zinc-900 rounded-lg p-4 border border-zinc-500 dark:border-zinc-800">
+  <div class="bg-zinc-100 dark:bg-zinc-900 rounded-lg p-4 border border-zinc-200 dark:border-zinc-800">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">Portfolio Overview</h3>
       <div class="flex items-center gap-2">
@@ -10,7 +10,7 @@
               'px-3 py-1 text-sm rounded-md transition-colors',
               valueDisplay === 'usd'
                 ? 'bg-primary text-primary-foreground'
-                : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-600',
+                : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-600',
             ]"
             @click="updateValueDisplay('usd')"
           >
@@ -21,7 +21,7 @@
               'px-3 py-1 text-sm rounded-md transition-colors',
               valueDisplay === 'btc'
                 ? 'bg-primary text-primary-foreground'
-                : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-600',
+                : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-600',
             ]"
             @click="updateValueDisplay('btc')"
           >

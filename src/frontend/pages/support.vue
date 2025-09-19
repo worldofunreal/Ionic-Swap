@@ -15,7 +15,7 @@
       <!-- Quick Actions -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <div
-          class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow text-center"
+          class="bg-zinc-50 dark:bg-neutral-800 p-6 rounded-lg shadow text-center"
         >
           <div
             class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mx-auto mb-4"
@@ -40,7 +40,7 @@
         </div>
 
         <div
-          class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow text-center"
+          class="bg-zinc-50 dark:bg-neutral-800 p-6 rounded-lg shadow text-center"
         >
           <div
             class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center mx-auto mb-4"
@@ -65,7 +65,7 @@
         </div>
 
         <div
-          class="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow text-center"
+          class="bg-zinc-50 dark:bg-neutral-800 p-6 rounded-lg shadow text-center"
         >
           <div
             class="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center mx-auto mb-4"
@@ -95,7 +95,7 @@
         <!-- FAQ Section -->
         <div
           v-if="activeSection === 'faq'"
-          class="bg-white dark:bg-neutral-800 rounded-lg shadow p-8"
+          class="bg-zinc-50 dark:bg-neutral-800 rounded-lg shadow p-8"
         >
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
             Frequently Asked Questions
@@ -122,7 +122,7 @@
         <!-- Chat Section -->
         <div
           v-if="activeSection === 'chat'"
-          class="bg-white dark:bg-neutral-800 rounded-lg shadow p-8"
+          class="bg-zinc-50 dark:bg-neutral-800 rounded-lg shadow p-8"
         >
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
             Live Chat Support
@@ -148,7 +148,7 @@
         <!-- Email Section -->
         <div
           v-if="activeSection === 'email'"
-          class="bg-white dark:bg-neutral-800 rounded-lg shadow p-8"
+          class="bg-zinc-50 dark:bg-neutral-800 rounded-lg shadow p-8"
         >
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
             Email Support

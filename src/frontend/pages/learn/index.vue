@@ -28,19 +28,19 @@
           </p>
           <div class="flex flex-wrap justify-center gap-4">
             <div
-              class="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2"
+              class="flex items-center gap-2 bg-zinc-50/20 rounded-full px-4 py-2"
             >
               <UIcon name="i-heroicons-academic-cap" class="w-5 h-5" />
               <span class="text-sm font-medium">Beginner Friendly</span>
             </div>
             <div
-              class="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2"
+              class="flex items-center gap-2 bg-zinc-50/20 rounded-full px-4 py-2"
             >
               <UIcon name="i-heroicons-clock" class="w-5 h-5" />
               <span class="text-sm font-medium">5-10 min reads</span>
             </div>
             <div
-              class="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2"
+              class="flex items-center gap-2 bg-zinc-50/20 rounded-full px-4 py-2"
             >
               <UIcon name="i-heroicons-shield-check" class="w-5 h-5" />
               <span class="text-sm font-medium">Expert Reviewed</span>
@@ -60,7 +60,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <!-- Beginner Path -->
           <div
-            class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700"
+            class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700"
           >
             <div class="flex items-center gap-3 mb-4">
               <div
@@ -118,7 +118,7 @@
 
           <!-- Intermediate Path -->
           <div
-            class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700"
+            class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700"
           >
             <div class="flex items-center gap-3 mb-4">
               <div
@@ -175,7 +175,7 @@
 
           <!-- Advanced Path -->
           <div
-            class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700"
+            class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700"
           >
             <div class="flex items-center gap-3 mb-4">
               <div
@@ -231,7 +231,7 @@
             v-for="article in articles"
             :key="article.slug"
             :to="`/learn/${article.slug}`"
-            class="group bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-200 hover:scale-105"
+            class="group bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-200 hover:scale-105"
           >
             <div class="flex items-center gap-3 mb-4">
               <div
@@ -276,7 +276,7 @@
       <!-- Call to Action -->
       <div class="text-center">
         <div
-          class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8 border border-gray-200 dark:border-gray-700"
+          class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8 border border-gray-200 dark:border-gray-700"
         >
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             Ready to Start Swapping?

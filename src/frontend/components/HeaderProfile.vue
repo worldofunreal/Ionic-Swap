@@ -11,7 +11,8 @@
         >
           <template #fallback>
             <div
-              class="w-full h-full rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-sm"
+              class="w-full h-full rounded-full flex items-center justify-center text-white font-bold text-sm"
+              :class="`bg-${currentTheme}-500`"
             >
               {{
                 authStore.userProfile?.username?.charAt(0).toUpperCase() || 'U'
@@ -21,7 +22,7 @@
         </UAvatar>
         <!-- Wallet Icon Overlay -->
         <div
-          class="absolute -bottom-1 -right-1 w-5 h-5 bg-background-elevated rounded-full border-2 border-background-elevated flex items-center justify-center"
+          class="absolute -bottom-1 -right-1 w-5 h-5 bg-zinc-100 dark:bg-zinc-800 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center"
         >
           <component
             :is="getWalletIcon(authStore.nativeWallet).type"
@@ -48,11 +49,11 @@
     <!-- User Menu Dropdown -->
     <div
       v-if="showUserMenu"
-      class="absolute right-0 mt-2 w-96 bg-card rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 z-50"
+      class="absolute right-0 mt-2 w-80 bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-800 z-50"
     >
-      <div class="p-4">
+      <div class="p-3">
         <!-- User Info -->
-        <div class="flex items-center gap-3 mb-4">
+        <div class="flex items-center gap-3 mb-3">
           <UAvatar
             :src="userAvatar"
             size="lg"
@@ -60,7 +61,8 @@
           >
             <template #fallback>
               <div
-                class="w-full h-full rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-lg"
+                class="w-full h-full rounded-full flex items-center justify-center text-white font-bold text-lg"
+                :class="`bg-${currentTheme}-500`"
               >
                 {{
                   authStore.userProfile?.username?.charAt(0).toUpperCase() ||
@@ -74,7 +76,7 @@
               {{ authStore.userProfile?.username || 'User' }}
             </div>
             <div class="text-sm text-zinc-500 dark:text-zinc-400">
-              {{ authStore.nativeWallet.toUpperCase() }}
+              {{ getWalletDisplayName(authStore.nativeWallet) }}
             </div>
           </div>
         </div>
@@ -103,110 +105,88 @@
         </div>
 
         <!-- Cross-Chain Addresses Section -->
-        <div class="mb-4">
+        <div class="mb-3">
           <div
             class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2"
           >
-            Cross-Chain Addresses
+            Addresses
           </div>
 
           <!-- ICP Principal -->
-          <div v-if="authStore.principal" class="mb-3">
-            <div class="flex items-center gap-2 mb-1">
-              <UIcon name="token-branded:icp" class="w-4 h-4 text-orange-500" />
-              <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400"
-                >ICP</span
-              >
-            </div>
+          <div v-if="authStore.principal" class="mb-2">
             <div
-              class="flex items-center gap-2 p-2 bg-muted rounded-md"
+              class="flex items-center justify-between gap-2 p-2 bg-zinc-50 dark:bg-zinc-800 rounded-md"
             >
-              <span
-                class="text-sm font-mono text-zinc-900 dark:text-white truncate"
-              >
-                {{ authStore.principal }}
-              </span>
+              <div class="flex items-center gap-2 min-w-0">
+                <UIcon name="token-branded:icp" class="w-3 h-3 text-orange-500 flex-shrink-0" />
+                <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex-shrink-0">ICP</span>
+                <span class="text-xs font-mono text-zinc-900 dark:text-white truncate">
+                  {{ formatCompactAddress(authStore.principal) }}
+                </span>
+              </div>
               <UIcon
                 name="i-heroicons-document-duplicate-20-solid"
-                class="text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:text-white transition flex-shrink-0"
+                class="w-3 h-3 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition flex-shrink-0"
                 @click="copyToClipboard(authStore.principal, 'ICP')"
               />
             </div>
           </div>
 
           <!-- EVM Address -->
-          <div v-if="authStore.evmAddress" class="mb-3">
-            <div class="flex items-center gap-2 mb-1">
-              <UIcon name="cryptocurrency:eth" class="w-4 h-4 text-blue-500" />
-              <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400"
-                >EVM</span
-              >
-            </div>
+          <div v-if="authStore.evmAddress" class="mb-2">
             <div
-              class="flex items-center gap-2 p-2 bg-muted rounded-md"
+              class="flex items-center justify-between gap-2 p-2 bg-zinc-50 dark:bg-zinc-800 rounded-md"
             >
-              <span
-                class="text-sm font-mono text-zinc-900 dark:text-white truncate"
-              >
-                {{ authStore.evmAddress }}
-              </span>
+              <div class="flex items-center gap-2 min-w-0">
+                <UIcon name="cryptocurrency:eth" class="w-3 h-3 text-blue-500 flex-shrink-0" />
+                <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex-shrink-0">EVM</span>
+                <span class="text-xs font-mono text-zinc-900 dark:text-white truncate">
+                  {{ formatCompactAddress(authStore.evmAddress) }}
+                </span>
+              </div>
               <UIcon
                 name="i-heroicons-document-duplicate-20-solid"
-                class="text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:text-white transition flex-shrink-0"
+                class="w-3 h-3 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition flex-shrink-0"
                 @click="copyToClipboard(authStore.evmAddress, 'EVM')"
               />
             </div>
           </div>
 
           <!-- Solana Address -->
-          <div v-if="authStore.solAddress" class="mb-3">
-            <div class="flex items-center gap-2 mb-1">
-              <UIcon
-                name="cryptocurrency:sol"
-                class="w-4 h-4 text-purple-500"
-              />
-              <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400"
-                >SOL</span
-              >
-            </div>
+          <div v-if="authStore.solAddress" class="mb-2">
             <div
-              class="flex items-center gap-2 p-2 bg-muted rounded-md"
+              class="flex items-center justify-between gap-2 p-2 bg-zinc-50 dark:bg-zinc-800 rounded-md"
             >
-              <span
-                class="text-sm font-mono text-zinc-900 dark:text-white truncate"
-              >
-                {{ authStore.solAddress }}
-              </span>
+              <div class="flex items-center gap-2 min-w-0">
+                <UIcon name="cryptocurrency:sol" class="w-3 h-3 text-purple-500 flex-shrink-0" />
+                <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex-shrink-0">SOL</span>
+                <span class="text-xs font-mono text-zinc-900 dark:text-white truncate">
+                  {{ formatCompactAddress(authStore.solAddress) }}
+                </span>
+              </div>
               <UIcon
                 name="i-heroicons-document-duplicate-20-solid"
-                class="text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:text-white transition flex-shrink-0"
+                class="w-3 h-3 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition flex-shrink-0"
                 @click="copyToClipboard(authStore.solAddress, 'Solana')"
               />
             </div>
           </div>
 
           <!-- Bitcoin Address -->
-          <div v-if="authStore.btcAddress" class="mb-3">
-            <div class="flex items-center gap-2 mb-1">
-              <UIcon
-                name="cryptocurrency:btc"
-                class="w-4 h-4 text-orange-400"
-              />
-              <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400"
-                >BTC</span
-              >
-            </div>
+          <div v-if="authStore.btcAddress" class="mb-2">
             <div
-              class="flex items-center gap-2 p-2 bg-muted rounded-md"
+              class="flex items-center justify-between gap-2 p-2 bg-zinc-50 dark:bg-zinc-800 rounded-md"
             >
-              <span
-                class="text-sm font-mono text-zinc-900 dark:text-white truncate"
-              >
-                {{ authStore.btcAddress }}
-              </span>
+              <div class="flex items-center gap-2 min-w-0">
+                <UIcon name="cryptocurrency:btc" class="w-3 h-3 text-orange-400 flex-shrink-0" />
+                <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex-shrink-0">BTC</span>
+                <span class="text-xs font-mono text-zinc-900 dark:text-white truncate">
+                  {{ formatCompactAddress(authStore.btcAddress) }}
+                </span>
+              </div>
               <UIcon
                 name="i-heroicons-document-duplicate-20-solid"
-                class="text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:text-white transition flex-shrink-0"
+                class="w-3 h-3 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition flex-shrink-0"
                 @click="copyToClipboard(authStore.btcAddress, 'Bitcoin')"
               />
             </div>
@@ -215,7 +195,7 @@
 
         <!-- Actions -->
         <div
-          class="border-t border-neutral-200 dark:border-neutral-700 pt-3 space-y-2"
+          class="border-t border-zinc-200 dark:border-zinc-800 pt-2 space-y-2"
         >
           <!-- Profile Button -->
           <UButton
@@ -254,6 +234,7 @@
   import { useAuthStore } from '@/stores/auth'
   import { canisterService } from '@/services/CanisterService'
   import { useRoute } from 'vue-router'
+  import { useColorTheme } from '@/composables/useColorTheme'
 
   defineOptions({
     name: 'HeaderProfile',
@@ -262,6 +243,7 @@
   const authStore = useAuthStore()
   const route = useRoute()
   const { $trackInteraction, $trackButtonClick } = useNuxtApp()
+  const { currentTheme } = useColorTheme()
 
   // Avatar URL - convert file paths to full URLs with cache busting
   const userAvatar = computed(() => {
@@ -516,7 +498,7 @@
 
     switch (walletType.toLowerCase()) {
       case 'local':
-        return { type: 'img', src: '/wouid.svg', alt: 'Local Wallet' }
+        return { type: 'img', src: '/wouid.svg', alt: 'Ionic Wallet' }
       case 'metamask':
         return { type: 'img', src: '/metamask.svg', alt: 'MetaMask' }
       case 'rabby':
@@ -533,5 +515,35 @@
       default:
         return { type: 'UIcon', name: 'solar:wallet-bold' }
     }
+  }
+
+  function getWalletDisplayName(walletType?: string): string {
+    if (!walletType) return 'Unknown Wallet'
+    
+    switch (walletType.toLowerCase()) {
+      case 'local':
+        return 'Ionic Wallet'
+      case 'metamask':
+        return 'MetaMask'
+      case 'rabby':
+        return 'Rabby'
+      case 'magic-eden':
+        return 'Magic Eden'
+      case 'phantom':
+        return 'Phantom'
+      case 'plug':
+        return 'Plug'
+      case 'internetidentity':
+      case 'icp':
+        return 'Internet Identity'
+      default:
+        return walletType.charAt(0).toUpperCase() + walletType.slice(1)
+    }
+  }
+
+  function formatCompactAddress(address: string): string {
+    if (!address) return ''
+    if (address.length <= 12) return address
+    return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
 </script>

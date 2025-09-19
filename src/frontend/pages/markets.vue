@@ -4,7 +4,7 @@
       <!-- Left Column - Token List -->
       <div class="w-80 flex">
         <div
-          class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col w-full h-full"
+          class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col w-full h-full"
         >
           <!-- Search Bar Header -->
           <div
@@ -97,7 +97,7 @@
       <div class="flex-1 flex">
         <div
           v-if="selectedToken"
-          class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col w-full h-full"
+          class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col w-full h-full"
         >
           <div class="flex items-center justify-between p-6 pb-4 flex-shrink-0">
             <div class="flex items-center space-x-3">

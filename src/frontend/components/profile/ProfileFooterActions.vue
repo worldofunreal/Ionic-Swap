@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex gap-4 items-center bg-white dark:bg-neutral-950 border-t border-gray-200 dark:border-gray-800 px-6 py-3 shadow-lg rounded-t-2xl justify-end"
+    class="flex gap-4 items-center bg-zinc-50 dark:bg-neutral-950 border-t border-gray-200 dark:border-gray-800 px-6 py-3 shadow-lg rounded-t-2xl justify-end"
   >
     <button class="px-4 py-2 rounded bg-primary-600 text-white font-semibold">
       List items

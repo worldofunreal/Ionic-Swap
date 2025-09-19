@@ -62,7 +62,7 @@
       <!-- Main Content -->
       <div class="space-y-8">
         <!-- How It Works -->
-        <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8">
+        <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
           <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             How Cross-Chain Swapping Works
           </h2>
@@ -129,7 +129,7 @@
         </div>
 
         <!-- Supported Chains -->
-        <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8">
+        <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
           <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             Supported Blockchain Networks
           </h2>
@@ -237,7 +237,7 @@
         </div>
 
         <!-- Benefits -->
-        <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8">
+        <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
           <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
             Benefits of Cross-Chain Swapping
           </h2>

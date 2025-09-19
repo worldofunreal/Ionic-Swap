@@ -60,7 +60,7 @@
       <!-- Main Content -->
       <div class="space-y-8">
         <!-- ERC-20 Standard -->
-        <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8">
+        <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
           <div class="flex items-center gap-4 mb-6">
             <div
               class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center"
@@ -141,7 +141,7 @@
         </div>
 
         <!-- SPL Standard -->
-        <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8">
+        <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
           <div class="flex items-center gap-4 mb-6">
             <div
               class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center"
@@ -219,7 +219,7 @@
         </div>
 
         <!-- ICRC Standard -->
-        <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-sm p-8">
+        <div class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-sm p-8">
           <div class="flex items-center gap-4 mb-6">
             <div
               class="w-12 h-12 rounded-full bg-cyan-100 dark:bg-cyan-900 flex items-center justify-center"

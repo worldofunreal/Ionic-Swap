@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex flex-col gap-2 bg-white dark:bg-neutral-950 rounded-xl shadow p-4 min-w-[200px]"
+    class="flex flex-col gap-2 bg-zinc-50 dark:bg-neutral-950 rounded-xl shadow p-4 min-w-[200px]"
   >
     <div class="flex items-center gap-2">
       <span class="font-bold text-lg">0.00 ETH</span>

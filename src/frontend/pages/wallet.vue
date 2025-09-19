@@ -8,7 +8,7 @@
     <!-- Wallet Portfolio Overview -->
     <div v-else>
         <!-- Top Header -->
-        <div class="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-500 dark:border-zinc-800 px-6 py-4">
+        <div class="bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-6 py-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
               <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Wallet</h1>
@@ -20,7 +20,7 @@
                 <input 
                   type="text" 
                   placeholder="Search coins, tokens, or addresses..."
-                  class="pl-10 pr-4 py-2 w-80 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  class="pl-10 pr-4 py-2 w-80 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               
@@ -46,7 +46,7 @@
             <!-- Portfolio Overview & User Profile Section -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
               <!-- User Profile Card -->
-              <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 p-4">
+              <div class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 p-4">
                 <div class="flex items-center gap-3 mb-3">
                   <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
                     <span class="text-white font-bold text-sm">{{ userInitial }}</span>
@@ -90,13 +90,13 @@
 
 
             <!-- My Assets Section -->
-            <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 mb-8">
+            <div class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 mb-8">
               <div class="p-4 border-b border-zinc-200 dark:border-zinc-800">
                 <div class="flex items-center justify-between">
                   <h3 class="text-base font-semibold text-zinc-900 dark:text-white">My Assets</h3>
                   <div class="flex items-center gap-3">
                     <!-- Value Toggle -->
-                    <div class="flex bg-zinc-50 dark:bg-zinc-900 rounded-md p-1">
+                    <div class="flex bg-zinc-100 dark:bg-zinc-900 rounded-md p-1">
                       <button
                         :class="[
                           'px-2 py-1 text-xs rounded-md transition-colors',
@@ -130,7 +130,7 @@
               <!-- Tokens Table -->
               <div class="overflow-x-auto">
                 <table class="w-full">
-                  <thead class="bg-zinc-50 dark:bg-zinc-900">
+                  <thead class="bg-zinc-100 dark:bg-zinc-900">
                     <tr>
                       <th class="px-6 py-3 text-left text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                         Coin
@@ -149,10 +149,10 @@
                       </th>
                     </tr>
                   </thead>
-                  <tbody class="bg-zinc-50 dark:bg-zinc-900 divide-y divide-default">
+                  <tbody class="bg-zinc-100 dark:bg-zinc-900 divide-y divide-default">
                     <tr v-if="tokensWithBalances.length === 0">
                       <td colspan="5" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
-                        <div class="w-16 h-16 bg-zinc-50 dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div class="w-16 h-16 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-4">
                           <UIcon name="i-heroicons-currency-dollar-20-solid" class="w-8 h-8" />
                         </div>
                         <p class="text-base font-medium">Loading Assets...</p>
@@ -167,7 +167,7 @@
                       <!-- Coin Column -->
                       <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
-                          <div class="w-10 h-10 rounded-full bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center mr-3">
+                          <div class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center mr-3">
                             <UIcon :name="getTokenIcon(token.symbol)" class="w-6 h-6" />
                           </div>
                           <div>
@@ -243,14 +243,14 @@
             <!-- Bottom Section: Wallet Addresses & Portfolio Stats -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <!-- Wallet Addresses Card -->
-              <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
+              <div class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
                 <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
                   Wallet Addresses
                 </h3>
                 
                 <div class="space-y-3">
                   <!-- EVM Address -->
-                  <div v-if="userProfile?.evm_address?.[0]" class="p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
+                  <div v-if="userProfile?.evm_address?.[0]" class="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
                     <div class="flex items-center gap-2 mb-2">
                       <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded-full">EVM</span>
                       <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.evm_address[0], 'EVM')" />
@@ -259,7 +259,7 @@
                   </div>
 
                   <!-- Bitcoin Address -->
-                  <div v-if="userProfile?.bitcoin_address?.[0]" class="p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
+                  <div v-if="userProfile?.bitcoin_address?.[0]" class="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
                     <div class="flex items-center gap-2 mb-2">
                       <span class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs font-semibold px-2 py-1 rounded-full">BTC</span>
                       <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.bitcoin_address[0], 'Bitcoin')" />
@@ -268,7 +268,7 @@
                   </div>
 
                   <!-- Solana Address -->
-                  <div v-if="userProfile?.solana_address?.[0]" class="p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
+                  <div v-if="userProfile?.solana_address?.[0]" class="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
                     <div class="flex items-center gap-2 mb-2">
                       <span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs font-semibold px-2 py-1 rounded-full">SOL</span>
                       <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.solana_address[0], 'Solana')" />
@@ -277,7 +277,7 @@
                   </div>
 
                   <!-- ICP Principal -->
-                  <div v-if="userProfile?.id" class="p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
+                  <div v-if="userProfile?.id" class="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
                     <div class="flex items-center gap-2 mb-2">
                       <span class="bg-muted text-zinc-500 dark:text-zinc-400 text-xs font-semibold px-2 py-1 rounded-full">ICP</span>
                       <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.id.toText(), 'ICP')" />
@@ -293,7 +293,7 @@
               </div>
 
               <!-- Portfolio Stats Card -->
-              <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
+              <div class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
                 <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
                   Portfolio Stats
                 </h3>
@@ -336,7 +336,7 @@
                   <div class="space-y-2">
                     <div v-for="(balance, symbol) in userBalances" :key="symbol" class="flex items-center justify-between">
                       <div class="flex items-center gap-2">
-                        <div class="w-4 h-4 rounded-full bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center">
+                        <div class="w-4 h-4 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
                           <UIcon :name="getTokenIcon(symbol)" class="w-3 h-3" />
                         </div>
                         <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ symbol }}</span>
@@ -356,7 +356,7 @@
             </div>
 
             <!-- Transaction History Section -->
-            <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 mb-8">
+            <div class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 mb-8">
               <div class="p-4 border-b border-zinc-200 dark:border-zinc-800">
                 <div class="flex items-center justify-between">
                   <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">Recent Transactions</h3>
@@ -410,7 +410,7 @@
                   <div
                     v-for="transaction in transactionHistory.slice(0, 5)"
                     :key="transaction.id"
-                    class="bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-4 hover:bg-zinc-50 dark:bg-zinc-900-elevated transition-colors"
+                    class="bg-zinc-100 dark:bg-zinc-900/50 rounded-lg p-4 hover:bg-zinc-100 dark:bg-zinc-900-elevated transition-colors"
                   >
                     <div class="flex items-center justify-between">
                       <!-- Transaction Type & Pair -->

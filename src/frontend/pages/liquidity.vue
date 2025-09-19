@@ -1,8 +1,8 @@
 <template>
-  <div class="h-full bg-gray-50 dark:bg-neutral-950 overflow-hidden">
+  <div class="h-full bg-zinc-50 dark:bg-zinc-900 overflow-hidden">
     <!-- Liquidity Header -->
     <div
-      class="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex-shrink-0"
+      class="bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex-shrink-0"
     >
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
@@ -13,10 +13,10 @@
               💧
             </div>
             <div>
-              <div class="font-semibold text-gray-900 dark:text-white">
+              <div class="font-semibold text-zinc-900 dark:text-white">
                 Liquidity Pools
               </div>
-              <div class="text-sm text-gray-500 dark:text-gray-400">
+              <div class="text-sm text-zinc-500 dark:text-zinc-400">
                 Stake tokens and earn trading fees
               </div>
             </div>
@@ -28,19 +28,19 @@
               <div class="text-xl font-bold text-purple-600 dark:text-purple-400">
                 ${{ formatUSDTSystemValue(systemStats.totalStaked) }}
               </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">Total TVL</div>
+              <div class="text-xs text-zinc-500 dark:text-zinc-400">Total TVL</div>
             </div>
             <div class="text-center">
-              <div class="text-xl font-bold text-gray-900 dark:text-white">
+              <div class="text-xl font-bold text-zinc-900 dark:text-white">
                 {{ formatSystemStats.totalVotingPower }}
               </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">Voting Power</div>
+              <div class="text-xs text-zinc-500 dark:text-zinc-400">Voting Power</div>
             </div>
             <div class="text-center">
               <div class="text-xl font-bold text-green-600 dark:text-green-400">
                 ${{ formatUSDTSystemValue(systemStats.totalFees) }}
               </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">Fee Earnings</div>
+              <div class="text-xs text-zinc-500 dark:text-zinc-400">Fee Earnings</div>
             </div>
           </div>
         </div>
@@ -67,7 +67,7 @@
       <div class="flex-1 flex flex-col">
         <!-- Pool Controls -->
         <div
-          class="bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-gray-800 px-4 py-2 flex-shrink-0"
+          class="bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 py-2 flex-shrink-0"
         >
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
@@ -78,7 +78,7 @@
                   'px-3 py-1 text-sm rounded-md transition-colors',
                   activePoolTab === tab.value
                     ? 'bg-primary-500 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600',
+                    : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600',
                 ]"
                 @click="activePoolTab = tab.value"
               >
@@ -87,7 +87,7 @@
             </div>
 
             <div class="flex items-center space-x-2">
-              <span class="text-sm text-gray-500 dark:text-gray-400">
+              <span class="text-sm text-zinc-500 dark:text-zinc-400">
                 {{ allPools.length }} pools available
               </span>
             </div>
@@ -95,11 +95,11 @@
         </div>
 
         <!-- Pool List -->
-        <div class="flex-1 bg-white dark:bg-neutral-900 overflow-auto">
+        <div class="flex-1 bg-zinc-100 dark:bg-zinc-900 overflow-auto">
           <!-- Loading State -->
           <div v-if="loading && allPools.length === 0" class="p-8 text-center">
-            <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 mx-auto mb-2 animate-spin text-gray-400" />
-            <p class="text-gray-500 dark:text-gray-400">Loading liquidity pools...</p>
+            <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 mx-auto mb-2 animate-spin text-zinc-400" />
+            <p class="text-zinc-500 dark:text-zinc-400">Loading liquidity pools...</p>
           </div>
 
           <!-- Pool Cards -->
@@ -108,24 +108,24 @@
               v-for="pool in filteredPools"
               :key="pool.token_symbol"
               :class="[
-                'border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer transition-all',
+                'border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 cursor-pointer transition-all',
                 selectedPool?.token_symbol === pool.token_symbol
                   ? 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                  : 'hover:bg-gray-50 dark:hover:bg-neutral-800',
+                  : 'hover:bg-zinc-50 dark:hover:bg-zinc-800',
               ]"
               @click="selectPool(pool)"
             >
               <div class="grid grid-cols-14 gap-1 items-center">
                 <!-- Token Info - Fixed Width -->
                 <div class="col-span-2 flex items-center space-x-2">
-                  <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center">
+                  <div class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
                     <UIcon :name="getTokenIcon(pool.token_symbol)" class="w-5 h-5" />
                   </div>
                   <div>
-                    <div class="font-semibold text-gray-900 dark:text-white text-sm">
+                    <div class="font-semibold text-zinc-900 dark:text-white text-sm">
                       {{ pool.token_symbol }}
                     </div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                    <div class="text-xs text-zinc-500 dark:text-zinc-400">
                       {{ TokenService.getTokenName(pool.token_symbol) }}
                     </div>
                   </div>
@@ -136,15 +136,15 @@
                   <div class="text-sm font-semibold text-purple-600 dark:text-purple-400">
                     ${{ formatUSDTValue(pool.tvl_usdt) }}
                   </div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">TVL</div>
+                  <div class="text-xs text-zinc-500 dark:text-zinc-400">TVL</div>
                 </div>
 
                 <!-- Total Staked - Fixed Width -->
                 <div class="col-span-2 text-center">
-                  <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                  <div class="text-sm font-semibold text-zinc-900 dark:text-white">
                     {{ TokenService.formatBalance(typeof pool.total_staked === 'bigint' ? Number(pool.total_staked) : pool.total_staked, pool.token_symbol) }} {{ pool.token_symbol }}
                   </div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">Total Staked</div>
+                  <div class="text-xs text-zinc-500 dark:text-zinc-400">Total Staked</div>
                 </div>
 
                 <!-- Available - Fixed Width -->
@@ -152,7 +152,7 @@
                   <div class="text-sm font-semibold text-blue-600 dark:text-blue-400">
                     {{ TokenService.formatBalance(typeof pool.available_liquidity === 'bigint' ? Number(pool.available_liquidity) : pool.available_liquidity, pool.token_symbol) }} {{ pool.token_symbol }}
                   </div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">Available</div>
+                  <div class="text-xs text-zinc-500 dark:text-zinc-400">Available</div>
                 </div>
 
                 <!-- Fee Earnings USDT - Fixed Width -->
@@ -160,7 +160,7 @@
                   <div class="text-sm font-semibold text-green-600 dark:text-green-400">
                     ${{ formatUSDTValue(pool.total_fees_collected_usdt) }}
                   </div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">Fee Earnings</div>
+                  <div class="text-xs text-zinc-500 dark:text-zinc-400">Fee Earnings</div>
                 </div>
 
                 <!-- Fees (Token) - Fixed Width -->
@@ -168,7 +168,7 @@
                   <div class="text-sm font-semibold text-green-600 dark:text-green-400">
                     {{ formatPoolFees(pool.total_fees_collected, pool.token_symbol) }}
                   </div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">Fees</div>
+                  <div class="text-xs text-zinc-500 dark:text-zinc-400">Fees</div>
                 </div>
 
                 <!-- Status - Fixed Width -->
@@ -193,10 +193,10 @@
 
       <!-- Right Column - Pool Details & Actions -->
       <div
-        class="w-96 bg-white dark:bg-neutral-900 border-l border-gray-200 dark:border-gray-800 flex flex-col"
+        class="w-96 bg-zinc-100 dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 flex flex-col"
       >
         <!-- Pool Details Tabs -->
-        <div class="flex border-b border-gray-200 dark:border-gray-800">
+        <div class="flex border-b border-zinc-200 dark:border-zinc-800">
           <button
             v-for="tab in detailTabs"
             :key="tab.value"
@@ -204,7 +204,7 @@
               'flex-1 px-4 py-3 text-sm font-medium transition-colors',
               activeDetailTab === tab.value
                 ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300',
+                : 'text-zinc-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-gray-300',
             ]"
             @click="activeDetailTab = tab.value"
           >
@@ -216,9 +216,9 @@
         <div class="flex-1 p-4 overflow-auto">
           <!-- No Pool Selected -->
           <div v-if="!selectedPool" class="text-center py-8">
-            <UIcon name="i-heroicons-cursor-arrow-rays" class="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+            <UIcon name="i-heroicons-cursor-arrow-rays" class="w-12 h-12 mx-auto mb-4 text-zinc-300 dark:text-zinc-600" />
             <h4 class="text-lg font-medium text-foreground mb-2">Select a Pool</h4>
-            <p class="text-gray-500 dark:text-gray-400">
+            <p class="text-zinc-500 dark:text-zinc-400">
               Choose a liquidity pool to view details and manage your positions.
             </p>
           </div>
@@ -226,37 +226,37 @@
           <!-- Pool Overview Tab -->
           <div v-else-if="activeDetailTab === 'overview'" class="space-y-6">
             <!-- Pool Info -->
-            <div class="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4">
+            <div class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4">
               <div class="flex items-center space-x-3 mb-4">
-                <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-neutral-700 flex items-center justify-center">
+                <div class="w-12 h-12 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
                   <UIcon :name="getTokenIcon(selectedPool.token_symbol)" class="w-8 h-8" />
                 </div>
                 <div>
                   <h3 class="text-lg font-semibold text-foreground">{{ selectedPool.token_symbol }} Pool</h3>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">{{ TokenService.getTokenName(selectedPool.token_symbol) }}</p>
+                  <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ TokenService.getTokenName(selectedPool.token_symbol) }}</p>
                 </div>
               </div>
 
               <!-- Pool Stats Grid -->
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <div class="text-sm text-gray-500 dark:text-gray-400">Total Staked</div>
+                  <div class="text-sm text-zinc-500 dark:text-zinc-400">Total Staked</div>
                   <div class="font-semibold text-foreground">
                     {{ TokenService.formatBalance(typeof selectedPool.total_staked === 'bigint' ? Number(selectedPool.total_staked) : selectedPool.total_staked, selectedPool.token_symbol) }} {{ selectedPool.token_symbol }}
                   </div>
                 </div>
                 <div>
-                  <div class="text-sm text-gray-500 dark:text-gray-400">Available Liquidity</div>
+                  <div class="text-sm text-zinc-500 dark:text-zinc-400">Available Liquidity</div>
                   <div class="font-semibold text-foreground">
                     {{ TokenService.formatBalance(typeof selectedPool.available_liquidity === 'bigint' ? Number(selectedPool.available_liquidity) : selectedPool.available_liquidity, selectedPool.token_symbol) }} {{ selectedPool.token_symbol }}
                   </div>
                 </div>
                 <div>
-                  <div class="text-sm text-gray-500 dark:text-gray-400">Total Voting Power</div>
+                  <div class="text-sm text-zinc-500 dark:text-zinc-400">Total Voting Power</div>
                   <div class="font-semibold text-foreground">{{ selectedPool.total_voting_power.toFixed(2) }}</div>
                 </div>
                 <div>
-                  <div class="text-sm text-gray-500 dark:text-gray-400">Fees Collected</div>
+                  <div class="text-sm text-zinc-500 dark:text-zinc-400">Fees Collected</div>
                   <div class="font-semibold text-green-600 dark:text-green-400">
                     {{ formatPoolFees(selectedPool.total_fees_collected, selectedPool.token_symbol) }}
                   </div>
@@ -268,11 +268,11 @@
             </div>
 
             <!-- Fee Breakdown -->
-            <div class="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4">
+            <div class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4">
               <h4 class="font-medium text-foreground mb-3">Fee Breakdown (24h)</h4>
               <div class="space-y-2">
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-500 dark:text-gray-400">Trading Fees</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Trading Fees</span>
                   <div class="text-right">
                     <div class="font-semibold text-foreground">
                       {{ formatPoolFees(selectedPool.fees_from_trading, selectedPool.token_symbol) }}
@@ -283,7 +283,7 @@
                   </div>
                 </div>
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-500 dark:text-gray-400">Spread Fees</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Spread Fees</span>
                   <div class="text-right">
                     <div class="font-semibold text-foreground">
                       {{ formatPoolFees(selectedPool.fees_from_spread, selectedPool.token_symbol) }}
@@ -294,7 +294,7 @@
                   </div>
                 </div>
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-500 dark:text-gray-400">Volatility Penalties</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Volatility Penalties</span>
                   <div class="text-right">
                     <div class="font-semibold text-foreground">
                       {{ formatPoolFees(selectedPool.fees_from_volatility, selectedPool.token_symbol) }}
@@ -305,7 +305,7 @@
                   </div>
                 </div>
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-500 dark:text-gray-400">Depth Penalties</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Depth Penalties</span>
                   <div class="text-right">
                     <div class="font-semibold text-foreground">
                       {{ formatPoolFees(selectedPool.fees_from_depth, selectedPool.token_symbol) }}
@@ -319,11 +319,11 @@
             </div>
 
             <!-- Current Conditions -->
-            <div class="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4">
+            <div class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4">
               <h4 class="font-medium text-foreground mb-3">Current Conditions</h4>
               <div class="space-y-2">
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-500 dark:text-gray-400">Pool Status</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Pool Status</span>
                   <span 
                     :class="[
                       'px-2 py-1 text-xs rounded-full',
@@ -334,11 +334,11 @@
                   </span>
                 </div>
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-500 dark:text-gray-400">1h Volatility</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">1h Volatility</span>
                   <span class="font-semibold text-foreground">{{ (selectedPool.current_volatility_1h * 100).toFixed(2) }}%</span>
                 </div>
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-500 dark:text-gray-400">1h Volume</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">1h Volume</span>
                   <span class="font-semibold text-foreground">
                     {{ TokenService.formatBalance(typeof selectedPool.total_volume_1h === 'bigint' ? Number(selectedPool.total_volume_1h) : selectedPool.total_volume_1h, selectedPool.token_symbol) }} {{ selectedPool.token_symbol }}
                   </span>
@@ -347,27 +347,27 @@
             </div>
 
             <!-- Threshold Information -->
-            <div class="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4">
+            <div class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4">
               <h4 class="font-medium text-foreground mb-3">Liquidity Thresholds</h4>
               <div class="space-y-2">
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-500 dark:text-gray-400">Current Liquidity (USDT)</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Current Liquidity (USDT)</span>
                   <span class="font-semibold text-foreground">{{ formatThresholdStatus(selectedPool) }}</span>
                 </div>
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-500 dark:text-gray-400">Healthy Threshold</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Healthy Threshold</span>
                   <span class="text-sm text-green-600 dark:text-green-400">≥ $10.0M</span>
                 </div>
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-500 dark:text-gray-400">Rebalance Threshold</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Rebalance Threshold</span>
                   <span class="text-sm text-yellow-600 dark:text-yellow-400">≥ $7.0M</span>
                 </div>
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-500 dark:text-gray-400">Critical Threshold</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Critical Threshold</span>
                   <span class="text-sm text-orange-600 dark:text-orange-400">≥ $5.0M</span>
                 </div>
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-500 dark:text-gray-400">Halt Threshold</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Halt Threshold</span>
                   <span class="text-sm text-red-600 dark:text-red-400">< $5.0M</span>
                 </div>
               </div>
@@ -378,15 +378,15 @@
           <div v-else-if="activeDetailTab === 'positions'" class="space-y-4">
             <!-- Loading State -->
             <div v-if="positionsLoading" class="text-center py-8">
-              <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 mx-auto mb-2 animate-spin text-gray-400" />
-              <p class="text-gray-500 dark:text-gray-400">Loading positions...</p>
+              <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 mx-auto mb-2 animate-spin text-zinc-400" />
+              <p class="text-zinc-500 dark:text-zinc-400">Loading positions...</p>
             </div>
 
             <!-- No Positions -->
             <div v-else-if="userPositions.length === 0" class="text-center py-8">
-              <UIcon name="i-heroicons-banknotes" class="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+              <UIcon name="i-heroicons-banknotes" class="w-12 h-12 mx-auto mb-4 text-zinc-300 dark:text-zinc-600" />
               <h4 class="text-lg font-medium text-foreground mb-2">No Positions</h4>
-              <p class="text-gray-500 dark:text-gray-400 mb-4">
+              <p class="text-zinc-500 dark:text-zinc-400 mb-4">
                 You don't have any liquidity positions yet.
               </p>
               <button
@@ -402,16 +402,16 @@
               <div
                 v-for="position in userPositions"
                 :key="position.id"
-                class="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4"
+                class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4"
               >
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-700 flex items-center justify-center">
+                    <div class="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
                       <UIcon :name="getTokenIcon(position.token_symbol)" class="w-5 h-5" />
                     </div>
                     <div>
                       <div class="font-semibold text-foreground">{{ position.token_symbol }}</div>
-                      <div class="text-xs text-gray-500 dark:text-gray-400">ID: {{ position.id.slice(-8) }}</div>
+                      <div class="text-xs text-zinc-500 dark:text-zinc-400">ID: {{ position.id.slice(-8) }}</div>
                     </div>
                   </div>
                   <div 
@@ -426,39 +426,39 @@
 
                 <div class="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <div class="text-gray-500 dark:text-gray-400">Staked Amount</div>
+                    <div class="text-zinc-500 dark:text-zinc-400">Staked Amount</div>
                     <div class="font-semibold text-foreground">
                       {{ TokenService.formatBalance(typeof position.staked_amount === 'bigint' ? Number(position.staked_amount) : position.staked_amount, position.token_symbol) }} {{ position.token_symbol }}
                     </div>
                   </div>
                   <div>
-                    <div class="text-gray-500 dark:text-gray-400">Dissolve Delay</div>
+                    <div class="text-zinc-500 dark:text-zinc-400">Dissolve Delay</div>
                     <div class="font-semibold text-foreground">{{ formatDuration(position.dissolve_delay_seconds) }}</div>
                   </div>
                   <div>
-                    <div class="text-gray-500 dark:text-gray-400">Age</div>
+                    <div class="text-zinc-500 dark:text-zinc-400">Age</div>
                     <div class="font-semibold text-foreground">{{ formatAge(position.created_at) }}</div>
                   </div>
                   <div>
-                    <div class="text-gray-500 dark:text-gray-400">Voting Power</div>
+                    <div class="text-zinc-500 dark:text-zinc-400">Voting Power</div>
                     <div class="font-semibold text-foreground">{{ calculateVotingPower(position).toFixed(2) }}</div>
-                    <div class="text-xs text-gray-400 dark:text-gray-500">
+                    <div class="text-xs text-zinc-400 dark:text-gray-500">
                       {{ calculateVotingPowerPercentage(position, selectedPool).toFixed(2) }}% of pool
                     </div>
                   </div>
                   <div>
-                    <div class="text-gray-500 dark:text-gray-400">Claimable Fees</div>
+                    <div class="text-zinc-500 dark:text-zinc-400">Claimable Fees</div>
                     <div class="font-semibold text-foreground">
                       {{ calculateClaimableFees(position, selectedPool).toFixed(6) }} {{ position.token_symbol }}
                     </div>
-                    <div class="text-xs text-gray-400 dark:text-gray-500">
+                    <div class="text-xs text-zinc-400 dark:text-gray-500">
                       ≈ ${{ (calculateClaimableFees(position, selectedPool) * (selectedPool?.current_price_usdt?.[0] || 0)).toFixed(2) }}
                     </div>
                   </div>
                 </div>
 
                 <!-- Position Actions -->
-                <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <div class="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
                   <div class="flex space-x-2">
                     <button
                       v-if="position.state.Locked"
@@ -502,8 +502,8 @@
               <!-- Amount Input -->
               <div class="space-y-2">
                 <div class="flex items-center justify-between">
-                  <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
-                  <span class="text-xs text-gray-500 dark:text-gray-400">
+                  <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Amount</label>
+                  <span class="text-xs text-zinc-500 dark:text-zinc-400">
                     Balance: {{ formatUserBalance(selectedPool?.token_symbol || '') }}
                   </span>
                 </div>
@@ -515,9 +515,9 @@
                     placeholder="0.00"
                     @input="formatStakeAmount"
                     @blur="validateStakeAmount"
-                    class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                  <div class="absolute left-3 top-2 text-sm text-gray-500 dark:text-gray-400">
+                  <div class="absolute left-3 top-2 text-sm text-zinc-500 dark:text-zinc-400">
                     {{ selectedPool?.token_symbol || 'TOKEN' }}
                   </div>
                 </div>
@@ -527,7 +527,7 @@
                   <button
                     v-for="percent in [25, 50, 75, 100]"
                     :key="percent"
-                    class="flex-1 px-2 py-1 text-xs bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-neutral-600"
+                    class="flex-1 px-2 py-1 text-xs bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded hover:bg-gray-200 dark:hover:bg-neutral-600"
                     @click="setStakeAmount(percent)"
                   >
                     {{ percent }}%
@@ -537,10 +537,10 @@
 
               <!-- Dissolve Delay -->
               <div class="space-y-2">
-                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Dissolve Delay</label>
+                <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Dissolve Delay</label>
                 <select
                   v-model="selectedDissolveDelay"
-                  class="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option v-for="option in dissolveDelayOptions" :key="option.value" :value="option.value">
                     {{ option.label }} ({{ option.multiplier }}x voting power)
@@ -549,19 +549,19 @@
               </div>
 
               <!-- Stake Preview -->
-              <div class="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4">
+              <div class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4">
                 <h4 class="font-medium text-foreground mb-2">Staking Preview</h4>
                 <div class="space-y-1 text-sm">
                   <div class="flex justify-between">
-                    <span class="text-gray-500 dark:text-gray-400">Amount to Stake</span>
+                    <span class="text-zinc-500 dark:text-zinc-400">Amount to Stake</span>
                     <span class="font-semibold text-foreground">{{ stakeAmount || '0.00' }} {{ selectedPool?.token_symbol || 'TOKEN' }}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-gray-500 dark:text-gray-400">Dissolve Delay</span>
+                    <span class="text-zinc-500 dark:text-zinc-400">Dissolve Delay</span>
                     <span class="font-semibold text-foreground">{{ formatDuration(selectedDissolveDelay) }}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-gray-500 dark:text-gray-400">Expected Voting Power</span>
+                    <span class="text-zinc-500 dark:text-zinc-400">Expected Voting Power</span>
                     <span class="font-semibold text-foreground">{{ calculateExpectedVotingPower().toFixed(2) }}</span>
                   </div>
                 </div>
@@ -608,15 +608,15 @@
             </div>
             
             <!-- Basic Stats for now -->
-            <div v-if="selectedPool" class="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4">
+            <div v-if="selectedPool" class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4">
               <h4 class="font-medium text-foreground mb-3">Quick Stats</h4>
               <div class="space-y-2 text-sm">
                 <div class="flex justify-between">
-                  <span class="text-gray-500 dark:text-gray-400">Pool Utilization</span>
+                  <span class="text-zinc-500 dark:text-zinc-400">Pool Utilization</span>
                   <span class="font-semibold text-foreground">{{ getPoolUtilization(selectedPool).toFixed(1) }}%</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-gray-500 dark:text-gray-400">Fee Index</span>
+                  <span class="text-zinc-500 dark:text-zinc-400">Fee Index</span>
                   <span class="font-semibold text-foreground">{{ selectedPool.global_fee_index.toFixed(6) }}</span>
                 </div>
               </div>

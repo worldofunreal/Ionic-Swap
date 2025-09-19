@@ -11,7 +11,7 @@ export default defineAppConfig({
     },
     toast: {
       slots: {
-        root: 'relative group overflow-hidden bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg rounded-lg p-4 flex gap-2.5'
+        root: 'relative group overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg rounded-lg p-4 flex gap-2.5'
       }
     },
     // Global defaults for consistent styling
