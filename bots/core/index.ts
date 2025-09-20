@@ -1,3 +1,4 @@
+import { Principal } from '@dfinity/principal';
 import {
   Bot,
   BotIdentity,
@@ -16,8 +17,7 @@ import {
 } from '../types';
 import {
   generateBotIdentity,
-  callCanister,
-  parseCanisterResult,
+  createBotActor,
   formatTokenAmount,
   calculateUsdValue,
   calculateProfitPercent,
@@ -46,6 +46,8 @@ export class TradingEngine {
   constructor(config: SystemConfig) {
     this.config = config;
   }
+
+  // No global initialization needed - each bot creates their own authenticated actor
 
   // ============================================================================
   // BOT MANAGEMENT
@@ -91,26 +93,35 @@ export class TradingEngine {
 
   private async signupBot(bot: Bot): Promise<void> {
     try {
-      // Try to sign up - if user exists, handle it gracefully
-      const result = callCanister(
-        this.config.canisterId,
-        'signup',
-        `("${bot.identity.name}", null, null, null)`
+      log.bot(bot.identity.name, `Attempting signup with principal: ${bot.identity.principal}`);
+      
+      // Create authenticated actor for this bot (same as frontend does)
+      const actor = await createBotActor(bot.identity.identity, this.config.canisterId);
+      
+      // Make signed call to signup (same as frontend)
+      const result = await actor.signup(
+        bot.identity.name,
+        [], // empty evm_address
+        [], // empty bitcoin_address  
+        []  // empty solana_address
       );
 
-      if (result.includes('Ok')) {
-        // New user signed up successfully
-        log.bot(bot.identity.name, `Signed up and received ${STARTING_BALANCE_USDT.toLocaleString()} USDT`);
-      } else if (result.includes('User already exists')) {
-        // User already exists, that's fine - just load their data
-        log.bot(bot.identity.name, `User already exists, loading existing data`);
-      } else {
-        throw new Error(`Signup failed: ${result}`);
+      if ('Ok' in (result as any)) {
+        // New user signed up successfully and automatically got 2M USDT faucet
+        log.bot(bot.identity.name, `✅ Successfully signed up and received ${STARTING_BALANCE_USDT.toLocaleString()} USDT`);
+      } else if ('Err' in (result as any)) {
+        const error = (result as any).Err;
+        const errorStr = JSON.stringify(error);
+        if (errorStr.includes('User already exists')) {
+          // User already exists, they should already have their faucet tokens
+          log.bot(bot.identity.name, `ℹ️ User already exists, loading existing data`);
+        } else {
+          throw new Error(`Signup failed: ${errorStr}`);
+        }
       }
 
-      // Initialize portfolio (will be updated from actual balances later)
-      bot.portfolio.balances['USDT'] = BigInt(STARTING_BALANCE_USDT * 1_000_000); // 6 decimals
-      bot.portfolio.totalUsdValue = STARTING_BALANCE_USDT;
+      // Store the bot's actor for future calls
+      (bot as any).actor = actor;
 
     } catch (error) {
       throw new BotError(`Failed to signup bot: ${error}`, bot.identity.name, 'signup');
@@ -131,16 +142,29 @@ export class TradingEngine {
 
   async updateMarketData(): Promise<void> {
     try {
-      const result = callCanister(this.config.canisterId, 'get_current_prices');
-      const prices = parseCanisterResult<Record<string, TradingPair>>(result);
+      // Use any bot's actor to get prices (query call, doesn't need specific identity)
+      const firstBot = Array.from(this.bots.values())[0];
+      if (!firstBot || !(firstBot as any).actor) {
+        throw new Error('No bot actors available for market data');
+      }
 
-      this.marketData = {
-        prices,
-        lastUpdated: Date.now(),
-        isStale: false
-      };
+      const actor = (firstBot as any).actor;
+      const result = await actor.get_current_prices();
 
-      log.info(`Updated market data: ${Object.keys(prices).length} prices`);
+      if ('Ok' in (result as any)) {
+        const pricesJson = (result as any).Ok;
+        const prices = JSON.parse(pricesJson) as Record<string, TradingPair>;
+
+        this.marketData = {
+          prices,
+          lastUpdated: Date.now(),
+          isStale: false
+        };
+
+        log.info(`Updated market data: ${Object.keys(prices).length} prices`);
+      } else {
+        throw new Error(`Failed to get prices: ${JSON.stringify((result as any).Err)}`);
+      }
     } catch (error) {
       log.error('Failed to update market data:', error);
       this.marketData.isStale = true;
@@ -157,27 +181,29 @@ export class TradingEngine {
 
   async updateBotPortfolio(bot: Bot): Promise<void> {
     try {
-      const result = callCanister(
-        this.config.canisterId,
-        'get_user_balances',
-        `(principal "${bot.identity.principal}")`
-      );
+      // Use bot's own authenticated actor (same as frontend)
+      const actor = (bot as any).actor;
+      if (!actor) {
+        throw new Error('Bot actor not available');
+      }
 
-      // Parse balance result
-      const balanceMatches = result.matchAll(/record\s*\{\s*"([^"]+)";\s*([0-9_]+)\s*:\s*nat\s*\}/g);
-      
+      const principal = Principal.fromText(bot.identity.principal);
+      const result = await actor.get_user_balances(principal);
+
+      // Result is array of [string, bigint] tuples - same format as frontend gets
       bot.portfolio.balances = {};
       let totalUsdValue = 0;
 
-      for (const match of balanceMatches) {
-        const symbol = match[1]! as SupportedToken;
-        const amount = BigInt(match[2]!.replace(/_/g, ''));
-        bot.portfolio.balances[symbol] = amount;
+      if (Array.isArray(result)) {
+        for (const [symbol, amount] of result) {
+          const bigintAmount = BigInt(amount);
+          bot.portfolio.balances[symbol as SupportedToken] = bigintAmount;
 
-        // Calculate USD value
-        const price = this.marketData.prices[symbol]?.price || (symbol === 'USDT' ? 1.0 : 0);
-        const usdValue = calculateUsdValue(amount, symbol, price);
-        totalUsdValue += usdValue;
+          // Calculate USD value
+          const price = this.marketData.prices[symbol]?.price || (symbol === 'USDT' ? 1.0 : 0);
+          const usdValue = calculateUsdValue(bigintAmount, symbol as SupportedToken, price);
+          totalUsdValue += usdValue;
+        }
       }
 
       bot.portfolio.totalUsdValue = totalUsdValue;
@@ -200,20 +226,23 @@ export class TradingEngine {
     log.bot(bot.identity.name, `Executing trade: ${formatTokenAmount(amount, fromToken)} ${fromToken} → ${toToken}`);
 
     try {
-      const swapRequest: SwapRequest = {
+      // Use bot's own authenticated actor for trade (same as frontend)
+      const actor = (bot as any).actor;
+      if (!actor) {
+        throw new Error('Bot actor not available');
+      }
+
+      const swapRequest = {
         from_token: fromToken,
         to_token: toToken,
         amount
       };
 
-      const result = callCanister(
-        this.config.canisterId,
-        'market_swap',
-        `(record { from_token = "${fromToken}"; to_token = "${toToken}"; amount = ${amount} })`
-      );
+      const result = await actor.market_swap(swapRequest);
 
-      if (result.includes('Ok')) {
+      if ('Ok' in (result as any)) {
         // Parse successful trade result
+        const swapResult = (result as any).Ok;
         const trade: Trade = {
           id: tradeId,
           timestamp,
@@ -221,9 +250,9 @@ export class TradingEngine {
           fromToken,
           toToken,
           fromAmount: amount,
-          toAmount: 0n, // Will be updated from result parsing
-          fromPrice: this.marketData.prices[fromToken]?.price || 0,
-          toPrice: this.marketData.prices[toToken]?.price || 0,
+          toAmount: BigInt(swapResult.to_amount),
+          fromPrice: swapResult.from_price,
+          toPrice: swapResult.to_price,
           profitLoss: 0, // Will be calculated
           successful: true
         };
@@ -235,7 +264,7 @@ export class TradingEngine {
         return trade;
 
       } else {
-        throw new Error(`Trade failed: ${result}`);
+        throw new Error(`Trade failed: ${JSON.stringify((result as any).Err)}`);
       }
 
     } catch (error) {
@@ -385,11 +414,15 @@ export class TradingEngine {
     log.info(`Starting trading engine with ${this.config.tradingInterval}s intervals...`);
     this.isRunning = true;
 
-    // Initialize price oracle
+    // Initialize price oracle using any bot's actor
     try {
-      callCanister(this.config.canisterId, 'start_price_scheduler');
-      callCanister(this.config.canisterId, 'update_prices');
-      await sleep(2000); // Wait for initial price update
+      const firstBot = Array.from(this.bots.values())[0];
+      if (firstBot && (firstBot as any).actor) {
+        const actor = (firstBot as any).actor;
+        await actor.start_price_scheduler();
+        await actor.update_prices();
+        await sleep(2000); // Wait for initial price update
+      }
     } catch (error) {
       log.error('Failed to initialize price oracle:', error);
     }

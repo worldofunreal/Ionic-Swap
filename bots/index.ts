@@ -45,6 +45,8 @@ class TradingBotApplication {
       log.info('🚀 Initializing Ionic Swap Trading Bot System');
       log.info('===============================================');
       
+      // No global initialization needed - each bot creates their own authenticated actor
+      
       // Validate strategies
       const availableStrategies = getAvailableStrategies();
       log.info(`Available strategies: ${availableStrategies.join(', ')}`);

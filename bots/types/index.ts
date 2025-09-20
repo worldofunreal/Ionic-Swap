@@ -8,6 +8,7 @@ export interface BotIdentity {
   name: string;
   principal: string;
   seed: string;
+  identity: any; // Ed25519KeyIdentity for signed calls
 }
 
 export interface TokenBalance {

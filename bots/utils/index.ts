@@ -1,7 +1,14 @@
 import { Principal } from '@dfinity/principal';
-import { execSync } from 'child_process';
+import { Actor, HttpAgent } from '@dfinity/agent';
+import type { Identity } from '@dfinity/agent';
+import { Ed25519KeyIdentity } from '@dfinity/identity';
 import * as crypto from 'crypto';
 import { TOKEN_DECIMALS, SupportedToken } from '../types';
+
+// IMPORTANT: DO NOT USE DFX CLI CALLS!
+// We use the same frontend imports/libraries (@dfinity/agent, @dfinity/principal)
+// to call canister functions directly in TypeScript, just like the frontend does.
+// This ensures we get the same response format and behavior as the frontend.
 
 // ============================================================================
 // IDENTITY UTILITIES
@@ -29,12 +36,14 @@ export const generateSeed = (name: string): Uint8Array => {
 
 export const generateBotIdentity = (name: string) => {
   const seed = generateSeed(name);
-  const principal = Principal.selfAuthenticating(seed);
+  const identity = Ed25519KeyIdentity.generate(seed);
+  const principal = identity.getPrincipal();
   
   return {
     name,
     principal: principal.toText(),
     seed: Array.from(seed).map(b => b.toString(16).padStart(2, '0')).join(''),
+    identity, // Include the actual identity for signed calls
   };
 };
 
@@ -63,51 +72,36 @@ export const calculateUsdValue = (amount: bigint, symbol: SupportedToken, price:
 };
 
 // ============================================================================
-// CANISTER UTILITIES
+// CANISTER UTILITIES - USING IC SDK (NOT DFX!)
 // ============================================================================
 
-export const callCanister = (canisterId: string, method: string, args: string = ''): string => {
-  try {
-    const fullArgs = args ? ` '${args}'` : '';
-    const cmd = `dfx canister call ${canisterId} ${method}${fullArgs}`;
-    const result = execSync(cmd, { 
-      encoding: 'utf8',
-      cwd: process.cwd(),
-      timeout: 30000, // 30 second timeout
-      shell: '/bin/bash' // Use bash to handle the command properly
-    });
-    return result.trim();
-  } catch (error) {
-    throw new Error(`Canister call failed: ${method} - ${error}`);
-  }
-};
+// DO NOT USE DFX CLI CALLS! Use the same @dfinity/agent SDK as the frontend.
+// Each bot needs their own authenticated actor with their own identity for signed calls.
 
-export const parseCanisterResult = <T>(result: string): T => {
+// Create authenticated actor for a specific bot identity (same as frontend)
+export const createBotActor = async (identity: Identity, canisterId: string) => {
   try {
-    // Handle variant { Ok = "..." } wrapper - capture everything between quotes
-    const variantMatch = result.match(/variant\s*\{\s*Ok\s*=\s*"((?:[^"\\]|\\.)*)"/s);
-    if (variantMatch) {
-      const jsonStr = variantMatch[1]!.replace(/\\\"/g, '"');
-      return JSON.parse(jsonStr);
-    }
-    
-    // Handle Ok() wrapper
-    const okMatch = result.match(/Ok\s*\(\s*"((?:[^"\\]|\\.)*)"\s*\)/s);
-    if (okMatch) {
-      const jsonStr = okMatch[1]!.replace(/\\\"/g, '"');
-      return JSON.parse(jsonStr);
-    }
-    
-    // Handle direct JSON
-    const jsonMatch = result.match(/"((?:[^"\\]|\\.)*)"/s);
-    if (jsonMatch) {
-      const jsonStr = jsonMatch[1]!.replace(/\\\"/g, '"');
-      return JSON.parse(jsonStr);
-    }
-    
-    throw new Error('Could not parse canister result');
+    // Create agent with bot's identity for signed calls (same as frontend)
+    const agent = new HttpAgent({
+      host: 'http://127.0.0.1:4943', // Local IC network
+      identity, // Use bot's identity for authentication
+    });
+
+    // Fetch root key for local development (same as frontend)
+    await agent.fetchRootKey();
+
+    // Import the IDL factory from declarations (same as frontend)
+    const { idlFactory } = await import('../../src/declarations/backend');
+
+    // Create the backend actor with bot's identity (same as frontend)
+    const actor = Actor.createActor(idlFactory, {
+      agent,
+      canisterId,
+    });
+
+    return actor;
   } catch (error) {
-    throw new Error(`Failed to parse canister result: ${error}`);
+    throw new Error(`Failed to create bot actor: ${error}`);
   }
 };
 
