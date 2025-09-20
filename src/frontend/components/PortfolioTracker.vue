@@ -46,13 +46,14 @@
       <!-- Portfolio Value -->
       <div class="flex items-center justify-between">
         <div class="flex flex-col">
-          <span class="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Estimated Balance</span>
+          <span class="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Total Portfolio Value</span>
           <span class="text-2xl font-bold text-zinc-900 dark:text-white">
             <span v-if="balancesVisible">
               {{ valueDisplay === 'usd' ? `$${formatNumber(localPortfolioValue, 2)}` : `${(localPortfolioValue / btcPrice).toFixed(8)} BTC` }}
             </span>
             <span v-else class="text-2xl">••••••••</span>
           </span>
+          <span class="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Includes liquid tokens + staked positions + claimable fees</span>
         </div>
         
         <!-- 24h Change (from backend) -->

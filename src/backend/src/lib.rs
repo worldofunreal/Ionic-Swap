@@ -278,6 +278,8 @@ pub async fn get_portfolio_data(user: Principal) -> icp::types::PortfolioData {
     
     // Calculate current portfolio value using oracle prices
     let mut current_value_usdt = 0.0;
+    
+    // Add liquid token balances
     for (symbol, amount) in current_balances.iter() {
         // Get price from oracle
         let price = if symbol.as_str() == "USDT" {
@@ -295,6 +297,39 @@ pub async fn get_portfolio_data(user: Principal) -> icp::types::PortfolioData {
         let normalized_amount = *amount as f64 / (10.0_f64.powi(decimals as i32));
         
         current_value_usdt += normalized_amount * price;
+    }
+    
+    // Add staked positions value and claimable fees
+    let user_positions = storage::LiquidityStorage::get_user_positions(user);
+    for position in user_positions.iter() {
+        // Get price for the staked token
+        let price = if position.token_symbol == "USDT" {
+            1.0
+        } else {
+            crate::oracle::get_pair_price(&position.token_symbol)
+                .await
+                .map(|trading_pair| trading_pair.price)
+                .unwrap_or(1.0)
+        };
+        
+        // Get token info for decimals
+        let token = tokens.iter().find(|t| t.symbol == position.token_symbol);
+        let decimals = token.map(|t| t.decimals as u32).unwrap_or(6);
+        
+        // Add staked amount value
+        let normalized_staked = position.staked_amount as f64 / (10.0_f64.powi(decimals as i32));
+        current_value_usdt += normalized_staked * price;
+        
+        // Add claimable fees value (only for non-dissolved positions)
+        if position.state != icp::liquidity::NeuronState::Dissolved {
+            if let Some(pool) = storage::LiquidityStorage::get_pool_info(&position.token_symbol) {
+                let position_voting_power = calculate_position_voting_power(position);
+                let fee_index_difference = pool.global_fee_index - position.last_fee_index;
+                let claimable_fees_raw = (fee_index_difference * position_voting_power) as u64;
+                let normalized_claimable = claimable_fees_raw as f64 / (10.0_f64.powi(decimals as i32));
+                current_value_usdt += normalized_claimable * price;
+            }
+        }
     }
     
     // Get historical portfolio points

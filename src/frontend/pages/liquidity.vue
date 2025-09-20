@@ -443,10 +443,10 @@
                   <div>
                     <div class="text-zinc-500 dark:text-zinc-400">Claimable Fees</div>
                     <div class="font-semibold text-foreground">
-                      {{ calculateClaimableFees(position, selectedPool).toFixed(6) }} {{ position.token_symbol }}
+                      {{ calculateClaimableFees(position).toFixed(6) }} {{ position.token_symbol }}
                     </div>
                     <div class="text-xs text-zinc-400 dark:text-gray-500">
-                      ≈ ${{ (calculateClaimableFees(position, selectedPool) * (selectedPool?.current_price_usdt?.[0] || 0)).toFixed(2) }}
+                      ≈ ${{ (calculateClaimableFees(position) * getPositionPrice(position)).toFixed(2) }}
                     </div>
                   </div>
                 </div>
@@ -819,7 +819,9 @@
     return (positionVP / totalVP) * 100
   }
 
-  const calculateClaimableFees = (position: any, pool: any) => {
+  const calculateClaimableFees = (position: any) => {
+    // Find the correct pool for this specific position
+    const pool = allPools.value.find(p => p.token_symbol === position.token_symbol)
     if (!pool) return 0
     
     // Calculate raw voting power (in token's smallest units) for fee calculation
@@ -833,7 +835,7 @@
     const claimableFeesRaw = feeIndexDifference * rawVotingPower
     
     // Debug logging
-    console.log(`🔍 Fee calculation for position ${position.id}:`, {
+    console.log(`🔍 Fee calculation for position ${position.id} (${position.token_symbol}):`, {
       stakeAmount,
       rawVotingPower,
       globalFeeIndex: pool.global_fee_index,
@@ -859,6 +861,11 @@
     const availableLiquidity = Number(pool.available_liquidity)
     if (totalStaked === 0) return 0
     return ((totalStaked - availableLiquidity) / totalStaked) * 100
+  }
+
+  const getPositionPrice = (position: any) => {
+    const pool = allPools.value.find(p => p.token_symbol === position.token_symbol)
+    return pool?.current_price_usdt?.[0] || 0
   }
 
   const formatUserBalance = (symbol: string) => {

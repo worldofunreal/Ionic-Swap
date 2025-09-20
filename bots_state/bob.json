@@ -1,6 +1,6 @@
 {
   "botName": "bob",
-  "realizedPnlUsd": 0,
+  "realizedPnlUsd": 308.44796999469986,
   "costBasis": {
     "BTC": {
       "avgCostUsd": 115548,
@@ -16,7 +16,7 @@
     },
     "BNB": {
       "avgCostUsd": 992.25,
-      "quantity": "20000000000"
+      "quantity": "19061229237"
     },
     "XRP": {
       "avgCostUsd": 2.99,
@@ -35,5 +35,5 @@
       "quantity": "5000000000"
     }
   },
-  "lastUpdated": 1758340258709
+  "lastUpdated": 1758389311029
 }

@@ -1,6 +1,6 @@
 {
   "botName": "charlie",
-  "realizedPnlUsd": 0,
+  "realizedPnlUsd": 5154.919570018689,
   "costBasis": {
     "BTC": {
       "avgCostUsd": 115548,
@@ -16,7 +16,7 @@
     },
     "BNB": {
       "avgCostUsd": 992.32,
-      "quantity": "160000000000"
+      "quantity": "144203886646"
     },
     "XRP": {
       "avgCostUsd": 2.99,
@@ -39,5 +39,5 @@
       "quantity": "20000000000"
     }
   },
-  "lastUpdated": 1758340276737
+  "lastUpdated": 1758389312912
 }

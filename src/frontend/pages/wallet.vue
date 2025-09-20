@@ -307,8 +307,12 @@
                     </span>
                   </div>
                   <div class="flex justify-between items-center">
-                    <span class="text-zinc-500 dark:text-zinc-400">Tokens Held</span>
+                    <span class="text-zinc-500 dark:text-zinc-400">Liquid Tokens</span>
                     <span class="font-semibold text-zinc-900 dark:text-white">{{ Object.keys(userBalances).length }}</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-zinc-500 dark:text-zinc-400">Staked Positions</span>
+                    <span class="font-semibold text-zinc-900 dark:text-white">{{ liquidityPositions.length }}</span>
                   </div>
                   <div class="flex justify-between items-center">
                     <span class="text-zinc-500 dark:text-zinc-400">Networks</span>
@@ -523,6 +527,10 @@
   const transactionHistory = ref<SwapTransaction[]>([])
   const transactionHistoryLoading = ref(false)
   
+  // Liquidity positions data  
+  const liquidityPositions = ref<any[]>([])
+  const allPools = ref<any[]>([])
+  
   // Real price data from PriceService
   const tokenPrices = ref<Record<string, { usd: number; btc: number; change24h: number }>>({})
   const btcPrice = ref(45000) // Will be updated from PriceService
@@ -563,21 +571,50 @@
     tokenPrices.value = newTokenPrices
   }
 
-  // Watch for changes in prices or balances to recalculate total value
-  watch([tokenPrices, userBalances], () => {
-    if (Object.keys(userBalances.value).length > 0 && Object.keys(tokenPrices.value).length > 0) {
-      totalValue.value = Object.entries(userBalances.value).reduce((total, [symbol, amount]) => {
-        const token = internalTokens.value.find(t => t.symbol === symbol)
-        if (token) {
-          const decimals = token.decimals || 6
-          const normalizedAmount = amount / Math.pow(10, decimals)
-          const price = tokenPrices.value[symbol]
-          if (price) {
-            return total + (normalizedAmount * price.usd)
+  // Watch for changes in prices, balances, or positions to recalculate total value
+  watch([tokenPrices, userBalances, liquidityPositions], () => {
+    if (Object.keys(tokenPrices.value).length > 0) {
+      let total = 0
+      
+      // Add liquid token balances
+      if (Object.keys(userBalances.value).length > 0) {
+        total += Object.entries(userBalances.value).reduce((subtotal, [symbol, amount]) => {
+          const token = internalTokens.value.find(t => t.symbol === symbol)
+          if (token) {
+            const decimals = token.decimals || 6
+            const normalizedAmount = amount / Math.pow(10, decimals)
+            const price = tokenPrices.value[symbol]
+            if (price) {
+              return subtotal + (normalizedAmount * price.usd)
+            }
           }
-        }
-        return total
-      }, 0)
+          return subtotal
+        }, 0)
+      }
+      
+      // Add staked positions value + claimable fees
+      if (liquidityPositions.value.length > 0) {
+        total += liquidityPositions.value.reduce((subtotal, position) => {
+          const price = tokenPrices.value[position.token_symbol]
+          if (price) {
+            // Add staked amount value
+            const decimals = TokenService.getTokenDecimals(position.token_symbol)
+            const normalizedStaked = Number(position.staked_amount) / Math.pow(10, decimals)
+            let positionValue = normalizedStaked * price.usd
+            
+            // Add claimable fees value (only for non-dissolved positions)
+            if (position.state && !position.state.Dissolved) {
+              const claimableFees = calculateClaimableFees(position)
+              positionValue += claimableFees * price.usd
+            }
+            
+            return subtotal + positionValue
+          }
+          return subtotal
+        }, 0)
+      }
+      
+      totalValue.value = total
     }
   }, { deep: true })
 
@@ -690,6 +727,24 @@
     return 'text-gray-600 dark:text-gray-400'
   }
 
+  // Calculate claimable fees for a position
+  const calculateClaimableFees = (position: any) => {
+    // Find the corresponding pool for this position
+    const pool = allPools.value.find(p => p.token_symbol === position.token_symbol)
+    if (!pool) return 0
+    
+    const stakeAmount = Number(position.staked_amount)
+    const delayMultiplier = Math.min(4.0, 1.0 + (Number(position.dissolve_delay_seconds) / (365 * 24 * 3600)) * 3.0)
+    const age = (Date.now() / 1000) - Number(position.created_at)
+    const ageMultiplier = Math.min(1.5, 1.0 + (age / (4 * 365 * 24 * 3600)) * 0.5)
+    const rawVotingPower = stakeAmount * delayMultiplier * ageMultiplier
+    
+    const feeIndexDifference = pool.global_fee_index - (position.last_fee_index || 0)
+    const claimableFeesRaw = feeIndexDifference * rawVotingPower
+    
+    return claimableFeesRaw / Math.pow(10, TokenService.getTokenDecimals(position.token_symbol))
+  }
+
   // Refresh token balances (silent for auto-refresh)
   const refreshBalances = async (event?: Event, silent = false) => {
     // Prevent any default behavior that might cause page refresh
@@ -733,6 +788,8 @@
     refreshInterval = setInterval(() => {
       refreshBalances(undefined, true) // Silent refresh
       loadTransactionHistory() // Also refresh transaction history
+      loadLiquidityPositions() // Also refresh liquidity positions
+      loadAllPools() // Also refresh pool data for fee calculations
     }, 30000)
   }
 
@@ -852,6 +909,30 @@
     return date.toLocaleString()
   }
 
+  // Load liquidity positions for the user
+  const loadLiquidityPositions = async () => {
+    if (!auth.userProfile?.id || !canisterService.isInitialized()) return
+
+    try {
+      const positions = await canisterService.getLiquidityPositions(auth.userProfile.id as any)
+      liquidityPositions.value = positions
+    } catch (error) {
+      console.error('Error loading liquidity positions:', error)
+    }
+  }
+
+  // Load all pools for fee calculations
+  const loadAllPools = async () => {
+    if (!canisterService.isInitialized()) return
+    
+    try {
+      const pools = await canisterService.getAllLiquidityPools()
+      allPools.value = pools
+    } catch (error) {
+      console.error('Error loading pools:', error)
+    }
+  }
+
   // Load user token balances and data
   const loadTokenData = async () => {
     if (!auth.userProfile?.id) return
@@ -878,19 +959,14 @@
       // Load transaction history
       await loadTransactionHistory()
 
-      // Calculate total value using real price data
-      totalValue.value = Object.entries(balances).reduce((total, [symbol, amount]) => {
-        const token = tokens.find(t => t.symbol === symbol)
-        if (token) {
-          const decimals = token.decimals || 6
-          const normalizedAmount = amount / Math.pow(10, decimals)
-          const price = tokenPrices.value[symbol]
-          if (price) {
-            return total + (normalizedAmount * price.usd)
-          }
-        }
-        return total
-      }, 0)
+      // Load liquidity positions and pools
+      await Promise.all([
+        loadLiquidityPositions(),
+        loadAllPools()
+      ])
+
+      // Note: Total value calculation is now handled by the watch function
+      // which includes both liquid tokens and staked positions
 
     } catch (error) {
       console.error('Error loading token data:', error)

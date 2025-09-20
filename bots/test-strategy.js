@@ -63,3 +63,4 @@ if (decision.opportunities.length > 0) {
   console.log(`BTC should sell: ${btcChange >= STRATEGIES.SCALPER.minProfitPercent ? 'YES' : 'NO'}`);
   console.log(`ETH should buy: ${ethChange <= -0.15 ? 'YES' : 'NO'}`);
 }
+
