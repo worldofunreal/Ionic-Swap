@@ -1,0 +1,39 @@
+{
+  "botName": "frank",
+  "realizedPnlUsd": 0,
+  "costBasis": {
+    "BTC": {
+      "avgCostUsd": 115549,
+      "quantity": "400000000000"
+    },
+    "ETH": {
+      "avgCostUsd": 4467.67,
+      "quantity": "300000000000"
+    },
+    "SOL": {
+      "avgCostUsd": 238.4,
+      "quantity": "40000000000"
+    },
+    "BNB": {
+      "avgCostUsd": 992.32,
+      "quantity": "20000000000"
+    },
+    "XRP": {
+      "avgCostUsd": 2.99,
+      "quantity": "20000000000"
+    },
+    "DOGE": {
+      "avgCostUsd": 0.265362,
+      "quantity": "10000000000"
+    },
+    "ADA": {
+      "avgCostUsd": 0.894339,
+      "quantity": "5000000000"
+    },
+    "TRX": {
+      "avgCostUsd": 0.344881,
+      "quantity": "5000000000"
+    }
+  },
+  "lastUpdated": 1758340330752
+}

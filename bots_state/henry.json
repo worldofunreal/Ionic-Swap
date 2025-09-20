@@ -1,0 +1,43 @@
+{
+  "botName": "henry",
+  "realizedPnlUsd": 0,
+  "costBasis": {
+    "BTC": {
+      "avgCostUsd": 115549,
+      "quantity": "240000000000"
+    },
+    "ETH": {
+      "avgCostUsd": 4467.67,
+      "quantity": "240000000000"
+    },
+    "SOL": {
+      "avgCostUsd": 238.38,
+      "quantity": "160000000000"
+    },
+    "BNB": {
+      "avgCostUsd": 992.57,
+      "quantity": "120000000000"
+    },
+    "XRP": {
+      "avgCostUsd": 2.99,
+      "quantity": "80000000000"
+    },
+    "DOGE": {
+      "avgCostUsd": 0.265369,
+      "quantity": "60000000000"
+    },
+    "ADA": {
+      "avgCostUsd": 0.894298,
+      "quantity": "40000000000"
+    },
+    "TRX": {
+      "avgCostUsd": 0.34487,
+      "quantity": "40000000000"
+    },
+    "ICP": {
+      "avgCostUsd": 4.74,
+      "quantity": "20000000000"
+    }
+  },
+  "lastUpdated": 1758340368538
+}

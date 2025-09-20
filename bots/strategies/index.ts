@@ -39,7 +39,7 @@ export const STRATEGIES: Record<string, TradingStrategy> = {
   
   SCALPER: {
     name: 'Scalper',
-    minProfitPercent: 0.5,
+    minProfitPercent: 0.1, // TEMP: Lower for testing
     maxTradePercent: 5,
     riskLevel: 'aggressive',
     cooldownSeconds: 30
@@ -103,12 +103,42 @@ export abstract class BaseStrategy implements IStrategy {
     return true;
   }
   
-  protected getPriceChange(bot: Bot, token: string, currentPrice: number): number {
-    const history = bot.priceHistory[token] || [];
-    if (history.length === 0) return 0;
+  // Get P&L vs cost basis (REAL profit/loss)
+  protected getRealPnL(bot: Bot, token: string, currentPrice: number): number {
+    const costBasis = bot.costBasis[token];
+    if (!costBasis) return 0; // No position = no P&L
     
-    const lastPrice = history[history.length - 1]!;
-    return ((currentPrice - lastPrice) / lastPrice) * 100;
+    const pnlPercent = ((currentPrice - costBasis.avgCostUsd) / costBasis.avgCostUsd) * 100;
+    
+    // DEBUG: Log REAL P&L vs cost basis (disabled to reduce spam)
+    // if (Math.random() < 0.01) {
+    //   console.log(`[DEBUG] ${bot.identity.name} ${token}: ${pnlPercent.toFixed(3)}% P&L (cost: $${costBasis.avgCostUsd.toFixed(2)} → current: $${currentPrice.toFixed(2)})`);
+    // }
+    
+    return pnlPercent;
+  }
+  
+  // DEPRECATED - This was always broken (comparing same prices)
+  protected getPriceChange(bot: Bot, token: string, currentPrice: number): number {
+    // Silently return 0 to avoid spam
+    return 0;
+  }
+  
+  // Get recent price change from Binance history (for buy signals)
+  protected getRecentPriceChange(bot: Bot, token: string, currentPrice: number): number {
+    const history = bot.priceHistory[token] || [];
+    if (history.length < 10) return 0; // Need some history
+    
+    // Compare current price to 10 periods ago to detect trends
+    const pastPrice = history[history.length - 10]!;
+    const change = ((currentPrice - pastPrice) / pastPrice) * 100;
+    
+    // Disabled debug to reduce spam
+    // if (Math.random() < 0.01) {
+    //   console.log(`[DEBUG] ${bot.identity.name} ${token}: ${change.toFixed(3)}% trend (${pastPrice.toFixed(2)} → ${currentPrice.toFixed(2)})`);
+    // }
+    
+    return change;
   }
   
   protected getVolatility(bot: Bot, token: string): number {
@@ -139,30 +169,32 @@ export class MomentumStrategy extends BaseStrategy {
     for (const [token, price] of Object.entries(marketData.prices)) {
       if (token === 'USDT') continue;
       
-      const priceChange = this.getPriceChange(bot, token, price.price);
-      const volatility = this.getVolatility(bot, token);
+      const currentPrice = price.price;
+      const balance = bot.portfolio.balances[token] || 0n;
+      const pnlPercent = this.getRealPnL(bot, token, currentPrice);
+      const recentTrend = this.getRecentPriceChange(bot, token, currentPrice);
       
-      // Strong upward momentum - sell
-      if (priceChange >= this.config.minProfitPercent && bot.portfolio.balances[token]) {
+      // SELL: If we have the token and it's profitable
+      if (balance > 0n && pnlPercent >= this.config.minProfitPercent) {
         opportunities.push({
           fromToken: token,
           toToken: 'USDT',
-          expectedProfitPercent: priceChange,
-          confidence: Math.min(priceChange / 5, 1), // Higher confidence with higher price change
-          maxAmount: bot.portfolio.balances[token] || 0n,
-          reason: `Strong upward momentum: ${priceChange.toFixed(2)}% price increase`
+          expectedProfitPercent: pnlPercent,
+          confidence: Math.min(pnlPercent / 5, 1),
+          maxAmount: balance,
+          reason: `Momentum sell: ${pnlPercent.toFixed(2)}% profit vs cost basis`
         });
       }
       
-      // Strong downward momentum - buy (if we have USDT)
-      if (priceChange <= -this.config.minProfitPercent && bot.portfolio.balances['USDT']) {
+      // BUY: If token is trending down (opportunity)
+      if (recentTrend <= -(this.config.minProfitPercent + 0.5) && bot.portfolio.balances['USDT']) {
         opportunities.push({
           fromToken: 'USDT',
           toToken: token,
-          expectedProfitPercent: Math.abs(priceChange),
-          confidence: Math.min(Math.abs(priceChange) / 5, 1),
+          expectedProfitPercent: Math.abs(recentTrend),
+          confidence: Math.min(Math.abs(recentTrend) / 5, 1),
           maxAmount: bot.portfolio.balances['USDT'] || 0n,
-          reason: `Strong downward momentum: ${priceChange.toFixed(2)}% price decrease, buying opportunity`
+          reason: `Momentum buy: ${recentTrend.toFixed(2)}% downtrend, buying opportunity`
         });
       }
     }
@@ -191,33 +223,36 @@ export class ConservativeStrategy extends BaseStrategy {
     for (const [token, price] of Object.entries(marketData.prices)) {
       if (token === 'USDT') continue;
       
-      const priceChange = this.getPriceChange(bot, token, price.price);
+      const currentPrice = price.price;
+      const balance = bot.portfolio.balances[token] || 0n;
+      const pnlPercent = this.getRealPnL(bot, token, currentPrice);
       const volatility = this.getVolatility(bot, token);
+      const recentTrend = this.getRecentPriceChange(bot, token, currentPrice);
       
       // Only trade if volatility is low (less risky)
       if (volatility > 10) continue; // Skip high volatility tokens
       
-      // Conservative profit taking - only on significant gains
-      if (priceChange >= this.config.minProfitPercent * 2 && bot.portfolio.balances[token]) {
+      // SELL: Conservative profit taking - only on significant gains
+      if (balance > 0n && pnlPercent >= (this.config.minProfitPercent * 2 + 0.25)) {
         opportunities.push({
           fromToken: token,
           toToken: 'USDT',
-          expectedProfitPercent: priceChange,
-          confidence: 0.8, // Conservative confidence
-          maxAmount: bot.portfolio.balances[token] || 0n,
-          reason: `Conservative profit taking: ${priceChange.toFixed(2)}% gain with low volatility`
+          expectedProfitPercent: pnlPercent,
+          confidence: 0.8,
+          maxAmount: balance,
+          reason: `Conservative sell: ${pnlPercent.toFixed(2)}% profit vs cost basis (low volatility)`
         });
       }
       
-      // Conservative buying - only on significant dips with low volatility
-      if (priceChange <= -this.config.minProfitPercent * 2 && bot.portfolio.balances['USDT']) {
+      // BUY: Conservative buying - only on significant dips with low volatility
+      if (recentTrend <= -(this.config.minProfitPercent * 2 + 0.25) && bot.portfolio.balances['USDT']) {
         opportunities.push({
           fromToken: 'USDT',
           toToken: token,
-          expectedProfitPercent: Math.abs(priceChange),
-          confidence: 0.8,
+          expectedProfitPercent: Math.abs(recentTrend),
+          confidence: 0.7,
           maxAmount: bot.portfolio.balances['USDT'] || 0n,
-          reason: `Conservative buying: ${priceChange.toFixed(2)}% dip with low volatility`
+          reason: `Conservative buy: ${recentTrend.toFixed(2)}% downtrend (low volatility)`
         });
       }
     }
@@ -246,33 +281,36 @@ export class BalancedStrategy extends BaseStrategy {
     for (const [token, price] of Object.entries(marketData.prices)) {
       if (token === 'USDT') continue;
       
-      const priceChange = this.getPriceChange(bot, token, price.price);
+      const currentPrice = price.price;
+      const balance = bot.portfolio.balances[token] || 0n;
+      const pnlPercent = this.getRealPnL(bot, token, currentPrice);
       const volatility = this.getVolatility(bot, token);
+      const recentTrend = this.getRecentPriceChange(bot, token, currentPrice);
       
-      // Balanced approach - consider both momentum and risk
-      const riskAdjustedProfit = priceChange * (1 - volatility / 100);
+      // Balanced approach - consider both profit and risk
+      const riskAdjustedProfit = pnlPercent * (1 - volatility / 100);
       
-      // Sell on good profits
-      if (priceChange >= this.config.minProfitPercent && bot.portfolio.balances[token]) {
+      // SELL: Balanced profit taking
+      if (balance > 0n && pnlPercent >= (this.config.minProfitPercent + 0.25)) {
         opportunities.push({
           fromToken: token,
           toToken: 'USDT',
           expectedProfitPercent: riskAdjustedProfit,
-          confidence: Math.max(0.1, 1 - volatility / 50), // Lower confidence with higher volatility
-          maxAmount: bot.portfolio.balances[token] || 0n,
-          reason: `Balanced sell: ${priceChange.toFixed(2)}% gain, ${volatility.toFixed(1)}% volatility`
+          confidence: Math.max(0.1, 1 - volatility / 50),
+          maxAmount: balance,
+          reason: `Balanced sell: ${pnlPercent.toFixed(2)}% profit vs cost basis, ${volatility.toFixed(1)}% volatility`
         });
       }
       
-      // Buy on dips
-      if (priceChange <= -this.config.minProfitPercent && bot.portfolio.balances['USDT']) {
+      // BUY: Balanced buying on trends
+      if (recentTrend <= -(this.config.minProfitPercent + 0.25) && bot.portfolio.balances['USDT']) {
         opportunities.push({
           fromToken: 'USDT',
           toToken: token,
-          expectedProfitPercent: Math.abs(riskAdjustedProfit),
+          expectedProfitPercent: Math.abs(recentTrend),
           confidence: Math.max(0.1, 1 - volatility / 50),
           maxAmount: bot.portfolio.balances['USDT'] || 0n,
-          reason: `Balanced buy: ${priceChange.toFixed(2)}% dip, ${volatility.toFixed(1)}% volatility`
+          reason: `Balanced buy: ${recentTrend.toFixed(2)}% downtrend, ${volatility.toFixed(1)}% volatility`
         });
       }
     }
@@ -301,29 +339,38 @@ export class ScalperStrategy extends BaseStrategy {
     for (const [token, price] of Object.entries(marketData.prices)) {
       if (token === 'USDT') continue;
       
-      const priceChange = this.getPriceChange(bot, token, price.price);
+      // Use ACTUAL cost basis vs current price for real P&L
+      const currentPrice = price.price;
+      const costBasis = bot.costBasis[token];
+      const balance = bot.portfolio.balances[token] || 0n;
       
-      // Scalping - take small profits quickly
-      if (Math.abs(priceChange) >= this.config.minProfitPercent) {
-        if (priceChange > 0 && bot.portfolio.balances[token]) {
-          // Quick profit taking
+      if (costBasis && balance > 0n) {
+        // SELL: Check if current price > cost basis + profit threshold
+        const pnlPercent = ((currentPrice - costBasis.avgCostUsd) / costBasis.avgCostUsd) * 100;
+        
+        if (pnlPercent >= this.config.minProfitPercent) {
           opportunities.push({
             fromToken: token,
             toToken: 'USDT',
-            expectedProfitPercent: priceChange,
-            confidence: 0.6, // Medium confidence for quick trades
-            maxAmount: bot.portfolio.balances[token] || 0n,
-            reason: `Scalp sell: ${priceChange.toFixed(2)}% quick profit`
+            expectedProfitPercent: pnlPercent,
+            confidence: 0.7,
+            maxAmount: balance,
+            reason: `Scalp sell: ${pnlPercent.toFixed(2)}% profit vs cost basis $${costBasis.avgCostUsd.toFixed(2)}`
           });
-        } else if (priceChange < 0 && bot.portfolio.balances['USDT']) {
-          // Quick buy on dip
+        }
+      }
+      
+      // BUY: Always consider buying if we have USDT and token dropped from recent high
+      if (bot.portfolio.balances['USDT'] && bot.portfolio.balances['USDT'] > 0n) {
+        const recentTrend = this.getRecentPriceChange(bot, token, currentPrice);
+        if (recentTrend <= -0.15) { // 0.15% dip from recent high
           opportunities.push({
             fromToken: 'USDT',
             toToken: token,
-            expectedProfitPercent: Math.abs(priceChange),
+            expectedProfitPercent: Math.abs(recentTrend),
             confidence: 0.6,
             maxAmount: bot.portfolio.balances['USDT'] || 0n,
-            reason: `Scalp buy: ${priceChange.toFixed(2)}% quick dip`
+            reason: `Scalp buy: ${recentTrend.toFixed(2)}% dip opportunity`
           });
         }
       }

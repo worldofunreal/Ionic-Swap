@@ -21,6 +21,67 @@
 
     <!-- Portfolio Content -->
     <div v-else class="space-y-6">
+      <!-- Portfolio Overview Card -->
+      <div class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg shadow-sm border border-primary-400 text-white p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-xl font-bold mb-1">
+              {{ isOwnProfile ? 'My Portfolio' : `${userProfile?.username || 'User'}'s Portfolio` }}
+            </h3>
+            <p class="text-primary-100 text-sm">Total portfolio value across all assets</p>
+          </div>
+          <div class="text-right">
+            <div class="text-2xl font-bold mb-1">
+              {{ valueDisplay === 'usd' 
+                ? `$${portfolioTotalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+                : `${(portfolioTotalValue / btcPrice).toFixed(8)} BTC` 
+              }}
+            </div>
+            <div class="text-primary-100 text-sm">
+              {{ portfolioStats.totalAssets }} total assets
+            </div>
+          </div>
+        </div>
+        
+        <!-- Portfolio Breakdown -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-primary-400">
+          <div class="text-center">
+            <div class="text-lg font-semibold">{{ portfolioStats.tokenCount }}</div>
+            <div class="text-primary-100 text-xs">Token Balances</div>
+          </div>
+          <div class="text-center">
+            <div class="text-lg font-semibold">{{ portfolioStats.positionCount }}</div>
+            <div class="text-primary-100 text-xs">Staked Positions</div>
+          </div>
+          <div class="text-center">
+            <div class="text-lg font-semibold">
+              {{ valueDisplay === 'usd' 
+                ? `$${tokensWithBalances.reduce((sum, token) => sum + token.value, 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}` 
+                : `${(tokensWithBalances.reduce((sum, token) => sum + token.value, 0) / btcPrice).toFixed(4)} BTC`
+              }}
+            </div>
+            <div class="text-primary-100 text-xs">Liquid Assets</div>
+          </div>
+          <div class="text-center">
+            <div class="text-lg font-semibold">
+              {{ valueDisplay === 'usd' 
+                ? `$${liquidityPositions.reduce((total, position) => {
+                    const stakeAmount = Number(position.staked_amount) / Math.pow(10, TokenService.getTokenDecimals(position.token_symbol))
+                    const price = tokenPrices[position.token_symbol]
+                    return total + (price ? stakeAmount * price.usd : 0)
+                  }, 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}` 
+                : `${(liquidityPositions.reduce((total, position) => {
+                    const stakeAmount = Number(position.staked_amount) / Math.pow(10, TokenService.getTokenDecimals(position.token_symbol))
+                    const price = tokenPrices[position.token_symbol]
+                    return total + (price ? stakeAmount * price.usd : 0)
+                  }, 0) / btcPrice).toFixed(4)} BTC`
+              }}
+            </div>
+            <div class="text-primary-100 text-xs">Staked Assets</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Token Balances Section -->
       <div class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800">
         <div class="p-4 border-b border-zinc-200 dark:border-zinc-800">
@@ -410,6 +471,35 @@
   // Computed properties
   const userProfile = computed(() => props.targetUser || auth.userProfile)
   const userId = computed(() => userProfile.value?.id)
+
+  // Portfolio total value calculation
+  const portfolioTotalValue = computed(() => {
+    // Calculate token balances value
+    const tokenValue = tokensWithBalances.value.reduce((total, token) => total + token.value, 0)
+    
+    // Calculate liquidity positions value
+    const positionsValue = liquidityPositions.value.reduce((total, position) => {
+      const stakeAmount = Number(position.staked_amount) / Math.pow(10, TokenService.getTokenDecimals(position.token_symbol))
+      const price = tokenPrices.value[position.token_symbol]
+      return total + (price ? stakeAmount * price.usd : 0)
+    }, 0)
+    
+    return tokenValue + positionsValue
+  })
+
+  // Portfolio stats
+  const portfolioStats = computed(() => {
+    const tokenCount = tokensWithBalances.value.length
+    const positionCount = liquidityPositions.value.length
+    const totalAssets = tokenCount + positionCount
+    
+    return {
+      totalValue: portfolioTotalValue.value,
+      tokenCount,
+      positionCount,
+      totalAssets
+    }
+  })
 
   // Get tokens with balances, sorted by value
   const tokensWithBalances = computed(() => {

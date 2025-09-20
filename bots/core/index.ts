@@ -28,6 +28,7 @@ import {
   CanisterError
 } from '../utils';
 import { IStrategy, createStrategy, getAvailableStrategies, BaseStrategy, STRATEGIES } from '../strategies';
+import { PortfolioBootstrap } from './bootstrap';
 
 // ============================================================================
 // TRADING ENGINE
@@ -74,11 +75,19 @@ export class TradingEngine {
           trades: [],
           lastTradeTime: 0,
           isActive: true,
-          priceHistory: {}
+          priceHistory: {},
+          realizedPnlUsd: 0,
+          costBasis: {}
         };
 
         // Sign up the bot
         await this.signupBot(bot);
+        
+        // Load bot state from persistent storage
+        const { StateStore } = require('../state/StateStore');
+        const state = StateStore.load(bot.identity.name);
+        bot.realizedPnlUsd = state.realizedPnlUsd;
+        bot.costBasis = state.costBasis;
         
         this.bots.set(bot.identity.name, bot);
         log.success(`Initialized bot: ${bot.identity.name} with ${strategyConfig.name} strategy`);
@@ -161,7 +170,21 @@ export class TradingEngine {
           isStale: false
         };
 
+        // Also update in-memory priceHistory buffers (cap at 100)
+        for (const bot of this.bots.values()) {
+          for (const [symbol, pair] of Object.entries(prices)) {
+            if (!bot.priceHistory[symbol]) bot.priceHistory[symbol] = [];
+            bot.priceHistory[symbol]!.push(pair.price);
+            if (bot.priceHistory[symbol]!.length > 100) {
+              bot.priceHistory[symbol] = bot.priceHistory[symbol]!.slice(-100);
+            }
+          }
+        }
+
         log.info(`Updated market data: ${Object.keys(prices).length} prices`);
+        
+        // Always show portfolio analysis after market data update
+        this.logDetailedPnLAnalysis(prices);
       } else {
         throw new Error(`Failed to get prices: ${JSON.stringify((result as any).Err)}`);
       }
@@ -169,6 +192,122 @@ export class TradingEngine {
       log.error('Failed to update market data:', error);
       this.marketData.isStale = true;
     }
+  }
+
+  // Seed initial price history from Binance so strategies can act immediately
+  private async seedPriceHistoryIfNeeded(): Promise<void> {
+    try {
+      const symbols = Object.keys(this.marketData.prices);
+      if (symbols.length === 0) return;
+      const bots = Array.from(this.bots.values());
+      if (bots.length === 0) return;
+
+      // If first bot already has sufficient history, skip
+      const first = bots[0]!;
+      const hasHistory = symbols.every((s) => (first.priceHistory[s]?.length || 0) >= 30);
+      if (hasHistory) {
+        return; // Silent skip to reduce spam
+      }
+      
+      log.info('Insufficient history detected, fetching from Binance...');
+
+      const { fetchBinanceCloses } = require('../utils/marketData');
+      const fetches = symbols.map(async (s) => {
+        if (s === 'USDT') return { s, closes: [] as number[] };
+        const closes = await fetchBinanceCloses(s as any, '1m', 60);
+        return { s, closes };
+      });
+
+      const results = await Promise.all(fetches);
+      for (const bot of bots) {
+        for (const { s, closes } of results) {
+          if (!bot.priceHistory[s]) bot.priceHistory[s] = [];
+          bot.priceHistory[s] = [...(bot.priceHistory[s] || []), ...closes].slice(-100);
+        }
+      }
+      log.info(`Seeded Binance history for ${symbols.length} tokens (up to 60 points)`);
+    } catch (error) {
+      log.warning('Binance seeding failed (non-fatal):', error);
+    }
+  }
+
+  // Show simple portfolio for each bot - their holdings, cost basis, current price, P&L
+  private logDetailedPnLAnalysis(prices: Record<string, any>): void {
+    console.log('\n' + '='.repeat(100));
+    console.log('💼 BOT PORTFOLIOS - HOLDINGS & P&L');
+    console.log('='.repeat(100));
+    
+    for (const bot of this.bots.values()) {
+      console.log(`\n🤖 ${bot.identity.name.toUpperCase()} (${bot.strategy.name})`);
+      console.log('─'.repeat(90));
+      console.log('TOKEN     | QUANTITY      | BOUGHT @   | CURRENT @  | P&L %     | P&L $     | ACTION');
+      console.log('─'.repeat(90));
+      
+      let totalUnrealizedPnl = 0;
+      let hasTokens = false;
+      
+      // Show USDT first
+      const usdtBalance = bot.portfolio.balances['USDT'] || 0n;
+      if (usdtBalance > 0n) {
+        const usdtAmount = Number(usdtBalance) / 1_000_000; // USDT has 6 decimals
+        console.log(`USDT      | ${usdtAmount.toFixed(2).padStart(12)} | $1.00      | $1.00      | +0.00%    | $0.00     | 💰 CASH`);
+        hasTokens = true;
+      }
+      
+      // Show all other token holdings
+      for (const [token, balance] of Object.entries(bot.portfolio.balances)) {
+        if (token === 'USDT' || balance === 0n) continue;
+        
+        const currentPrice = prices[token]?.price || 0;
+        const costBasis = bot.costBasis[token];
+        
+        if (costBasis && currentPrice > 0) {
+          hasTokens = true;
+          const decimals = token === 'BTC' || token === 'ETH' ? 8 : 6;
+          const quantity = Number(balance) / Math.pow(10, decimals);
+          const currentValue = quantity * currentPrice;
+          const costValue = quantity * costBasis.avgCostUsd;
+          const unrealizedPnl = currentValue - costValue;
+          const pnlPercent = ((currentPrice - costBasis.avgCostUsd) / costBasis.avgCostUsd) * 100;
+          
+          totalUnrealizedPnl += unrealizedPnl;
+          
+          // Determine action
+          const strategy = bot.strategy;
+          const shouldSell = this.shouldSellToken(pnlPercent, strategy);
+          const shouldBuy = this.shouldBuyToken(pnlPercent, strategy);
+          const action = shouldSell ? '🔴 SELL' : shouldBuy ? '🟢 BUY' : '⚪ HOLD';
+          
+          const pnlSign = pnlPercent >= 0 ? '+' : '';
+          const dollarSign = unrealizedPnl >= 0 ? '+' : '';
+          
+          console.log(
+            `${token.padEnd(9)} | ${quantity.toFixed(4).padStart(12)} | $${costBasis.avgCostUsd.toFixed(2).padStart(7)} | $${currentPrice.toFixed(2).padStart(7)} | ${(pnlSign + pnlPercent.toFixed(2) + '%').padStart(8)} | ${(dollarSign + '$' + Math.abs(unrealizedPnl).toFixed(2)).padStart(8)} | ${action}`
+          );
+        }
+      }
+      
+      if (!hasTokens) {
+        console.log('No holdings found');
+      }
+      
+      console.log('─'.repeat(90));
+      console.log(`💎 Realized P&L: $${bot.realizedPnlUsd.toFixed(2).padStart(10)}  |  📈 Unrealized P&L: ${totalUnrealizedPnl >= 0 ? '+' : ''}$${totalUnrealizedPnl.toFixed(2).padStart(10)}`);
+    }
+    
+    console.log('\n' + '='.repeat(100));
+  }
+  
+  // Check if bot should sell a token based on P&L and strategy
+  private shouldSellToken(pnlPercent: number, strategy: any): boolean {
+    const threshold = strategy.minProfitPercent || 1.0;
+    return pnlPercent >= threshold;
+  }
+  
+  // Check if bot should buy more of a token (on dip)
+  private shouldBuyToken(pnlPercent: number, strategy: any): boolean {
+    const threshold = -(strategy.minProfitPercent || 1.0);
+    return pnlPercent <= threshold;
   }
 
   getMarketData(): MarketData {
@@ -209,6 +348,14 @@ export class TradingEngine {
       bot.portfolio.totalUsdValue = totalUsdValue;
       bot.portfolio.profitLoss = totalUsdValue - STARTING_BALANCE_USDT;
       bot.portfolio.profitLossPercent = calculateProfitPercent(totalUsdValue, STARTING_BALANCE_USDT);
+
+      // Initialize or update cost basis state for existing holdings
+      const { StateStore } = require('../state/StateStore');
+      const state = StateStore.load(bot.identity.name);
+      const withInit = StateStore.initMissingFromHoldings(state, bot.portfolio.balances, this.marketData.prices as any);
+      bot.realizedPnlUsd = withInit.realizedPnlUsd;
+      bot.costBasis = withInit.costBasis;
+      StateStore.save(withInit);
 
     } catch (error) {
       throw new BotError(`Failed to update portfolio: ${error}`, bot.identity.name, 'updatePortfolio');
@@ -256,6 +403,24 @@ export class TradingEngine {
           profitLoss: 0, // Will be calculated
           successful: true
         };
+
+        // Update cost basis state
+        const { StateStore } = require('../state/StateStore');
+        const state = StateStore.load(bot.identity.name);
+        let updated = state;
+        if (fromToken === 'USDT') {
+          // Buy token: increase cost basis
+          updated = StateStore.onBuy(state, toToken, trade.toAmount, trade.toPrice);
+          log.bot(bot.identity.name, `📊 Cost basis updated: ${toToken} @ $${trade.toPrice.toFixed(4)}`);
+        } else if (toToken === 'USDT') {
+          // Sell token: realize P&L
+          updated = StateStore.onSell(state, fromToken, trade.fromAmount, trade.fromPrice);
+          const pnlDiff = updated.realizedPnlUsd - state.realizedPnlUsd;
+          log.bot(bot.identity.name, `💰 Realized P&L: ${pnlDiff > 0 ? '+' : ''}$${pnlDiff.toFixed(2)}`);
+        }
+        bot.realizedPnlUsd = updated.realizedPnlUsd;
+        bot.costBasis = updated.costBasis;
+        StateStore.save(updated);
 
         bot.trades.push(trade);
         bot.lastTradeTime = timestamp;
@@ -368,6 +533,8 @@ export class TradingEngine {
     try {
       // Update market data
       await this.updateMarketData();
+      // Seed Binance history if needed so strategies can act immediately
+      await this.seedPriceHistoryIfNeeded();
       
       if (this.marketData.isStale) {
         log.warning('Market data is stale, skipping trading cycle');
@@ -383,8 +550,16 @@ export class TradingEngine {
           // Update bot portfolio
           await this.updateBotPortfolio(bot);
           
-          // Execute strategy
-          await this.executeStrategy(bot);
+          // Check if bot needs portfolio bootstrap
+          if (PortfolioBootstrap.needsBootstrap(bot)) {
+            log.bot(bot.identity.name, `🏗️ Bot needs portfolio diversification`);
+            await PortfolioBootstrap.bootstrapBot(bot);
+            // Update portfolio after bootstrap
+            await this.updateBotPortfolio(bot);
+          } else {
+            // Execute trading strategy
+            await this.executeStrategy(bot);
+          }
           
           // Small delay between bots
           await sleep(500);
@@ -486,8 +661,9 @@ export class TradingEngine {
       const profitColor = bot.portfolio.profitLoss >= 0 ? '🟢' : '🔴';
       console.log(`${profitColor} ${bot.identity.name} (${bot.strategy.name})`);
       console.log(`   Portfolio: $${bot.portfolio.totalUsdValue.toFixed(2)}`);
-      console.log(`   P&L: $${bot.portfolio.profitLoss.toFixed(2)} (${bot.portfolio.profitLossPercent.toFixed(2)}%)`);
-      console.log(`   Trades: ${bot.trades.length} (${bot.trades.filter(t => t.successful).length} successful)`);
+    console.log(`   P&L: $${bot.portfolio.profitLoss.toFixed(2)} (${bot.portfolio.profitLossPercent.toFixed(2)}%)`);
+    console.log(`   Realized P&L: $${bot.realizedPnlUsd.toFixed(2)}`);
+    console.log(`   Trades: ${bot.trades.length} (${bot.trades.filter(t => t.successful).length} successful)`);
       
       // Show top holdings
       const holdings = Object.entries(bot.portfolio.balances)
@@ -501,7 +677,9 @@ export class TradingEngine {
         .slice(0, 3);
       
       for (const holding of holdings) {
-        console.log(`   ${holding.symbol}: ${formatTokenAmount(holding.amount, holding.symbol as SupportedToken)} ($${holding.value.toFixed(2)})`);
+        const costBasis = bot.costBasis[holding.symbol];
+        const costInfo = costBasis ? ` (avg: $${costBasis.avgCostUsd.toFixed(4)})` : '';
+        console.log(`   ${holding.symbol}: ${formatTokenAmount(holding.amount, holding.symbol as SupportedToken)} ($${holding.value.toFixed(2)})${costInfo}`);
       }
       console.log('');
     }

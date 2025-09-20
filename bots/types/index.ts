@@ -86,6 +86,8 @@ export interface Bot {
   lastTradeTime: number;
   isActive: boolean;
   priceHistory: Record<string, number[]>;
+  realizedPnlUsd: number;
+  costBasis: Record<string, { avgCostUsd: number; quantity: bigint }>;
 }
 
 export interface BotMetrics {

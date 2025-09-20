@@ -81,11 +81,26 @@ class TradingBotApplication {
   async runSingleCycle(): Promise<void> {
     try {
       await this.initialize();
-      await this.engine.runTradingCycle();
-      this.engine.printSystemStatus();
+      
+      // Run 10 cycles for complete bootstrap + initial trading, then continue
+      log.info('🔄 Running 10 cycles for complete bootstrap and initial trading, then continuing...');
+      
+      for (let i = 1; i <= 10; i++) {
+        log.info(`📊 Cycle ${i}/10`);
+        await this.engine.runTradingCycle();
+        
+        if (i < 10) {
+          log.info('⏰ Waiting 5 seconds before next cycle...');
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+      }
+      
+      // After initial cycles, continue running
+      log.info('🚀 Initial bootstrap completed, now running continuously...');
+      await this.start();
       
     } catch (error) {
-      log.error('❌ Failed to run single cycle:', error);
+      log.error('❌ Failed to run cycles:', error);
       process.exit(1);
     }
   }

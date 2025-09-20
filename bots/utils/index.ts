@@ -90,8 +90,8 @@ export const createBotActor = async (identity: Identity, canisterId: string) => 
     // Fetch root key for local development (same as frontend)
     await agent.fetchRootKey();
 
-    // Import the IDL factory from declarations (same as frontend)
-    const { idlFactory } = await import('../../src/declarations/backend');
+      // Import the IDL factory from declarations (same as frontend)
+      const { idlFactory } = require('../../src/declarations/backend');
 
     // Create the backend actor with bot's identity (same as frontend)
     const actor = Actor.createActor(idlFactory, {
