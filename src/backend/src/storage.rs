@@ -824,7 +824,6 @@ impl LiquidityStorage {
 
     /// Get all pool information with threshold data
     pub async fn get_all_pools() -> Vec<PoolInfo> {
-        let config = Self::get_config();
         let mut pools = Vec::new();
         
         // First collect all pools
@@ -1110,9 +1109,9 @@ impl LiquidityStorage {
             
             pool.total_staked += position.staked_amount;
             
-            // Calculate voting power (simplified - will be enhanced in later stages)
-            let base_voting_power = position.locked_amount() as f64;
-            pool.total_voting_power += base_voting_power;
+            // Calculate voting power using the same function as individual positions
+            let voting_power = crate::calculate_position_voting_power(position);
+            pool.total_voting_power += voting_power;
             
             // NOTE: available_liquidity is intentionally not recalculated here.
             // It is a live counter adjusted by swaps and stakes.

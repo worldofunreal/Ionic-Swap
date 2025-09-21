@@ -26,19 +26,20 @@
           <div class="flex items-center space-x-6 ml-8">
             <div class="text-center">
               <div class="text-xl font-bold text-purple-600 dark:text-purple-400">
-                ${{ formatUSDTSystemValue(systemStats.totalStaked) }}
+                {{ formatSystemStats.totalStaked }}
               </div>
               <div class="text-xs text-zinc-500 dark:text-zinc-400">Total TVL</div>
             </div>
-            <div class="text-center">
+            <!-- Voting Power - Temporarily disabled, needs rework for proper display -->
+            <!-- <div class="text-center">
               <div class="text-xl font-bold text-zinc-900 dark:text-white">
                 {{ formatSystemStats.totalVotingPower }}
               </div>
               <div class="text-xs text-zinc-500 dark:text-zinc-400">Voting Power</div>
-            </div>
+            </div> -->
             <div class="text-center">
               <div class="text-xl font-bold text-green-600 dark:text-green-400">
-                ${{ formatUSDTSystemValue(systemStats.totalFees) }}
+                {{ formatSystemStats.totalFees }}
               </div>
               <div class="text-xs text-zinc-500 dark:text-zinc-400">Fee Earnings</div>
             </div>
@@ -115,7 +116,7 @@
               ]"
               @click="selectPool(pool)"
             >
-              <div class="grid grid-cols-14 gap-1 items-center">
+              <div class="grid grid-cols-12 gap-1 items-center">
                 <!-- Token Info - Fixed Width -->
                 <div class="col-span-2 flex items-center space-x-2">
                   <img :src="TokenService.getTokenIcon(pool.token_symbol)" :alt="`${pool.token_symbol} icon`" class="w-8 h-8" />
@@ -132,7 +133,7 @@
                 <!-- TVL USDT - Fixed Width -->
                 <div class="col-span-2 text-center">
                   <div class="text-sm font-semibold text-purple-600 dark:text-purple-400">
-                    ${{ formatUSDTValue(pool.tvl_usdt) }}
+                    {{ formatUSDTValue(pool.tvl_usdt) }}
                   </div>
                   <div class="text-xs text-zinc-500 dark:text-zinc-400">TVL</div>
                 </div>
@@ -140,7 +141,7 @@
                 <!-- Total Staked - Fixed Width -->
                 <div class="col-span-2 text-center">
                   <div class="text-sm font-semibold text-zinc-900 dark:text-white">
-                    {{ TokenService.formatBalance(typeof pool.total_staked === 'bigint' ? Number(pool.total_staked) : pool.total_staked, pool.token_symbol) }} {{ pool.token_symbol }}
+                    {{ TokenService.formatLargeAmount(pool.total_staked, pool.token_symbol) }}
                   </div>
                   <div class="text-xs text-zinc-500 dark:text-zinc-400">Total Staked</div>
                 </div>
@@ -148,25 +149,17 @@
                 <!-- Available - Fixed Width -->
                 <div class="col-span-2 text-center">
                   <div class="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                    {{ TokenService.formatBalance(typeof pool.available_liquidity === 'bigint' ? Number(pool.available_liquidity) : pool.available_liquidity, pool.token_symbol) }} {{ pool.token_symbol }}
+                    {{ TokenService.formatLargeAmount(pool.available_liquidity, pool.token_symbol) }}
                   </div>
-                  <div class="text-xs text-zinc-500 dark:text-zinc-400">Available</div>
+                  <div class="text-xs text-zinc-500 dark:text-zinc-400">Liquidity Available</div>
                 </div>
 
-                <!-- Fee Earnings USDT - Fixed Width -->
+                <!-- Fee Earnings (Token) - Fixed Width -->
                 <div class="col-span-2 text-center">
                   <div class="text-sm font-semibold text-green-600 dark:text-green-400">
-                    ${{ formatUSDTValue(pool.total_fees_collected_usdt) }}
+                    {{ TokenService.formatLargeAmount(pool.total_fees_collected, pool.token_symbol) }}
                   </div>
                   <div class="text-xs text-zinc-500 dark:text-zinc-400">Fee Earnings</div>
-                </div>
-
-                <!-- Fees (Token) - Fixed Width -->
-                <div class="col-span-2 text-center">
-                  <div class="text-sm font-semibold text-green-600 dark:text-green-400">
-                    {{ formatPoolFees(pool.total_fees_collected, pool.token_symbol) }}
-                  </div>
-                  <div class="text-xs text-zinc-500 dark:text-zinc-400">Fees</div>
                 </div>
 
                 <!-- Status - Fixed Width -->
@@ -238,13 +231,13 @@
                 <div>
                   <div class="text-sm text-zinc-500 dark:text-zinc-400">Total Staked</div>
                   <div class="font-semibold text-foreground">
-                    {{ TokenService.formatBalance(typeof selectedPool.total_staked === 'bigint' ? Number(selectedPool.total_staked) : selectedPool.total_staked, selectedPool.token_symbol) }} {{ selectedPool.token_symbol }}
+                    {{ TokenService.formatLargeAmount(selectedPool.total_staked, selectedPool.token_symbol) }}
                   </div>
                 </div>
                 <div>
                   <div class="text-sm text-zinc-500 dark:text-zinc-400">Available Liquidity</div>
                   <div class="font-semibold text-foreground">
-                    {{ TokenService.formatBalance(typeof selectedPool.available_liquidity === 'bigint' ? Number(selectedPool.available_liquidity) : selectedPool.available_liquidity, selectedPool.token_symbol) }} {{ selectedPool.token_symbol }}
+                    {{ TokenService.formatLargeAmount(selectedPool.available_liquidity, selectedPool.token_symbol) }}
                   </div>
                 </div>
                 <div>
@@ -254,10 +247,10 @@
                 <div>
                   <div class="text-sm text-zinc-500 dark:text-zinc-400">Fees Collected</div>
                   <div class="font-semibold text-green-600 dark:text-green-400">
-                    {{ formatPoolFees(selectedPool.total_fees_collected, selectedPool.token_symbol) }}
+                    {{ TokenService.formatLargeAmount(selectedPool.total_fees_collected, selectedPool.token_symbol) }}
                   </div>
                   <div class="text-xs text-green-500 dark:text-green-400">
-                    ${{ formatUSDTValue(selectedPool.total_fees_collected_usdt) }}
+                    {{ formatUSDTValue(selectedPool.total_fees_collected_usdt) }}
                   </div>
                 </div>
               </div>
@@ -344,27 +337,27 @@
 
             <!-- Threshold Information -->
             <div class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-4">
-              <h4 class="font-medium text-foreground mb-3">Liquidity Thresholds</h4>
+              <h4 class="font-medium text-foreground mb-3">Liquidity Health</h4>
               <div class="space-y-2">
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Current Liquidity (USDT)</span>
-                  <span class="font-semibold text-foreground">{{ formatThresholdStatus(selectedPool) }}</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Available / Total Staked</span>
+                  <span class="font-semibold text-foreground">{{ formatLiquidityStats(selectedPool) }}</span>
                 </div>
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Healthy Threshold</span>
-                  <span class="text-sm text-green-600 dark:text-green-400">≥ $10.0M</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Current Ratio</span>
+                  <span class="font-semibold text-foreground">{{ formatLiquidityRatio(selectedPool) }}</span>
                 </div>
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Rebalance Threshold</span>
-                  <span class="text-sm text-yellow-600 dark:text-yellow-400">≥ $7.0M</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Healthy</span>
+                  <span class="text-sm text-green-600 dark:text-green-400">≥ {{ formatThresholdAmount(selectedPool, 0.75) }}</span>
                 </div>
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Critical Threshold</span>
-                  <span class="text-sm text-orange-600 dark:text-orange-400">≥ $5.0M</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Needs Rebalance</span>
+                  <span class="text-sm text-yellow-600 dark:text-yellow-400">{{ formatThresholdAmount(selectedPool, 0.50) }} - {{ formatThresholdAmount(selectedPool, 0.75) }}</span>
                 </div>
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Halt Threshold</span>
-                  <span class="text-sm text-red-600 dark:text-red-400">< $5.0M</span>
+                  <span class="text-sm text-zinc-500 dark:text-zinc-400">Halted</span>
+                  <span class="text-sm text-red-600 dark:text-red-400">< {{ formatThresholdAmount(selectedPool, 0.50) }}</span>
                 </div>
               </div>
             </div>
@@ -643,7 +636,7 @@
   // Data
   const allPools = ref<any[]>([])
   const userPositions = ref<any[]>([])
-  const systemStats = ref({ totalStaked: 0, totalVotingPower: 0, totalFees: 0, totalPools: 0 })
+  const systemStats = ref({ totalStaked: 0, totalVotingPower: 0, totalFees: 0, totalPools: 0, totalPositions: 0 })
   const canisterServiceReady = ref(false)
   const userBalances = ref<Record<string, number>>({})
 
@@ -689,9 +682,9 @@
   })
 
   const formatSystemStats = computed(() => ({
-    totalStaked: `$${(systemStats.value.totalStaked / 1_000_000).toFixed(1)}M`,
+    totalStaked: TokenService.formatLargeUSD(systemStats.value.totalStaked),
     totalVotingPower: systemStats.value.totalVotingPower.toFixed(0),
-    totalFees: `$${(systemStats.value.totalFees / 1000).toFixed(1)}K`,
+    totalFees: TokenService.formatLargeUSD(systemStats.value.totalFees),
   }))
 
   // Helper functions
@@ -725,27 +718,12 @@
     
     // Handle null, undefined, or non-numeric values
     if (actualValue === null || actualValue === undefined || typeof actualValue !== 'number' || isNaN(actualValue)) {
-      return '0.00'
+      return '$0.00'
     }
     
-    if (actualValue >= 1_000_000) {
-      return `${(actualValue / 1_000_000).toFixed(1)}M`
-    } else if (actualValue >= 1_000) {
-      return `${(actualValue / 1_000).toFixed(1)}K`
-    } else {
-      return actualValue.toFixed(2)
-    }
+    return TokenService.formatLargeUSD(actualValue)
   }
 
-  const formatUSDTSystemValue = (value: number) => {
-    if (value >= 1_000_000) {
-      return `${(value / 1_000_000).toFixed(1)}M`
-    } else if (value >= 1_000) {
-      return `${(value / 1_000).toFixed(1)}K`
-    } else {
-      return value.toFixed(2)
-    }
-  }
 
   const formatPoolStatus = (status: any) => {
     if (!status) return 'Unknown'
@@ -804,19 +782,53 @@
   }
 
   const calculateVotingPower = (position: any) => {
-    // Simplified voting power calculation
-    const stakeAmount = Number(position.staked_amount) / Math.pow(10, TokenService.getTokenDecimals(position.token_symbol))
-    const delayMultiplier = Math.min(4.0, 1.0 + (Number(position.dissolve_delay_seconds) / (365 * 24 * 3600)) * 3.0)
-    const age = (Date.now() / 1000) - Number(position.created_at)
-    const ageMultiplier = Math.min(1.5, 1.0 + (age / (4 * 365 * 24 * 3600)) * 0.5)
-    return stakeAmount * delayMultiplier * ageMultiplier
+    // Use locked_amount if available (accounts for dissolving state), otherwise fallback to staked_amount
+    const lockedAmount = position.locked_amount || position.staked_amount
+    
+    // Convert to display amount
+    const stakeAmount = Number(lockedAmount) / Math.pow(10, TokenService.getTokenDecimals(position.token_symbol))
+    
+    // Delay multiplier: exactly match backend formula
+    const delay_days = Number(position.dissolve_delay_seconds) / (24 * 3600)
+    const delayMultiplier = Math.min(4.0, 1.0 + (delay_days / 365.0) * 3.0)
+    
+    // Age multiplier: use current_age_seconds if available, otherwise calculate
+    let age_seconds
+    if (position.current_age_seconds) {
+      age_seconds = Number(position.current_age_seconds)
+    } else {
+      // Fallback calculation (less accurate but better than nothing)
+      age_seconds = (Date.now() / 1000) - Number(position.created_at)
+    }
+    const age_years = age_seconds / (365 * 24 * 3600)
+    const ageMultiplier = Math.min(1.5, 1.0 + (age_years / 4.0) * 0.5)
+    
+    const votingPower = stakeAmount * delayMultiplier * ageMultiplier
+    
+    // Debug logging
+    console.log(`🔍 Voting Power Calculation for ${position.token_symbol}:`, {
+      lockedAmount,
+      stakeAmount,
+      delay_days,
+      delayMultiplier,
+      age_seconds,
+      age_years,
+      ageMultiplier,
+      finalVotingPower: votingPower
+    })
+    
+    return votingPower
   }
 
   const calculateVotingPowerPercentage = (position: any, pool: any) => {
     const positionVP = calculateVotingPower(position)
-    const totalVP = pool?.total_voting_power || 0
-    if (totalVP === 0) return 0
-    return (positionVP / totalVP) * 100
+    
+    // Normalize pool's total voting power to match frontend scale
+    const poolDecimals = TokenService.getTokenDecimals(position.token_symbol)
+    const normalizedPoolVP = (pool?.total_voting_power || 0) / Math.pow(10, poolDecimals)
+    
+    if (normalizedPoolVP === 0) return 0
+    return (positionVP / normalizedPoolVP) * 100
   }
 
   const calculateClaimableFees = (position: any) => {
@@ -877,50 +889,34 @@
     return TokenService.formatBalance(balance, symbol)
   }
 
-  const formatThresholdStatus = (pool: any) => {
-    // Calculate threshold amounts based on current token price and configuration
-    // For display purposes, we'll show the current threshold level
+  const formatLiquidityRatio = (pool: any) => {
+    if (!pool || pool.total_staked === 0) return '0.0%'
+    
     const availableLiquidity = Number(pool.available_liquidity)
+    const totalStaked = Number(pool.total_staked)
+    const ratio = (availableLiquidity / totalStaked) * 100
     
-    // Default threshold values in USDT (these should match backend config)
-    const defaultThresholds = {
-      healthy: 10_000_000,    // $10M
-      rebalance: 7_000_000,   // $7M  
-      halt: 5_000_000         // $5M
-    }
-    
-    // Get approximate price for conversion (fallback prices)
-    const price = (() => {
-      switch (pool.token_symbol) {
-        case 'USDT': return 1.0
-        case 'BTC': return 45000.0
-        case 'ETH': return 3000.0
-        case 'SOL': return 100.0
-        case 'BNB': return 300.0
-        case 'XRP': return 0.6
-        case 'DOGE': return 0.08
-        case 'ADA': return 0.5
-        case 'TRX': return 0.1
-        case 'ICP': return 12.0
-        default: return 1.0
-      }
-    })()
-    
-    // Convert available liquidity to USDT value
-    const decimals = TokenService.getTokenDecimals(pool.token_symbol)
-    const liquidityUSDT = (availableLiquidity / Math.pow(10, decimals)) * price
-    
-    // Determine threshold status and format
-    if (liquidityUSDT >= defaultThresholds.healthy) {
-      return `$${(liquidityUSDT / 1_000_000).toFixed(1)}M`
-    } else if (liquidityUSDT >= defaultThresholds.rebalance) {
-      return `$${(liquidityUSDT / 1_000_000).toFixed(1)}M`
-    } else if (liquidityUSDT >= defaultThresholds.halt) {
-      return `$${(liquidityUSDT / 1_000_000).toFixed(1)}M`
-    } else {
-      return `$${(liquidityUSDT / 1_000).toFixed(0)}K`
-    }
+    return `${ratio.toFixed(1)}%`
   }
+
+  const formatLiquidityStats = (pool: any) => {
+    if (!pool) return '0 / 0'
+    
+    const available = TokenService.formatCompactBalance(pool.available_liquidity, pool.token_symbol)
+    const total = TokenService.formatCompactBalance(pool.total_staked, pool.token_symbol)
+    
+    return `${available} / ${total} ${pool.token_symbol}`
+  }
+
+  const formatThresholdAmount = (pool: any, ratio: number) => {
+    if (!pool || pool.total_staked === 0) return '0'
+    
+    const totalStaked = Number(pool.total_staked)
+    const thresholdAmount = totalStaked * ratio
+    
+    return TokenService.formatCompactBalance(thresholdAmount, pool.token_symbol) + ' ' + pool.token_symbol
+  }
+
 
   // Form helpers
   const parseFormattedNumber = (value: string): number => {
@@ -991,9 +987,12 @@
   const refreshData = async () => {
     loading.value = true
     try {
+      // Load pools first, then system stats (which depends on pools)
+      await loadAllPools()
+      await loadSystemStats()
+      
+      // Load user data in parallel
       await Promise.all([
-        loadAllPools(),
-        loadSystemStats(),
         loadUserPositions(),
         loadUserBalances()
       ])
@@ -1011,6 +1010,14 @@
       const pools = await canisterService.getAllLiquidityPools()
       allPools.value = pools
       
+      // Debug logging to check pool voting power data
+      console.log('🔍 Pool Data Debug:', pools.map(p => ({
+        token: p.token_symbol,
+        totalVotingPower: p.total_voting_power,
+        totalStaked: p.total_staked,
+        availableLiquidity: p.available_liquidity
+      })))
+      
       // Auto-select first pool if none selected (URL watcher will handle URL-based selection)
       if (!selectedPool.value && pools.length > 0 && !useRoute().query.token) {
         selectedPool.value = pools[0]
@@ -1025,12 +1032,29 @@
     
     try {
       const stats = await canisterService.getLiquiditySystemStats()
+      
+      // Calculate actual total voting power from all pools
+      const totalVotingPower = allPools.value.reduce((total, pool) => {
+        return total + (pool.total_voting_power || 0)
+      }, 0)
+      
       systemStats.value = {
         totalStaked: Number(stats[2]),      // total_staked_usdt (index 2)
-        totalVotingPower: Number(stats[0]), // total_positions (index 0) 
+        totalVotingPower: totalVotingPower, // actual total voting power
         totalFees: Number(stats[3]),        // total_fees_usdt (index 3)
-        totalPools: Number(stats[1])        // total_pools (index 1)
+        totalPools: Number(stats[1]),       // total_pools (index 1)
+        totalPositions: Number(stats[0])    // total_positions (index 0)
       }
+      
+      // Debug logging
+      console.log('🔍 System Stats Debug:', {
+        backendStats: stats,
+        calculatedVotingPower: totalVotingPower,
+        poolVotingPowers: allPools.value.map(p => ({
+          token: p.token_symbol,
+          votingPower: p.total_voting_power
+        }))
+      })
     } catch (error) {
       console.error('Error loading system stats:', error)
     }
@@ -1043,10 +1067,11 @@
     try {
       const positions = await canisterService.getLiquidityPositions(auth.userProfile.id as any)
       
-      // Filter positions for selected pool if one is selected
-      if (selectedPool.value) {
+      // Filter positions for selected pool if one is selected AND we're not on "My Positions" tab
+      if (selectedPool.value && activeDetailTab.value !== 'positions') {
         userPositions.value = positions.filter(p => p.token_symbol === selectedPool.value.token_symbol)
       } else {
+        // Show all positions when on "My Positions" tab or no pool selected
         userPositions.value = positions
       }
     } catch (error) {
@@ -1211,6 +1236,13 @@
   watch(canisterServiceReady, async (isReady) => {
     if (isReady) {
       await refreshData()
+    }
+  })
+
+  // Watch for tab changes to reload positions appropriately
+  watch(activeDetailTab, async (newTab) => {
+    if (canisterServiceReady.value && newTab === 'positions') {
+      await loadUserPositions()
     }
   })
 

@@ -1,6 +1,6 @@
 {
   "botName": "jack",
-  "realizedPnlUsd": 305.3308289714994,
+  "realizedPnlUsd": 649.6668442136989,
   "costBasis": {
     "BTC": {
       "avgCostUsd": 115543,
@@ -16,7 +16,7 @@
     },
     "BNB": {
       "avgCostUsd": 992.57,
-      "quantity": "19061531892"
+      "quantity": "17997255911"
     },
     "XRP": {
       "avgCostUsd": 2.99,
@@ -35,5 +35,5 @@
       "quantity": "5000000000"
     }
   },
-  "lastUpdated": 1758389323532
+  "lastUpdated": 1758416344654
 }

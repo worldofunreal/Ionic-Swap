@@ -1,6 +1,6 @@
 {
   "botName": "grace",
-  "realizedPnlUsd": 5155.088740927689,
+  "realizedPnlUsd": 5234.092287097887,
   "costBasis": {
     "BTC": {
       "avgCostUsd": 115549,
@@ -16,7 +16,7 @@
     },
     "BNB": {
       "avgCostUsd": 992.32,
-      "quantity": "144203886646"
+      "quantity": "143972911968"
     },
     "XRP": {
       "avgCostUsd": 2.99,
@@ -39,5 +39,5 @@
       "quantity": "20000000000"
     }
   },
-  "lastUpdated": 1758389319180
+  "lastUpdated": 1758395514792
 }

@@ -1079,7 +1079,15 @@ pub async fn claim_fees(position_id: String) -> Result<String, String> {
     ic_cdk::println!("💰 User {} claimed {} {} fees from position {}", 
         caller, claimable_fees_raw, position.token_symbol, position_id);
     
-    Ok(format!("Successfully claimed {} {} in fees", claimable_fees_raw, position.token_symbol))
+    // Format the amount properly for user display
+    let decimals = match position.token_symbol.as_str() {
+        "BTC" => 8, "ETH" => 8, "USDT" => 6, "SOL" => 9, "BNB" => 8,
+        "XRP" => 6, "DOGE" => 8, "ADA" => 6, "TRX" => 6, "ICP" => 8,
+        _ => 6,
+    };
+    let formatted_amount = claimable_fees_raw as f64 / (10.0_f64.powi(decimals as i32));
+    
+    Ok(format!("Successfully claimed {:.6} {} in fees", formatted_amount, position.token_symbol))
 }
 
 /// Start dissolving a position
@@ -1178,7 +1186,7 @@ pub async fn withdraw(position_id: String, amount: u64) -> Result<String, String
 }
 
 /// Calculate voting power for a position (same logic as frontend)
-fn calculate_position_voting_power(position: &icp::liquidity::LiquidityNeuron) -> f64 {
+pub fn calculate_position_voting_power(position: &icp::liquidity::LiquidityNeuron) -> f64 {
     // Use currently locked amount to reflect dissolving state
     let stake_amount = position.locked_amount() as f64;
     

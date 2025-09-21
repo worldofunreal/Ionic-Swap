@@ -312,4 +312,59 @@ export class TokenService {
     const config = this.getTokenConfig(tokenSymbol)
     return !!config?.iconPath
   }
+
+  /**
+   * Format large token amounts with B/M/K abbreviations (includes token symbol)
+   */
+  static formatLargeAmount(rawAmount: number | bigint, tokenSymbol: string): string {
+    const config = this.getTokenConfig(tokenSymbol)
+    if (!config) return '0'
+    
+    const amount = Number(rawAmount) / Math.pow(10, config.decimals)
+    
+    if (amount >= 1_000_000_000) {
+      return `${(amount / 1_000_000_000).toFixed(1)}B ${tokenSymbol}`
+    } else if (amount >= 1_000_000) {
+      return `${(amount / 1_000_000).toFixed(1)}M ${tokenSymbol}`
+    } else if (amount >= 1_000) {
+      return `${(amount / 1_000).toFixed(1)}K ${tokenSymbol}`
+    } else {
+      return `${amount.toFixed(config.displayDecimals)} ${tokenSymbol}`
+    }
+  }
+
+  /**
+   * Format large token amounts with B/M/K abbreviations (number only, no symbol)
+   */
+  static formatCompactBalance(rawAmount: number | bigint, tokenSymbol: string): string {
+    const config = this.getTokenConfig(tokenSymbol)
+    if (!config) return '0'
+    
+    const amount = Number(rawAmount) / Math.pow(10, config.decimals)
+    
+    if (amount >= 1_000_000_000) {
+      return `${(amount / 1_000_000_000).toFixed(1)}B`
+    } else if (amount >= 1_000_000) {
+      return `${(amount / 1_000_000).toFixed(1)}M`
+    } else if (amount >= 1_000) {
+      return `${(amount / 1_000).toFixed(1)}K`
+    } else {
+      return amount.toFixed(config.displayDecimals)
+    }
+  }
+
+  /**
+   * Format large USD amounts with B/M/K abbreviations
+   */
+  static formatLargeUSD(amount: number): string {
+    if (amount >= 1_000_000_000) {
+      return `$${(amount / 1_000_000_000).toFixed(1)}B`
+    } else if (amount >= 1_000_000) {
+      return `$${(amount / 1_000_000).toFixed(1)}M`
+    } else if (amount >= 1_000) {
+      return `$${(amount / 1_000).toFixed(1)}K`
+    } else {
+      return `$${amount.toFixed(2)}`
+    }
+  }
 }

@@ -1,6 +1,6 @@
 {
   "botName": "alice",
-  "realizedPnlUsd": 5167.523020608097,
+  "realizedPnlUsd": 5246.630340572403,
   "costBasis": {
     "BTC": {
       "avgCostUsd": 115548,
@@ -16,7 +16,7 @@
     },
     "BNB": {
       "avgCostUsd": 992.25,
-      "quantity": "144202772282"
+      "quantity": "143971781309"
     },
     "XRP": {
       "avgCostUsd": 2.99,
@@ -39,5 +39,5 @@
       "quantity": "20000000000"
     }
   },
-  "lastUpdated": 1758389309150
+  "lastUpdated": 1758395509169
 }

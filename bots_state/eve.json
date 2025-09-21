@@ -1,6 +1,6 @@
 {
   "botName": "eve",
-  "realizedPnlUsd": 3159.336928321393,
+  "realizedPnlUsd": 3963.2722314838943,
   "costBasis": {
     "BTC": {
       "avgCostUsd": 115549,
@@ -16,7 +16,7 @@
     },
     "BNB": {
       "avgCostUsd": 992.32,
-      "quantity": "110346176532"
+      "quantity": "107979683978"
     },
     "XRP": {
       "avgCostUsd": 2.99,
@@ -39,5 +39,5 @@
       "quantity": "20000000000"
     }
   },
-  "lastUpdated": 1758389315421
+  "lastUpdated": 1758407774371
 }

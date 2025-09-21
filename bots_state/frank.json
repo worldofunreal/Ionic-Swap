@@ -1,6 +1,6 @@
 {
   "botName": "frank",
-  "realizedPnlUsd": 307.7691185444994,
+  "realizedPnlUsd": 654.9072842457989,
   "costBasis": {
     "BTC": {
       "avgCostUsd": 115549,
@@ -16,7 +16,7 @@
     },
     "BNB": {
       "avgCostUsd": 992.32,
-      "quantity": "19061295459"
+      "quantity": "17996751351"
     },
     "XRP": {
       "avgCostUsd": 2.99,
@@ -35,5 +35,5 @@
       "quantity": "5000000000"
     }
   },
-  "lastUpdated": 1758389317299
+  "lastUpdated": 1758416341529
 }
