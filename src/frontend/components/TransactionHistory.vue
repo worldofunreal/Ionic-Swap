@@ -20,6 +20,23 @@
       </div>
     </div>
 
+    <!-- Filter Tabs -->
+    <div class="flex items-center space-x-1 mb-4">
+      <button
+        v-for="filter in transactionFilters"
+        :key="filter.value"
+        :class="[
+          'px-3 py-1 text-xs rounded-md transition-colors',
+          activeFilter === filter.value
+            ? 'bg-primary text-primary-foreground'
+            : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800',
+        ]"
+        @click="activeFilter = filter.value"
+      >
+        {{ filter.label }}
+      </button>
+    </div>
+
     <!-- Loading State -->
     <div v-if="loading && transactions.length === 0" class="text-center py-8">
       <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 mx-auto mb-2 animate-spin text-zinc-500 dark:text-zinc-400" />
@@ -38,27 +55,27 @@
     <!-- Transaction List -->
     <div v-else class="space-y-2">
       <div
-        v-for="transaction in transactions"
+        v-for="transaction in unifiedTransactions"
         :key="transaction.id"
         class="bg-zinc-100 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-3 hover:shadow-sm transition-shadow"
       >
         <div class="flex items-center justify-between">
-          <!-- Transaction Type & Pair -->
+          <!-- Transaction Type & Info -->
           <div class="flex items-center space-x-2">
             <div
               :class="[
                 'w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs',
-                getTransactionTypeClass(transaction)
+                getTransactionTypeColor(transaction)
               ]"
             >
-              {{ getTransactionIcon(transaction) }}
+              {{ getTransactionTypeIcon(transaction) }}
             </div>
             <div class="flex items-center space-x-2">
               <div class="font-semibold text-zinc-900 dark:text-white text-sm">
-                {{ transaction.from_token }} → {{ transaction.to_token }}
+                {{ transaction.displayTitle }}
               </div>
               <div class="text-xs text-zinc-500 dark:text-zinc-400">
-                {{ formatTransactionType(transaction.transaction_type) }}
+                {{ transaction.type === 'swap' ? 'Swap' : formatTransactionType(transaction.transaction_type) }}
               </div>
             </div>
           </div>
@@ -66,9 +83,13 @@
           <!-- Transaction Details -->
           <div class="text-right">
             <div class="font-semibold text-zinc-900 dark:text-white text-sm">
-              {{ formatAmount(transaction.from_amount, transaction.from_token) }} 
-              {{ transaction.from_token }} → {{ formatAmount(transaction.to_amount, transaction.to_token) }} 
-              {{ transaction.to_token }}
+              {{ transaction.displayAmount }}
+            </div>
+            <div v-if="transaction.type === 'swap'" class="text-xs text-zinc-500 dark:text-zinc-400">
+              Rate: {{ formatPrice(transaction.to_price) }}
+            </div>
+            <div v-else-if="transaction.success === false" class="text-xs text-red-500">
+              Failed
             </div>
           </div>
         </div>
@@ -79,10 +100,10 @@
             <div class="flex items-center space-x-2">
               <span>{{ formatDate(transaction.timestamp) }}</span>
               <span>•</span>
-              <span>ID: {{ transaction.id }}</span>
+              <span>ID: {{ transaction.id.slice(0, 10) }}...</span>
             </div>
-            <div class="text-right">
-              <div>Price: {{ formatPrice(transaction.to_price) }}</div>
+            <div v-if="transaction.position_id" class="text-right">
+              <div>Position: {{ transaction.position_id.slice(-8) }}</div>
             </div>
           </div>
         </div>
@@ -128,13 +149,54 @@ const auth = useAuthStore()
 
 // Reactive data
 const transactions = ref<SwapTransaction[]>([])
+const liquidityTransactions = ref<any[]>([])
 const loading = ref(false)
 const hasMore = ref(true)
 const currentOffset = ref(0)
+const activeFilter = ref('all')
+
+// Transaction filters
+const transactionFilters = [
+  { label: 'All', value: 'all' },
+  { label: 'Swaps', value: 'swaps' },
+  { label: 'Staking', value: 'staking' }
+]
 
 // Computed
 const isAuthenticated = computed(() => !!auth.userProfile?.id)
 const userId = computed(() => props.targetUserId || auth.userProfile?.id?.toText?.())
+
+// Unified transaction list with filtering
+const unifiedTransactions = computed(() => {
+  const swapTxs = transactions.value.map(tx => ({
+    ...tx,
+    type: 'swap',
+    displayTitle: `${tx.from_token} → ${tx.to_token}`,
+    displayAmount: `${formatAmount(tx.from_amount, tx.from_token)} → ${formatAmount(tx.to_amount, tx.to_token)}`,
+    timestamp: tx.timestamp
+  }))
+  
+  const liquidityTxs = liquidityTransactions.value.map(tx => ({
+    ...tx,
+    type: 'liquidity',
+    displayTitle: getStakingDisplayTitle(tx),
+    displayAmount: getStakingDisplayAmount(tx),
+    timestamp: tx.timestamp
+  }))
+  
+  // Combine and sort by timestamp (newest first)
+  const combined = [...swapTxs, ...liquidityTxs]
+    .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
+  
+  // Apply filter
+  if (activeFilter.value === 'swaps') {
+    return combined.filter(tx => tx.type === 'swap')
+  } else if (activeFilter.value === 'staking') {
+    return combined.filter(tx => tx.type === 'liquidity')
+  }
+  
+  return combined
+})
 
 // Methods
 const loadTransactions = async (reset = false) => {
@@ -147,22 +209,20 @@ const loadTransactions = async (reset = false) => {
 
   loading.value = true
   try {
-    const offset = reset ? 0 : currentOffset.value
-    const newTransactions = await canisterService.getUserSwapHistoryPaginated(
-      userId.value,
-      props.limit,
-      offset
-    )
+    // Load both swap and liquidity transactions
+    const [swapTxs, liquidityTxs] = await Promise.all([
+      canisterService.getUserSwapHistory(userId.value),
+      canisterService.getLiquidityTransactions(auth.userProfile?.id as any)
+    ])
 
     if (reset) {
-      transactions.value = newTransactions
-      currentOffset.value = newTransactions.length
-    } else {
-      transactions.value.push(...newTransactions)
-      currentOffset.value += newTransactions.length
+      transactions.value = swapTxs
+      liquidityTransactions.value = liquidityTxs
+      currentOffset.value = 0
     }
 
-    hasMore.value = newTransactions.length === props.limit
+    // For now, disable pagination since we're loading all transactions
+    hasMore.value = false
   } catch (error) {
     console.error('Error loading transaction history:', error)
   } finally {
@@ -183,16 +243,22 @@ const loadMore = async () => {
   await loadTransactions(false)
 }
 
-const getTransactionTypeClass = (transaction: SwapTransaction) => {
-  return 'bg-zinc-600 dark:bg-zinc-700' // Match zinc theme
-}
 
-const getTransactionIcon = (transaction: SwapTransaction) => {
-  return '↔' // Swap icon
-}
-
-const formatTransactionType = (type: string) => {
-  return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ')
+const formatTransactionType = (type: any) => {
+  // Handle Candid enum format: {Stake: null}, {ClaimFees: null}, etc.
+  if (type && typeof type === 'object') {
+    const key = Object.keys(type)[0]
+    if (key) {
+      return key.replace(/([A-Z])/g, ' $1').trim() // Convert CamelCase to spaced
+    }
+  }
+  
+  // Handle string format
+  if (typeof type === 'string') {
+    return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ')
+  }
+  
+  return 'Unknown'
 }
 
 const formatAmount = (amount: bigint, token: string) => {
@@ -203,9 +269,100 @@ const formatPrice = (price: number) => {
   return `$${price.toFixed(2)}`
 }
 
-const formatDate = (timestamp: bigint) => {
-  const date = new Date(Number(timestamp) * 1000)
+const formatDate = (timestamp: bigint | number) => {
+  const timestampNum = Number(timestamp)
+  
+  // Handle different timestamp formats
+  let dateMs
+  if (timestampNum > 1_000_000_000_000_000_000) {
+    // Nanoseconds (liquidity transactions) - convert to milliseconds
+    dateMs = timestampNum / 1_000_000
+  } else if (timestampNum > 1_000_000_000_000) {
+    // Milliseconds - use as is
+    dateMs = timestampNum
+  } else {
+    // Seconds (swap transactions) - convert to milliseconds
+    dateMs = timestampNum * 1000
+  }
+  
+  const date = new Date(dateMs)
   return date.toLocaleString()
+}
+
+// Staking transaction helpers
+const getStakingDisplayTitle = (tx: any) => {
+  // Handle Candid enum format: {Stake: null}, {ClaimFees: null}, etc.
+  let txType = ''
+  if (tx.transaction_type && typeof tx.transaction_type === 'object') {
+    txType = Object.keys(tx.transaction_type)[0]
+  } else if (typeof tx.transaction_type === 'string') {
+    txType = tx.transaction_type
+  }
+  
+  switch (txType) {
+    case 'Stake':
+      return `Staked ${tx.token_symbol}`
+    case 'ClaimFees':
+      return `Claimed ${tx.token_symbol} Fees`
+    case 'StartDissolving':
+      return `Started Dissolving ${tx.token_symbol}`
+    case 'CancelDissolving':
+      return `Cancelled Dissolving ${tx.token_symbol}`
+    case 'PartialWithdraw':
+    case 'FullWithdraw':
+      return `Withdrew ${tx.token_symbol}`
+    default:
+      return `${txType} ${tx.token_symbol}`
+  }
+}
+
+const getStakingDisplayAmount = (tx: any) => {
+  const amount = TokenService.formatLargeAmount(tx.amount, tx.token_symbol)
+  return amount
+}
+
+const getTransactionTypeIcon = (tx: any) => {
+  if (tx.type === 'swap') return '↔'
+  
+  // Handle Candid enum format
+  let txType = ''
+  if (tx.transaction_type && typeof tx.transaction_type === 'object') {
+    txType = Object.keys(tx.transaction_type)[0]
+  } else if (typeof tx.transaction_type === 'string') {
+    txType = tx.transaction_type
+  }
+  
+  switch (txType) {
+    case 'Stake': return '🏛'
+    case 'ClaimFees': return '💰'
+    case 'StartDissolving': return '⏳'
+    case 'CancelDissolving': return '❌'
+    case 'PartialWithdraw':
+    case 'FullWithdraw': return '🏦'
+    default: return '🔄'
+  }
+}
+
+const getTransactionTypeColor = (tx: any) => {
+  if (tx.type === 'swap') return 'bg-blue-500'
+  
+  // Handle Candid enum format
+  let txType = ''
+  if (tx.transaction_type && typeof tx.transaction_type === 'object') {
+    txType = Object.keys(tx.transaction_type)[0]
+  } else if (typeof tx.transaction_type === 'string') {
+    txType = tx.transaction_type
+  }
+  
+  switch (txType) {
+    case 'Stake': return 'bg-green-500'
+    case 'ClaimFees': return 'bg-purple-500'
+    case 'StartDissolving': return 'bg-yellow-500'
+    case 'CancelDissolving': return 'bg-gray-500'
+    case 'PartialWithdraw':
+    case 'FullWithdraw': return 'bg-orange-500'
+    default: return 'bg-gray-500'
+  }
 }
 
 // Lifecycle
