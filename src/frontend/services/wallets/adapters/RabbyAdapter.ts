@@ -6,7 +6,9 @@ interface EthereumProvider {
   selectedAddress?: string
   isConnected: () => boolean
   on: (event: string, callback: (data: unknown) => void) => void
+  isMetaMask?: boolean
   isRabby?: boolean
+  providers?: EthereumProvider[]
 }
 
 declare global {
@@ -20,7 +22,42 @@ export class RabbyAdapter implements WalletAdapter {
   capabilities = { icp: false, evm: true, sol: false, btc: false }
 
   private async isRabbyInstalled(): Promise<boolean> {
-    return typeof window.ethereum !== 'undefined' && window.ethereum.isRabby === true
+    if (typeof window.ethereum === 'undefined') {
+      return false
+    }
+
+    const ethereum = window.ethereum as any
+    
+    // Handle multi-provider setup (EIP-1193)
+    if (ethereum.providers && Array.isArray(ethereum.providers)) {
+      return ethereum.providers.some((provider: any) => provider.isRabby)
+    }
+    
+    // Single provider case - check if it's Rabby
+    return ethereum.isRabby === true
+  }
+
+  private async getRabbyProvider(): Promise<EthereumProvider> {
+    if (typeof window.ethereum === 'undefined') {
+      throw new Error('No Ethereum provider found')
+    }
+
+    const ethereum = window.ethereum as any
+    
+    // Handle multi-provider setup
+    if (ethereum.providers && Array.isArray(ethereum.providers)) {
+      const rabbyProvider = ethereum.providers.find((provider: any) => provider.isRabby)
+      if (rabbyProvider) {
+        return rabbyProvider
+      }
+    }
+    
+    // Single provider case
+    if (ethereum.isRabby) {
+      return ethereum
+    }
+
+    throw new Error('Rabby wallet is not installed')
   }
 
   private async getEthereumAddress(): Promise<string> {
@@ -28,15 +65,17 @@ export class RabbyAdapter implements WalletAdapter {
       throw new Error('Rabby wallet is not installed')
     }
 
-    const accounts = await window.ethereum.request({
+    const provider = await this.getRabbyProvider()
+
+    const accounts = await provider.request({
       method: 'eth_requestAccounts',
-    })
+    }) as string[]
 
     if (!accounts || accounts.length === 0) {
       throw new Error('Rabby wallet is locked or no accounts found')
     }
 
-    return accounts[0]
+    return accounts[0]!
   }
 
   private async signMessage(message: string, address: string): Promise<string> {
@@ -44,10 +83,12 @@ export class RabbyAdapter implements WalletAdapter {
       throw new Error('Rabby wallet is not installed')
     }
 
-    const signature = await window.ethereum.request({
+    const provider = await this.getRabbyProvider()
+
+    const signature = await provider.request({
       method: 'personal_sign',
       params: [message, address],
-    })
+    }) as string
 
     return signature
   }

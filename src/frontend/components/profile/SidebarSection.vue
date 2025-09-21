@@ -1,7 +1,7 @@
 <template>
   <div class="mb-2">
     <button
-      class="flex items-center w-full justify-between font-bold text-sm py-2 focus:outline-none"
+      class="flex items-center w-full justify-between font-bold text-sm py-2 focus:ring-primary"
       @click="$emit('toggle')"
     >
       <span>{{ title }}</span>

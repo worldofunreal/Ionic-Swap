@@ -1316,6 +1316,63 @@ class CanisterService {
     }
   }
 
+  // Withdraw the full currently available amount from a position
+  async withdrawAvailable(positionId: string): Promise<string> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.withdraw_available(positionId)
+      if (result.Ok) {
+        return result.Ok
+      } else {
+        throw new Error(result.Err)
+      }
+    } catch (error) {
+      console.error('Error withdrawing available amount:', error)
+      throw error
+    }
+  }
+
+  // Add more tokens to an existing position
+  async addToPosition(positionId: string, amount: bigint): Promise<string> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.add_to_position(positionId, amount)
+      if (result.Ok) {
+        return result.Ok
+      } else {
+        throw new Error(result.Err)
+      }
+    } catch (error) {
+      console.error('Error adding to position:', error)
+      throw error
+    }
+  }
+
+  // Compound claimable fees into the staked position
+  async compoundFees(positionId: string): Promise<string> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.compound_fees(positionId)
+      if (result.Ok) {
+        return result.Ok
+      } else {
+        throw new Error(result.Err)
+      }
+    } catch (error) {
+      console.error('Error compounding fees:', error)
+      throw error
+    }
+  }
+
   // Get fee analytics for a token and time period
   async getFeeAnalytics(
     tokenSymbol: string | null,

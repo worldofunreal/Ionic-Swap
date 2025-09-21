@@ -65,6 +65,22 @@
               >
             </div>
           </UButton>
+
+          <!-- Recover Ionic Wallet -->
+          <UButton
+            id="recover-btn"
+            block
+            size="xl"
+            color="neutral"
+            variant="outline"
+            class="h-12 text-sm font-normal border-zinc-300 dark:border-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 justify-start"
+            @click="openRecoveryModal"
+          >
+            <div class="flex items-center gap-3">
+              <UIcon name="i-heroicons-key-20-solid" class="w-6 h-6" />
+              <span>Recover Ionic Wallet <span class="text-zinc-500 text-xs">(12-word phrase)</span></span>
+            </div>
+          </UButton>
         </div>
 
         <!-- Divider -->
@@ -170,6 +186,7 @@
         </div>
       </div>
     </div>
+    <RecoveryModal ref="recoveryModal" />
   </div>
 </template>
 
@@ -179,6 +196,7 @@
   import { canisterService } from '@/services/CanisterService'
   import { generateRandomUsername } from '@/utils/usernameGenerator'
   import type { WalletType } from '@/services/wallets/types'
+  import RecoveryModal from './RecoveryModal.vue'
 
   // TypeScript declarations are handled by global types
 
@@ -213,6 +231,15 @@
   })
 
   const auth = useAuthStore()
+
+  // Add ref for recovery modal
+  const recoveryModal = ref()
+
+  // Add method to open recovery modal
+  const openRecoveryModal = () => {
+    // Don't close the login panel, just open recovery modal on top
+    recoveryModal.value?.open()
+  }
 
   async function login(walletType: WalletType) {
     error.value = ''

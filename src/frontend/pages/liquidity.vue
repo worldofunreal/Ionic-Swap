@@ -442,40 +442,191 @@
                       ≈ ${{ (calculateClaimableFees(position) * getPositionPrice(position)).toFixed(2) }}
                     </div>
                   </div>
+                  
+                  <!-- Dissolving-specific information -->
+                  <div v-if="position.state.Dissolving">
+                    <div class="text-zinc-500 dark:text-zinc-400">Dissolving Progress</div>
+                    <div class="font-semibold text-foreground">
+                      {{ calculateDissolvingProgress(position).toFixed(1) }}%
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                      <div 
+                        class="bg-yellow-500 h-2 rounded-full transition-all duration-300" 
+                        :style="{ width: calculateDissolvingProgress(position) + '%' }"
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <div v-if="position.state.Dissolving">
+                    <div class="text-zinc-500 dark:text-zinc-400">Time Remaining</div>
+                    <div class="font-semibold text-foreground">
+                      {{ formatTimeRemaining(position) }}
+                    </div>
+                  </div>
+                  
+                  <div v-if="position.state.Dissolving || position.state.Dissolved">
+                    <div class="text-zinc-500 dark:text-zinc-400">Available to Withdraw</div>
+                    <div class="font-semibold text-green-600 dark:text-green-400">
+                      {{ formatAvailableWithdrawal(position) }}
+                    </div>
+                    <div class="text-xs text-green-500 dark:text-green-400">
+                      ≈ ${{ (calculateAvailableWithdrawal(position) / Math.pow(10, TokenService.getTokenDecimals(position.token_symbol)) * getPositionPrice(position)).toFixed(2) }}
+                    </div>
+                  </div>
+                  
+                  <div v-if="position.state.Dissolving">
+                    <div class="text-zinc-500 dark:text-zinc-400">Still Locked (Earning Fees)</div>
+                    <div class="font-semibold text-blue-600 dark:text-blue-400">
+                      {{ formatLockedAmount(position) }}
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Position Actions -->
                 <div class="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
-                  <div class="flex space-x-2">
-                    <button
-                      v-if="position.state.Locked"
-                      @click="startDissolving(position)"
-                      class="flex-1 px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-semibold rounded-md transition-colors"
-                    >
-                      Start Dissolving
-                    </button>
-                    <button
-                      v-if="position.state.Dissolving"
-                      @click="stopDissolving(position)"
-                      class="flex-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-md transition-colors"
-                    >
-                      Stop Dissolving
-                    </button>
+                  <div class="flex flex-col space-y-2">
+                    <!-- Primary Actions Row -->
+                    <div class="flex space-x-2">
+                      <!-- Unstake Button (Start Dissolving) -->
+                      <button
+                        v-if="position.state.Locked"
+                        @click="showDissolveConfirm[position.id] = true"
+                        class="flex-1 px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-semibold rounded-md transition-colors"
+                      >
+                        Unstake
+                      </button>
+                      
+                      <!-- Cancel Dissolving Button -->
+                      <button
+                        v-if="position.state.Dissolving"
+                        @click="stopDissolving(position)"
+                        class="flex-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-md transition-colors"
+                      >
+                        Cancel Dissolving
+                      </button>
+                      
+                      <!-- Add More Button -->
+                      <button
+                        v-if="position.state.Locked"
+                        @click="showAddStake[position.id] = !showAddStake[position.id]"
+                        class="flex-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-md transition-colors"
+                      >
+                        {{ showAddStake[position.id] ? 'Cancel' : 'Add More' }}
+                      </button>
+                      
+                      <!-- Claim/Compound Fees Buttons -->
+                      <button
+                        v-if="position.state.Locked && calculateClaimableFees(position) > 0"
+                        @click="compoundFees(position)"
+                        :disabled="compoundingPositions.includes(position.id)"
+                        class="flex-1 px-3 py-2 bg-green-500 hover:bg-green-600 disabled:bg-green-400 text-white text-xs font-semibold rounded-md transition-colors flex items-center justify-center"
+                      >
+                        <div v-if="compoundingPositions.includes(position.id)" class="w-3 h-3 mr-1 border border-white border-t-transparent rounded-full animate-spin"></div>
+                        {{ compoundingPositions.includes(position.id) ? 'Compounding...' : 'Compound' }}
+                      </button>
+                      
+                      <button
+                        @click="claimFees(position)"
+                        :disabled="claimingFees === position.id"
+                        class="flex-1 px-3 py-2 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-400 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-md transition-colors flex items-center justify-center"
+                      >
+                        <div v-if="claimingFees === position.id" class="w-3 h-3 mr-1 border border-white border-t-transparent rounded-full animate-spin"></div>
+                        {{ claimingFees === position.id ? 'Claiming...' : 'Claim Fees' }}
+                      </button>
+                    </div>
+                    
+                    <!-- Add Stake Section -->
+                    <div v-if="showAddStake[position.id]" class="bg-blue-50 dark:bg-blue-900/20 rounded-md p-3">
+                      <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-blue-700 dark:text-blue-300">Add More {{ position.token_symbol }}</span>
+                        <span class="text-xs text-blue-600 dark:text-blue-400">
+                          Balance: {{ formatUserBalance(position.token_symbol) }}
+                        </span>
+                      </div>
+                      
+                      <div class="flex space-x-2">
+                        <input
+                          v-model="addStakeAmounts[position.id]"
+                          type="text"
+                          placeholder="0.00"
+                          class="flex-1 px-2 py-1 text-xs bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                        >
+                        <button
+                          @click="setMaxAddStake(position)"
+                          class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-700"
+                        >
+                          Max
+                        </button>
+                        <button
+                          @click="addToPosition(position)"
+                          :disabled="addingToPositions.includes(position.id)"
+                          class="px-3 py-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-400 text-white text-xs font-semibold rounded transition-colors flex items-center"
+                        >
+                          <div v-if="addingToPositions.includes(position.id)" class="w-3 h-3 mr-1 border border-white border-t-transparent rounded-full animate-spin"></div>
+                          {{ addingToPositions.includes(position.id) ? 'Adding...' : 'Add' }}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <!-- Single Withdraw (withdraw available) -->
+                    <div v-if="(position.state.Dissolving || position.state.Dissolved) && calculateAvailableWithdrawal(position) > 0" class="bg-green-50 dark:bg-green-900/20 rounded-md p-3">
+                      <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-green-700 dark:text-green-300">Available to Withdraw</span>
+                        <span class="text-xs text-green-600 dark:text-green-400">
+                          {{ formatAvailableWithdrawal(position) }}
+                        </span>
+                      </div>
+                      <button
+                        @click="withdrawPosition(position)"
+                        :disabled="withdrawingPositions.includes(position.id)"
+                        class="w-full px-3 py-2 bg-green-500 hover:bg-green-600 disabled:bg-green-400 text-white text-xs font-semibold rounded-md transition-colors flex items-center justify-center"
+                      >
+                        <div v-if="withdrawingPositions.includes(position.id)" class="w-3 h-3 mr-1 border border-white border-t-transparent rounded-full animate-spin"></div>
+                        {{ withdrawingPositions.includes(position.id) ? 'Withdrawing...' : 'Withdraw Available' }}
+                      </button>
+                    </div>
+                    
+                    <!-- Full Withdrawal Button (for Dissolved positions) -->
                     <button
                       v-if="position.state.Dissolved"
                       @click="withdrawPosition(position)"
-                      class="flex-1 px-3 py-2 bg-green-500 hover:bg-green-600 text-white text-xs font-semibold rounded-md transition-colors"
+                      :disabled="withdrawingPositions.includes(position.id)"
+                      class="w-full px-3 py-2 bg-green-500 hover:bg-green-600 disabled:bg-green-400 text-white text-xs font-semibold rounded-md transition-colors flex items-center justify-center"
                     >
-                      Withdraw
+                      <div v-if="withdrawingPositions.includes(position.id)" class="w-3 h-3 mr-1 border border-white border-t-transparent rounded-full animate-spin"></div>
+                      {{ withdrawingPositions.includes(position.id) ? 'Withdrawing...' : 'Withdraw All' }}
                     </button>
-                    <button
-                      @click="claimFees(position)"
-                      :disabled="claimingFees === position.id"
-                      class="flex-1 px-3 py-2 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-400 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-md transition-colors flex items-center justify-center"
-                    >
-                      <div v-if="claimingFees === position.id" class="w-3 h-3 mr-1 border border-white border-t-transparent rounded-full animate-spin"></div>
-                      {{ claimingFees === position.id ? 'Claiming...' : 'Claim Fees' }}
-                    </button>
+                  </div>
+                </div>
+
+                <!-- Dissolving Confirmation Modal -->
+                <div
+                  v-if="showDissolveConfirm[position.id]"
+                  class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+                >
+                  <div class="bg-white dark:bg-zinc-800 rounded-lg shadow-lg w-full max-w-sm p-4">
+                    <h4 class="text-sm font-semibold text-foreground mb-2">Confirm Unstake</h4>
+                    <ul class="text-xs text-zinc-600 dark:text-zinc-300 space-y-2 mb-4 list-disc pl-4">
+                      <li>We will automatically claim your accumulated fees now.</li>
+                      <li>Your position will not earn new fees while dissolving.</li>
+                      <li>Your displayed voting power will decrease as your stake unlocks.</li>
+                      <li>You can cancel dissolving at any time to resume earning fees.</li>
+                    </ul>
+                    <div class="flex space-x-2">
+                      <button
+                        @click="showDissolveConfirm[position.id] = false"
+                        class="flex-1 px-3 py-2 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-zinc-800 dark:text-zinc-100 text-xs font-semibold rounded-md transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        @click="confirmStartDissolving(position)"
+                        :disabled="dissolvingPositions.includes(position.id)"
+                        class="flex-1 px-3 py-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-400 text-white text-xs font-semibold rounded-md transition-colors"
+                      >
+                        {{ dissolvingPositions.includes(position.id) ? 'Unstaking...' : 'Continue Unstake' }}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -504,7 +655,7 @@
                     placeholder="0.00"
                     @input="formatStakeAmount"
                     @blur="validateStakeAmount"
-                    class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                   <div class="absolute left-3 top-2 text-sm text-zinc-500 dark:text-zinc-400">
                     {{ selectedPool?.token_symbol || 'TOKEN' }}
@@ -529,7 +680,7 @@
                 <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Dissolve Delay</label>
                 <select
                   v-model="selectedDissolveDelay"
-                  class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option v-for="option in dissolveDelayOptions" :key="option.value" :value="option.value">
                     {{ option.label }} ({{ option.multiplier }}x voting power)
@@ -646,8 +797,17 @@
   const stakeAmount = ref('')
   const selectedDissolveDelay = ref(30 * 24 * 3600) // 30 days default
   
-  // Claim fees loading state
+  // Loading states for different actions
   const claimingFees = ref<string | null>(null) // Track which position ID is claiming fees
+  const dissolvingPositions = ref<string[]>([])
+  const withdrawingPositions = ref<string[]>([])
+  const addingToPositions = ref<string[]>([])
+  const compoundingPositions = ref<string[]>([])
+  
+  // UI state
+  const addStakeAmounts = ref<Record<string, string>>({})
+  const showAddStake = ref<Record<string, boolean>>({})
+  const showDissolveConfirm = ref<Record<string, boolean>>({})
 
   // Pool tabs
   const poolTabs = [
@@ -837,6 +997,8 @@
   }
 
   const calculateClaimableFees = (position: any) => {
+    // Do not show claimable fees while dissolving or dissolved
+    if (position.state?.Dissolving || position.state?.Dissolved) return 0
     // Find the correct pool for this specific position
     const pool = allPools.value.find(p => p.token_symbol === position.token_symbol)
     if (!pool) return 0
@@ -920,6 +1082,68 @@
     const thresholdAmount = totalStaked * ratio
     
     return TokenService.formatCompactBalance(thresholdAmount, pool.token_symbol) + ' ' + pool.token_symbol
+  }
+
+  // Enhanced dissolving/withdrawal helper functions
+  const calculateDissolvingProgress = (position: any) => {
+    if (!position.state.Dissolving || !position.dissolving_started_at) return 0
+    
+    const now = Date.now() / 1000
+    const elapsed = now - Number(position.dissolving_started_at)
+    const progress = Math.min(elapsed / Number(position.dissolve_delay_seconds), 1.0)
+    
+    return progress * 100
+  }
+
+  const calculateAvailableWithdrawal = (position: any) => {
+    if (position.state.Locked) return 0
+    if (position.state.Dissolved) {
+      const staked = Number(position.staked_amount)
+      const withdrawn = Number(position.withdrawn_amount || 0)
+      return Math.max(0, staked - withdrawn)
+    }
+    if (position.state.Dissolving && position.dissolving_started_at) {
+      const now = Date.now() / 1000
+      const elapsed = now - Number(position.dissolving_started_at)
+      const progress = Math.min(elapsed / Number(position.dissolve_delay_seconds), 1.0)
+      const totalAvailable = Number(position.staked_amount) * progress
+      const withdrawn = Number(position.withdrawn_amount || 0)
+      return Math.max(0, totalAvailable - withdrawn)
+    }
+    return 0
+  }
+
+  const calculateLockedAmount = (position: any) => {
+    if (position.state.Locked) return Number(position.staked_amount)
+    if (position.state.Dissolved) return 0
+    if (position.state.Dissolving && position.dissolving_started_at) {
+      const now = Date.now() / 1000
+      const elapsed = now - Number(position.dissolving_started_at)
+      const progress = Math.min(elapsed / Number(position.dissolve_delay_seconds), 1.0)
+      return Number(position.staked_amount) * (1 - progress)
+    }
+    return 0
+  }
+
+  const formatTimeRemaining = (position: any) => {
+    if (!position.state.Dissolving || !position.dissolving_started_at) return 'N/A'
+    
+    const now = Date.now() / 1000
+    const elapsed = now - Number(position.dissolving_started_at)
+    const remaining = Math.max(0, Number(position.dissolve_delay_seconds) - elapsed)
+    
+    return formatDuration(remaining)
+  }
+
+  const formatAvailableWithdrawal = (position: any) => {
+    const available = calculateAvailableWithdrawal(position)
+    const displayAmount = available / Math.pow(10, TokenService.getTokenDecimals(position.token_symbol))
+    return TokenService.formatBalance(available, position.token_symbol)
+  }
+
+  const formatLockedAmount = (position: any) => {
+    const locked = calculateLockedAmount(position)
+    return TokenService.formatBalance(locked, position.token_symbol)
   }
 
 
@@ -1170,11 +1394,37 @@
   }
 
   const startDissolving = async (position: any) => {
-    toast.add({
-      title: 'Dissolving Coming Soon',
-      description: 'Position management features will be available soon',
-      color: 'info',
-    })
+    if (!canisterServiceReady.value) return
+    
+    dissolvingPositions.value.push(position.id)
+    
+    try {
+      const result = await canisterService.startDissolving(position.id)
+      
+      toast.add({
+        title: 'Unstaking Started!',
+        description: result,
+        color: 'success',
+      })
+      
+      // Refresh positions to get updated state
+      await Promise.all([loadUserPositions(), loadUserBalances()])
+      
+    } catch (error) {
+      console.error('Error starting dissolving:', error)
+      toast.add({
+        title: 'Unstaking Failed',
+        description: error instanceof Error ? error.message : 'Please try again',
+        color: 'error',
+      })
+    } finally {
+      dissolvingPositions.value = dissolvingPositions.value.filter(id => id !== position.id)
+    }
+  }
+
+  const confirmStartDissolving = async (position: any) => {
+    showDissolveConfirm.value[position.id] = false
+    await startDissolving(position)
   }
 
   const claimFees = async (position: any) => {
@@ -1222,19 +1472,155 @@
   }
 
   const stopDissolving = async (position: any) => {
-    toast.add({
-      title: 'Dissolving Management Coming Soon',
-      description: 'Position management features will be available soon',
-      color: 'info',
-    })
+    try {
+      const result = await canisterService.cancelDissolving(position.id)
+      
+      toast.add({
+        title: 'Dissolving Cancelled',
+        description: result,
+        color: 'success',
+      })
+      
+      await loadUserPositions()
+      
+    } catch (error) {
+      console.error('Error cancelling dissolving:', error)
+      toast.add({
+        title: 'Cancel Failed',
+        description: error instanceof Error ? error.message : 'Please try again',
+        color: 'error',
+      })
+    }
   }
 
   const withdrawPosition = async (position: any) => {
-    toast.add({
-      title: 'Withdrawal Coming Soon',
-      description: 'Position withdrawal will be available soon',
-      color: 'info',
-    })
+    withdrawingPositions.value.push(position.id)
+    
+    try {
+      const result = await canisterService.withdrawAvailable(position.id)
+      
+      toast.add({
+        title: 'Withdrawal Successful!',
+        description: result,
+        color: 'success',
+      })
+      
+      await Promise.all([loadUserPositions(), loadUserBalances()])
+      
+    } catch (error) {
+      console.error('Error withdrawing full amount:', error)
+      toast.add({
+        title: 'Withdrawal Failed',
+        description: error instanceof Error ? error.message : 'Please try again',
+        color: 'error',
+      })
+    } finally {
+      withdrawingPositions.value = withdrawingPositions.value.filter(id => id !== position.id)
+    }
+  }
+
+  const addToPosition = async (position: any) => {
+    const amountStr = addStakeAmounts.value[position.id]
+    if (!amountStr) return
+    
+    const amount = parseFormattedNumber(amountStr)
+    if (amount <= 0) {
+      toast.add({
+        title: 'Invalid Amount',
+        description: 'Amount must be greater than 0',
+        color: 'error',
+      })
+      return
+    }
+    
+    // Check balance
+    const symbol = position.token_symbol
+    const balance = userBalances.value[symbol]
+    if (balance === undefined || balance === null) {
+      toast.add({
+        title: 'Balance Error',
+        description: 'Unable to check your balance',
+        color: 'error',
+      })
+      return
+    }
+
+    const balanceRaw = balance / Math.pow(10, TokenService.getTokenDecimals(symbol))
+    if (amount > balanceRaw) {
+      toast.add({
+        title: 'Insufficient Balance',
+        description: `You have ${TokenService.formatBalance(balance, symbol)} but trying to add ${amountStr}`,
+        color: 'error',
+      })
+      return
+    }
+    
+    addingToPositions.value.push(position.id)
+    
+    try {
+      const rawAmount = TokenService.toRawAmount(amount, position.token_symbol)
+      const result = await canisterService.addToPosition(position.id, BigInt(rawAmount))
+      
+      toast.add({
+        title: 'Successfully Added to Position!',
+        description: result,
+        color: 'success',
+      })
+      
+      // Clear input and refresh
+      addStakeAmounts.value[position.id] = ''
+      showAddStake.value[position.id] = false
+      await Promise.all([loadUserPositions(), loadUserBalances(), loadAllPools()])
+      
+    } catch (error) {
+      console.error('Error adding to position:', error)
+      toast.add({
+        title: 'Add to Position Failed',
+        description: error instanceof Error ? error.message : 'Please try again',
+        color: 'error',
+      })
+    } finally {
+      addingToPositions.value = addingToPositions.value.filter(id => id !== position.id)
+    }
+  }
+
+  const compoundFees = async (position: any) => {
+    compoundingPositions.value.push(position.id)
+    
+    try {
+      const result = await canisterService.compoundFees(position.id)
+      
+      toast.add({
+        title: 'Fees Compounded Successfully!',
+        description: result,
+        color: 'success',
+      })
+      
+      await Promise.all([loadUserPositions(), loadAllPools()])
+      
+    } catch (error) {
+      console.error('Error compounding fees:', error)
+      toast.add({
+        title: 'Compound Failed',
+        description: error instanceof Error ? error.message : 'Please try again',
+        color: 'error',
+      })
+    } finally {
+      compoundingPositions.value = compoundingPositions.value.filter(id => id !== position.id)
+    }
+  }
+
+  const setMaxAddStake = (position: any) => {
+    const symbol = position.token_symbol
+    const balance = userBalances.value[symbol]
+    
+    if (balance === undefined || balance === null) {
+      addStakeAmounts.value[position.id] = '0.00'
+      return
+    }
+    
+    const balanceRaw = balance / Math.pow(10, TokenService.getTokenDecimals(symbol))
+    addStakeAmounts.value[position.id] = balanceRaw.toFixed(TokenService.getDisplayDecimals(symbol))
   }
 
 

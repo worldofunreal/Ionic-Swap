@@ -21,7 +21,7 @@ export default defineNuxtConfig({
 
   // Configure color mode to work with our localStorage approach
   colorMode: {
-    preference: 'system',
+    preference: 'dark',
     fallback: 'dark',
     storageKey: 'ionic-swap-theme',
   },

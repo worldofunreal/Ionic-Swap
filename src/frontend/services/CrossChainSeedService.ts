@@ -126,6 +126,96 @@ export const CrossChainSeedService = {
     return bip39.validateMnemonic(mnemonic)
   },
 
+  // CRITICAL FIX: Direct mnemonic-based functions that avoid double conversion
+  // 
+  // WHY THIS IS ESSENTIAL:
+  // The old approach had a fatal flaw in the derivation chain:
+  // 1. User inputs mnemonic: "wing floor wolf..."
+  // 2. fromMnemonic() converts to seed: bip39.mnemonicToSeedSync(mnemonic)
+  // 3. toEvmAddress(seed) converts seed BACK to mnemonic: seedToMnemonic(seed)
+  // 4. This creates a DIFFERENT mnemonic: "moon deny sight vacant..."
+  // 5. HD wallets derive from the WRONG mnemonic = WRONG private keys
+  // 6. Recovery fails because same input mnemonic produces different addresses
+  //
+  // SOLUTION: Use original mnemonic directly for HD wallet derivation
+  async toEvmAddressFromMnemonic(mnemonic: string): Promise<string> {
+    // Use original mnemonic directly - no conversion to seed and back
+    const hdNode = ethers.HDNodeWallet.fromPhrase(mnemonic)
+    const account = hdNode.derivePath("44'/60'/0'/0/0")
+    return account.address
+  },
+
+  async toSolAddressFromMnemonic(mnemonic: string): Promise<string> {
+    // Use original mnemonic directly - no conversion to seed and back
+    const hdNode = ethers.HDNodeWallet.fromPhrase(mnemonic)
+    const account = hdNode.derivePath("44'/501'/0'/0/0")
+    const privateKeyBytes = ethers.getBytes(account.privateKey)
+    const keypair = Keypair.fromSeed(privateKeyBytes.slice(0, 32))
+    return keypair.publicKey.toString()
+  },
+
+  async toBtcAddressFromMnemonic(mnemonic: string): Promise<string> {
+    try {
+      console.log('Starting Bitcoin address generation from original mnemonic...')
+      
+      // Use original mnemonic directly - no conversion to seed and back
+      const hdNode = ethers.HDNodeWallet.fromPhrase(mnemonic)
+      const account = hdNode.derivePath("44'/0'/0'/0/0")
+      console.log('Derived Bitcoin account:', account.address)
+
+      // Convert private key to Bitcoin format
+      const privateKeyBuffer = Buffer.from(ethers.getBytes(account.privateKey) as Uint8Array)
+      console.log('Private key buffer length:', privateKeyBuffer.length)
+
+      // Generate Bitcoin keypair
+      const keyPair = ECPair.fromPrivateKey(privateKeyBuffer)
+      console.log('Generated Bitcoin keypair, public key length:', keyPair.publicKey.length)
+
+      // For Taproot, we need the internal public key (32 bytes)
+      const internalPubkey = Buffer.from(keyPair.publicKey.slice(1))
+      console.log('Internal public key for Taproot, length:', internalPubkey.length)
+
+      // Generate Taproot address
+      console.log('Attempting Taproot address generation...')
+      const { address: taprootAddress } = bitcoin.payments.p2tr({
+        pubkey: internalPubkey,
+        network: bitcoin.networks.bitcoin,
+      })
+
+      console.log('Taproot address result:', taprootAddress)
+
+      if (taprootAddress) {
+        return taprootAddress
+      }
+
+      throw new Error('Taproot address generation failed')
+    } catch (error) {
+      console.error('Bitcoin address generation error:', error)
+      const hdNode = ethers.HDNodeWallet.fromPhrase(mnemonic)
+      const errorAccount = hdNode.derivePath("44'/0'/0'/0/0")
+      return `btc_error_${errorAccount.address.slice(2)}`
+    }
+  },
+
+  // FIXED: fromMnemonic now uses deterministic, consistent derivation paths
+  //
+  // CRITICAL ARCHITECTURE DECISION:
+  // Different blockchain types require different derivation approaches:
+  //
+  // 1. ICP (Internet Computer): Uses Ed25519 signatures
+  //    - Requires: seed -> Ed25519KeyIdentity
+  //    - Method: Convert mnemonic to seed, then use seed for Ed25519 keypair
+  //    - Why: ICP's identity system is based on Ed25519, not HD wallets
+  //
+  // 2. EVM/Solana/Bitcoin: Use BIP44 HD wallets  
+  //    - Requires: mnemonic -> HD wallet -> derivation path -> private key
+  //    - Method: Use original mnemonic directly for HD wallet generation
+  //    - Why: HD wallets are designed to work with mnemonics, not arbitrary seeds
+  //
+  // This hybrid approach ensures:
+  // - Same mnemonic always produces same addresses across all chains
+  // - Recovery works consistently between login and recovery flows
+  // - Follows blockchain-specific standards (Ed25519 for ICP, BIP44 for others)
   async fromMnemonic(mnemonic: string): Promise<{
     principal: string
     evmAddress: string
@@ -136,16 +226,22 @@ export const CrossChainSeedService = {
     if (!this.isValidMnemonic(mnemonic)) {
       throw new Error('Invalid mnemonic')
     }
+    
+    // Create seed ONLY for ICP identity (Ed25519)
+    // ICP uses Ed25519 signatures which require a 32-byte seed
     const seedBuffer = bip39.mnemonicToSeedSync(mnemonic)
     const seed = new Uint8Array(seedBuffer.slice(0, 32))
-    const [principal, evmAddress, solAddress, btcAddress, identity] =
-      await Promise.all([
-        this.toIcpPrincipal(seed),
-        this.toEvmAddress(seed),
-        this.toSolAddress(seed),
-        this.toBtcAddress(seed),
-        this.toIdentity(seed),
-      ])
+    
+    // Use ORIGINAL mnemonic directly for HD wallets (EVM, Solana, Bitcoin)
+    // This ensures deterministic address generation that matches recovery
+    const [principal, evmAddress, solAddress, btcAddress, identity] = await Promise.all([
+      this.toIcpPrincipal(seed),                    // ✅ ICP: seed-based (Ed25519)
+      this.toEvmAddressFromMnemonic(mnemonic),      // ✅ EVM: direct mnemonic (BIP44)
+      this.toSolAddressFromMnemonic(mnemonic),      // ✅ Solana: direct mnemonic (BIP44)
+      this.toBtcAddressFromMnemonic(mnemonic),      // ✅ Bitcoin: direct mnemonic (BIP44)
+      this.toIdentity(seed),                        // ✅ ICP Identity: seed-based (Ed25519)
+    ])
+    
     return {
       principal,
       evmAddress,

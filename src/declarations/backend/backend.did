@@ -272,15 +272,19 @@ type UserUpdate = record {
   location : opt text;
 };
 service : (InitArg) -> {
+  // Add more tokens to an existing position
+  add_to_position : (text, nat64) -> (Result);
   // Bootstrap canister as initial liquidity provider (admin function)
   // Stakes ~$20M worth of each token to provide initial liquidity
   bootstrap_canister_liquidity : () -> (Result);
-  // Cancel dissolving (return to Locked)
+  // Cancel dissolving (return to Locked, preserving accumulated age)
   cancel_dissolving : (text) -> (Result);
   // Claim 2M USDT from faucet (one-time only per principal)
   claim_faucet : () -> (Result);
   // Claim accumulated fees from a liquidity position
   claim_fees : (text) -> (Result);
+  // Compound claimable fees into the staked position
+  compound_fees : (text) -> (Result);
   // Debug function to check all positions in the system (testing function)
   debug_get_all_positions : () -> (vec LiquidityNeuron) query;
   // Debug function to check all positions for a token (testing function)
@@ -405,7 +409,7 @@ service : (InitArg) -> {
   signup : (text, opt text, opt text, opt text) -> (Result_3);
   // Stake tokens in liquidity pool (user function)
   stake_tokens : (text, nat64, nat64) -> (Result);
-  // Start dissolving a position
+  // Start dissolving a position (automatically claims fees first)
   start_dissolving : (text) -> (Result);
   // Start the price update scheduler (runs every second)
   start_price_scheduler : () -> (Result);
@@ -445,4 +449,6 @@ service : (InitArg) -> {
   update_website : (text) -> (Result_3);
   // Withdraw available amount from a dissolving or dissolved position
   withdraw : (text, nat64) -> (Result);
+  // Withdraw the full currently available amount from a dissolving or dissolved position
+  withdraw_available : (text) -> (Result);
 }

@@ -6,6 +6,9 @@ interface EthereumProvider {
   selectedAddress?: string
   isConnected: () => boolean
   on: (event: string, callback: (data: unknown) => void) => void
+  isMetaMask?: boolean
+  isRabby?: boolean
+  providers?: EthereumProvider[]
 }
 
 declare global {
@@ -19,7 +22,42 @@ export class MetaMaskAdapter implements WalletAdapter {
   capabilities = { icp: false, evm: true, sol: false, btc: false }
 
   private async isMetaMaskInstalled(): Promise<boolean> {
-    return typeof window.ethereum !== 'undefined'
+    if (typeof window.ethereum === 'undefined') {
+      return false
+    }
+
+    const ethereum = window.ethereum as any
+    
+    // Handle multi-provider setup (EIP-1193)
+    if (ethereum.providers && Array.isArray(ethereum.providers)) {
+      return ethereum.providers.some((provider: any) => provider.isMetaMask)
+    }
+    
+    // Single provider case - check if it's MetaMask
+    return ethereum.isMetaMask === true
+  }
+
+  private async getMetaMaskProvider(): Promise<EthereumProvider> {
+    if (typeof window.ethereum === 'undefined') {
+      throw new Error('No Ethereum provider found')
+    }
+
+    const ethereum = window.ethereum as any
+    
+    // Handle multi-provider setup (EIP-1193)
+    if (ethereum.providers && Array.isArray(ethereum.providers)) {
+      const metaMaskProvider = ethereum.providers.find((provider: any) => provider.isMetaMask)
+      if (metaMaskProvider) {
+        return metaMaskProvider
+      }
+    }
+    
+    // Single provider case
+    if (ethereum.isMetaMask) {
+      return ethereum
+    }
+
+    throw new Error('MetaMask provider not found')
   }
 
   private async getEthereumAddress(): Promise<string> {
@@ -27,15 +65,17 @@ export class MetaMaskAdapter implements WalletAdapter {
       throw new Error('MetaMask is not installed')
     }
 
-    const accounts = await window.ethereum.request({
+    const provider = await this.getMetaMaskProvider()
+
+    const accounts = await provider.request({
       method: 'eth_requestAccounts',
-    })
+    }) as string[]
 
     if (!accounts || accounts.length === 0) {
       throw new Error('MetaMask is locked or no accounts found')
     }
 
-    return accounts[0]
+    return accounts[0]!
   }
 
   private async signMessage(message: string, address: string): Promise<string> {
@@ -43,10 +83,12 @@ export class MetaMaskAdapter implements WalletAdapter {
       throw new Error('MetaMask is not installed')
     }
 
-    const signature = await window.ethereum.request({
+    const provider = await this.getMetaMaskProvider()
+
+    const signature = await provider.request({
       method: 'personal_sign',
       params: [message, address],
-    })
+    }) as string
 
     return signature
   }

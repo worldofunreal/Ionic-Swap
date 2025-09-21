@@ -258,6 +258,61 @@
                   Connected
                 </UButton>
               </div>
+
+              <!-- Ionic Wallet Seed (only show for local wallet users) -->
+              <div 
+                v-if="userProfile && auth.nativeWallet === 'local'" 
+                class="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800"
+              >
+                <div class="flex items-center gap-3 mb-3">
+                  <img src="/logo.svg" alt="Ionic Wallet" class="w-10 h-10" />
+                  <div>
+                    <h4 class="text-sm font-medium text-amber-900 dark:text-amber-100">
+                      Ionic Wallet Recovery Phrase
+                    </h4>
+                    <p class="text-sm text-amber-700 dark:text-amber-300">
+                      {{ showSeed ? 'Keep this phrase safe and private' : 'Click to reveal your 12-word recovery phrase' }}
+                    </p>
+                  </div>
+                </div>
+
+                <div v-if="showSeed" class="mb-3 p-3 bg-zinc-100 dark:bg-zinc-800 rounded border font-mono text-sm">
+                  {{ userSeed || 'Loading...' }}
+                </div>
+
+                <div class="flex gap-2">
+                  <UButton
+                    v-if="!showSeed"
+                    color="amber"
+                    variant="soft"
+                    size="sm"
+                    @click="revealSeed"
+                  >
+                    <UIcon name="i-heroicons-eye-20-solid" class="w-4 h-4 mr-2" />
+                    Show Recovery Phrase
+                  </UButton>
+                  <template v-else>
+                    <UButton
+                      color="amber"
+                      variant="soft"
+                      size="sm"
+                      @click="copySeed"
+                    >
+                      <UIcon name="i-heroicons-clipboard-20-solid" class="w-4 h-4 mr-2" />
+                      Copy
+                    </UButton>
+                    <UButton
+                      color="neutral"
+                      variant="soft"
+                      size="sm"
+                      @click="hideSeed"
+                    >
+                      <UIcon name="i-heroicons-eye-slash-20-solid" class="w-4 h-4 mr-2" />
+                      Hide
+                    </UButton>
+                  </template>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -618,6 +673,8 @@
   import { canisterService } from '@/services/CanisterService'
   import { TokenService } from '@/services/TokenService'
   import { useToast } from '#imports'
+  import { appCacheService } from '@/services/AppCacheService'
+  import { CrossChainSeedService } from '@/services/CrossChainSeedService'
 
   // Authentication and user data
   const auth = useAuthStore()
@@ -637,6 +694,10 @@
     bitcoin: '',
     solana: '',
   })
+
+  // Seed management state
+  const showSeed = ref(false)
+  const userSeed = ref('')
 
   // Privacy settings (mock data for now)
   const privacySettings = ref({
@@ -813,6 +874,63 @@
         description: 'Failed to delete account. Please try again.',
         color: 'error',
       })
+    }
+  }
+
+  const revealSeed = async () => {
+    const session = appCacheService.getSession()
+    const toast = useToast()
+    
+    if (!session || auth.nativeWallet !== 'local') {
+      toast.add({
+        title: 'Unable to retrieve seed',
+        description: 'Not using Ionic wallet or no active session',
+        color: 'error',
+      })
+      return
+    }
+
+    try {
+      if (session.originalMnemonic) {
+        // Prefer the exact mnemonic generated at login
+        userSeed.value = session.originalMnemonic
+        showSeed.value = true
+      } else if (session.originalSignature?.startsWith('local-wallet-mnemonic-')) {
+        // Extract the exact mnemonic embedded in signature
+        const mnemonic = session.originalSignature.replace('local-wallet-mnemonic-', '')
+        userSeed.value = mnemonic
+        showSeed.value = true
+        appCacheService.updateSession({ originalMnemonic: mnemonic })
+      } else {
+        // Do NOT reconstruct a new phrase from a hashed seed (would not match login phrase)
+        throw new Error('No recovery phrase available in session')
+      }
+    } catch (error) {
+      console.error('Failed to retrieve seed:', error)
+      toast.add({
+        title: 'Unable to retrieve seed',
+        description: 'Recovery phrase unavailable in current session. Please re-login with Ionic wallet.',
+        color: 'error',
+      })
+    }
+  }
+
+  const hideSeed = () => {
+    showSeed.value = false
+    userSeed.value = ''
+  }
+
+  const copySeed = async () => {
+    try {
+      await navigator.clipboard.writeText(userSeed.value)
+      const toast = useToast()
+      toast.add({
+        title: 'Copied!',
+        description: 'Recovery phrase copied to clipboard',
+        color: 'success',
+      })
+    } catch (error) {
+      console.error('Failed to copy seed:', error)
     }
   }
 

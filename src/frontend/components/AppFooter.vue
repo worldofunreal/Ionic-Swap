@@ -128,7 +128,7 @@
         <!-- Color Theme Switcher -->
         <ClientOnly>
           <button
-            class="relative w-7 h-7 rounded-lg transition-all duration-300 focus:outline-none border border-zinc-200 dark:border-zinc-800 flex items-center justify-center bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800"
+            class="relative w-7 h-7 rounded-lg transition-all duration-300 focus:ring-primary border border-zinc-200 dark:border-zinc-800 flex items-center justify-center bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800"
             aria-label="Toggle color theme"
             @click="toggleColorTheme"
           >

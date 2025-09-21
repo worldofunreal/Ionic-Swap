@@ -98,7 +98,7 @@
                   v-model="state.name"
                   placeholder="Your name"
                   size="lg"
-                  class="w-full dark:bg-neutral-700 dark:text-white dark:border-gray-600 dark:focus:border-primary-500"
+                  class="w-full dark:bg-neutral-700 dark:text-white dark:border-gray-600 dark:focus:ring-primary"
                 />
               </UFormField>
               <UFormField label="Email" name="email">
@@ -107,7 +107,7 @@
                   type="email"
                   placeholder="your@email.com"
                   size="lg"
-                  class="w-full dark:bg-neutral-700 dark:text-white dark:border-gray-600 dark:focus:border-primary-500"
+                  class="w-full dark:bg-neutral-700 dark:text-white dark:border-gray-600 dark:focus:ring-primary"
                 />
               </UFormField>
               <UFormField label="Company" name="company">
@@ -115,7 +115,7 @@
                   v-model="state.company"
                   placeholder="Your company"
                   size="lg"
-                  class="w-full dark:bg-neutral-700 dark:text-white dark:border-gray-600 dark:focus:border-primary-500"
+                  class="w-full dark:bg-neutral-700 dark:text-white dark:border-gray-600 dark:focus:ring-primary"
                 />
               </UFormField>
               <UFormField label="Message" name="message">
@@ -124,7 +124,7 @@
                   placeholder="Tell us about your inquiry..."
                   :rows="4"
                   size="lg"
-                  class="w-full dark:bg-neutral-700 dark:text-white dark:border-gray-600 dark:focus:border-primary-500"
+                  class="w-full dark:bg-neutral-700 dark:text-white dark:border-gray-600 dark:focus:ring-primary"
                 />
               </UFormField>
             </div>

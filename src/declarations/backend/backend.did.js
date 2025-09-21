@@ -292,10 +292,12 @@ export const idlFactory = ({ IDL }) => {
     'location' : IDL.Opt(IDL.Text),
   });
   return IDL.Service({
+    'add_to_position' : IDL.Func([IDL.Text, IDL.Nat64], [Result], []),
     'bootstrap_canister_liquidity' : IDL.Func([], [Result], []),
     'cancel_dissolving' : IDL.Func([IDL.Text], [Result], []),
     'claim_faucet' : IDL.Func([], [Result], []),
     'claim_fees' : IDL.Func([IDL.Text], [Result], []),
+    'compound_fees' : IDL.Func([IDL.Text], [Result], []),
     'debug_get_all_positions' : IDL.Func(
         [],
         [IDL.Vec(LiquidityNeuron)],
@@ -480,6 +482,7 @@ export const idlFactory = ({ IDL }) => {
     'update_solana_address' : IDL.Func([IDL.Text], [Result_3], []),
     'update_website' : IDL.Func([IDL.Text], [Result_3], []),
     'withdraw' : IDL.Func([IDL.Text, IDL.Nat64], [Result], []),
+    'withdraw_available' : IDL.Func([IDL.Text], [Result], []),
   });
 };
 export const init = ({ IDL }) => {

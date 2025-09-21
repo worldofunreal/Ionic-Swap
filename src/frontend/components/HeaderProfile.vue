@@ -499,7 +499,7 @@
 
     switch (walletType.toLowerCase()) {
       case 'local':
-        return { type: 'img', src: '/wouid.svg', alt: 'Ionic Wallet' }
+        return { type: 'img', src: '/logo.svg', alt: 'Ionic Wallet' }
       case 'metamask':
         return { type: 'img', src: '/metamask.svg', alt: 'MetaMask' }
       case 'rabby':

@@ -293,12 +293,16 @@ export interface UserUpdate {
 }
 export interface _SERVICE {
   /**
+   * Add more tokens to an existing position
+   */
+  'add_to_position' : ActorMethod<[string, bigint], Result>,
+  /**
    * Bootstrap canister as initial liquidity provider (admin function)
    * Stakes ~$20M worth of each token to provide initial liquidity
    */
   'bootstrap_canister_liquidity' : ActorMethod<[], Result>,
   /**
-   * Cancel dissolving (return to Locked)
+   * Cancel dissolving (return to Locked, preserving accumulated age)
    */
   'cancel_dissolving' : ActorMethod<[string], Result>,
   /**
@@ -309,6 +313,10 @@ export interface _SERVICE {
    * Claim accumulated fees from a liquidity position
    */
   'claim_fees' : ActorMethod<[string], Result>,
+  /**
+   * Compound claimable fees into the staked position
+   */
+  'compound_fees' : ActorMethod<[string], Result>,
   /**
    * Debug function to check all positions in the system (testing function)
    */
@@ -558,7 +566,7 @@ export interface _SERVICE {
    */
   'stake_tokens' : ActorMethod<[string, bigint, bigint], Result>,
   /**
-   * Start dissolving a position
+   * Start dissolving a position (automatically claims fees first)
    */
   'start_dissolving' : ActorMethod<[string], Result>,
   /**
@@ -639,6 +647,10 @@ export interface _SERVICE {
    * Withdraw available amount from a dissolving or dissolved position
    */
   'withdraw' : ActorMethod<[string, bigint], Result>,
+  /**
+   * Withdraw the full currently available amount from a dissolving or dissolved position
+   */
+  'withdraw_available' : ActorMethod<[string], Result>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

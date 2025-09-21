@@ -23,9 +23,9 @@
         </h2>
         <UButton
           size="sm"
-          color="primary"
           :loading="loading"
-          :disabled="!hasChanges"
+          :disabled="!hasChanges || hasValidationErrors"
+          class="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           @click="saveProfile"
         >
           Save
@@ -142,8 +142,17 @@
               type="text"
               placeholder="Enter your display name"
               maxlength="50"
-              class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white"
+              class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white"
+              @input="validateDisplayName"
             >
+            <div class="flex justify-between items-center mt-1">
+              <div v-if="displayNameError" class="text-red-500 text-xs">
+                {{ displayNameError }}
+              </div>
+              <div class="text-xs ml-auto" :class="form.displayName.length > 45 ? 'text-orange-500' : 'text-zinc-500'">
+                {{ form.displayName.length }} / 50
+              </div>
+            </div>
           </div>
 
           <!-- Bio -->
@@ -159,9 +168,9 @@
                 placeholder="Tell us about yourself"
                 maxlength="160"
                 rows="3"
-                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white resize-none"
+                class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white resize-none"
               />
-              <div class="absolute bottom-2 right-2 text-xs text-zinc-500">
+              <div class="absolute bottom-2 right-2 text-xs" :class="form.bio.length > 150 ? 'text-orange-500' : 'text-zinc-500'">
                 {{ form.bio.length }} / 160
               </div>
             </div>
@@ -179,8 +188,17 @@
               type="text"
               placeholder="Where are you based?"
               maxlength="30"
-              class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white"
+              class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white"
+              @input="validateLocation"
             >
+            <div class="flex justify-between items-center mt-1">
+              <div v-if="locationError" class="text-red-500 text-xs">
+                {{ locationError }}
+              </div>
+              <div class="text-xs ml-auto" :class="form.location.length > 25 ? 'text-orange-500' : 'text-zinc-500'">
+                {{ form.location.length }} / 30
+              </div>
+            </div>
           </div>
 
           <!-- Website -->
@@ -195,8 +213,17 @@
               type="url"
               placeholder="https://yourwebsite.com"
               maxlength="100"
-              class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white"
+              class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white"
+              @blur="formatWebsiteUrl"
             >
+            <div class="flex justify-between items-center mt-1">
+              <div v-if="websiteError" class="text-red-500 text-xs">
+                {{ websiteError }}
+              </div>
+              <div class="text-xs ml-auto" :class="form.website.length > 90 ? 'text-orange-500' : 'text-zinc-500'">
+                {{ form.website.length }} / 100
+              </div>
+            </div>
           </div>
         </div>
 
@@ -230,6 +257,9 @@
   const show = ref(false)
   const loading = ref(false)
   const error = ref('')
+  const websiteError = ref('')
+  const displayNameError = ref('')
+  const locationError = ref('')
 
   // Upload loading states
   const uploadLoading = ref(false)
@@ -300,6 +330,11 @@
     return `${baseUrl}?t=${timestamp}&v=${profileUpdateTrigger.value}&trigger=${Date.now()}`
   })
 
+  // Check if form has validation errors
+  const hasValidationErrors = computed(() => {
+    return !!(displayNameError.value || locationError.value || websiteError.value)
+  })
+
   // Check if form has changes
   const hasChanges = computed(() => {
     if (!userProfile.value) return false
@@ -313,6 +348,60 @@
       form.value.bannerUrl !== (userProfile.value.banner_url?.[0] || '')
     )
   })
+
+  // Validate display name
+  const validateDisplayName = () => {
+    displayNameError.value = ''
+    
+    if (form.value.displayName.length > 50) {
+      displayNameError.value = 'Display name must be 50 characters or less'
+    }
+  }
+
+  // Validate location
+  const validateLocation = () => {
+    locationError.value = ''
+    
+    if (form.value.location.length > 30) {
+      locationError.value = 'Location must be 30 characters or less'
+    }
+  }
+
+  // Format website URL to ensure it starts with https://
+  const formatWebsiteUrl = () => {
+    websiteError.value = ''
+    
+    if (!form.value.website.trim()) {
+      return
+    }
+
+    const website = form.value.website.trim()
+    
+    // Check length first
+    if (website.length > 100) {
+      websiteError.value = 'Website must be 100 characters or less'
+      return
+    }
+    
+    // If it already starts with http:// or https://, validate it
+    if (website.startsWith('http://') || website.startsWith('https://')) {
+      // If it starts with http://, suggest using https://
+      if (website.startsWith('http://')) {
+        websiteError.value = 'Consider using https:// for better security'
+      }
+      return
+    }
+    
+    // If it doesn't start with a protocol, add https://
+    if (website && !website.startsWith('http')) {
+      const newUrl = `https://${website}`
+      if (newUrl.length <= 100) {
+        form.value.website = newUrl
+      } else {
+        websiteError.value = 'Website URL is too long'
+      }
+    }
+  }
 
   // Initialize form with current profile data
   const initializeForm = () => {
@@ -333,11 +422,17 @@
     show.value = true
     initializeForm()
     error.value = ''
+    websiteError.value = ''
+    displayNameError.value = ''
+    locationError.value = ''
   }
 
   const close = () => {
     show.value = false
     error.value = ''
+    websiteError.value = ''
+    displayNameError.value = ''
+    locationError.value = ''
   }
 
   // File input refs
@@ -660,8 +755,52 @@
   const saveProfile = async () => {
     if (!hasChanges.value) return
 
-    loading.value = true
+    // Clear all errors first
     error.value = ''
+    websiteError.value = ''
+    displayNameError.value = ''
+    locationError.value = ''
+
+    // Validate all fields before saving
+    validateDisplayName()
+    validateLocation()
+    
+    if (form.value.website.trim()) {
+      formatWebsiteUrl()
+      // Additional validation to ensure the URL is properly formatted
+      if (!form.value.website.startsWith('https://') && !form.value.website.startsWith('http://')) {
+        websiteError.value = 'Website URL must start with https://'
+      }
+    }
+
+    // Check for any validation errors
+    if (hasValidationErrors.value) {
+      error.value = 'Please fix the validation errors before saving'
+      return
+    }
+
+    // Final backend validation checks to prevent submission errors
+    if (form.value.displayName.length > 50) {
+      displayNameError.value = 'Display name must be 50 characters or less'
+      return
+    }
+    
+    if (form.value.bio.length > 160) {
+      error.value = 'Bio must be 160 characters or less'
+      return
+    }
+    
+    if (form.value.location.length > 30) {
+      locationError.value = 'Location must be 30 characters or less'
+      return
+    }
+    
+    if (form.value.website.length > 100) {
+      websiteError.value = 'Website must be 100 characters or less'
+      return
+    }
+
+    loading.value = true
 
     try {
       // Create update object with all required fields

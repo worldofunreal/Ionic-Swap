@@ -25,6 +25,7 @@ export interface CrossChainAuthResult {
   btcAddress?: string
   nativeWallet: string
   signature?: string
+  mnemonic?: string // Add mnemonic field for local wallet
 }
 
 export interface WalletAdapter {
