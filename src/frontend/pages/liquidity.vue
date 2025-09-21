@@ -470,9 +470,11 @@
                     </button>
                     <button
                       @click="claimFees(position)"
-                      class="flex-1 px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold rounded-md transition-colors"
+                      :disabled="claimingFees === position.id"
+                      class="flex-1 px-3 py-2 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-400 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-md transition-colors flex items-center justify-center"
                     >
-                      Claim Fees
+                      <div v-if="claimingFees === position.id" class="w-3 h-3 mr-1 border border-white border-t-transparent rounded-full animate-spin"></div>
+                      {{ claimingFees === position.id ? 'Claiming...' : 'Claim Fees' }}
                     </button>
                   </div>
                 </div>
@@ -643,6 +645,9 @@
   // Staking form
   const stakeAmount = ref('')
   const selectedDissolveDelay = ref(30 * 24 * 3600) // 30 days default
+  
+  // Claim fees loading state
+  const claimingFees = ref<string | null>(null) // Track which position ID is claiming fees
 
   // Pool tabs
   const poolTabs = [
@@ -1182,6 +1187,9 @@
       return
     }
 
+    // Set loading state for this specific position
+    claimingFees.value = position.id
+
     try {
       const result = await canisterService.claimFees(position.id)
       
@@ -1191,13 +1199,14 @@
         color: 'success',
       })
 
-      // Refresh data
-      await Promise.all([
-        loadUserBalances(),
-        loadUserPositions(),
-        loadAllPools(),
-        loadSystemStats()
-      ])
+      // Update position's fee index locally (no need for full refresh)
+      const pool = allPools.value.find(p => p.token_symbol === position.token_symbol)
+      if (pool) {
+        position.last_fee_index = pool.global_fee_index
+      }
+      
+      // Optional: Update user balance locally if needed
+      // The claimable fees will now show 0 since last_fee_index = global_fee_index
 
     } catch (error) {
       console.error('Error claiming fees:', error)
@@ -1206,6 +1215,9 @@
         description: error instanceof Error ? error.message : 'Please try again',
         color: 'error',
       })
+    } finally {
+      // Clear loading state
+      claimingFees.value = null
     }
   }
 
