@@ -100,7 +100,7 @@
             <div class="flex items-center space-x-2">
               <span>{{ formatDate(transaction.timestamp) }}</span>
               <span>•</span>
-              <span>ID: {{ transaction.id.slice(0, 10) }}...</span>
+              <span>ID: {{ transaction.id }}</span>
             </div>
             <div v-if="transaction.position_id" class="text-right">
               <div>Position: {{ transaction.position_id.slice(-8) }}</div>

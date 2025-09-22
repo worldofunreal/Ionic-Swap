@@ -49,7 +49,7 @@
       v-if="showUserMenu"
       class="absolute right-0 mt-2 w-80 bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-lg border border-zinc-100 dark:border-zinc-800 z-50"
     >
-      <div class="p-2">
+      <div class="p-4">
         <!-- User Info -->
         <div class="flex items-center gap-3 mb-3">
           <img

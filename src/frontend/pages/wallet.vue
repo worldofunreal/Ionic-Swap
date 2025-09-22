@@ -18,24 +18,24 @@
               <div class="relative">
                 <UIcon name="i-heroicons-magnifying-glass-20-solid" class="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500 dark:text-zinc-400" />
                 <input 
+                  v-model="searchQuery"
                   type="text" 
-                  placeholder="Search coins, tokens, or addresses..."
-                  class="pl-10 pr-4 py-2 w-80 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Search tokens, positions, or transactions..."
+                  class="pl-10 pr-10 py-2 w-80 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
+                <button 
+                  v-if="searchQuery"
+                  @click="searchQuery = ''"
+                  class="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                >
+                  <UIcon name="i-heroicons-x-mark-20-solid" class="w-4 h-4" />
+                </button>
               </div>
               
-              <UButton color="primary" size="lg" class="text-base font-semibold px-6 py-3 text-white">
-                <UIcon name="i-heroicons-arrow-down-tray-20-solid" class="w-5 h-5 mr-2" />
+              <UButton color="primary" class="text-sm font-semibold px-4 py-2 text-white">
+                <UIcon name="i-heroicons-arrow-down-tray-20-solid" class="w-4 h-4 mr-2" />
                 Deposit
               </UButton>
-              
-              <div class="flex items-center gap-2">
-                <UIcon name="i-heroicons-bell-20-solid" class="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer" />
-                <UIcon name="i-heroicons-chat-bubble-left-20-solid" class="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer" />
-                <UIcon name="i-heroicons-arrow-down-tray-20-solid" class="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer" />
-                <UIcon name="i-heroicons-globe-alt-20-solid" class="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer" />
-                <UIcon name="i-heroicons-moon-20-solid" class="w-5 h-5 text-zinc-500 dark:text-zinc-400 cursor-pointer" />
-              </div>
             </div>
           </div>
         </div>
@@ -56,21 +56,56 @@
                       {{ userProfile?.username || 'User' }}
                     </h2>
                     <div class="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-                      <span>UID: {{ userProfile?.id?.toText().slice(-8) || 'N/A' }}</span>
-                      <span>VIP Level: Regular User</span>
+                      <button 
+                        class="flex items-center gap-1 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+                        @click="openFollowersModal('following')"
+                      >
+                        <span class="font-semibold text-zinc-900 dark:text-white">{{ userProfile?.following_count || 0 }}</span>
+                        <span>Following</span>
+                      </button>
+                      <button 
+                        class="flex items-center gap-1 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+                        @click="openFollowersModal('followers')"
+                      >
+                        <span class="font-semibold text-zinc-900 dark:text-white">{{ userProfile?.followers_count || 0 }}</span>
+                        <span>Followers</span>
+                      </button>
                     </div>
                   </div>
                 </div>
-                
-                <!-- Social Stats -->
-                <div class="flex items-center gap-4 text-xs">
-                  <div class="flex items-center gap-1">
-                    <span class="font-semibold text-zinc-900 dark:text-white">{{ userProfile?.following_count || 0 }}</span>
-                    <span class="text-zinc-500 dark:text-zinc-400">Following</span>
+
+                <!-- Compact Wallet Addresses -->
+                <div class="space-y-3">
+                  <!-- ICP Principal -->
+                  <div v-if="userProfile?.id" class="flex items-center gap-2 text-base">
+                    <img :src="TokenService.getTokenIcon('ICP')" alt="ICP icon" class="w-5 h-5" />
+                    <span class="font-mono text-zinc-600 dark:text-zinc-300">{{ formatCompactAddress(userProfile.id.toText()) }}</span>
+                    <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-3 h-3 text-zinc-400 hover:text-zinc-600 cursor-pointer" @click="copyToClipboard(userProfile.id.toText(), 'ICP')" />
+                    <UIcon name="i-heroicons-qr-code-20-solid" class="w-3 h-3 text-zinc-400 hover:text-zinc-600 cursor-pointer" @click="showQRCode(userProfile.id.toText(), 'ICP')" />
                   </div>
-                  <div class="flex items-center gap-1">
-                    <span class="font-semibold text-zinc-900 dark:text-white">{{ userProfile?.followers_count || 0 }}</span>
-                    <span class="text-zinc-500 dark:text-zinc-400">Followers</span>
+
+                  <!-- EVM Address -->
+                  <div v-if="userProfile?.evm_address?.[0]" class="flex items-center gap-2 text-base">
+                    <img :src="TokenService.getTokenIcon('ETH')" alt="Ethereum icon" class="w-5 h-5" />
+                    <span class="font-mono text-zinc-600 dark:text-zinc-300">{{ formatCompactAddress(userProfile.evm_address[0]) }}</span>
+                    <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-3 h-3 text-zinc-400 hover:text-zinc-600 cursor-pointer" @click="copyToClipboard(userProfile.evm_address[0], 'EVM')" />
+                    <UIcon name="i-heroicons-qr-code-20-solid" class="w-3 h-3 text-zinc-400 hover:text-zinc-600 cursor-pointer" @click="showQRCode(userProfile.evm_address[0], 'EVM')" />
+                  </div>
+
+                  <!-- Solana Address -->
+                  <div v-if="userProfile?.solana_address?.[0]" class="flex items-center gap-2 text-base">
+                    <img :src="TokenService.getTokenIcon('SOL')" alt="Solana icon" class="w-5 h-5" />
+                    <span class="font-mono text-zinc-600 dark:text-zinc-300">{{ formatCompactAddress(userProfile.solana_address[0]) }}</span>
+                    <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-3 h-3 text-zinc-400 hover:text-zinc-600 cursor-pointer" @click="copyToClipboard(userProfile.solana_address[0], 'Solana')" />
+                    <UIcon name="i-heroicons-qr-code-20-solid" class="w-3 h-3 text-zinc-400 hover:text-zinc-600 cursor-pointer" @click="showQRCode(userProfile.solana_address[0], 'Solana')" />
+                  </div>
+
+                  <!-- Bitcoin Address -->
+                  <div v-if="userProfile?.bitcoin_address?.[0]" class="flex items-center gap-2 text-base">
+                    <img :src="TokenService.getTokenIcon('BTC')" alt="Bitcoin icon" class="w-5 h-5" />
+                    <span class="font-mono text-zinc-600 dark:text-zinc-300">{{ formatCompactAddress(userProfile.bitcoin_address[0]) }}</span>
+                    <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-3 h-3 text-zinc-400 hover:text-zinc-600 cursor-pointer" @click="copyToClipboard(userProfile.bitcoin_address[0], 'Bitcoin')" />
+                    <UIcon name="i-heroicons-qr-code-20-solid" class="w-3 h-3 text-zinc-400 hover:text-zinc-600 cursor-pointer" @click="showQRCode(userProfile.bitcoin_address[0], 'Bitcoin')" />
                   </div>
                 </div>
               </div>
@@ -89,14 +124,14 @@
             </div>
 
 
-            <!-- My Assets Section -->
+            <!-- Assets Section with Tabs -->
             <div class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 mb-8">
+              <!-- Tab Header -->
               <div class="p-4 border-b border-zinc-200 dark:border-zinc-800">
-                <div class="flex items-center justify-between">
-                  <h3 class="text-base font-semibold text-zinc-900 dark:text-white">My Assets</h3>
+                <div class="flex items-center justify-between mb-4">
                   <div class="flex items-center gap-3">
-                    <!-- Value Toggle -->
-                    <div class="flex bg-zinc-100 dark:bg-zinc-900 rounded-md p-1">
+                    <!-- Value Toggle (only show for Tokens tab) -->
+                    <div v-if="activeTab === 'tokens'" class="flex bg-zinc-100 dark:bg-zinc-900 rounded-md p-1">
                       <button
                         :class="[
                           'px-2 py-1 text-xs rounded-md transition-colors',
@@ -121,370 +156,89 @@
                       </button>
                     </div>
                     <span class="text-xs text-zinc-500 dark:text-zinc-400">
-                      {{ tokensWithBalances.length }} assets
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Tokens Table -->
-              <div class="overflow-x-auto">
-                <table class="w-full">
-                  <thead class="bg-zinc-100 dark:bg-zinc-900">
-                    <tr>
-                      <th class="px-6 py-3 text-left text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                        Coin
-                      </th>
-                      <th class="px-6 py-3 text-right text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                        Amount
-                      </th>
-                      <th class="px-6 py-3 text-right text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                        Price
-                      </th>
-                      <th class="px-6 py-3 text-right text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                        Today's PnL
-                      </th>
-                      <th class="px-6 py-3 text-right text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="bg-zinc-100 dark:bg-zinc-900 divide-y divide-default">
-                    <tr v-if="tokensWithBalances.length === 0">
-                      <td colspan="5" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
-                        <div class="w-16 h-16 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <UIcon name="i-heroicons-currency-dollar-20-solid" class="w-8 h-8" />
-                        </div>
-                        <p class="text-base font-medium">Loading Assets...</p>
-                        <p class="text-sm">Fetching your token balances</p>
-                      </td>
-                    </tr>
-                    <tr
-                      v-for="token in tokensWithBalances"
-                      :key="token.symbol"
-                      class="hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                    >
-                      <!-- Coin Column -->
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center">
-                          <img :src="TokenService.getTokenIcon(token.symbol)" :alt="`${token.symbol} icon`" class="w-10 h-10 mr-3" />
-                          <div>
-                            <div class="text-sm font-semibold text-zinc-900 dark:text-white">
-                              {{ token.symbol }}
-                            </div>
-                            <div class="text-sm text-zinc-500 dark:text-zinc-400">
-                              {{ TokenService.getTokenName(token.symbol) }}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-
-                      <!-- Amount Column -->
-                      <td class="px-6 py-4 whitespace-nowrap text-right">
-                        <div class="text-sm font-bold text-zinc-900 dark:text-white">
-                          <span v-if="balancesVisible">{{ formatTokenAmount(token.symbol, token.balance) }}</span>
-                          <span v-else>••••••••</span>
-                        </div>
-                        <div class="text-xs text-zinc-500 dark:text-zinc-400">
-                          <span v-if="balancesVisible">{{ valueDisplay === 'usd' ? formatTokenValue(token.value) : formatTokenValueBTC(token.value) }}</span>
-                          <span v-else>••••••</span>
-                        </div>
-                      </td>
-
-                      <!-- Coin Price / Cost Price Column -->
-                      <td class="px-6 py-4 whitespace-nowrap text-right">
-                        <div class="text-sm font-semibold text-zinc-900 dark:text-white">
-                          <span v-if="balancesVisible">{{ valueDisplay === 'usd' ? formatTokenPrice(token.price) : formatTokenPriceBTC(token.price) }}</span>
-                          <span v-else>••••••</span>
-                        </div>
-                      </td>
-
-                      <!-- Today's PnL Column -->
-                      <td class="px-6 py-4 whitespace-nowrap text-right">
-                        <div class="text-sm font-semibold" :class="token.change24h >= 0 ? 'text-green-500' : 'text-red-500'">
-                          <span v-if="balancesVisible">
-                            {{ token.change24h >= 0 ? '+' : '' }}{{ token.change24h.toFixed(2) }}%
-                          </span>
-                          <span v-else>••••••</span>
-                        </div>
-                      </td>
-
-                      <!-- Action Column -->
-                      <td class="px-6 py-4 whitespace-nowrap text-right">
-                        <div class="flex justify-end gap-2">
-                          <button
-                            @click="tradeToken(token.symbol)"
-                            class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold rounded-lg transition-colors"
-                          >
-                            Trade
-                          </button>
-                          <button
-                            @click="stakeToken(token.symbol)"
-                            class="px-4 py-2 bg-zinc-700 hover:bg-zinc-800 text-white text-sm font-semibold rounded-lg transition-colors"
-                          >
-                            Stake
-                          </button>
-                          <button
-                            @click="openWithdrawModal(token.symbol)"
-                            class="px-4 py-2 bg-zinc-500 hover:bg-zinc-600 text-white text-sm font-semibold rounded-lg transition-colors"
-                          >
-                            Withdraw
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Bottom Section: Wallet Addresses & Portfolio Stats -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <!-- Wallet Addresses Card -->
-              <div class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
-                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
-                  Wallet Addresses
-                </h3>
-                
-                <div class="space-y-3">
-                  <!-- EVM Address -->
-                  <div v-if="userProfile?.evm_address?.[0]" class="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
-                    <div class="flex items-center gap-2 mb-2">
-                      <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded-full">EVM</span>
-                      <div class="flex items-center gap-2">
-                        <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.evm_address[0], 'EVM')" />
-                        <UIcon name="i-heroicons-qr-code-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="showQRCode(userProfile.evm_address[0], 'Ethereum')" />
-                      </div>
-                    </div>
-                    <div class="font-mono text-sm text-zinc-900 dark:text-white">{{ formatAddress(userProfile.evm_address[0]) }}</div>
-                  </div>
-
-                  <!-- Bitcoin Address -->
-                  <div v-if="userProfile?.bitcoin_address?.[0]" class="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
-                    <div class="flex items-center gap-2 mb-2">
-                      <span class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs font-semibold px-2 py-1 rounded-full">BTC</span>
-                      <div class="flex items-center gap-2">
-                        <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.bitcoin_address[0], 'Bitcoin')" />
-                        <UIcon name="i-heroicons-qr-code-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="showQRCode(userProfile.bitcoin_address[0], 'Bitcoin')" />
-                      </div>
-                    </div>
-                    <div class="font-mono text-sm text-zinc-900 dark:text-white">{{ formatAddress(userProfile.bitcoin_address[0]) }}</div>
-                  </div>
-
-                  <!-- Solana Address -->
-                  <div v-if="userProfile?.solana_address?.[0]" class="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
-                    <div class="flex items-center gap-2 mb-2">
-                      <span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs font-semibold px-2 py-1 rounded-full">SOL</span>
-                      <div class="flex items-center gap-2">
-                        <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.solana_address[0], 'Solana')" />
-                        <UIcon name="i-heroicons-qr-code-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="showQRCode(userProfile.solana_address[0], 'Solana')" />
-                      </div>
-                    </div>
-                    <div class="font-mono text-sm text-zinc-900 dark:text-white">{{ formatAddress(userProfile.solana_address[0]) }}</div>
-                  </div>
-
-                  <!-- ICP Principal -->
-                  <div v-if="userProfile?.id" class="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
-                    <div class="flex items-center gap-2 mb-2">
-                      <span class="bg-muted text-zinc-500 dark:text-zinc-400 text-xs font-semibold px-2 py-1 rounded-full">ICP</span>
-                      <div class="flex items-center gap-2">
-                        <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.id.toText(), 'ICP')" />
-                        <UIcon name="i-heroicons-qr-code-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="showQRCode(userProfile.id.toText(), 'ICP')" />
-                      </div>
-                    </div>
-                    <div class="font-mono text-sm text-zinc-900 dark:text-white">{{ formatAddress(userProfile.id.toText()) }}</div>
-                  </div>
-                </div>
-
-                <UButton color="primary" variant="soft" size="lg" class="w-full mt-4 text-base font-semibold py-3 text-white" @click="editAddresses">
-                  <UIcon name="i-heroicons-plus-20-solid" class="w-5 h-5 mr-2" />
-                  Add/Edit Addresses
-                </UButton>
-              </div>
-
-              <!-- Portfolio Stats Card -->
-              <div class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
-                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
-                  Portfolio Stats
-                </h3>
-                
-                <div class="space-y-4">
-                  <div class="flex justify-between items-center">
-                    <span class="text-zinc-500 dark:text-zinc-400">Total Value</span>
-                    <span class="font-semibold text-zinc-900 dark:text-white">
-                      <span v-if="balancesVisible">
-                        {{ valueDisplay === 'usd' ? `$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `${(totalValue / btcPrice).toFixed(8)} BTC` }}
+                      {{ getTabCount() }} {{ getTabLabel() }}
+                      <span v-if="searchQuery" class="text-primary-600 dark:text-primary-400">
+                        (filtered by "{{ searchQuery }}")
                       </span>
-                      <span v-else>••••••</span>
-                    </span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-zinc-500 dark:text-zinc-400">Liquid Tokens</span>
-                    <span class="font-semibold text-zinc-900 dark:text-white">{{ Object.keys(userBalances).length }}</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-zinc-500 dark:text-zinc-400">Staked Positions</span>
-                    <span class="font-semibold text-zinc-900 dark:text-white">{{ liquidityPositions.length }}</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-zinc-500 dark:text-zinc-400">Networks</span>
-                    <span class="font-semibold text-zinc-900 dark:text-white">4</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-zinc-500 dark:text-zinc-400">Faucet Status</span>
-                    <span class="font-semibold text-green-500">{{ faucetClaimed ? 'Claimed' : 'Available' }}</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-zinc-500 dark:text-zinc-400">USDT Balance</span>
-                    <span class="font-semibold text-zinc-900 dark:text-white">{{ formatTokenBalance('USDT') }}</span>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-zinc-500 dark:text-zinc-400">Account Age</span>
-                    <span class="font-semibold text-zinc-900 dark:text-white">New User</span>
-                  </div>
-                </div>
-
-                <!-- Portfolio Allocation Chart -->
-                <div class="mt-6">
-                  <h4 class="text-sm font-medium text-zinc-900 dark:text-white mb-3">Token Holdings</h4>
-                  <div class="space-y-2">
-                    <div v-for="(balance, symbol) in userBalances" :key="symbol" class="flex items-center justify-between">
-                      <div class="flex items-center gap-2">
-                        <img :src="TokenService.getTokenIcon(symbol)" :alt="`${symbol} icon`" class="w-4 h-4" />
-                        <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ symbol }}</span>
-                      </div>
-                      <span class="text-sm font-medium text-zinc-900 dark:text-white">
-                        <span v-if="balancesVisible">{{ formatTokenBalance(symbol) }}</span>
-                        <span v-else>••••••</span>
-                      </span>
-                    </div>
-                    <div v-if="Object.keys(userBalances).length === 0" class="text-center py-4 text-zinc-500 dark:text-zinc-400">
-                      <p class="text-sm">No tokens yet</p>
-                      <p class="text-xs">Complete signup to receive your welcome bonus!</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Transaction History Section -->
-            <div class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 mb-8">
-              <div class="p-4 border-b border-zinc-200 dark:border-zinc-800">
-                <div class="flex items-center justify-between">
-                  <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">Recent Transactions</h3>
-                  <div class="flex items-center gap-2">
-                    <button
-                      @click="refreshTransactionHistory"
-                      :disabled="transactionHistoryLoading"
-                      class="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:text-white disabled:opacity-50"
-                    >
-                      <UIcon 
-                        :name="transactionHistoryLoading ? 'i-heroicons-arrow-path' : 'i-heroicons-arrow-path'" 
-                        :class="transactionHistoryLoading ? 'animate-spin' : ''"
-                        class="w-4 h-4"
-                      />
-                    </button>
-                    <span class="text-xs text-zinc-500 dark:text-zinc-400">
-                      {{ transactionHistory.length }} transactions
                     </span>
                   </div>
                 </div>
+                
+                <!-- Tab Navigation -->
+                <div class="flex space-x-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1">
+                  <button
+                    v-for="tab in tabs"
+                    :key="tab.id"
+                    :class="[
+                      'flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                      activeTab === tab.id
+                        ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
+                        : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                    ]"
+                    @click="activeTab = tab.id"
+                  >
+                    <div class="flex items-center justify-center gap-2">
+                      <UIcon :name="tab.icon" class="w-4 h-4" />
+                      {{ tab.label }}
+                    </div>
+                  </button>
+                </div>
               </div>
 
-              <!-- Transaction History Content -->
+              <!-- Tab Content -->
               <div class="p-4">
-                <!-- Loading State -->
-                <div v-if="transactionHistoryLoading && transactionHistory.length === 0" class="text-center py-8">
-                  <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 mx-auto mb-2 animate-spin text-zinc-500 dark:text-zinc-400" />
-                  <p class="text-zinc-500 dark:text-zinc-400">Loading transaction history...</p>
-                </div>
+                <!-- Tokens Tab -->
+                <Tokens
+                  v-if="activeTab === 'tokens'"
+                  :tokens="tokensWithBalances"
+                  :balances-visible="balancesVisible"
+                  :value-display="valueDisplay"
+                  :btc-price="btcPrice"
+                  :show-actions="true"
+                  empty-title="Loading Assets..."
+                  empty-description="Fetching your token balances"
+                  @trade="tradeToken"
+                  @stake="stakeToken"
+                  @withdraw="openWithdrawModal"
+                />
 
-                <!-- Empty State -->
-                <div v-else-if="!transactionHistoryLoading && transactionHistory.length === 0" class="text-center py-8">
-                  <UIcon name="i-heroicons-document-text" class="w-12 h-12 mx-auto mb-4 text-zinc-500 dark:text-zinc-400" />
-                  <h4 class="text-lg font-medium text-zinc-900 dark:text-white mb-2">No transactions yet</h4>
-                  <p class="text-zinc-500 dark:text-zinc-400 mb-4">
-                    Your trading history will appear here once you make your first swap.
-                  </p>
-                  <UButton 
-                    color="primary" 
-                    variant="soft" 
-                    @click="navigateTo('/trading')"
-                    class="text-sm font-semibold px-4 py-2"
-                  >
-                    <UIcon name="i-heroicons-arrow-right-20-solid" class="w-4 h-4 mr-2" />
-                    Start Trading
-                  </UButton>
-                </div>
+                <!-- Stakes Tab -->
+                <Stakes
+                  v-else-if="activeTab === 'stakes'"
+                  :positions="filteredLiquidityPositions"
+                  :loading="false"
+                  :show-actions="true"
+                  :empty-title="searchQuery ? 'No matching positions' : 'No liquidity positions'"
+                  :empty-description="getEmptyDescription()"
+                  @start-dissolving="startDissolving"
+                  @stop-dissolving="stopDissolving"
+                  @withdraw="withdrawPosition"
+                  @claim-fees="claimFees"
+                >
+                  <template #cta>
+                    <UButton 
+                      color="primary" 
+                      variant="soft" 
+                      @click="navigateTo('/liquidity')"
+                      class="text-sm font-semibold px-4 py-2"
+                    >
+                      <UIcon name="i-heroicons-plus-20-solid" class="w-4 h-4 mr-2" />
+                      Start Staking
+                    </UButton>
+                  </template>
+                </Stakes>
 
-                <!-- Transaction List -->
-                <div v-else class="space-y-3">
-                  <div
-                    v-for="transaction in transactionHistory.slice(0, 5)"
-                    :key="transaction.id"
-                    class="bg-zinc-100 dark:bg-zinc-900/50 rounded-lg p-4 hover:bg-zinc-100 dark:bg-zinc-900-elevated transition-colors"
-                  >
-                    <div class="flex items-center justify-between">
-                      <!-- Transaction Type & Pair -->
-                      <div class="flex items-center space-x-3">
-                        <div class="flex items-center space-x-2">
-                          <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">
-                            ↔
-                          </div>
-                          <div>
-                            <div class="font-semibold text-zinc-900 dark:text-white">
-                              {{ transaction.from_token }} → {{ transaction.to_token }}
-                            </div>
-                            <div class="text-sm text-zinc-500 dark:text-zinc-400">
-                              {{ formatTransactionType(transaction.transaction_type) }}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- Transaction Details -->
-                      <div class="text-right">
-                        <div class="font-semibold text-zinc-900 dark:text-white">
-                          {{ formatAmount(transaction.from_amount, transaction.from_token) }} 
-                          {{ transaction.from_token }}
-                        </div>
-                        <div class="text-sm text-zinc-500 dark:text-zinc-400">
-                          → {{ formatAmount(transaction.to_amount, transaction.to_token) }} 
-                          {{ transaction.to_token }}
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Transaction Metadata -->
-                    <div class="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
-                      <div class="flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400">
-                        <div class="flex items-center space-x-4">
-                          <span>{{ formatDate(transaction.timestamp) }}</span>
-                          <span>•</span>
-                          <span>ID: {{ transaction.id.slice(0, 10) }}...</span>
-                        </div>
-                        <div class="text-right">
-                          <div>Rate: {{ formatPrice(transaction.from_price) }} → {{ formatPrice(transaction.to_price) }}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- View All Button -->
-                <div v-if="transactionHistory.length > 5" class="mt-4 text-center">
-                  <UButton 
-                    color="neutral" 
-                    variant="soft" 
-                    @click="navigateTo('/trading')"
-                    class="text-sm font-semibold px-4 py-2"
-                  >
-                    View All Transactions
-                    <UIcon name="i-heroicons-arrow-right-20-solid" class="w-4 h-4 ml-2" />
-                  </UButton>
-                </div>
+                <!-- Transactions Tab -->
+                <TransactionHistory
+                  v-else-if="activeTab === 'transactions'"
+                  :limit="20"
+                  :target-user-id="auth.userProfile?.id?.toText?.() || null"
+                  :transactions="filteredTransactionHistory"
+                />
               </div>
             </div>
+
+
           </div>
         </div>
     </div>
@@ -505,6 +259,13 @@
       :wallet-type="qrWalletType"
       @close="qrModalOpen = false"
     />
+
+    <!-- Followers/Following Modal -->
+    <FollowersFollowingModal 
+      ref="followersModalRef" 
+      :user-profile="userProfile" 
+      :is-own-profile="true" 
+    />
   </div>
 </template>
 
@@ -520,6 +281,10 @@
   import PortfolioTracker from '@/components/PortfolioTracker.vue'
   import WithdrawalModal from '@/components/WithdrawalModal.vue'
   import QRCodeModal from '@/components/QRCodeModal.vue'
+  import Tokens from '@/components/Tokens.vue'
+  import Stakes from '@/components/Stakes.vue'
+  import TransactionHistory from '@/components/TransactionHistory.vue'
+  import FollowersFollowingModal from '@/components/FollowersFollowingModal.vue'
 
   const auth = useAuthStore()
   const loading = ref(true)
@@ -560,6 +325,64 @@
   // Balance visibility toggle
   const balancesVisible = ref(true)
   
+  // Search functionality
+  const searchQuery = ref('')
+  
+  // Tab state for My Assets section
+  const tabs = [
+    { id: 'tokens', label: 'Tokens', icon: 'i-heroicons-currency-dollar-20-solid' },
+    { id: 'stakes', label: 'Stakes', icon: 'i-heroicons-banknotes-20-solid' },
+    { id: 'transactions', label: 'Transactions', icon: 'i-heroicons-clock-20-solid' }
+  ] as const
+  const activeTab = ref<'tokens' | 'stakes' | 'transactions'>('tokens')
+  
+  // Filtered liquidity positions based on search
+  const filteredLiquidityPositions = computed(() => {
+    if (!searchQuery.value.trim()) {
+      return liquidityPositions.value
+    }
+
+    const query = searchQuery.value.toLowerCase().trim()
+    return liquidityPositions.value.filter(position => 
+      position.token_symbol.toLowerCase().includes(query)
+    )
+  })
+
+  // Filtered transaction history based on search
+  const filteredTransactionHistory = computed(() => {
+    if (!searchQuery.value.trim()) {
+      return transactionHistory.value
+    }
+
+    const query = searchQuery.value.toLowerCase().trim()
+    return transactionHistory.value.filter(transaction => 
+      transaction.from_token.toLowerCase().includes(query) ||
+      transaction.to_token.toLowerCase().includes(query)
+    )
+  })
+
+  // Tab helper functions
+  const getTabCount = () => {
+    switch (activeTab.value) {
+      case 'tokens': return tokensWithBalances.value.length
+      case 'stakes': return filteredLiquidityPositions.value.length
+      case 'transactions': return filteredTransactionHistory.value.length
+      default: return 0
+    }
+  }
+  
+  const getTabLabel = () => {
+    return activeTab.value === 'transactions' ? 'transactions' : 'assets'
+  }
+
+  // Get empty description for stakes
+  const getEmptyDescription = () => {
+    if (searchQuery.value) {
+      return `No positions found for '${searchQuery.value}'`
+    }
+    return "You don't have any liquidity positions yet."
+  }
+  
   // Auto-refresh interval
   let refreshInterval: NodeJS.Timeout | null = null
   
@@ -571,6 +394,9 @@
   const qrModalOpen = ref(false)
   const qrAddress = ref('')
   const qrWalletType = ref('')
+  
+  // Followers modal state
+  const followersModalRef = ref<{ open: (tab: 'followers' | 'following') => void } | null>(null)
   
   // Toggle balance visibility
   const toggleBalanceVisibility = () => {
@@ -646,7 +472,7 @@
 
   // Computed property to get all tokens with their balances, sorted by value
   const tokensWithBalances = computed(() => {
-    return internalTokens.value
+    const tokens = internalTokens.value
       .map(token => {
         const balance = userBalances.value[token.symbol] || 0
         const decimals = token.decimals || 6
@@ -664,6 +490,17 @@
         }
       })
       .sort((a, b) => b.value - a.value) // Sort by value descending
+
+    // Filter by search query if provided
+    if (!searchQuery.value.trim()) {
+      return tokens
+    }
+
+    const query = searchQuery.value.toLowerCase().trim()
+    return tokens.filter(token => 
+      token.symbol.toLowerCase().includes(query) ||
+      token.name.toLowerCase().includes(query)
+    )
   })
 
   // Format address for display
@@ -679,6 +516,13 @@
       return `${address.slice(0, 4)}...${address.slice(-4)}`
     }
     return address
+  }
+
+  // Format compact address for display (matches HeaderProfile.vue)
+  const formatCompactAddress = (address: string) => {
+    if (!address) return ''
+    if (address.length <= 12) return address
+    return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
 
   // Format token balance for display using TokenService
@@ -828,6 +672,7 @@
       loadTransactionHistory() // Also refresh transaction history
       loadLiquidityPositions() // Also refresh liquidity positions
       loadAllPools() // Also refresh pool data for fee calculations
+      refreshUserProfile() // Also refresh user profile for follower/following counts
     }, 30000)
   }
 
@@ -872,6 +717,53 @@
     navigateTo(`/tokens/${symbol.toLowerCase()}`)
   }
 
+  // Liquidity position actions
+  const startDissolving = async (position: any) => {
+    toast.add({
+      title: 'Dissolving Coming Soon',
+      description: 'Position management features will be available soon',
+      color: 'info',
+    })
+  }
+
+  const stopDissolving = async (position: any) => {
+    toast.add({
+      title: 'Dissolving Management Coming Soon',
+      description: 'Position management features will be available soon',
+      color: 'info',
+    })
+  }
+
+  const withdrawPosition = async (position: any) => {
+    toast.add({
+      title: 'Withdrawal Coming Soon',
+      description: 'Position withdrawal will be available soon',
+      color: 'info',
+    })
+  }
+
+  const claimFees = async (position: any) => {
+    try {
+      const result = await canisterService.claimFees(position.id)
+      
+      toast.add({
+        title: 'Fees Claimed Successfully!',
+        description: result,
+        color: 'success',
+      })
+
+      // Refresh positions
+      await loadLiquidityPositions()
+    } catch (error) {
+      console.error('Error claiming fees:', error)
+      toast.add({
+        title: 'Claim Failed',
+        description: error instanceof Error ? error.message : 'Please try again',
+        color: 'error',
+      })
+    }
+  }
+
   // Copy to clipboard function
   const copyToClipboard = async (text: string, walletType: string) => {
     try {
@@ -891,20 +783,19 @@
     }
   }
 
-  // Edit addresses function
-  const editAddresses = () => {
-    toast.add({
-      title: 'Coming Soon',
-      description: 'Address editing will be available soon.',
-      color: 'info',
-    })
-  }
 
   // Show QR code modal
   const showQRCode = (address: string, walletType: string) => {
     qrAddress.value = address
     qrWalletType.value = walletType
     qrModalOpen.value = true
+  }
+
+  // Open followers/following modal
+  const openFollowersModal = (tab: 'followers' | 'following') => {
+    if (followersModalRef.value) {
+      followersModalRef.value.open(tab)
+    }
   }
 
   // Transaction history methods
@@ -978,6 +869,26 @@
     }
   }
 
+  // Refresh user profile to get updated follower/following counts
+  const refreshUserProfile = async () => {
+    if (!auth.userProfile?.id) return
+    
+    try {
+      console.log('Refreshing user profile...')
+      const updatedProfile = await canisterService.getMyProfile()
+      if (updatedProfile) {
+        // Update the auth store with the fresh profile data
+        auth.userProfile = updatedProfile
+        console.log('User profile refreshed with updated counts:', {
+          followers: updatedProfile.followers_count,
+          following: updatedProfile.following_count
+        })
+      }
+    } catch (error) {
+      console.error('Error refreshing user profile:', error)
+    }
+  }
+
   // Load user token balances and data
   const loadTokenData = async () => {
     if (!auth.userProfile?.id) return
@@ -1010,6 +921,9 @@
         loadAllPools()
       ])
 
+      // Refresh user profile to get updated follower/following counts
+      await refreshUserProfile()
+
       // Note: Total value calculation is now handled by the watch function
       // which includes both liquid tokens and staked positions
 
@@ -1021,8 +935,9 @@
   // Handle page visibility change
   const handleVisibilityChange = () => {
     if (document.visibilityState === 'visible') {
-      // Page became visible, refresh balances
+      // Page became visible, refresh balances and profile
       refreshBalances(undefined, true)
+      refreshUserProfile()
     }
   }
 

@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="show"
-    class="fixed inset-0 bg-black bg-opacity-50 dark:bg-black/50 flex items-center justify-center z-50"
+    class="fixed inset-0 bg-zinc-50/20 dark:bg-black/20 backdrop-blur-md flex items-center justify-center z-50"
     @click="close"
   >
     <div
@@ -29,7 +29,7 @@
           <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
             Current Username
           </label>
-          <div class="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-md text-zinc-600 dark:text-zinc-400">
+          <div class="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-md text-zinc-300 dark:text-zinc-700">
             @{{ currentUsername }}
           </div>
         </div>
@@ -88,14 +88,14 @@
         <UButton
           color="neutral"
           variant="soft"
-          class="flex-1"
+          class="flex-1 py-3 text-center bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300"
           @click="close"
         >
           Cancel
         </UButton>
         <UButton
           color="primary"
-          class="flex-1 bg-primary-500 hover:bg-primary-600 text-white"
+          class="flex-1 py-3 text-center bg-primary-500 hover:bg-primary-600 text-white"
           :loading="loading"
           :disabled="!canUpdate"
           @click="updateUsername"

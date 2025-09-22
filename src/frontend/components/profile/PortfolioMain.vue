@@ -120,88 +120,17 @@
           </div>
         </div>
 
-        <!-- Token Balances Table -->
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-muted">
-              <tr>
-                <th class="px-6 py-3 text-left text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                  Coin
-            </th>
-                <th class="px-6 py-3 text-right text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                  Amount
-            </th>
-                <th class="px-6 py-3 text-right text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                  Price
-            </th>
-                <th class="px-6 py-3 text-right text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                  Today's PnL
-            </th>
-                <th class="px-6 py-3 text-right text-sm font-bold text-muted-foreground uppercase tracking-wider">
-                  Value
-            </th>
-          </tr>
-        </thead>
-            <tbody class="bg-card divide-y divide-zinc-200 dark:divide-zinc-800">
-              <tr v-if="tokensWithBalances.length === 0">
-                <td colspan="5" class="px-6 py-12 text-center text-muted-foreground">
-                  <div class="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                    <UIcon name="i-heroicons-currency-dollar-20-solid" class="w-8 h-8" />
-                  </div>
-                  <p class="text-base font-medium">No token balances</p>
-                  <p class="text-sm">{{ isOwnProfile ? 'Complete signup to receive your welcome bonus!' : 'This user has no token balances' }}</p>
-                </td>
-              </tr>
-              <tr
-                v-for="token in tokensWithBalances"
-                :key="token.symbol"
-                class="hover:bg-muted/50 transition-colors"
-              >
-                <!-- Coin Column -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <img :src="TokenService.getTokenIcon(token.symbol)" :alt="`${token.symbol} icon`" class="w-10 h-10 mr-3" />
-                    <div>
-                      <div class="text-sm font-semibold text-foreground">
-                        {{ token.symbol }}
-                      </div>
-                      <div class="text-sm text-muted-foreground">
-                        {{ TokenService.getTokenName(token.symbol) }}
-                      </div>
-                </div>
-              </div>
-            </td>
-
-                <!-- Amount Column -->
-                <td class="px-6 py-4 whitespace-nowrap text-right">
-                  <div class="text-sm font-bold text-foreground">
-                    {{ formatTokenAmount(token.symbol, token.balance) }}
-                  </div>
-            </td>
-
-                <!-- Price Column -->
-                <td class="px-6 py-4 whitespace-nowrap text-right">
-                  <div class="text-sm font-semibold text-foreground">
-                    {{ valueDisplay === 'usd' ? formatTokenPrice(token.price) : formatTokenPriceBTC(token.price) }}
-                  </div>
-            </td>
-
-                <!-- Today's PnL Column -->
-                <td class="px-6 py-4 whitespace-nowrap text-right">
-                  <div class="text-sm font-semibold" :class="token.change24h >= 0 ? 'text-green-500' : 'text-red-500'">
-                    {{ token.change24h >= 0 ? '+' : '' }}{{ token.change24h.toFixed(2) }}%
-                  </div>
-            </td>
-
-                <!-- Value Column -->
-                <td class="px-6 py-4 whitespace-nowrap text-right">
-                  <div class="text-sm font-semibold text-foreground">
-                    {{ valueDisplay === 'usd' ? formatTokenValue(token.value) : formatTokenValueBTC(token.value) }}
-                  </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+        <!-- Token Balances Table using Tokens component -->
+        <div class="p-4">
+          <Tokens
+            :tokens="tokensWithBalances"
+            :balances-visible="true"
+            :value-display="valueDisplay"
+            :btc-price="btcPrice"
+            :show-actions="false"
+            :empty-title="isOwnProfile ? 'No token balances' : 'This user has no token balances'"
+            :empty-description="isOwnProfile ? 'Complete signup to receive your welcome bonus!' : 'This user has no token balances'"
+          />
         </div>
       </div>
 
@@ -216,126 +145,32 @@
           </div>
         </div>
 
-        <!-- Liquidity Positions Content -->
+        <!-- Liquidity Positions Content using Stakes component -->
         <div class="p-4">
-          <!-- Loading State -->
-          <div v-if="positionsLoading" class="flex justify-center items-center py-8">
-            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600" />
-          </div>
-
-          <!-- Empty State -->
-          <div v-else-if="liquidityPositions.length === 0" class="text-center py-8">
-            <div class="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <UIcon name="i-heroicons-banknotes-20-solid" class="w-8 h-8" />
-            </div>
-            <p class="text-base font-medium text-foreground mb-2">No liquidity positions</p>
-            <p class="text-sm text-muted-foreground mb-4">
-              {{ isOwnProfile ? "You don't have any liquidity positions yet." : "This user has no liquidity positions." }}
-            </p>
-            <UButton 
-              v-if="isOwnProfile"
-              color="primary" 
-              variant="soft" 
-              @click="navigateTo('/liquidity')"
-              class="text-sm font-semibold px-4 py-2"
-            >
-              <UIcon name="i-heroicons-plus-20-solid" class="w-4 h-4 mr-2" />
-              Start Staking
-            </UButton>
-          </div>
-
-          <!-- Positions List -->
-          <div v-else class="space-y-4">
-            <div
-              v-for="position in liquidityPositions"
-              :key="position.id"
-              class="bg-muted/50 rounded-lg p-4 hover:bg-muted transition-colors"
-            >
-              <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center space-x-3">
-                  <img :src="TokenService.getTokenIcon(position.token_symbol)" :alt="`${position.token_symbol} icon`" class="w-10 h-10" />
-                  <div>
-                    <div class="font-semibold text-foreground">{{ position.token_symbol }} Pool</div>
-                    <div class="text-xs text-muted-foreground">ID: {{ position.id.slice(-8) }}</div>
-                  </div>
-                </div>
-                <div 
-                  :class="[
-                    'px-3 py-1 text-xs rounded-full font-medium',
-                    getNeuronStateClass(position.state)
-                  ]"
-                >
-                  {{ formatNeuronState(position.state) }}
-                </div>
-              </div>
-
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <div class="text-muted-foreground mb-1">Staked Amount</div>
-                  <div class="font-semibold text-foreground">
-                    {{ TokenService.formatBalance(typeof position.staked_amount === 'bigint' ? Number(position.staked_amount) : position.staked_amount, position.token_symbol) }} {{ position.token_symbol }}
-                  </div>
-                </div>
-                <div>
-                  <div class="text-muted-foreground mb-1">Voting Power</div>
-                  <div class="font-semibold text-foreground">{{ calculateVotingPower(position).toFixed(2) }}</div>
-                </div>
-                <div>
-                  <div class="text-muted-foreground mb-1">Dissolve Delay</div>
-                  <div class="font-semibold text-foreground">{{ formatDuration(position.dissolve_delay_seconds) }}</div>
-                </div>
-                <div>
-                  <div class="text-muted-foreground mb-1">Age</div>
-                  <div class="font-semibold text-foreground">{{ formatAge(position.created_at) }}</div>
-                </div>
-              </div>
-
-              <!-- Claimable Fees -->
-              <div class="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
-                <div class="flex items-center justify-between">
-                  <span class="text-sm text-muted-foreground">Claimable Fees</span>
-                  <div class="text-right">
-                    <div class="font-semibold text-foreground">
-                      {{ calculateClaimableFees(position).toFixed(6) }} {{ position.token_symbol }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Position Actions (only for own profile) -->
-              <div v-if="isOwnProfile" class="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
-                <div class="flex gap-2">
-                  <button
-                    v-if="position.state.Locked"
-                    @click="startDissolving(position)"
-                    class="flex-1 px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-semibold rounded-md transition-colors"
-                  >
-                    Start Dissolving
-                  </button>
-                  <button
-                    v-if="position.state.Dissolving"
-                    @click="stopDissolving(position)"
-                    class="flex-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-md transition-colors"
-                  >
-                    Stop Dissolving
-                  </button>
-                  <button
-                    v-if="position.state.Dissolved"
-                    @click="withdrawPosition(position)"
-                    class="flex-1 px-3 py-2 bg-green-500 hover:bg-green-600 text-white text-xs font-semibold rounded-md transition-colors"
-                  >
-                    Withdraw
-                  </button>
-                  <button
-                    @click="claimFees(position)"
-                    class="flex-1 px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold rounded-md transition-colors"
-                  >
-                    Claim Fees
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <Stakes
+            :positions="liquidityPositions"
+            :loading="positionsLoading"
+            :show-actions="isOwnProfile"
+            :empty-title="'No liquidity positions'"
+            :empty-description="isOwnProfile ? 'You don\'t have any liquidity positions yet.' : 'This user has no liquidity positions.'"
+            @start-dissolving="startDissolving"
+            @stop-dissolving="stopDissolving"
+            @withdraw="withdrawPosition"
+            @claim-fees="claimFees"
+          >
+            <template #cta>
+              <UButton 
+                v-if="isOwnProfile"
+                color="primary" 
+                variant="soft" 
+                @click="navigateTo('/liquidity')"
+                class="text-sm font-semibold px-4 py-2"
+              >
+                <UIcon name="i-heroicons-plus-20-solid" class="w-4 h-4 mr-2" />
+                Start Staking
+              </UButton>
+            </template>
+          </Stakes>
         </div>
       </div>
     </div>
@@ -437,6 +272,8 @@
   import { priceService } from '@/services/PriceService'
   import { TokenService } from '@/services/TokenService'
   import { useToast } from '#imports'
+  import Tokens from '@/components/Tokens.vue'
+  import Stakes from '@/components/Stakes.vue'
 
   // Props
   interface Props {
@@ -550,64 +387,6 @@
   }
 
   // Liquidity position helpers
-  const formatNeuronState = (state: any) => {
-    if (state && typeof state === 'object') {
-      if ('Locked' in state) return 'Locked'
-      if ('Dissolving' in state) return 'Dissolving'
-      if ('Dissolved' in state) return 'Dissolved'
-    }
-    return 'Unknown'
-  }
-
-  const getNeuronStateClass = (state: any) => {
-    if (state.Locked) return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-    if (state.Dissolving) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-    if (state.Dissolved) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-    return 'bg-zinc-100 text-zinc-800 dark:bg-zinc-900 dark:text-zinc-200'
-  }
-
-  const formatDuration = (seconds: number | bigint) => {
-    const secondsNum = typeof seconds === 'bigint' ? Number(seconds) : seconds
-    const days = Math.floor(secondsNum / (24 * 3600))
-    if (days >= 365) return `${Math.floor(days / 365)} year${Math.floor(days / 365) !== 1 ? 's' : ''}`
-    if (days >= 30) return `${Math.floor(days / 30)} month${Math.floor(days / 30) !== 1 ? 's' : ''}`
-    if (days >= 7) return `${Math.floor(days / 7)} week${Math.floor(days / 7) !== 1 ? 's' : ''}`
-    if (days > 0) return `${days} day${days !== 1 ? 's' : ''}`
-    const hours = Math.floor(secondsNum / 3600)
-    return `${hours} hour${hours !== 1 ? 's' : ''}`
-  }
-
-  const formatAge = (timestamp: number | bigint) => {
-    const now = Date.now() / 1000
-    const age = now - Number(timestamp)
-    return formatDuration(age)
-  }
-
-  const calculateVotingPower = (position: any) => {
-    const stakeAmount = Number(position.staked_amount) / Math.pow(10, TokenService.getTokenDecimals(position.token_symbol))
-    const delayMultiplier = Math.min(4.0, 1.0 + (Number(position.dissolve_delay_seconds) / (365 * 24 * 3600)) * 3.0)
-    const age = (Date.now() / 1000) - Number(position.created_at)
-    const ageMultiplier = Math.min(1.5, 1.0 + (age / (4 * 365 * 24 * 3600)) * 0.5)
-    return stakeAmount * delayMultiplier * ageMultiplier
-  }
-
-  const calculateClaimableFees = (position: any) => {
-    // Find the corresponding pool for this position
-    const pool = allPools.value.find(p => p.token_symbol === position.token_symbol)
-    if (!pool) return 0
-    
-    const stakeAmount = Number(position.staked_amount)
-    const delayMultiplier = Math.min(4.0, 1.0 + (Number(position.dissolve_delay_seconds) / (365 * 24 * 3600)) * 3.0)
-    const age = (Date.now() / 1000) - Number(position.created_at)
-    const ageMultiplier = Math.min(1.5, 1.0 + (age / (4 * 365 * 24 * 3600)) * 0.5)
-    const rawVotingPower = stakeAmount * delayMultiplier * ageMultiplier
-    
-    const feeIndexDifference = pool.global_fee_index - (position.last_fee_index || 0)
-    const claimableFeesRaw = feeIndexDifference * rawVotingPower
-    
-    return claimableFeesRaw / Math.pow(10, TokenService.getTokenDecimals(position.token_symbol))
-  }
-
   // Liquidity position actions (only for own profile)
   const startDissolving = async (position: any) => {
     toast.add({
