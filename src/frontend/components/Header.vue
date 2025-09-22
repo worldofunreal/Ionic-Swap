@@ -30,7 +30,7 @@
             v-model="search"
             placeholder="Search Ionic Swap"
             size="lg"
-            class="w-96 h-12 text-lg"
+            class="w-96 h-12 text-lg [&>input]:bg-zinc-50 [&>input]:dark:bg-zinc-800 [&>input]:border-zinc-200 [&>input]:dark:border-zinc-700"
             icon="ri:search-line"
             @input="handleSearchInput"
             @focus="showSearchResults = true"

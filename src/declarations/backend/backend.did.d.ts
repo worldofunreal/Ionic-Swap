@@ -642,6 +642,10 @@ export interface _SERVICE {
    */
   'update_profile' : ActorMethod<[UserUpdate], Result_3>,
   'update_solana_address' : ActorMethod<[string], Result_3>,
+  /**
+   * Update username (requires signed call, owner only)
+   */
+  'update_username' : ActorMethod<[string], Result_3>,
   'update_website' : ActorMethod<[string], Result_3>,
   /**
    * Withdraw available amount from a dissolving or dissolved position

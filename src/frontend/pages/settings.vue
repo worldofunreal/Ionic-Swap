@@ -259,60 +259,6 @@
                 </UButton>
               </div>
 
-              <!-- Ionic Wallet Seed (only show for local wallet users) -->
-              <div 
-                v-if="userProfile && auth.nativeWallet === 'local'" 
-                class="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800"
-              >
-                <div class="flex items-center gap-3 mb-3">
-                  <img src="/logo.svg" alt="Ionic Wallet" class="w-10 h-10" />
-                  <div>
-                    <h4 class="text-sm font-medium text-amber-900 dark:text-amber-100">
-                      Ionic Wallet Recovery Phrase
-                    </h4>
-                    <p class="text-sm text-amber-700 dark:text-amber-300">
-                      {{ showSeed ? 'Keep this phrase safe and private' : 'Click to reveal your 12-word recovery phrase' }}
-                    </p>
-                  </div>
-                </div>
-
-                <div v-if="showSeed" class="mb-3 p-3 bg-zinc-100 dark:bg-zinc-800 rounded border font-mono text-sm">
-                  {{ userSeed || 'Loading...' }}
-                </div>
-
-                <div class="flex gap-2">
-                  <UButton
-                    v-if="!showSeed"
-                    color="amber"
-                    variant="soft"
-                    size="sm"
-                    @click="revealSeed"
-                  >
-                    <UIcon name="i-heroicons-eye-20-solid" class="w-4 h-4 mr-2" />
-                    Show Recovery Phrase
-                  </UButton>
-                  <template v-else>
-                    <UButton
-                      color="amber"
-                      variant="soft"
-                      size="sm"
-                      @click="copySeed"
-                    >
-                      <UIcon name="i-heroicons-clipboard-20-solid" class="w-4 h-4 mr-2" />
-                      Copy
-                    </UButton>
-                    <UButton
-                      color="neutral"
-                      variant="soft"
-                      size="sm"
-                      @click="hideSeed"
-                    >
-                      <UIcon name="i-heroicons-eye-slash-20-solid" class="w-4 h-4 mr-2" />
-                      Hide
-                    </UButton>
-                  </template>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -560,6 +506,40 @@
             </div>
 
             <div class="space-y-4">
+              <!-- Username Management -->
+              <div
+                class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
+              >
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-10 h-10 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center"
+                  >
+                    <UIcon
+                      name="i-heroicons-at-symbol-20-solid"
+                      class="w-6 h-6 text-primary-600 dark:text-primary-400"
+                    />
+                  </div>
+                  <div>
+                    <h4
+                      class="text-sm font-medium text-zinc-900 dark:text-white"
+                    >
+                      Username
+                    </h4>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                      Current username: @{{ userProfile?.username || 'Not set' }}
+                    </p>
+                  </div>
+                </div>
+                <UButton
+                  color="primary"
+                  variant="soft"
+                  size="sm"
+                  @click="openUsernameModal"
+                >
+                  Change Username
+                </UButton>
+              </div>
+
               <!-- Profile Management -->
               <div
                 class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
@@ -589,10 +569,65 @@
                   color="primary"
                   variant="soft"
                   size="sm"
-                  @click="navigateToProfile"
+                  @click="openEditProfileModal"
                 >
                   Edit Profile
                 </UButton>
+              </div>
+
+              <!-- Ionic Wallet Recovery (only show for local wallet users) -->
+              <div 
+                v-if="userProfile && auth.nativeWallet === 'local'" 
+                class="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800"
+              >
+                <div class="flex items-center gap-3 mb-3">
+                  <img src="/logo.svg" alt="Ionic Wallet" class="w-10 h-10" />
+                  <div>
+                    <h4 class="text-sm font-medium text-amber-900 dark:text-amber-100">
+                      Ionic Wallet Recovery Phrase
+                    </h4>
+                    <p class="text-sm text-amber-700 dark:text-amber-300">
+                      {{ showSeed ? 'Keep this phrase safe and private' : 'Click to reveal your 12-word recovery phrase' }}
+                    </p>
+                  </div>
+                </div>
+
+                <div v-if="showSeed" class="mb-3 p-3 bg-zinc-100 dark:bg-zinc-800 rounded border font-mono text-sm">
+                  {{ userSeed || 'Loading...' }}
+                </div>
+
+                <div class="flex gap-2">
+                  <UButton
+                    v-if="!showSeed"
+                    color="warning"
+                    variant="soft"
+                    size="sm"
+                    @click="revealSeed"
+                  >
+                    <UIcon name="i-heroicons-eye-20-solid" class="w-4 h-4 mr-2" />
+                    Show Recovery Phrase
+                  </UButton>
+                  <template v-else>
+                    <UButton
+                      color="warning"
+                      variant="soft"
+                      size="sm"
+                      @click="copySeed"
+                    >
+                      <UIcon name="i-heroicons-clipboard-20-solid" class="w-4 h-4 mr-2" />
+                      Copy
+                    </UButton>
+                    <UButton
+                      color="neutral"
+                      variant="soft"
+                      size="sm"
+                      @click="hideSeed"
+                    >
+                      <UIcon name="i-heroicons-eye-slash-20-solid" class="w-4 h-4 mr-2" />
+                      Hide
+                    </UButton>
+                  </template>
+                </div>
               </div>
 
               <!-- Account Deletion -->
@@ -662,6 +697,12 @@
         </div>
       </div>
     </div>
+
+    <!-- Username Change Modal -->
+    <UsernameChangeModal ref="usernameModal" />
+    
+    <!-- Edit Profile Modal -->
+    <EditProfileModal ref="editProfileModalRef" />
   </div>
 </template>
 
@@ -675,6 +716,8 @@
   import { useToast } from '#imports'
   import { appCacheService } from '@/services/AppCacheService'
   import { CrossChainSeedService } from '@/services/CrossChainSeedService'
+  import UsernameChangeModal from '@/components/UsernameChangeModal.vue'
+  import EditProfileModal from '@/components/EditProfileModal.vue'
 
   // Authentication and user data
   const auth = useAuthStore()
@@ -685,7 +728,7 @@
   const { colorTheme, setColorTheme: setTheme, colorThemes } = useColorTheme()
 
   // UI state
-  const activeTab = ref('wallets')
+  const activeTab = ref('account')
   const saving = ref(false)
   const updatingWallet = ref(false)
   const editingWallet = ref('')
@@ -699,6 +742,10 @@
   const showSeed = ref(false)
   const userSeed = ref('')
 
+  // Modal refs
+  const usernameModal = ref<InstanceType<typeof UsernameChangeModal>>()
+  const editProfileModalRef = ref<InstanceType<typeof EditProfileModal>>()
+
   // Privacy settings (mock data for now)
   const privacySettings = ref({
     profileVisibility: 'public',
@@ -711,10 +758,10 @@
 
   // Tabs configuration
   const tabs = [
-    { id: 'wallets', name: 'Wallets' },
-    { id: 'theme', name: 'Theme' },
-    { id: 'privacy', name: 'Privacy' },
     { id: 'account', name: 'Account' },
+    { id: 'privacy', name: 'Privacy' },
+    { id: 'theme', name: 'Theme' },
+    { id: 'wallets', name: 'Wallets' },
   ]
 
   // Computed properties
@@ -800,12 +847,12 @@
     }
   }
 
-  const navigateToProfile = () => {
-    if (userProfile.value?.username) {
-      navigateTo(`/@${userProfile.value.username}`)
-    } else {
-      navigateTo('/profile')
-    }
+  const openEditProfileModal = () => {
+    editProfileModalRef.value?.open()
+  }
+
+  const openUsernameModal = () => {
+    usernameModal.value?.open()
   }
 
   const saveChanges = async () => {

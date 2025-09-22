@@ -29,13 +29,13 @@
             v-if="avatarUrl"
             :src="avatarUrl"
             alt="Avatar"
-            class="w-20 h-20 rounded-full border-4 border-white dark:border-zinc-900 shadow-lg bg-zinc-50 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+            class="w-20 h-20 rounded-full border-4 border-zinc-100 dark:border-zinc-900 bg-zinc-50 object-cover cursor-pointer hover:opacity-90 transition-opacity"
             crossorigin="anonymous"
             @click="openImageModal(avatarUrl, 'Avatar')"
           >
           <div
             v-else
-            class="w-20 h-20 rounded-full border-4 border-white dark:border-zinc-900 shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
+            class="w-20 h-20 rounded-full border-4 border-zinc-100 dark:border-zinc-900 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
           >
             <span class="text-white font-bold text-2xl">{{
               avatarInitial
@@ -44,7 +44,7 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex gap-3 mt-4 relative z-10">
+        <div class="flex gap-2 mt-4 relative z-10">
           <!-- Follow/Unfollow Button (only for other users) -->
           <UButton
             v-if="!isOwnProfile"
@@ -59,6 +59,7 @@
               !auth.authenticated ? 'solid' : isFollowing ? 'soft' : 'solid'
             "
             :loading="followLoading"
+            size="sm"
             class="follow-btn"
             @click="toggleFollow"
           >
@@ -70,7 +71,7 @@
                     ? 'i-heroicons-user-minus-20-solid'
                     : 'i-heroicons-user-plus-20-solid'
               "
-              class="w-4 h-4 mr-2"
+              class="w-4 h-4 mr-1"
             />
             {{
               !auth.authenticated
@@ -85,13 +86,14 @@
           <UButton
             v-if="isOwnProfile"
             color="primary"
-            variant="solid"
+            variant="outline"
+            size="sm"
             class="edit-profile-btn"
             @click="editProfile"
           >
             <UIcon
               name="i-heroicons-pencil-square-20-solid"
-              class="w-4 h-4 mr-2"
+              class="w-4 h-4 mr-1"
             />
             Edit Profile
           </UButton>

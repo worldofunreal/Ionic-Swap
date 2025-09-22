@@ -157,6 +157,13 @@ impl UserDatabase {
         })
     }
 
+    pub fn remove_username_mapping(username: &str) {
+        USERNAMES.with(|usernames| {
+            usernames.borrow_mut().remove(&username.to_string());
+        });
+    }
+
+
     pub fn get_user_count() -> u64 {
         USERS.with(|users| {
             users.borrow().len() as u64

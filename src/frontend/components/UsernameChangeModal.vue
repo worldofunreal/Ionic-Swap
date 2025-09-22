@@ -5,18 +5,18 @@
     @click="close"
   >
     <div
-      class="bg-zinc-50 dark:bg-neutral-900 rounded-lg shadow-lg w-full max-w-md mx-4"
+      class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-lg w-full max-w-md mx-4"
       @click.stop
     >
       <!-- Header -->
-      <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+      <div class="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800">
         <button
-          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
           @click="close"
         >
           <UIcon name="i-heroicons-x-mark-20-solid" class="w-6 h-6" />
         </button>
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
           Change Username
         </h2>
         <div class="w-6 h-6" /> <!-- Spacer -->
@@ -26,43 +26,53 @@
       <div class="p-4 space-y-4">
         <!-- Current Username -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
             Current Username
           </label>
-          <div class="p-3 bg-gray-100 dark:bg-gray-800 rounded-md text-gray-600 dark:text-gray-400">
+          <div class="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-md text-zinc-600 dark:text-zinc-400">
             @{{ currentUsername }}
           </div>
         </div>
 
         <!-- New Username -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
             New Username
           </label>
-          <UInput
+          <input
             v-model="newUsername"
+            type="text"
             placeholder="Enter new username"
-            :class="{ 'border-red-500': usernameError }"
+            maxlength="16"
+            class="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white"
+            :class="{ 'border-red-500 dark:border-red-500': usernameError }"
             @input="validateUsername"
           />
-          <div v-if="usernameError" class="text-red-500 text-sm mt-1">
-            {{ usernameError }}
-          </div>
-          <div v-if="usernameValid && !checkingAvailability" class="text-green-500 text-sm mt-1">
-            ✓ Username is available
-          </div>
-          <div v-if="checkingAvailability" class="text-blue-500 text-sm mt-1">
-            Checking availability...
+          <div class="flex justify-between items-center mt-1">
+            <div>
+              <div v-if="usernameError" class="text-red-500 text-xs">
+                {{ usernameError }}
+              </div>
+              <div v-else-if="usernameValid && !checkingAvailability" class="text-green-500 text-xs">
+                ✓ Username is available
+              </div>
+              <div v-else-if="checkingAvailability" class="text-primary-500 text-xs">
+                Checking availability...
+              </div>
+            </div>
+            <div class="text-xs ml-auto" :class="newUsername.length > 14 ? 'text-orange-500' : 'text-zinc-500'">
+              {{ newUsername.length }} / 16
+            </div>
           </div>
         </div>
 
         <!-- Username Guidelines -->
-        <div class="text-sm text-gray-500 dark:text-gray-400">
+        <div class="text-sm text-zinc-500 dark:text-zinc-400">
           <p class="font-medium mb-1">Username Guidelines:</p>
           <ul class="list-disc list-inside space-y-1">
-            <li>3-20 characters long</li>
-            <li>Letters, numbers, and underscores only</li>
-            <li>Must start with a letter</li>
+            <li>16 characters or less</li>
+            <li>No whitespace allowed</li>
+            <li>Cannot contain: / \ : * ? " &lt; &gt; |</li>
             <li>Must be unique across the platform</li>
           </ul>
         </div>
@@ -74,7 +84,7 @@
       </div>
 
       <!-- Footer -->
-      <div class="flex gap-3 p-4 border-t border-gray-200 dark:border-gray-700">
+      <div class="flex gap-3 p-4 border-t border-zinc-200 dark:border-zinc-800">
         <UButton
           color="neutral"
           variant="soft"
@@ -85,7 +95,7 @@
         </UButton>
         <UButton
           color="primary"
-          class="flex-1"
+          class="flex-1 bg-primary-500 hover:bg-primary-600 text-white"
           :loading="loading"
           :disabled="!canUpdate"
           @click="updateUsername"
@@ -141,14 +151,15 @@ const validateUsername = () => {
     return
   }
 
-  if (username.length < 3 || username.length > 20) {
-    usernameError.value = 'Username must be 3-20 characters long'
+  if (username.length > 16) {
+    usernameError.value = 'Username must be 16 characters or less'
     usernameValid.value = false
     return
   }
 
-  if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(username)) {
-    usernameError.value = 'Username must start with a letter and contain only letters, numbers, and underscores'
+  // Check for whitespace or forbidden special characters: / \ : * ? " < > |
+  if (username.includes(' ') || /[\/\\:*?"<>|]/.test(username)) {
+    usernameError.value = 'Username cannot contain whitespace or special characters'
     usernameValid.value = false
     return
   }

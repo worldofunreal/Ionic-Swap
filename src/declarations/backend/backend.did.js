@@ -480,6 +480,7 @@ export const idlFactory = ({ IDL }) => {
     'update_prices' : IDL.Func([], [Result_12], []),
     'update_profile' : IDL.Func([UserUpdate], [Result_3], []),
     'update_solana_address' : IDL.Func([IDL.Text], [Result_3], []),
+    'update_username' : IDL.Func([IDL.Text], [Result_3], []),
     'update_website' : IDL.Func([IDL.Text], [Result_3], []),
     'withdraw' : IDL.Func([IDL.Text, IDL.Nat64], [Result], []),
     'withdraw_available' : IDL.Func([IDL.Text], [Result], []),

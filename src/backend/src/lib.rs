@@ -415,6 +415,17 @@ pub async fn update_profile(update: user::UserUpdate) -> Result<user::User, user
     user::update_profile(caller, update).await
 }
 
+/// Update username (requires signed call, owner only)
+#[update]
+pub async fn update_username(new_username: String) -> Result<user::User, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    user::update_username(caller, new_username).await
+}
+
 /// Individual field updates (requires signed call, owner only)
 #[update]
 pub async fn update_display_name(display_name: String) -> Result<user::User, user::UserError> {

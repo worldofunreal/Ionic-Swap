@@ -174,6 +174,33 @@ pub fn get_user_by_username(username: String) -> Result<User, UserError> {
         .ok_or(UserError::UserNotFound)
 }
 
+pub async fn update_username(caller: Principal, new_username: String) -> Result<User, UserError> {
+    // Validate the new username
+    validate_username(&new_username)?;
+    
+    // Check if username is available
+    if UserDatabase::username_exists(&new_username) {
+        return Err(UserError::UsernameTaken);
+    }
+    
+    // Get the current user
+    let mut user = UserDatabase::get_user(caller)
+        .ok_or(UserError::UserNotFound)?;
+    
+    // Remove old username mapping
+    let old_username = user.username.clone();
+    UserDatabase::remove_username_mapping(&old_username);
+    
+    // Update the username and timestamp
+    user.username = new_username.clone();
+    user.updated_at = ic_cdk::api::time();
+    
+    // Use insert_user to properly set both user record and new username mapping
+    UserDatabase::insert_user(user.clone());
+    
+    Ok(user)
+}
+
 pub async fn update_profile(caller: Principal, update: UserUpdate) -> Result<User, UserError> {
     let mut user = UserDatabase::get_user(caller)
         .ok_or(UserError::UserNotFound)?;

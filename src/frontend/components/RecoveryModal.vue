@@ -8,37 +8,39 @@
 
     <!-- Modal Content -->
     <div
-      class="relative bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-xl max-w-2xl w-full mx-4"
+      class="relative bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-xl max-w-lg w-full mx-4"
     >
-      <div class="p-8">
+      <div class="p-6">
         <!-- Header -->
-        <div class="flex flex-col items-center mb-8">
-          <img src="/logo.svg" alt="Ionic Swap Logo" class="w-12 h-12 mb-2" >
-          <h2 class="text-2xl font-bold text-center text-zinc-900 dark:text-white">Recover Ionic Wallet</h2>
-          <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400 text-center">
-            Enter your 12-word recovery phrase to restore your account
-          </p>
+        <div class="flex items-center justify-center gap-3 mb-6">
+          <img src="/logo.svg" alt="Ionic Swap Logo" class="w-8 h-8" >
+          <div class="text-center">
+            <h2 class="text-lg font-bold text-zinc-900 dark:text-white">Recover Ionic Wallet</h2>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">
+              Enter your 12-word recovery phrase
+            </p>
+          </div>
         </div>
 
         <!-- Success Message -->
-        <div v-if="recoverySuccess" class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-          <div class="flex items-center gap-3">
-            <UIcon name="i-heroicons-check-circle-20-solid" class="w-6 h-6 text-green-600 dark:text-green-400" />
+        <div v-if="recoverySuccess" class="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-heroicons-check-circle-20-solid" class="w-5 h-5 text-green-600 dark:text-green-400" />
             <div>
               <h3 class="text-sm font-medium text-green-900 dark:text-green-100">Account Recovered!</h3>
-              <p class="text-sm text-green-700 dark:text-green-300">Welcome back to Ionic Swap</p>
+              <p class="text-xs text-green-700 dark:text-green-300">Welcome back to Ionic Swap</p>
             </div>
           </div>
         </div>
 
         <!-- Seed Phrase Input Grid -->
-        <div v-if="!recoverySuccess" class="mb-6">
-          <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-4">
+        <div v-if="!recoverySuccess" class="mb-4">
+          <label class="block text-sm font-medium text-zinc-900 dark:text-white mb-3">
             Recovery Phrase (12 words)
           </label>
           
           <!-- Word grid with individual boxes -->
-          <div class="grid grid-cols-3 gap-3 mb-4">
+          <div class="grid grid-cols-4 gap-2 mb-3">
             <div v-for="(word, index) in seedWords" :key="index" class="relative">
               <label :for="`word-${index}`" class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
                 {{ index + 1 }}
@@ -52,7 +54,7 @@
                   @keydown="handleKeyDown($event, index)"
                   :disabled="loading"
                   :class="[
-                    'w-full px-3 py-3 bg-zinc-50 dark:bg-zinc-800 border rounded-lg text-sm font-mono transition-colors',
+                    'w-full px-2 py-2 bg-zinc-50 dark:bg-zinc-800 border rounded-md text-xs font-mono transition-colors',
                     'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
                     seedWords[index] && isWordValid(index) 
                       ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20' 
@@ -64,16 +66,16 @@
                   spellcheck="false"
                   placeholder="word"
                 />
-                <div class="absolute right-2 top-1/2 transform -translate-y-1/2">
+                <div class="absolute right-1 top-1/2 transform -translate-y-1/2">
                   <UIcon 
                     v-if="seedWords[index] && isWordValid(index)" 
                     name="i-heroicons-check-circle-20-solid" 
-                    class="w-4 h-4 text-green-500" 
+                    class="w-3 h-3 text-green-500" 
                   />
                   <UIcon 
                     v-else-if="seedWords[index] && !isWordValid(index)" 
                     name="i-heroicons-x-circle-20-solid" 
-                    class="w-4 h-4 text-red-500" 
+                    class="w-3 h-3 text-red-500" 
                   />
                 </div>
               </div>
@@ -88,58 +90,55 @@
         </div>
 
         <!-- Action Buttons -->
-        <div v-if="!recoverySuccess" class="space-y-3">
+        <div v-if="!recoverySuccess" class="space-y-2">
           <UButton
             block
-            size="lg"
+            size="sm"
             :loading="loading"
             :disabled="!isSeedPhraseValid"
             @click="recover"
-            class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+            class="h-10 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
           >
             {{ loading ? 'Recovering...' : 'Recover Account' }}
           </UButton>
 
-          <UButton
-            block
-            color="neutral"
-            variant="soft"
-            size="lg"
+          <button
+            class="w-full h-10 text-sm font-normal hover:bg-zinc-100 dark:hover:bg-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-lg transition-colors"
             @click="close"
             :disabled="loading"
           >
             Cancel
-          </UButton>
+          </button>
         </div>
 
         <!-- Error Message -->
-        <div v-if="error" class="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-          <div class="flex items-center gap-3">
-            <UIcon name="i-heroicons-exclamation-triangle-20-solid" class="w-5 h-5 text-red-600 dark:text-red-400" />
+        <div v-if="error" class="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-heroicons-exclamation-triangle-20-solid" class="w-4 h-4 text-red-600 dark:text-red-400" />
             <div>
-              <h4 class="text-sm font-medium text-red-900 dark:text-red-100">Recovery Failed</h4>
-              <p class="text-sm text-red-700 dark:text-red-300">{{ error }}</p>
+              <h4 class="text-xs font-medium text-red-900 dark:text-red-100">Recovery Failed</h4>
+              <p class="text-xs text-red-700 dark:text-red-300">{{ error }}</p>
             </div>
           </div>
         </div>
         
         <!-- Validation Messages -->
-        <div v-if="!error && allWordsValidButInvalidChecksum" class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-          <div class="flex items-center gap-3">
-            <UIcon name="i-heroicons-exclamation-triangle-20-solid" class="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+        <div v-if="!error && allWordsValidButInvalidChecksum" class="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-heroicons-exclamation-triangle-20-solid" class="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
             <div>
-              <h4 class="text-sm font-medium text-yellow-900 dark:text-yellow-100">Invalid Checksum</h4>
-              <p class="text-sm text-yellow-700 dark:text-yellow-300">All words are valid, but they don't form a valid recovery phrase. Please check the word order.</p>
+              <h4 class="text-xs font-medium text-yellow-900 dark:text-yellow-100">Invalid Checksum</h4>
+              <p class="text-xs text-yellow-700 dark:text-yellow-300">All words are valid, but they don't form a valid recovery phrase. Please check the word order.</p>
             </div>
           </div>
         </div>
 
-        <div v-else-if="!error && isSeedPhraseValid && !recoverySuccess" class="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-          <div class="flex items-center gap-3">
-            <UIcon name="i-heroicons-check-circle-20-solid" class="w-5 h-5 text-green-600 dark:text-green-400" />
+        <div v-else-if="!error && isSeedPhraseValid && !recoverySuccess" class="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+          <div class="flex items-center gap-2">
+            <UIcon name="i-heroicons-check-circle-20-solid" class="w-4 h-4 text-green-600 dark:text-green-400" />
             <div>
-              <h4 class="text-sm font-medium text-green-900 dark:text-green-100">Valid Recovery Phrase</h4>
-              <p class="text-sm text-green-700 dark:text-green-300">Ready to recover your account</p>
+              <h4 class="text-xs font-medium text-green-900 dark:text-green-100">Valid Recovery Phrase</h4>
+              <p class="text-xs text-green-700 dark:text-green-300">Ready to recover your account</p>
             </div>
           </div>
         </div>
@@ -153,7 +152,7 @@
         </div>
 
         <!-- Info -->
-        <div class="mt-6 text-xs text-zinc-500 dark:text-zinc-400 text-center">
+        <div class="mt-4 px-2 text-xs text-zinc-500 dark:text-zinc-400 text-center">
           Enter the 12-word recovery phrase from your Ionic wallet. You can paste the entire phrase or enter words individually.
         </div>
       </div>
@@ -204,7 +203,9 @@
   // Validate each word individually
   const validateWord = (word: string): boolean => {
     if (!word) return false
-    return bip39.wordlists.english.includes(word.toLowerCase().trim())
+    const wordlist = bip39.wordlists.english
+    if (!wordlist) return false
+    return wordlist.includes(word.toLowerCase().trim())
   }
 
   const isWordValid = (index: number): boolean => {
@@ -380,6 +381,11 @@
         // Close modal and navigate after showing success
         setTimeout(() => {
           show.value = false
+          // Close the login panel by setting its show state to false
+          const loginPanelElement = document.getElementById('login-panel')
+          if (loginPanelElement && !loginPanelElement.classList.contains('hidden')) {
+            loginPanelElement.classList.add('hidden')
+          }
           navigateTo('/profile')
         }, 2000)
 
@@ -469,6 +475,11 @@
         // Close modal and navigate after showing success
         setTimeout(() => {
           show.value = false
+          // Close the login panel by setting its show state to false
+          const loginPanelElement = document.getElementById('login-panel')
+          if (loginPanelElement && !loginPanelElement.classList.contains('hidden')) {
+            loginPanelElement.classList.add('hidden')
+          }
           navigateTo('/profile')
         }, 2000)
 
