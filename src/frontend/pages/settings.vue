@@ -486,40 +486,9 @@
                       Help us improve by sharing anonymous usage data
                     </p>
                   </div>
-                  <USwitch v-model="privacySettings.analyticsEnabled" @change="savePrivacySettings" />
+                  <USwitch v-model="privacySettings.analyticsEnabled" @change="handleAnalyticsToggle" />
                 </div>
 
-                <div
-                  class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
-                >
-                  <div>
-                    <h5
-                      class="text-sm font-medium text-zinc-900 dark:text-white"
-                    >
-                      Marketing Communications
-                    </h5>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                      Receive updates about new features and promotions
-                    </p>
-                  </div>
-                  <USwitch v-model="privacySettings.marketingEnabled" @change="savePrivacySettings" />
-                </div>
-
-                <div
-                  class="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg"
-                >
-                  <div>
-                    <h5
-                      class="text-sm font-medium text-zinc-900 dark:text-white"
-                    >
-                      Third-Party Integrations
-                    </h5>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                      Allow data sharing with trusted third-party services
-                    </p>
-                  </div>
-                  <USwitch v-model="privacySettings.thirdPartyEnabled" @change="savePrivacySettings" />
-                </div>
               </div>
             </div>
           </div>
@@ -542,11 +511,11 @@
               >
                 <div class="flex items-center gap-3">
                   <div
-                    class="w-10 h-10 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center"
+                    class="w-10 h-10 bg-zinc-100 dark:bg-zinc-700 rounded-lg flex items-center justify-center"
                   >
                     <UIcon
                       name="i-heroicons-at-symbol-20-solid"
-                      class="w-6 h-6 text-primary-600 dark:text-primary-400"
+                      class="w-6 h-6 text-zinc-600 dark:text-zinc-400"
                     />
                   </div>
                   <div>
@@ -561,7 +530,7 @@
                   </div>
                 </div>
                 <button
-                  class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
+                  class="px-3 py-2 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-zinc-900 dark:text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
                   @click="openUsernameModal"
                 >
                   <UIcon name="i-heroicons-at-symbol-20-solid" class="w-4 h-4" />
@@ -575,11 +544,11 @@
               >
                 <div class="flex items-center gap-3">
                   <div
-                    class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center"
+                    class="w-10 h-10 bg-zinc-100 dark:bg-zinc-700 rounded-lg flex items-center justify-center"
                   >
                     <UIcon
                       name="i-heroicons-user-circle-20-solid"
-                      class="w-6 h-6 text-blue-600 dark:text-blue-400"
+                      class="w-6 h-6 text-zinc-600 dark:text-zinc-400"
                     />
                   </div>
                   <div>
@@ -595,7 +564,7 @@
                   </div>
                 </div>
                 <button
-                  class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
+                  class="px-3 py-2 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-zinc-900 dark:text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
                   @click="openEditProfileModal"
                 >
                   <UIcon name="i-heroicons-user-circle-20-solid" class="w-4 h-4" />
@@ -606,16 +575,16 @@
               <!-- Ionic Wallet Recovery (only show for local wallet users) -->
               <div 
                 v-if="userProfile && auth.nativeWallet === 'local'" 
-                class="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800"
+                class="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700"
               >
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-3">
                     <img src="/logo.svg" alt="Ionic Wallet" class="w-10 h-10" />
                     <div>
-                      <h4 class="text-sm font-medium text-amber-900 dark:text-amber-100">
+                      <h4 class="text-sm font-medium text-zinc-900 dark:text-white">
                         Ionic Wallet Recovery Phrase
                       </h4>
-                      <p class="text-sm text-amber-700 dark:text-amber-300">
+                      <p class="text-sm text-zinc-600 dark:text-zinc-400">
                         {{ showSeed ? 'Keep this phrase safe and private' : 'Click to reveal your 12-word recovery phrase' }}
                       </p>
                     </div>
@@ -624,7 +593,7 @@
                   <!-- Show Recovery Button (top right) -->
                   <button
                     v-if="!showSeed"
-                    class="px-4 py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
+                    class="px-3 py-2 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-zinc-900 dark:text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
                     @click="revealSeed"
                   >
                     <UIcon name="i-heroicons-eye-20-solid" class="w-4 h-4" />
@@ -638,14 +607,14 @@
 
                 <div v-if="showSeed" class="flex gap-2">
                   <button
-                    class="px-4 py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
+                    class="px-3 py-2 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-zinc-900 dark:text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
                     @click="copySeed"
                   >
                     <UIcon name="i-heroicons-clipboard-20-solid" class="w-4 h-4" />
                     Copy
                   </button>
                   <button
-                    class="px-4 py-3 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
+                    class="px-3 py-2 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-zinc-900 dark:text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
                     @click="hideSeed"
                   >
                     <UIcon name="i-heroicons-eye-slash-20-solid" class="w-4 h-4" />
@@ -722,6 +691,16 @@
   import UsernameChangeModal from '@/components/UsernameChangeModal.vue'
   import EditProfileModal from '@/components/EditProfileModal.vue'
 
+  // TypeScript declaration for Microsoft Clarity
+  declare global {
+    interface Window {
+      clarity: {
+        (action: string, ...args: any[]): void
+        stop?: () => void
+      }
+    }
+  }
+
   // Authentication and user data
   const auth = useAuthStore()
   const userProfile = computed(() => auth.userProfile)
@@ -755,8 +734,6 @@
     activityVisibility: 'public', 
     walletVisibility: 'public',
     analyticsEnabled: true,
-    marketingEnabled: false,
-    thirdPartyEnabled: false,
   })
 
   const loadingPrivacySettings = ref(false)
@@ -890,8 +867,6 @@
         activityVisibility: getVisibilityValue(settings.activity_visibility),
         walletVisibility: getVisibilityValue(settings.wallet_visibility),
         analyticsEnabled: settings.analytics_enabled,
-        marketingEnabled: settings.marketing_enabled,
-        thirdPartyEnabled: settings.third_party_enabled,
       }
     } catch (error) {
       console.error('Failed to load privacy settings:', error)
@@ -901,8 +876,6 @@
         activityVisibility: 'public',
         walletVisibility: 'public',
         analyticsEnabled: true,
-        marketingEnabled: false,
-        thirdPartyEnabled: false,
       }
     } finally {
       loadingPrivacySettings.value = false
@@ -926,8 +899,8 @@
         activity_visibility: createVisibilityLevel(privacySettings.value.activityVisibility),
         wallet_visibility: createVisibilityLevel(privacySettings.value.walletVisibility),
         analytics_enabled: privacySettings.value.analyticsEnabled,
-        marketing_enabled: privacySettings.value.marketingEnabled,
-        third_party_enabled: privacySettings.value.thirdPartyEnabled,
+        marketing_enabled: false, // Always disabled
+        third_party_enabled: false, // Always disabled
       }
       
       console.log('🔄 Converted to backend format:', backendSettings)
@@ -959,6 +932,53 @@
     await savePrivacySettings()
   }
 
+  // Handle analytics toggle with Microsoft Clarity integration
+  const handleAnalyticsToggle = async () => {
+    // Save privacy settings first
+    await savePrivacySettings()
+    
+    // Handle Microsoft Clarity based on analytics setting
+    if (privacySettings.value.analyticsEnabled) {
+      // Enable Microsoft Clarity
+      enableMicrosoftClarity()
+    } else {
+      // Disable Microsoft Clarity
+      disableMicrosoftClarity()
+    }
+  }
+
+  // Enable Microsoft Clarity
+  const enableMicrosoftClarity = () => {
+    if (typeof window !== 'undefined' && !window.clarity) {
+      // Load Microsoft Clarity script
+      const script = document.createElement('script')
+      script.type = 'text/javascript'
+      script.innerHTML = `
+        (function(c,l,a,r,i,t,y){
+          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+          t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "YOUR_CLARITY_PROJECT_ID");
+      `
+      document.head.appendChild(script)
+    }
+  }
+
+  // Disable Microsoft Clarity
+  const disableMicrosoftClarity = () => {
+    if (typeof window !== 'undefined' && window.clarity) {
+      // Clear Clarity data and disable tracking
+      if (window.clarity.stop) {
+        window.clarity.stop()
+      }
+      // Remove Clarity script
+      const clarityScript = document.querySelector('script[src*="clarity.ms"]')
+      if (clarityScript) {
+        clarityScript.remove()
+      }
+    }
+  }
+
   const resetChanges = () => {
     // Reset privacy settings to defaults
     privacySettings.value = {
@@ -966,8 +986,6 @@
       activityVisibility: 'public',
       walletVisibility: 'public',
       analyticsEnabled: true,
-      marketingEnabled: false,
-      thirdPartyEnabled: false,
     }
     savePrivacySettings()
   }
@@ -1100,5 +1118,10 @@
     
     // Load privacy settings from backend
     await loadPrivacySettings()
+    
+    // Initialize Microsoft Clarity if analytics is enabled
+    if (privacySettings.value.analyticsEnabled) {
+      enableMicrosoftClarity()
+    }
   })
 </script>
