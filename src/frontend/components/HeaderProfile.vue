@@ -120,11 +120,18 @@
                   {{ formatCompactAddress(authStore.principal) }}
                 </span>
               </div>
-              <UIcon
-                name="i-heroicons-document-duplicate-20-solid"
-                class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition flex-shrink-0"
-                @click="copyToClipboard(authStore.principal, 'ICP')"
-              />
+              <div class="flex items-center gap-2">
+                <UIcon
+                  name="i-heroicons-document-duplicate-20-solid"
+                  class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition flex-shrink-0"
+                  @click="copyToClipboard(authStore.principal, 'ICP')"
+                />
+                <UIcon
+                  name="i-heroicons-qr-code-20-solid"
+                  class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition flex-shrink-0"
+                  @click="showQRCode(authStore.principal, 'ICP')"
+                />
+              </div>
             </div>
           </div>
 
@@ -140,11 +147,18 @@
                   {{ formatCompactAddress(authStore.evmAddress) }}
                 </span>
               </div>
-              <UIcon
-                name="i-heroicons-document-duplicate-20-solid"
-                class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition flex-shrink-0"
-                @click="copyToClipboard(authStore.evmAddress, 'EVM')"
-              />
+              <div class="flex items-center gap-2">
+                <UIcon
+                  name="i-heroicons-document-duplicate-20-solid"
+                  class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition flex-shrink-0"
+                  @click="copyToClipboard(authStore.evmAddress, 'EVM')"
+                />
+                <UIcon
+                  name="i-heroicons-qr-code-20-solid"
+                  class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition flex-shrink-0"
+                  @click="showQRCode(authStore.evmAddress, 'EVM')"
+                />
+              </div>
             </div>
           </div>
 
@@ -160,11 +174,18 @@
                   {{ formatCompactAddress(authStore.solAddress) }}
                 </span>
               </div>
-              <UIcon
-                name="i-heroicons-document-duplicate-20-solid"
-                class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition flex-shrink-0"
-                @click="copyToClipboard(authStore.solAddress, 'Solana')"
-              />
+              <div class="flex items-center gap-2">
+                <UIcon
+                  name="i-heroicons-document-duplicate-20-solid"
+                  class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition flex-shrink-0"
+                  @click="copyToClipboard(authStore.solAddress, 'Solana')"
+                />
+                <UIcon
+                  name="i-heroicons-qr-code-20-solid"
+                  class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition flex-shrink-0"
+                  @click="showQRCode(authStore.solAddress, 'Solana')"
+                />
+              </div>
             </div>
           </div>
 
@@ -180,11 +201,18 @@
                   {{ formatCompactAddress(authStore.btcAddress) }}
                 </span>
               </div>
-              <UIcon
-                name="i-heroicons-document-duplicate-20-solid"
-                class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition flex-shrink-0"
-                @click="copyToClipboard(authStore.btcAddress, 'Bitcoin')"
-              />
+              <div class="flex items-center gap-2">
+                <UIcon
+                  name="i-heroicons-document-duplicate-20-solid"
+                  class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition flex-shrink-0"
+                  @click="copyToClipboard(authStore.btcAddress, 'Bitcoin')"
+                />
+                <UIcon
+                  name="i-heroicons-qr-code-20-solid"
+                  class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition flex-shrink-0"
+                  @click="showQRCode(authStore.btcAddress, 'Bitcoin')"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -222,6 +250,14 @@
         </div>
       </div>
     </div>
+
+    <!-- QR Code Modal -->
+    <QRCodeModal
+      :is-open="qrModalOpen"
+      :address="qrAddress"
+      :wallet-type="qrWalletType"
+      @close="qrModalOpen = false"
+    />
   </div>
 </template>
 
@@ -233,6 +269,7 @@
   import { useRoute } from 'vue-router'
   import { useColorTheme } from '@/composables/useColorTheme'
   import { TokenService } from '@/services/TokenService'
+  import QRCodeModal from '@/components/QRCodeModal.vue'
 
   defineOptions({
     name: 'HeaderProfile',
@@ -266,6 +303,11 @@
   const followLoading = ref(false)
   const isFollowing = ref(false)
   const isHoveringFollow = ref(false)
+  
+  // QR code modal state
+  const qrModalOpen = ref(false)
+  const qrAddress = ref('')
+  const qrWalletType = ref('')
 
   // Check if we're on a profile page and if it's not the current user's profile
   const showFollowButton = computed(() => {
@@ -557,5 +599,11 @@
     if (!address) return ''
     if (address.length <= 12) return address
     return `${address.slice(0, 6)}...${address.slice(-4)}`
+  }
+
+  function showQRCode(address: string, walletType: string) {
+    qrAddress.value = address
+    qrWalletType.value = walletType
+    qrModalOpen.value = true
   }
 </script>

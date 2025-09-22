@@ -48,34 +48,24 @@
             <!-- EVM Address -->
             <div class="space-y-4">
               <div class="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
-                <div class="flex items-center gap-3 mb-3">
-                  <img
-                    :src="TokenService.getTokenIcon('ETH')"
-                    alt="Ethereum icon"
-                    class="w-10 h-10"
-                  />
-                  <div>
-                    <h4
-                      class="text-sm font-medium text-zinc-900 dark:text-white"
-                    >
-                      Ethereum Address
-                    </h4>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                      {{
-                        userProfile?.evm_address?.[0]
-                          ? formatAddress(userProfile.evm_address[0])
-                          : 'Not connected'
-                      }}
-                    </p>
-                  </div>
-                </div>
-
                 <div v-if="editingWallet === 'evm'" class="space-y-3">
-                  <UInput
-                    v-model="walletAddresses.evm"
-                    placeholder="0x..."
-                    class="w-full"
-                  />
+                  <div class="flex items-center gap-3 mb-3">
+                    <img
+                      :src="TokenService.getTokenIcon('ETH')"
+                      alt="Ethereum icon"
+                      class="w-10 h-10"
+                    />
+                    <div class="flex-1">
+                      <h4 class="text-sm font-medium text-zinc-900 dark:text-white">
+                        Ethereum Address
+                      </h4>
+                      <UInput
+                        v-model="walletAddresses.evm"
+                        placeholder="0x..."
+                        class="w-full mt-2"
+                      />
+                    </div>
+                  </div>
                   <div class="flex gap-2">
                     <button
                       class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
@@ -96,46 +86,56 @@
                   </div>
                 </div>
 
-                <button
-                  v-else
-                  class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
-                  @click="editWalletAddress('evm')"
-                >
-                  <UIcon name="i-heroicons-link-20-solid" class="w-4 h-4" />
-                  {{ userProfile?.evm_address?.[0] ? 'Update Address' : 'Connect Wallet' }}
-                </button>
+                <div v-else class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <img
+                      :src="TokenService.getTokenIcon('ETH')"
+                      alt="Ethereum icon"
+                      class="w-10 h-10"
+                    />
+                    <div>
+                      <h4 class="text-sm font-medium text-zinc-900 dark:text-white">
+                        Ethereum Address
+                      </h4>
+                      <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                        {{
+                          userProfile?.evm_address?.[0]
+                            ? formatAddress(userProfile.evm_address[0])
+                            : 'Not connected'
+                        }}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
+                    @click="editWalletAddress('evm')"
+                  >
+                    <UIcon name="i-heroicons-link-20-solid" class="w-4 h-4" />
+                    {{ userProfile?.evm_address?.[0] ? 'Update Address' : 'Connect Wallet' }}
+                  </button>
+                </div>
               </div>
 
               <!-- Bitcoin Address -->
               <div class="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
-                <div class="flex items-center gap-3 mb-3">
-                  <img
-                    :src="TokenService.getTokenIcon('BTC')"
-                    alt="Bitcoin icon"
-                    class="w-10 h-10"
-                  />
-                  <div>
-                    <h4
-                      class="text-sm font-medium text-zinc-900 dark:text-white"
-                    >
-                      Bitcoin Address
-                    </h4>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                      {{
-                        userProfile?.bitcoin_address?.[0]
-                          ? formatAddress(userProfile.bitcoin_address[0])
-                          : 'Not connected'
-                      }}
-                    </p>
-                  </div>
-                </div>
-
                 <div v-if="editingWallet === 'bitcoin'" class="space-y-3">
-                  <UInput
-                    v-model="walletAddresses.bitcoin"
-                    placeholder="bc1..."
-                    class="w-full"
-                  />
+                  <div class="flex items-center gap-3 mb-3">
+                    <img
+                      :src="TokenService.getTokenIcon('BTC')"
+                      alt="Bitcoin icon"
+                      class="w-10 h-10"
+                    />
+                    <div class="flex-1">
+                      <h4 class="text-sm font-medium text-zinc-900 dark:text-white">
+                        Bitcoin Address
+                      </h4>
+                      <UInput
+                        v-model="walletAddresses.bitcoin"
+                        placeholder="bc1..."
+                        class="w-full mt-2"
+                      />
+                    </div>
+                  </div>
                   <div class="flex gap-2">
                     <button
                       class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
@@ -156,46 +156,56 @@
                   </div>
                 </div>
 
-                <button
-                  v-else
-                  class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
-                  @click="editWalletAddress('bitcoin')"
-                >
-                  <UIcon name="i-heroicons-link-20-solid" class="w-4 h-4" />
-                  {{ userProfile?.bitcoin_address?.[0] ? 'Update Address' : 'Connect Wallet' }}
-                </button>
+                <div v-else class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <img
+                      :src="TokenService.getTokenIcon('BTC')"
+                      alt="Bitcoin icon"
+                      class="w-10 h-10"
+                    />
+                    <div>
+                      <h4 class="text-sm font-medium text-zinc-900 dark:text-white">
+                        Bitcoin Address
+                      </h4>
+                      <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                        {{
+                          userProfile?.bitcoin_address?.[0]
+                            ? formatAddress(userProfile.bitcoin_address[0])
+                            : 'Not connected'
+                        }}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
+                    @click="editWalletAddress('bitcoin')"
+                  >
+                    <UIcon name="i-heroicons-link-20-solid" class="w-4 h-4" />
+                    {{ userProfile?.bitcoin_address?.[0] ? 'Update Address' : 'Connect Wallet' }}
+                  </button>
+                </div>
               </div>
 
               <!-- Solana Address -->
               <div class="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
-                <div class="flex items-center gap-3 mb-3">
-                  <img
-                    :src="TokenService.getTokenIcon('SOL')"
-                    alt="Solana icon"
-                    class="w-10 h-10"
-                  />
-                  <div>
-                    <h4
-                      class="text-sm font-medium text-zinc-900 dark:text-white"
-                    >
-                      Solana Address
-                    </h4>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                      {{
-                        userProfile?.solana_address?.[0]
-                          ? formatAddress(userProfile.solana_address[0])
-                          : 'Not connected'
-                      }}
-                    </p>
-                  </div>
-                </div>
-
                 <div v-if="editingWallet === 'solana'" class="space-y-3">
-                  <UInput
-                    v-model="walletAddresses.solana"
-                    placeholder="..."
-                    class="w-full"
-                  />
+                  <div class="flex items-center gap-3 mb-3">
+                    <img
+                      :src="TokenService.getTokenIcon('SOL')"
+                      alt="Solana icon"
+                      class="w-10 h-10"
+                    />
+                    <div class="flex-1">
+                      <h4 class="text-sm font-medium text-zinc-900 dark:text-white">
+                        Solana Address
+                      </h4>
+                      <UInput
+                        v-model="walletAddresses.solana"
+                        placeholder="..."
+                        class="w-full mt-2"
+                      />
+                    </div>
+                  </div>
                   <div class="flex gap-2">
                     <button
                       class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
@@ -216,14 +226,34 @@
                   </div>
                 </div>
 
-                <button
-                  v-else
-                  class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
-                  @click="editWalletAddress('solana')"
-                >
-                  <UIcon name="i-heroicons-link-20-solid" class="w-4 h-4" />
-                  {{ userProfile?.solana_address?.[0] ? 'Update Address' : 'Connect Wallet' }}
-                </button>
+                <div v-else class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <img
+                      :src="TokenService.getTokenIcon('SOL')"
+                      alt="Solana icon"
+                      class="w-10 h-10"
+                    />
+                    <div>
+                      <h4 class="text-sm font-medium text-zinc-900 dark:text-white">
+                        Solana Address
+                      </h4>
+                      <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                        {{
+                          userProfile?.solana_address?.[0]
+                            ? formatAddress(userProfile.solana_address[0])
+                            : 'Not connected'
+                        }}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
+                    @click="editWalletAddress('solana')"
+                  >
+                    <UIcon name="i-heroicons-link-20-solid" class="w-4 h-4" />
+                    {{ userProfile?.solana_address?.[0] ? 'Update Address' : 'Connect Wallet' }}
+                  </button>
+                </div>
               </div>
 
               <!-- ICP Principal -->
@@ -333,7 +363,7 @@
                   >
                     <div
                       class="w-8 h-8 rounded-full mx-auto mb-2"
-                      :class="`bg-${theme}-500`"
+                      :class="getThemeColorClass(theme)"
                     />
                     <span
                       class="text-xs font-medium text-zinc-700 dark:text-zinc-300 capitalize"
@@ -609,21 +639,20 @@
                 </div>
 
                 <div v-if="showSeed" class="flex gap-2">
-                    <button
-                      class="px-4 py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
-                      @click="copySeed"
-                    >
-                      <UIcon name="i-heroicons-clipboard-20-solid" class="w-4 h-4" />
-                      Copy
-                    </button>
-                    <button
-                      class="px-4 py-3 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
-                      @click="hideSeed"
-                    >
-                      <UIcon name="i-heroicons-eye-slash-20-solid" class="w-4 h-4" />
-                      Hide
-                    </button>
-                  </template>
+                  <button
+                    class="px-4 py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
+                    @click="copySeed"
+                  >
+                    <UIcon name="i-heroicons-clipboard-20-solid" class="w-4 h-4" />
+                    Copy
+                  </button>
+                  <button
+                    class="px-4 py-3 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
+                    @click="hideSeed"
+                  >
+                    <UIcon name="i-heroicons-eye-slash-20-solid" class="w-4 h-4" />
+                    Hide
+                  </button>
                 </div>
               </div>
 
@@ -989,6 +1018,21 @@
       return `${address.slice(0, 4)}...${address.slice(-4)}`
     }
     return address
+  }
+
+  // Get explicit theme color class to avoid Tailwind purging issues
+  const getThemeColorClass = (theme: string) => {
+    const colorClasses: Record<string, string> = {
+      emerald: 'bg-emerald-500',
+      pink: 'bg-pink-500',
+      red: 'bg-red-500',
+      orange: 'bg-orange-500',
+      sky: 'bg-sky-500',
+      fuchsia: 'bg-fuchsia-500',
+      purple: 'bg-purple-500',
+      teal: 'bg-teal-500',
+    }
+    return colorClasses[theme] || 'bg-emerald-500'
   }
 
   // Lifecycle

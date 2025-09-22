@@ -251,7 +251,10 @@
                   <div v-if="userProfile?.evm_address?.[0]" class="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
                     <div class="flex items-center gap-2 mb-2">
                       <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold px-2 py-1 rounded-full">EVM</span>
-                      <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.evm_address[0], 'EVM')" />
+                      <div class="flex items-center gap-2">
+                        <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.evm_address[0], 'EVM')" />
+                        <UIcon name="i-heroicons-qr-code-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="showQRCode(userProfile.evm_address[0], 'Ethereum')" />
+                      </div>
                     </div>
                     <div class="font-mono text-sm text-zinc-900 dark:text-white">{{ formatAddress(userProfile.evm_address[0]) }}</div>
                   </div>
@@ -260,7 +263,10 @@
                   <div v-if="userProfile?.bitcoin_address?.[0]" class="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
                     <div class="flex items-center gap-2 mb-2">
                       <span class="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs font-semibold px-2 py-1 rounded-full">BTC</span>
-                      <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.bitcoin_address[0], 'Bitcoin')" />
+                      <div class="flex items-center gap-2">
+                        <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.bitcoin_address[0], 'Bitcoin')" />
+                        <UIcon name="i-heroicons-qr-code-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="showQRCode(userProfile.bitcoin_address[0], 'Bitcoin')" />
+                      </div>
                     </div>
                     <div class="font-mono text-sm text-zinc-900 dark:text-white">{{ formatAddress(userProfile.bitcoin_address[0]) }}</div>
                   </div>
@@ -269,7 +275,10 @@
                   <div v-if="userProfile?.solana_address?.[0]" class="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
                     <div class="flex items-center gap-2 mb-2">
                       <span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs font-semibold px-2 py-1 rounded-full">SOL</span>
-                      <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.solana_address[0], 'Solana')" />
+                      <div class="flex items-center gap-2">
+                        <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.solana_address[0], 'Solana')" />
+                        <UIcon name="i-heroicons-qr-code-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="showQRCode(userProfile.solana_address[0], 'Solana')" />
+                      </div>
                     </div>
                     <div class="font-mono text-sm text-zinc-900 dark:text-white">{{ formatAddress(userProfile.solana_address[0]) }}</div>
                   </div>
@@ -278,7 +287,10 @@
                   <div v-if="userProfile?.id" class="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-lg">
                     <div class="flex items-center gap-2 mb-2">
                       <span class="bg-muted text-zinc-500 dark:text-zinc-400 text-xs font-semibold px-2 py-1 rounded-full">ICP</span>
-                      <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.id.toText(), 'ICP')" />
+                      <div class="flex items-center gap-2">
+                        <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="copyToClipboard(userProfile.id.toText(), 'ICP')" />
+                        <UIcon name="i-heroicons-qr-code-20-solid" class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer" @click="showQRCode(userProfile.id.toText(), 'ICP')" />
+                      </div>
                     </div>
                     <div class="font-mono text-sm text-zinc-900 dark:text-white">{{ formatAddress(userProfile.id.toText()) }}</div>
                   </div>
@@ -485,6 +497,14 @@
       :balances-visible="balancesVisible"
       :user-balances="userBalances"
     />
+
+    <!-- QR Code Modal -->
+    <QRCodeModal
+      :is-open="qrModalOpen"
+      :address="qrAddress"
+      :wallet-type="qrWalletType"
+      @close="qrModalOpen = false"
+    />
   </div>
 </template>
 
@@ -499,6 +519,7 @@
   import { TokenService } from '@/services/TokenService'
   import PortfolioTracker from '@/components/PortfolioTracker.vue'
   import WithdrawalModal from '@/components/WithdrawalModal.vue'
+  import QRCodeModal from '@/components/QRCodeModal.vue'
 
   const auth = useAuthStore()
   const loading = ref(true)
@@ -545,6 +566,11 @@
   // Withdrawal modal state
   const withdrawalModal = ref<InstanceType<typeof WithdrawalModal>>()
   const selectedToken = ref('')
+  
+  // QR code modal state
+  const qrModalOpen = ref(false)
+  const qrAddress = ref('')
+  const qrWalletType = ref('')
   
   // Toggle balance visibility
   const toggleBalanceVisibility = () => {
@@ -872,6 +898,13 @@
       description: 'Address editing will be available soon.',
       color: 'info',
     })
+  }
+
+  // Show QR code modal
+  const showQRCode = (address: string, walletType: string) => {
+    qrAddress.value = address
+    qrWalletType.value = walletType
+    qrModalOpen.value = true
   }
 
   // Transaction history methods

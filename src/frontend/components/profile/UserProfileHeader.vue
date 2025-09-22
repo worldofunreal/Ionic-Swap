@@ -188,6 +188,143 @@
             >
           </div>
         </div>
+
+        <!-- Row 4: Wallet Addresses -->
+        <div v-if="hasWalletAddresses" class="space-y-3">
+          <h3 class="text-sm font-semibold text-zinc-900 dark:text-white">Wallet Addresses</h3>
+          
+          <!-- Bitcoin Address -->
+          <div v-if="userProfile?.bitcoin_address?.[0]" class="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+            <div class="flex items-center gap-3">
+              <img
+                :src="TokenService.getTokenIcon('BTC')"
+                alt="Bitcoin icon"
+                class="w-8 h-8"
+              />
+              <div>
+                <div class="text-sm font-medium text-zinc-900 dark:text-white">Bitcoin</div>
+                <div class="text-xs font-mono text-zinc-600 dark:text-zinc-400">
+                  {{ formatAddress(userProfile.bitcoin_address[0]) }}
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                @click="copyToClipboard(userProfile.bitcoin_address[0], 'Bitcoin')"
+                class="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+                title="Copy address"
+              >
+                <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4" />
+              </button>
+              <button
+                @click="showQRCode(userProfile.bitcoin_address[0], 'Bitcoin')"
+                class="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+                title="Show QR code"
+              >
+                <UIcon name="i-heroicons-qr-code-20-solid" class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Ethereum Address -->
+          <div v-if="userProfile?.evm_address?.[0]" class="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+            <div class="flex items-center gap-3">
+              <img
+                :src="TokenService.getTokenIcon('ETH')"
+                alt="Ethereum icon"
+                class="w-8 h-8"
+              />
+              <div>
+                <div class="text-sm font-medium text-zinc-900 dark:text-white">Ethereum</div>
+                <div class="text-xs font-mono text-zinc-600 dark:text-zinc-400">
+                  {{ formatAddress(userProfile.evm_address[0]) }}
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                @click="copyToClipboard(userProfile.evm_address[0], 'Ethereum')"
+                class="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+                title="Copy address"
+              >
+                <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4" />
+              </button>
+              <button
+                @click="showQRCode(userProfile.evm_address[0], 'Ethereum')"
+                class="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+                title="Show QR code"
+              >
+                <UIcon name="i-heroicons-qr-code-20-solid" class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Solana Address -->
+          <div v-if="userProfile?.solana_address?.[0]" class="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+            <div class="flex items-center gap-3">
+              <img
+                :src="TokenService.getTokenIcon('SOL')"
+                alt="Solana icon"
+                class="w-8 h-8"
+              />
+              <div>
+                <div class="text-sm font-medium text-zinc-900 dark:text-white">Solana</div>
+                <div class="text-xs font-mono text-zinc-600 dark:text-zinc-400">
+                  {{ formatAddress(userProfile.solana_address[0]) }}
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                @click="copyToClipboard(userProfile.solana_address[0], 'Solana')"
+                class="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+                title="Copy address"
+              >
+                <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4" />
+              </button>
+              <button
+                @click="showQRCode(userProfile.solana_address[0], 'Solana')"
+                class="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+                title="Show QR code"
+              >
+                <UIcon name="i-heroicons-qr-code-20-solid" class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <!-- ICP Principal -->
+          <div v-if="userProfile?.id" class="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
+            <div class="flex items-center gap-3">
+              <img
+                :src="TokenService.getTokenIcon('ICP')"
+                alt="ICP icon"
+                class="w-8 h-8"
+              />
+              <div>
+                <div class="text-sm font-medium text-zinc-900 dark:text-white">ICP Principal</div>
+                <div class="text-xs font-mono text-zinc-600 dark:text-zinc-400">
+                  {{ formatAddress(userProfile.id.toText()) }}
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                @click="copyToClipboard(userProfile.id.toText(), 'ICP')"
+                class="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+                title="Copy address"
+              >
+                <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4" />
+              </button>
+              <button
+                @click="showQRCode(userProfile.id.toText(), 'ICP')"
+                class="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+                title="Show QR code"
+              >
+                <UIcon name="i-heroicons-qr-code-20-solid" class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -217,6 +354,57 @@
     </div>
   </div>
 
+  <!-- QR Code Modal -->
+  <div
+    v-if="qrModalOpen"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
+    @click="qrModalOpen = false"
+  >
+    <div
+      class="bg-zinc-50 dark:bg-zinc-800 rounded-xl p-6 max-w-sm mx-4 w-full"
+      @click.stop
+    >
+      <div class="text-center">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
+            {{ qrWalletType }} Address
+          </h3>
+          <button
+            @click="qrModalOpen = false"
+            class="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+          >
+            <UIcon name="i-heroicons-x-mark-20-solid" class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- QR Code -->
+        <div class="bg-white p-4 rounded-lg mb-4 inline-block">
+          <canvas ref="qrCanvas" class="max-w-full"></canvas>
+        </div>
+
+        <!-- Address -->
+        <div class="mb-4">
+          <div class="text-xs text-zinc-600 dark:text-zinc-400 mb-2">Address</div>
+          <div class="p-3 bg-zinc-100 dark:bg-zinc-700 rounded-lg">
+            <div class="text-sm font-mono text-zinc-900 dark:text-white break-all">
+              {{ qrAddress }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Copy Button -->
+        <button
+          @click="copyToClipboard(qrAddress, qrWalletType)"
+          class="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+        >
+          <UIcon name="i-heroicons-document-duplicate-20-solid" class="w-4 h-4" />
+          Copy Address
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Edit Profile Modal -->
   <EditProfileModal ref="editProfileModalRef" />
   
@@ -229,7 +417,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, watch, inject } from 'vue'
+  import { ref, computed, onMounted, watch, inject, nextTick } from 'vue'
   import type { Ref } from 'vue'
   import { useAuthStore } from '@/stores/auth'
   import { canisterService } from '@/services/CanisterService'
@@ -237,6 +425,8 @@
   import { useRoute } from 'vue-router'
   import EditProfileModal from '../EditProfileModal.vue'
   import FollowersFollowingModal from '../FollowersFollowingModal.vue'
+  import { TokenService } from '@/services/TokenService'
+  import QRCode from 'qrcode'
 
   // Inject login panel ref
   const loginPanelRef = inject('loginPanelRef') as Ref<{
@@ -250,10 +440,19 @@
     display_name?: string | string[]
     bio?: string[]
     avatar_url?: string[]
+    banner_url?: string[]
+    location?: string | string[]
+    website?: string | string[]
+    evm_address?: string[]
+    bitcoin_address?: string[]
+    solana_address?: string[]
     is_verified?: boolean
     am_following_them?: boolean
     is_following_me?: boolean
     updated_at?: number
+    created_at?: bigint
+    following_count?: number
+    followers_count?: number
   }
 
   // Props
@@ -617,6 +816,45 @@
     selectedImageTitle.value = title
     imageModalOpen.value = true
   }
+
+  // QR code modal functionality
+  const qrModalOpen = ref(false)
+  const qrAddress = ref('')
+  const qrWalletType = ref('')
+  const qrCanvas = ref<HTMLCanvasElement | null>(null)
+
+  const showQRCode = async (address: string, walletType: string) => {
+    qrAddress.value = address
+    qrWalletType.value = walletType
+    qrModalOpen.value = true
+    
+    // Generate QR code after modal is rendered
+    await nextTick()
+    if (qrCanvas.value) {
+      try {
+        await QRCode.toCanvas(qrCanvas.value, address, {
+          width: 200,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        })
+      } catch (error) {
+        console.error('Error generating QR code:', error)
+      }
+    }
+  }
+
+  // Check if user has any wallet addresses
+  const hasWalletAddresses = computed(() => {
+    return !!(
+      userProfile.value?.bitcoin_address?.[0] ||
+      userProfile.value?.evm_address?.[0] ||
+      userProfile.value?.solana_address?.[0] ||
+      userProfile.value?.id
+    )
+  })
 
   // Define emits
   defineEmits<{

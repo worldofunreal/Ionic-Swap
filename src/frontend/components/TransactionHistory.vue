@@ -261,8 +261,8 @@ const formatTransactionType = (type: any) => {
   return 'Unknown'
 }
 
-const formatAmount = (amount: bigint, token: string) => {
-  return TokenService.formatBalance(Number(amount), token)
+const formatAmount = (amount: bigint, token: string | undefined) => {
+  return TokenService.formatBalance(Number(amount), token || 'USDT')
 }
 
 const formatPrice = (price: number) => {
@@ -294,30 +294,31 @@ const getStakingDisplayTitle = (tx: any) => {
   // Handle Candid enum format: {Stake: null}, {ClaimFees: null}, etc.
   let txType = ''
   if (tx.transaction_type && typeof tx.transaction_type === 'object') {
-    txType = Object.keys(tx.transaction_type)[0]
+    txType = (Object.keys(tx.transaction_type)[0] ?? '')
   } else if (typeof tx.transaction_type === 'string') {
     txType = tx.transaction_type
   }
   
   switch (txType) {
     case 'Stake':
-      return `Staked ${tx.token_symbol}`
+      return `Staked ${tx.token_symbol ?? 'TOKEN'}`
     case 'ClaimFees':
-      return `Claimed ${tx.token_symbol} Fees`
+      return `Claimed ${tx.token_symbol ?? 'TOKEN'} Fees`
     case 'StartDissolving':
-      return `Started Dissolving ${tx.token_symbol}`
+      return `Started Dissolving ${tx.token_symbol ?? 'TOKEN'}`
     case 'CancelDissolving':
-      return `Cancelled Dissolving ${tx.token_symbol}`
+      return `Cancelled Dissolving ${tx.token_symbol ?? 'TOKEN'}`
     case 'PartialWithdraw':
     case 'FullWithdraw':
-      return `Withdrew ${tx.token_symbol}`
+      return `Withdrew ${tx.token_symbol ?? 'TOKEN'}`
     default:
-      return `${txType} ${tx.token_symbol}`
+      return `${txType} ${tx.token_symbol ?? ''}`.trim()
   }
 }
 
 const getStakingDisplayAmount = (tx: any) => {
-  const amount = TokenService.formatLargeAmount(tx.amount, tx.token_symbol)
+  const symbol = tx.token_symbol ?? 'USDT'
+  const amount = TokenService.formatLargeAmount(tx.amount ?? 0, symbol)
   return amount
 }
 
@@ -327,7 +328,7 @@ const getTransactionTypeIcon = (tx: any) => {
   // Handle Candid enum format
   let txType = ''
   if (tx.transaction_type && typeof tx.transaction_type === 'object') {
-    txType = Object.keys(tx.transaction_type)[0]
+    txType = (Object.keys(tx.transaction_type)[0] ?? '')
   } else if (typeof tx.transaction_type === 'string') {
     txType = tx.transaction_type
   }
@@ -349,7 +350,7 @@ const getTransactionTypeColor = (tx: any) => {
   // Handle Candid enum format
   let txType = ''
   if (tx.transaction_type && typeof tx.transaction_type === 'object') {
-    txType = Object.keys(tx.transaction_type)[0]
+    txType = (Object.keys(tx.transaction_type)[0] ?? '')
   } else if (typeof tx.transaction_type === 'string') {
     txType = tx.transaction_type
   }
