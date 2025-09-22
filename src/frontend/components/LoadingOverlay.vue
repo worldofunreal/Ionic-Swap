@@ -9,7 +9,7 @@
       <!-- Spinner -->
       <div class="flex justify-center mb-4">
         <div
-          class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"
+          class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"
         />
       </div>
 
@@ -24,9 +24,9 @@
 
       <!-- Progress bar (optional) -->
       <div v-if="showProgress" class="mt-4">
-        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+        <div class="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-2">
           <div
-            class="bg-blue-500 h-2 rounded-full transition-all duration-300"
+            class="bg-primary-500 h-2 rounded-full transition-all duration-300"
             :style="{ width: `${progress}%` }"
           />
         </div>

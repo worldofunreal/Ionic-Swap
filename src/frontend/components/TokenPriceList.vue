@@ -19,7 +19,7 @@
       <div
         v-for="token in tokens"
         :key="token.symbol"
-        class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+        class="flex items-center justify-between p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
         @click="selectToken(token)"
       >
         <div class="flex items-center gap-2">
@@ -29,7 +29,7 @@
             class="w-7 h-7"
           />
           <div>
-            <div class="font-bold text-black dark:text-white">
+            <div class="font-bold text-zinc-900 dark:text-white">
               {{ token.symbol }}
             </div>
             <div class="text-xs text-zinc-500 dark:text-zinc-400">

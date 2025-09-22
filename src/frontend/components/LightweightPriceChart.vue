@@ -15,13 +15,13 @@
       </div>
       <div class="flex gap-1">
         <!-- Chart Type Toggle -->
-        <div class="flex bg-gray-100 dark:bg-gray-700 rounded-md p-0.5">
+        <div class="flex bg-zinc-100 dark:bg-zinc-700 rounded-md p-0.5">
           <button
             :class="[
               'px-2 py-1 text-xs rounded-md transition-colors',
               chartType === 'candlesticks' 
                 ? 'bg-primary-500 text-white' 
-                : 'text-zinc-700 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600'
             ]"
             @click="chartType = 'candlesticks'"
           >
@@ -32,7 +32,7 @@
               'px-2 py-1 text-xs rounded-md transition-colors',
               chartType === 'line' 
                 ? 'bg-primary-500 text-white' 
-                : 'text-zinc-700 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600'
             ]"
             @click="chartType = 'line'"
           >
@@ -48,7 +48,7 @@
             'px-2 py-1 text-xs rounded-md transition-colors',
             selectedPeriod === period.value 
               ? 'bg-primary-500 text-white' 
-              : 'bg-gray-100 dark:bg-gray-700 text-zinc-700 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600'
           ]"
           @click="selectedPeriod = period.value"
         >
@@ -60,13 +60,13 @@
     <!-- Chart Container -->
     <div ref="chartContainer" class="flex-1 w-full relative">
       <!-- Loading state -->
-      <div v-if="loading" class="absolute inset-0 flex items-center justify-center gap-2 text-zinc-500 dark:text-zinc-300 bg-gray-50 dark:bg-neutral-900 rounded-lg">
-        <div class="w-4 h-4 border-2 border-gray-300 border-t-primary-500 rounded-full animate-spin" />
+      <div v-if="loading" class="absolute inset-0 flex items-center justify-center gap-2 text-zinc-500 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
+        <div class="w-4 h-4 border-2 border-zinc-300 border-t-primary-500 rounded-full animate-spin" />
         <span>Loading chart data...</span>
       </div>
 
       <!-- Error state -->
-      <div v-if="error" class="absolute inset-0 flex items-center justify-center gap-2 text-red-500 bg-gray-50 dark:bg-neutral-900 rounded-lg">
+      <div v-if="error" class="absolute inset-0 flex items-center justify-center gap-2 text-red-500 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
         <UIcon name="i-heroicons-exclamation-triangle" class="w-4 h-4" />
         <span>Failed to load chart data</span>
         <button class="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors" @click="refreshChart">Retry</button>

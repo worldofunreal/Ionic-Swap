@@ -148,7 +148,7 @@
 
                 <!-- Available - Fixed Width -->
                 <div class="col-span-2 text-center">
-                  <div class="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                  <div class="text-sm font-semibold text-primary-600 dark:text-primary-400">
                     {{ TokenService.formatLargeAmount(pool.available_liquidity, pool.token_symbol) }}
                   </div>
                   <div class="text-xs text-zinc-500 dark:text-zinc-400">Liquidity Available</div>
@@ -194,7 +194,7 @@
             :class="[
               'flex-1 px-4 py-3 text-sm font-medium transition-colors',
               activeDetailTab === tab.value
-                ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600 dark:border-primary-400'
                 : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300',
             ]"
             @click="activeDetailTab = tab.value"
@@ -449,7 +449,7 @@
                     <div class="font-semibold text-foreground">
                       {{ calculateDissolvingProgress(position).toFixed(1) }}%
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                    <div class="w-full bg-zinc-200 rounded-full h-2 mt-1">
                       <div 
                         class="bg-yellow-500 h-2 rounded-full transition-all duration-300" 
                         :style="{ width: calculateDissolvingProgress(position) + '%' }"
@@ -476,7 +476,7 @@
                   
                   <div v-if="position.state.Dissolving">
                     <div class="text-zinc-500 dark:text-zinc-400">Still Locked (Earning Fees)</div>
-                    <div class="font-semibold text-blue-600 dark:text-blue-400">
+                    <div class="font-semibold text-primary-600 dark:text-primary-400">
                       {{ formatLockedAmount(position) }}
                     </div>
                   </div>
@@ -500,7 +500,7 @@
                       <button
                         v-if="position.state.Dissolving"
                         @click="stopDissolving(position)"
-                        class="flex-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-md transition-colors"
+                        class="flex-1 px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white text-xs font-semibold rounded-md transition-colors"
                       >
                         Cancel Dissolving
                       </button>
@@ -509,7 +509,7 @@
                       <button
                         v-if="position.state.Locked"
                         @click="showAddStake[position.id] = !showAddStake[position.id]"
-                        class="flex-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-md transition-colors"
+                        class="flex-1 px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white text-xs font-semibold rounded-md transition-colors"
                       >
                         {{ showAddStake[position.id] ? 'Cancel' : 'Add More' }}
                       </button>
@@ -536,10 +536,10 @@
                     </div>
                     
                     <!-- Add Stake Section -->
-                    <div v-if="showAddStake[position.id]" class="bg-blue-50 dark:bg-blue-900/20 rounded-md p-3">
+                    <div v-if="showAddStake[position.id]" class="bg-primary-50 dark:bg-primary-900/20 rounded-md p-3">
                       <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-blue-700 dark:text-blue-300">Add More {{ position.token_symbol }}</span>
-                        <span class="text-xs text-blue-600 dark:text-blue-400">
+                        <span class="text-sm font-medium text-primary-700 dark:text-primary-300">Add More {{ position.token_symbol }}</span>
+                        <span class="text-xs text-primary-600 dark:text-primary-400">
                           Balance: {{ formatUserBalance(position.token_symbol) }}
                         </span>
                       </div>
@@ -549,18 +549,18 @@
                           v-model="addStakeAmounts[position.id]"
                           type="text"
                           placeholder="0.00"
-                          class="flex-1 px-2 py-1 text-xs bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                          class="flex-1 px-2 py-1 text-xs bg-white dark:bg-zinc-800 border border-primary-200 dark:border-primary-700 rounded focus:outline-none focus:ring-1 focus:ring-primary"
                         >
                         <button
                           @click="setMaxAddStake(position)"
-                          class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-700"
+                          class="px-2 py-1 text-xs bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 rounded hover:bg-primary-200 dark:hover:bg-primary-700"
                         >
                           Max
                         </button>
                         <button
                           @click="addToPosition(position)"
                           :disabled="addingToPositions.includes(position.id)"
-                          class="px-3 py-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-400 text-white text-xs font-semibold rounded transition-colors flex items-center"
+                          class="px-3 py-1 bg-primary-500 hover:bg-primary-600 disabled:bg-primary-400 text-white text-xs font-semibold rounded transition-colors flex items-center"
                         >
                           <div v-if="addingToPositions.includes(position.id)" class="w-3 h-3 mr-1 border border-white border-t-transparent rounded-full animate-spin"></div>
                           {{ addingToPositions.includes(position.id) ? 'Adding...' : 'Add' }}
@@ -667,7 +667,7 @@
                   <button
                     v-for="percent in [25, 50, 75, 100]"
                     :key="percent"
-                    class="flex-1 px-2 py-1 text-xs bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded hover:bg-gray-200 dark:hover:bg-neutral-600"
+                    class="flex-1 px-2 py-1 text-xs bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded hover:bg-zinc-200 dark:hover:bg-zinc-600"
                     @click="setStakeAmount(percent)"
                   >
                     {{ percent }}%
@@ -711,17 +711,17 @@
               <button
                 @click="executeStake"
                 :disabled="stakeLoading || !stakeAmount || parseFormattedNumber(stakeAmount) <= 0"
-                class="w-full py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center"
+                class="w-full py-3 bg-green-500 hover:bg-green-600 disabled:bg-zinc-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-colors flex items-center justify-center"
               >
                 <UIcon v-if="stakeLoading" name="i-heroicons-arrow-path" class="w-4 h-4 mr-2 animate-spin" />
                 {{ stakeLoading ? 'Staking...' : 'Stake Tokens' }}
               </button>
 
               <!-- Info Note -->
-              <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+              <div class="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-3">
                 <div class="flex items-start">
-                  <UIcon name="i-heroicons-information-circle" class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
-                  <div class="text-sm text-blue-700 dark:text-blue-300">
+                  <UIcon name="i-heroicons-information-circle" class="w-5 h-5 text-primary-600 dark:text-primary-400 mt-0.5 mr-2 flex-shrink-0" />
+                  <div class="text-sm text-primary-700 dark:text-primary-300">
                     <p class="font-medium mb-1">Staking Information</p>
                     <p>Your staked tokens will earn fees from trading activity. Longer dissolve delays provide higher voting power and fee earnings. You can claim accumulated fees at any time.</p>
                   </div>
@@ -900,12 +900,12 @@
   }
 
   const getPoolStatusClass = (status: any) => {
-    if (!status) return 'bg-gray-100 text-zinc-800 dark:bg-gray-900 dark:text-zinc-200'
+    if (!status) return 'bg-zinc-100 text-zinc-800 dark:bg-zinc-900 dark:text-zinc-200'
     if (status.Healthy !== undefined) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
     if (status.NeedsRebalance !== undefined) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
     if (status.Critical !== undefined) return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
     if (status.Halted !== undefined) return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-    return 'bg-gray-100 text-zinc-800 dark:bg-gray-900 dark:text-zinc-200'
+    return 'bg-zinc-100 text-zinc-800 dark:bg-zinc-900 dark:text-zinc-200'
   }
 
   const formatNeuronState = (state: any) => {
@@ -923,10 +923,10 @@
   }
 
   const getNeuronStateClass = (state: any) => {
-    if (state.Locked) return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+    if (state.Locked) return 'bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200'
     if (state.Dissolving) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
     if (state.Dissolved) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-    return 'bg-gray-100 text-zinc-800 dark:bg-gray-900 dark:text-zinc-200'
+    return 'bg-zinc-100 text-zinc-800 dark:bg-zinc-900 dark:text-zinc-200'
   }
 
   const formatDuration = (seconds: number | bigint) => {
@@ -1153,12 +1153,16 @@
     return parseFloat(cleaned) || 0
   }
 
-  const formatNumberWithCommas = (value: number, decimals: number): string => {
+  const formatNumberWithCommas = (value: number, decimals: number, useFloor: boolean = false): string => {
     if (isNaN(value) || !isFinite(value)) return '0.00'
+    
+    // Use Math.floor to round down when useFloor is true (for 100% calculations)
+    const adjustedValue = useFloor ? Math.floor(value * Math.pow(10, decimals)) / Math.pow(10, decimals) : value
+    
     return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
       maximumFractionDigits: decimals,
-    }).format(value)
+    }).format(adjustedValue)
   }
 
   const formatStakeAmount = (event: Event) => {
@@ -1202,8 +1206,9 @@
     const balanceRaw = balance / Math.pow(10, TokenService.getTokenDecimals(symbol))
     const amount = (balanceRaw * percent) / 100
     
-    // Format for display
-    stakeAmount.value = formatNumberWithCommas(amount, TokenService.getDisplayDecimals(symbol))
+    // Use floor rounding for 100% to avoid exceeding balance
+    const useFloor = percent === 100
+    stakeAmount.value = formatNumberWithCommas(amount, TokenService.getDisplayDecimals(symbol), useFloor)
   }
 
   // Actions
@@ -1620,7 +1625,10 @@
     }
     
     const balanceRaw = balance / Math.pow(10, TokenService.getTokenDecimals(symbol))
-    addStakeAmounts.value[position.id] = balanceRaw.toFixed(TokenService.getDisplayDecimals(symbol))
+    const decimals = TokenService.getDisplayDecimals(symbol)
+    // Use Math.floor to round down and avoid exceeding balance
+    const flooredAmount = Math.floor(balanceRaw * Math.pow(10, decimals)) / Math.pow(10, decimals)
+    addStakeAmounts.value[position.id] = flooredAmount.toFixed(decimals)
   }
 
 

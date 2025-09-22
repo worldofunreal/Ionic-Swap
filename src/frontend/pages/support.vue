@@ -18,11 +18,11 @@
           class="bg-zinc-50 dark:bg-neutral-800 p-6 rounded-lg shadow text-center"
         >
           <div
-            class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mx-auto mb-4"
+            class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center mx-auto mb-4"
           >
             <UIcon
               name="i-heroicons-question-mark-circle"
-              class="w-6 h-6 text-blue-600 dark:text-blue-400"
+              class="w-6 h-6 text-primary-600 dark:text-primary-400"
             />
           </div>
           <h3 class="text-lg font-medium text-zinc-900 dark:text-white mb-2">
@@ -32,7 +32,7 @@
             Find answers to common questions about swapping and DeFi
           </p>
           <button
-            class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+            class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
             @click="activeSection = 'faq'"
           >
             Browse FAQ →
@@ -131,7 +131,7 @@
             Our support team is available 24/7 to help you with any questions
             about cross-chain swapping, gasless transactions, or token trading.
           </p>
-          <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 text-center">
+          <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg p-6 text-center">
             <UIcon
               name="i-heroicons-chat-bubble-left-right"
               class="w-12 h-12 text-zinc-300 mx-auto mb-4"

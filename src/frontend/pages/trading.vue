@@ -455,23 +455,33 @@
     const balance = usdtBalanceDisplay.value
     const amount = (balance * percent) / 100
     console.log(`Setting buy amount: ${percent}% of ${balance} USDT = ${amount}`)
-    buyAmount.value = formatNumberWithCommas(amount, TokenService.getDisplayDecimals('USDT'))
+    
+    // Use floor rounding for 100% to avoid exceeding balance
+    const useFloor = percent === 100
+    buyAmount.value = formatNumberWithCommas(amount, TokenService.getDisplayDecimals('USDT'), useFloor)
   }
 
   const setSellAmount = (percent: number) => {
     const balance = selectedTokenBalanceDisplay.value
     const amount = (balance * percent) / 100
     console.log(`Setting sell amount: ${percent}% of ${balance} ${selectedTokenSymbol.value} = ${amount}`)
-    sellAmount.value = formatNumberWithCommas(amount, TokenService.getDisplayDecimals(selectedTokenSymbol.value))
+    
+    // Use floor rounding for 100% to avoid exceeding balance
+    const useFloor = percent === 100
+    sellAmount.value = formatNumberWithCommas(amount, TokenService.getDisplayDecimals(selectedTokenSymbol.value), useFloor)
   }
 
   // Format number with commas
-  const formatNumberWithCommas = (value: number, decimals: number): string => {
+  const formatNumberWithCommas = (value: number, decimals: number, useFloor: boolean = false): string => {
     if (isNaN(value) || !isFinite(value)) return '0.00'
+    
+    // Use Math.floor to round down when useFloor is true (for 100% calculations)
+    const adjustedValue = useFloor ? Math.floor(value * Math.pow(10, decimals)) / Math.pow(10, decimals) : value
+    
     return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
       maximumFractionDigits: decimals,
-    }).format(value)
+    }).format(adjustedValue)
   }
 
   // Parse number from formatted string (remove commas)
