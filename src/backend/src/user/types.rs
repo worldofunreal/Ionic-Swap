@@ -3,6 +3,58 @@ use ic_stable_structures::{storable::Bound, Storable};
 use serde::Serialize;
 use std::borrow::Cow;
 
+#[derive(CandidType, Deserialize, Clone, Debug, PartialEq, Eq, Serialize)]
+pub enum VisibilityLevel {
+    Public,
+    FollowersOnly,
+    Private,
+}
+
+impl Default for VisibilityLevel {
+    fn default() -> Self {
+        VisibilityLevel::Public
+    }
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug, Serialize)]
+pub struct PrivacySettings {
+    pub profile_visibility: VisibilityLevel,
+    pub activity_visibility: VisibilityLevel,
+    pub wallet_visibility: VisibilityLevel,
+    pub analytics_enabled: bool,
+    pub marketing_enabled: bool,
+    pub third_party_enabled: bool,
+}
+
+impl Default for PrivacySettings {
+    fn default() -> Self {
+        Self {
+            profile_visibility: VisibilityLevel::Public,
+            activity_visibility: VisibilityLevel::Public,
+            wallet_visibility: VisibilityLevel::Public,
+            analytics_enabled: true,
+            marketing_enabled: false,
+            third_party_enabled: false,
+        }
+    }
+}
+
+impl Storable for PrivacySettings {
+    const BOUND: Bound = Bound::Unbounded;
+    
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+    
+    fn into_bytes(self) -> Vec<u8> {
+        candid::encode_one(&self).unwrap()
+    }
+    
+    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+}
+
 // Newtype wrapper for Vec<Principal> to implement Storable
 #[derive(CandidType, Deserialize, Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct PrincipalList(pub Vec<Principal>);
@@ -41,6 +93,7 @@ pub struct User {
     pub solana_address: Option<String>,
     pub following_count: u32,
     pub followers_count: u32,
+    pub privacy_settings: Option<PrivacySettings>,
 }
 
 impl Storable for User {
@@ -132,6 +185,7 @@ impl User {
             solana_address,
             following_count: 0,
             followers_count: 0,
+            privacy_settings: Some(PrivacySettings::default()),
         }
     }
 
@@ -163,6 +217,11 @@ impl User {
         if let Some(solana_address) = update.solana_address {
             self.solana_address = Some(solana_address);
         }
+        self.updated_at = ic_cdk::api::time();
+    }
+
+    pub fn update_privacy_settings(&mut self, privacy_settings: PrivacySettings) {
+        self.privacy_settings = Some(privacy_settings);
         self.updated_at = ic_cdk::api::time();
     }
 }

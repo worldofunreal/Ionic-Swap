@@ -645,6 +645,28 @@ pub async fn delete_account() -> Result<(), user::UserError> {
     user::delete_account(caller).await
 }
 
+/// Update privacy settings (requires signed call, owner only)
+#[update]
+pub async fn update_privacy_settings(privacy_settings: user::types::PrivacySettings) -> Result<user::User, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    user::handlers::update_privacy_settings(caller, privacy_settings)
+}
+
+/// Get privacy settings (requires signed call, owner only)
+#[query]
+pub fn get_privacy_settings() -> Result<user::types::PrivacySettings, user::UserError> {
+    let caller = ic_cdk::api::msg_caller();
+    if caller == candid::Principal::anonymous() {
+        return Err(user::UserError::Unauthorized);
+    }
+    
+    user::handlers::get_privacy_settings(caller)
+}
+
 // ============================================================================
 // ASSET UPLOAD OPERATIONS
 // ============================================================================
@@ -1632,6 +1654,7 @@ pub fn debug_get_all_positions() -> Vec<icp::liquidity::LiquidityNeuron> {
 pub fn get_api_statistics() -> String {
     oracle::aggregator::get_api_stats()
 }
+
 
 // Enable Candid export
 ic_cdk::export_candid!();

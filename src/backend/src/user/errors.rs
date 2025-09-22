@@ -13,6 +13,8 @@ pub enum UserError {
     Unauthorized,
     #[error("Internal error: {0}")]
     InternalError(String),
+    #[error("Profile is private")]
+    ProfilePrivate,
 }
 
 impl From<std::string::FromUtf8Error> for UserError {

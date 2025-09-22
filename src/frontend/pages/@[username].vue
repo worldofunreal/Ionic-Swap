@@ -7,6 +7,25 @@
       />
     </div>
 
+    <!-- Private Profile State -->
+    <div
+      v-else-if="isPrivateProfile"
+      class="flex items-center justify-center min-h-screen"
+    >
+      <div class="text-center">
+        <div class="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+          <UIcon name="i-heroicons-lock-closed-20-solid" class="w-8 h-8 text-zinc-500 dark:text-zinc-400" />
+        </div>
+        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
+          This Profile is Private
+        </h1>
+        <p class="text-zinc-600 dark:text-zinc-400 mb-6">
+          The user "{{ username }}" has set their profile to private. Only followers can view this profile.
+        </p>
+        <UButton color="primary" @click="$router.push('/')"> Go Home </UButton>
+      </div>
+    </div>
+
     <!-- Error State -->
     <div
       v-else-if="error"
@@ -91,6 +110,7 @@
 
   const loading = ref(true)
   const error = ref(false)
+  const isPrivateProfile = ref(false)
   const userProfile = ref<UserProfile | null>(null)
   const activeTab = ref('Portfolio')
 
@@ -311,6 +331,7 @@
 
     loading.value = true
     error.value = false
+    isPrivateProfile.value = false
 
     try {
       // Initialize canister service if needed (works for both authenticated and public access)
@@ -328,7 +349,12 @@
       }
     } catch (err) {
       console.error('Error loading user profile:', err)
-      error.value = true
+      // Check if it's a private profile error
+      if (err instanceof Error && err.message === 'PROFILE_PRIVATE') {
+        isPrivateProfile.value = true
+      } else {
+        error.value = true
+      }
     } finally {
       loading.value = false
     }

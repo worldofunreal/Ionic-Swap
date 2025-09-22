@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex items-center gap-3 p-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer transition-colors rounded-lg"
+    class="flex items-center gap-3 p-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer transition-colors rounded-lg border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
     @click="handleClick"
   >
     <!-- Avatar -->
@@ -14,7 +14,8 @@
       >
       <div
         v-else
-        class="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm border-2 border-zinc-200 dark:border-zinc-800"
+        class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm border-2 border-zinc-200 dark:border-zinc-800"
+        style="background: linear-gradient(to bottom right, #4F8CEE, #64C4AA);"
       >
         {{ user.username?.charAt(0).toUpperCase() || 'U' }}
       </div>
@@ -26,7 +27,7 @@
         <span class="font-semibold text-zinc-900 dark:text-white truncate">
           {{ displayName }}
         </span>
-        <span v-if="user.is_verified" class="text-blue-500">
+        <span v-if="user.is_verified" class="text-primary-500">
           <UIcon name="i-heroicons-check-badge-20-solid" class="w-4 h-4" />
         </span>
       </div>
@@ -42,7 +43,7 @@
       <!-- Follows you indicator -->
       <p
         v-if="isFollowingMe"
-        class="text-xs text-green-600 dark:text-green-400 mt-1"
+        class="text-xs text-emerald-600 dark:text-emerald-400 mt-1"
       >
         Follows you
       </p>
@@ -50,28 +51,40 @@
 
     <!-- Follow Status -->
     <div v-if="showFollowButton" class="flex-shrink-0">
-      <UButton
+      <button
         v-if="!isFollowing"
-        size="xs"
-        color="primary"
-        variant="soft"
-        :loading="followLoading"
+        :disabled="followLoading"
+        class="px-4 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-2"
+        :class="
+          followLoading
+            ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400 cursor-not-allowed'
+            : 'bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white'
+        "
         @click.stop="handleFollow"
       >
+        <div v-if="followLoading" class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+        <UIcon v-else name="i-heroicons-user-plus-20-solid" class="w-4 h-4" />
         Follow
-      </UButton>
-      <UButton
+      </button>
+      <button
         v-else
-        size="xs"
-        color="neutral"
-        variant="soft"
-        :loading="followLoading"
+        :disabled="followLoading"
+        class="px-4 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-2"
+        :class="
+          followLoading
+            ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400 cursor-not-allowed'
+            : isHoveringFollowButton
+              ? 'bg-red-100 hover:bg-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-700 dark:text-red-400'
+              : 'bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white'
+        "
         @click.stop="handleUnfollow"
         @mouseenter="isHoveringFollowButton = true"
         @mouseleave="isHoveringFollowButton = false"
       >
+        <div v-if="followLoading" class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+        <UIcon v-else name="i-heroicons-user-minus-20-solid" class="w-4 h-4" />
         {{ isHoveringFollowButton ? 'Unfollow' : 'Following' }}
-      </UButton>
+      </button>
     </div>
   </div>
 </template>

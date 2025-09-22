@@ -24,17 +24,18 @@ const getBackendCanisterId = () => {
 // Export types from the backend canister
 export type {
   User,
-  UserResult,
   UserUpdate,
   CompactProfile,
   PersonalUser,
   SwapTransaction,
   PortfolioData,
   PortfolioPoint,
+  PrivacySettings,
+  VisibilityLevel,
 } from '../../declarations/backend/backend.did'
 
-// Helper function to handle UserResult
-const handleUserResult = (result: UserResult): User => {
+// Helper function to handle user result variants
+const handleUserResult = (result: any): User => {
   if ('Ok' in result) {
     return result.Ok
   } else {
@@ -177,6 +178,10 @@ class CanisterService {
       // If user not found, return null
       if (error instanceof Error && error.message.includes('UserNotFound')) {
         return null
+      }
+      // If profile is private, throw a specific error
+      if (error instanceof Error && error.message.includes('ProfilePrivate')) {
+        throw new Error('PROFILE_PRIVATE')
       }
       throw error
     }
@@ -750,6 +755,9 @@ class CanisterService {
         if (result.Err.UserNotFound) {
           return null
         }
+        if (result.Err.ProfilePrivate) {
+          throw new Error('PROFILE_PRIVATE')
+        }
         throw new Error(`Backend error: ${JSON.stringify(result.Err)}`)
       }
     } catch (error) {
@@ -792,6 +800,10 @@ class CanisterService {
       // If user not found, return null
       if (error instanceof Error && error.message.includes('UserNotFound')) {
         return null
+      }
+      // If profile is private, throw a specific error
+      if (error instanceof Error && error.message.includes('ProfilePrivate')) {
+        throw new Error('PROFILE_PRIVATE')
       }
       throw error
     }
@@ -849,6 +861,10 @@ class CanisterService {
       // If user not found, return null
       if (error instanceof Error && error.message.includes('UserNotFound')) {
         return null
+      }
+      // If profile is private, throw a specific error
+      if (error instanceof Error && error.message.includes('ProfilePrivate')) {
+        throw new Error('PROFILE_PRIVATE')
       }
       throw error
     }
@@ -1392,6 +1408,46 @@ class CanisterService {
       return result
     } catch (error) {
       console.error('Error getting fee analytics:', error)
+      throw error
+    }
+  }
+
+  // Privacy settings methods
+  async getPrivacySettings(): Promise<PrivacySettings> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.get_privacy_settings()
+      if ('Ok' in result) {
+        return result.Ok
+      } else {
+        throw new Error(`Backend error: ${JSON.stringify(result.Err)}`)
+      }
+    } catch (error) {
+      console.error('Error getting privacy settings:', error)
+      throw error
+    }
+  }
+
+  async updatePrivacySettings(settings: PrivacySettings): Promise<User> {
+    if (!this.backendActor) {
+      throw new Error('CanisterService not initialized')
+    }
+
+    try {
+      const result = await this.backendActor.update_privacy_settings(settings)
+      if ('Ok' in result) {
+        // Invalidate cache for this user since privacy settings changed
+        const user = result.Ok
+        appCacheService.invalidateUserCache(user)
+        return user
+      } else {
+        throw new Error(`Backend error: ${JSON.stringify(result.Err)}`)
+      }
+    } catch (error) {
+      console.error('Error updating privacy settings:', error)
       throw error
     }
   }

@@ -409,16 +409,15 @@
                     Control who can see your profile information
                   </p>
                 </div>
-                <USelect
+                <select
                   v-model="privacySettings.profileVisibility"
-                  :options="[
-                    { label: 'Public', value: 'public' },
-                    { label: 'Followers Only', value: 'followers' },
-                    { label: 'Private', value: 'private' },
-                  ]"
-                  size="sm"
-                  class="w-40"
-                />
+                  @change="savePrivacySettings"
+                  class="px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white w-40"
+                >
+                  <option value="public">Public</option>
+                  <option value="followers">Followers Only</option>
+                  <option value="private">Private</option>
+                </select>
               </div>
 
               <!-- Activity Visibility -->
@@ -433,16 +432,15 @@
                     Control who can see your activity and transactions
                   </p>
                 </div>
-                <USelect
+                <select
                   v-model="privacySettings.activityVisibility"
-                  :options="[
-                    { label: 'Public', value: 'public' },
-                    { label: 'Followers Only', value: 'followers' },
-                    { label: 'Private', value: 'private' },
-                  ]"
-                  size="sm"
-                  class="w-40"
-                />
+                  @change="savePrivacySettings"
+                  class="px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white w-40"
+                >
+                  <option value="public">Public</option>
+                  <option value="followers">Followers Only</option>
+                  <option value="private">Private</option>
+                </select>
               </div>
 
               <!-- Wallet Address Visibility -->
@@ -457,17 +455,17 @@
                     Control who can see your wallet addresses
                   </p>
                 </div>
-                <USelect
+                <select
                   v-model="privacySettings.walletVisibility"
-                  :options="[
-                    { label: 'Public', value: 'public' },
-                    { label: 'Followers Only', value: 'followers' },
-                    { label: 'Private', value: 'private' },
-                  ]"
-                  size="sm"
-                  class="w-40"
-                />
+                  @change="savePrivacySettings"
+                  class="px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white w-40"
+                >
+                  <option value="public">Public</option>
+                  <option value="followers">Followers Only</option>
+                  <option value="private">Private</option>
+                </select>
               </div>
+
 
               <!-- Data Sharing -->
               <div class="space-y-4">
@@ -488,7 +486,7 @@
                       Help us improve by sharing anonymous usage data
                     </p>
                   </div>
-                  <USwitch v-model="privacySettings.analyticsEnabled" />
+                  <USwitch v-model="privacySettings.analyticsEnabled" @change="savePrivacySettings" />
                 </div>
 
                 <div
@@ -504,7 +502,7 @@
                       Receive updates about new features and promotions
                     </p>
                   </div>
-                  <USwitch v-model="privacySettings.marketingEnabled" />
+                  <USwitch v-model="privacySettings.marketingEnabled" @change="savePrivacySettings" />
                 </div>
 
                 <div
@@ -520,7 +518,7 @@
                       Allow data sharing with trusted third-party services
                     </p>
                   </div>
-                  <USwitch v-model="privacySettings.thirdPartyEnabled" />
+                  <USwitch v-model="privacySettings.thirdPartyEnabled" @change="savePrivacySettings" />
                 </div>
               </div>
             </div>
@@ -692,32 +690,12 @@
           </div>
         </div>
 
-        <!-- Save Button -->
+        <!-- Status Bar -->
         <div class="px-6 py-4 bg-zinc-50 dark:bg-zinc-800 rounded-b-lg">
           <div class="flex justify-between items-center">
             <p class="text-sm text-zinc-500 dark:text-zinc-400">
               {{ saveStatus }}
             </p>
-            <div class="flex gap-3">
-              <UButton
-                v-if="hasUnsavedChanges"
-                color="neutral"
-                variant="soft"
-                size="sm"
-                @click="resetChanges"
-              >
-                Reset
-              </UButton>
-              <UButton
-                v-if="hasUnsavedChanges"
-                color="primary"
-                size="sm"
-                :loading="saving"
-                @click="saveChanges"
-              >
-                Save Changes
-              </UButton>
-            </div>
           </div>
         </div>
       </div>
@@ -736,7 +714,7 @@
   import { useAuthStore } from '@/stores/auth'
   import { useColorTheme } from '@/composables/useColorTheme'
   import { useTheme } from '@/composables/useTheme'
-  import { canisterService } from '@/services/CanisterService'
+  import { canisterService, type PrivacySettings, type VisibilityLevel } from '@/services/CanisterService'
   import { TokenService } from '@/services/TokenService'
   import { useToast } from '#imports'
   import { appCacheService } from '@/services/AppCacheService'
@@ -771,15 +749,17 @@
   const usernameModal = ref<InstanceType<typeof UsernameChangeModal>>()
   const editProfileModalRef = ref<InstanceType<typeof EditProfileModal>>()
 
-  // Privacy settings (mock data for now)
+  // Privacy settings - simplified for UI
   const privacySettings = ref({
     profileVisibility: 'public',
-    activityVisibility: 'public',
+    activityVisibility: 'public', 
     walletVisibility: 'public',
     analyticsEnabled: true,
     marketingEnabled: false,
     thirdPartyEnabled: false,
   })
+
+  const loadingPrivacySettings = ref(false)
 
   // Tabs configuration
   const tabs = [
@@ -791,16 +771,33 @@
 
   // Computed properties
   const hasUnsavedChanges = computed(() => {
-    // For now, always return false since most changes are immediate
-    // This can be enhanced when we add more complex form handling
-    return false
+    // Privacy settings changes need to be saved
+    return loadingPrivacySettings.value
   })
 
   const saveStatus = computed(() => {
     if (saving.value) return 'Saving changes...'
+    if (loadingPrivacySettings.value) return 'Loading privacy settings...'
     if (hasUnsavedChanges.value) return 'You have unsaved changes'
     return 'All changes saved'
   })
+
+  // Helper functions to convert between frontend and backend formats
+  const createVisibilityLevel = (value: string): VisibilityLevel => {
+    switch (value) {
+      case 'public': return { Public: null } as VisibilityLevel
+      case 'followers': return { FollowersOnly: null } as VisibilityLevel
+      case 'private': return { Private: null } as VisibilityLevel
+      default: return { Public: null } as VisibilityLevel
+    }
+  }
+
+  const getVisibilityValue = (visibility: VisibilityLevel): string => {
+    if ('Public' in visibility) return 'public'
+    if ('FollowersOnly' in visibility) return 'followers'
+    if ('Private' in visibility) return 'private'
+    return 'public'
+  }
 
   // Methods
   const toggleTheme = () => {
@@ -880,29 +877,86 @@
     usernameModal.value?.open()
   }
 
-  const saveChanges = async () => {
-    saving.value = true
-    try {
-      // Save privacy settings (mock implementation)
-      await new Promise(resolve => setTimeout(resolve, 1000))
+  // Load privacy settings from backend
+  const loadPrivacySettings = async () => {
+    if (!auth.authenticated) return
 
+    loadingPrivacySettings.value = true
+    try {
+      const settings = await canisterService.getPrivacySettings()
+      // Convert backend format to frontend format
+      privacySettings.value = {
+        profileVisibility: getVisibilityValue(settings.profile_visibility),
+        activityVisibility: getVisibilityValue(settings.activity_visibility),
+        walletVisibility: getVisibilityValue(settings.wallet_visibility),
+        analyticsEnabled: settings.analytics_enabled,
+        marketingEnabled: settings.marketing_enabled,
+        thirdPartyEnabled: settings.third_party_enabled,
+      }
+    } catch (error) {
+      console.error('Failed to load privacy settings:', error)
+      // Use defaults if loading fails
+      privacySettings.value = {
+        profileVisibility: 'public',
+        activityVisibility: 'public',
+        walletVisibility: 'public',
+        analyticsEnabled: true,
+        marketingEnabled: false,
+        thirdPartyEnabled: false,
+      }
+    } finally {
+      loadingPrivacySettings.value = false
+    }
+  }
+
+  // Save privacy settings to backend
+  const savePrivacySettings = async () => {
+    if (!auth.authenticated) {
+      console.log('❌ Not authenticated, cannot save privacy settings')
+      return
+    }
+
+    console.log('💾 Saving privacy settings:', privacySettings.value)
+    saving.value = true
+    
+    try {
+      // Convert frontend format to backend format
+      const backendSettings: PrivacySettings = {
+        profile_visibility: createVisibilityLevel(privacySettings.value.profileVisibility),
+        activity_visibility: createVisibilityLevel(privacySettings.value.activityVisibility),
+        wallet_visibility: createVisibilityLevel(privacySettings.value.walletVisibility),
+        analytics_enabled: privacySettings.value.analyticsEnabled,
+        marketing_enabled: privacySettings.value.marketingEnabled,
+        third_party_enabled: privacySettings.value.thirdPartyEnabled,
+      }
+      
+      console.log('🔄 Converted to backend format:', backendSettings)
+      
+      await canisterService.updatePrivacySettings(backendSettings)
+      
+      console.log('✅ Privacy settings saved successfully')
+      
       const toast = useToast()
       toast.add({
-        title: 'Settings Saved',
-        description: 'Your settings have been saved successfully',
+        title: 'Privacy Settings Updated',
+        description: 'Your privacy settings have been saved successfully',
         color: 'success',
       })
     } catch (error) {
-      console.error('Failed to save settings:', error)
+      console.error('❌ Failed to save privacy settings:', error)
       const toast = useToast()
       toast.add({
         title: 'Save Failed',
-        description: 'Failed to save settings. Please try again.',
+        description: 'Failed to save privacy settings. Please try again.',
         color: 'error',
       })
     } finally {
       saving.value = false
     }
+  }
+
+  const saveChanges = async () => {
+    await savePrivacySettings()
   }
 
   const resetChanges = () => {
@@ -915,6 +969,7 @@
       marketingEnabled: false,
       thirdPartyEnabled: false,
     }
+    savePrivacySettings()
   }
 
   const deleteAccount = async () => {
@@ -1036,10 +1091,14 @@
   }
 
   // Lifecycle
-  onMounted(() => {
+  onMounted(async () => {
     // Ensure user is authenticated
     if (!auth.authenticated) {
       navigateTo('/')
+      return
     }
+    
+    // Load privacy settings from backend
+    await loadPrivacySettings()
   })
 </script>

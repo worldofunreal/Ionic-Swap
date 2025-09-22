@@ -26,12 +26,26 @@ export const idlFactory = ({ IDL }) => {
   const UserError = IDL.Variant({
     'InvalidInput' : IDL.Text,
     'UsernameTaken' : IDL.Null,
+    'ProfilePrivate' : IDL.Null,
     'Unauthorized' : IDL.Null,
     'InternalError' : IDL.Text,
     'UserNotFound' : IDL.Null,
   });
   const Result_1 = IDL.Variant({ 'Ok' : IDL.Null, 'Err' : UserError });
   const Result_2 = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : UserError });
+  const VisibilityLevel = IDL.Variant({
+    'Private' : IDL.Null,
+    'FollowersOnly' : IDL.Null,
+    'Public' : IDL.Null,
+  });
+  const PrivacySettings = IDL.Record({
+    'analytics_enabled' : IDL.Bool,
+    'wallet_visibility' : VisibilityLevel,
+    'marketing_enabled' : IDL.Bool,
+    'activity_visibility' : VisibilityLevel,
+    'profile_visibility' : VisibilityLevel,
+    'third_party_enabled' : IDL.Bool,
+  });
   const User = IDL.Record({
     'id' : IDL.Principal,
     'bio' : IDL.Opt(IDL.Text),
@@ -49,6 +63,7 @@ export const idlFactory = ({ IDL }) => {
     'solana_address' : IDL.Opt(IDL.Text),
     'followers_count' : IDL.Nat32,
     'location' : IDL.Opt(IDL.Text),
+    'privacy_settings' : IDL.Opt(PrivacySettings),
   });
   const Result_3 = IDL.Variant({ 'Ok' : User, 'Err' : UserError });
   const InternalToken = IDL.Record({
@@ -166,6 +181,7 @@ export const idlFactory = ({ IDL }) => {
     'initial_value_usdt' : IDL.Float64,
     'all_time_high' : IDL.Float64,
   });
+  const Result_5 = IDL.Variant({ 'Ok' : PrivacySettings, 'Err' : UserError });
   const PersonalUser = IDL.Record({
     'id' : IDL.Principal,
     'bio' : IDL.Opt(IDL.Text),
@@ -186,7 +202,7 @@ export const idlFactory = ({ IDL }) => {
     'followers_count' : IDL.Nat32,
     'location' : IDL.Opt(IDL.Text),
   });
-  const Result_5 = IDL.Variant({ 'Ok' : PersonalUser, 'Err' : UserError });
+  const Result_6 = IDL.Variant({ 'Ok' : PersonalUser, 'Err' : UserError });
   const SwapTransaction = IDL.Record({
     'id' : IDL.Text,
     'to_token' : IDL.Text,
@@ -212,7 +228,7 @@ export const idlFactory = ({ IDL }) => {
     'upgrade' : IDL.Opt(IDL.Bool),
     'status_code' : IDL.Nat16,
   });
-  const Result_6 = IDL.Variant({ 'Ok' : IDL.Bool, 'Err' : IDL.Text });
+  const Result_7 = IDL.Variant({ 'Ok' : IDL.Bool, 'Err' : IDL.Text });
   const SwapRequest = IDL.Record({
     'to_token' : IDL.Text,
     'from_token' : IDL.Text,
@@ -227,8 +243,8 @@ export const idlFactory = ({ IDL }) => {
     'to_price' : IDL.Float64,
     'from_price' : IDL.Float64,
   });
-  const Result_7 = IDL.Variant({ 'Ok' : SwapResult, 'Err' : IDL.Text });
-  const Result_8 = IDL.Variant({
+  const Result_8 = IDL.Variant({ 'Ok' : SwapResult, 'Err' : IDL.Text });
+  const Result_9 = IDL.Variant({
     'Ok' : IDL.Vec(CompactProfile),
     'Err' : UserError,
   });
@@ -257,7 +273,7 @@ export const idlFactory = ({ IDL }) => {
     'swap_tx_hash' : IDL.Text,
     'token_out_amount' : IDL.Nat64,
   });
-  const Result_9 = IDL.Variant({ 'Ok' : EvmSwapResult, 'Err' : IDL.Text });
+  const Result_10 = IDL.Variant({ 'Ok' : EvmSwapResult, 'Err' : IDL.Text });
   const SwapRequest_1 = IDL.Record({
     'min_amount_out' : IDL.Nat64,
     'deadline' : IDL.Nat64,
@@ -271,15 +287,15 @@ export const idlFactory = ({ IDL }) => {
     'swap_tx_hash' : IDL.Text,
     'token_out_amount' : IDL.Nat64,
   });
-  const Result_10 = IDL.Variant({ 'Ok' : SwapResult_1, 'Err' : IDL.Text });
-  const Result_11 = IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text });
+  const Result_11 = IDL.Variant({ 'Ok' : SwapResult_1, 'Err' : IDL.Text });
+  const Result_12 = IDL.Variant({ 'Ok' : IDL.Null, 'Err' : IDL.Text });
   const PriceUpdateResult = IDL.Record({
     'total_sources' : IDL.Nat8,
     'pairs_updated' : IDL.Vec(TradingPair),
     'successful_sources' : IDL.Nat8,
     'timestamp' : IDL.Nat64,
   });
-  const Result_12 = IDL.Variant({ 'Ok' : PriceUpdateResult, 'Err' : IDL.Text });
+  const Result_13 = IDL.Variant({ 'Ok' : PriceUpdateResult, 'Err' : IDL.Text });
   const UserUpdate = IDL.Record({
     'bio' : IDL.Opt(IDL.Text),
     'evm_address' : IDL.Opt(IDL.Text),
@@ -370,6 +386,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'get_pair_price' : IDL.Func([IDL.Text], [Result_4], ['query']),
     'get_portfolio_data' : IDL.Func([IDL.Principal], [PortfolioData], []),
+    'get_privacy_settings' : IDL.Func([], [Result_5], ['query']),
     'get_solana_token_balances' : IDL.Func([], [Result], []),
     'get_token_address' : IDL.Func([IDL.Text, IDL.Text], [Result], ['query']),
     'get_token_balance' : IDL.Func(
@@ -391,7 +408,7 @@ export const idlFactory = ({ IDL }) => {
     'get_user_count' : IDL.Func([], [IDL.Nat64], ['query']),
     'get_user_personal' : IDL.Func(
         [IDL.Principal, IDL.Principal],
-        [Result_5],
+        [Result_6],
         ['query'],
       ),
     'get_user_swap_history' : IDL.Func(
@@ -424,14 +441,14 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         ['query'],
       ),
-    'is_token_deployed' : IDL.Func([IDL.Text, IDL.Text], [Result_6], ['query']),
+    'is_token_deployed' : IDL.Func([IDL.Text, IDL.Text], [Result_7], ['query']),
     'is_username_available' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
-    'market_swap' : IDL.Func([SwapRequest], [Result_7], []),
+    'market_swap' : IDL.Func([SwapRequest], [Result_8], []),
     'reload_token_registry' : IDL.Func([], [Result], []),
-    'search_users' : IDL.Func([IDL.Text, IDL.Nat32], [Result_8], ['query']),
+    'search_users' : IDL.Func([IDL.Text, IDL.Nat32], [Result_9], ['query']),
     'search_users_personal' : IDL.Func(
         [IDL.Text, IDL.Nat32, IDL.Principal],
-        [Result_8],
+        [Result_9],
         ['query'],
       ),
     'set_liquidity_config' : IDL.Func([LiquidityConfig], [Result], []),
@@ -455,10 +472,10 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'submit_gasless_permit' : IDL.Func([PermitRequest], [Result], []),
-    'swap_evm' : IDL.Func([PermitRequest, EvmSwapRequest], [Result_9], []),
+    'swap_evm' : IDL.Func([PermitRequest, EvmSwapRequest], [Result_10], []),
     'swap_solana' : IDL.Func(
         [IDL.Vec(IDL.Nat8), SwapRequest_1],
-        [Result_10],
+        [Result_11],
         [],
       ),
     'test_ed25519' : IDL.Func([], [Result], []),
@@ -466,7 +483,7 @@ export const idlFactory = ({ IDL }) => {
     'test_simple_evm_transaction' : IDL.Func([], [Result], []),
     'transfer_tokens' : IDL.Func(
         [IDL.Principal, IDL.Principal, IDL.Text, IDL.Nat64],
-        [Result_11],
+        [Result_12],
         [],
       ),
     'unfollow_user' : IDL.Func([IDL.Principal], [Result_3], []),
@@ -477,7 +494,8 @@ export const idlFactory = ({ IDL }) => {
     'update_display_name' : IDL.Func([IDL.Text], [Result_3], []),
     'update_evm_address' : IDL.Func([IDL.Text], [Result_3], []),
     'update_location' : IDL.Func([IDL.Text], [Result_3], []),
-    'update_prices' : IDL.Func([], [Result_12], []),
+    'update_prices' : IDL.Func([], [Result_13], []),
+    'update_privacy_settings' : IDL.Func([PrivacySettings], [Result_3], []),
     'update_profile' : IDL.Func([UserUpdate], [Result_3], []),
     'update_solana_address' : IDL.Func([IDL.Text], [Result_3], []),
     'update_username' : IDL.Func([IDL.Text], [Result_3], []),

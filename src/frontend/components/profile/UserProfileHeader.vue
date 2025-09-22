@@ -60,24 +60,21 @@
         <!-- Action Buttons -->
         <div class="flex gap-2 relative z-10">
           <!-- Follow/Unfollow Button (only for other users) -->
-          <UButton
+          <button
             v-if="!isOwnProfile"
-            :color="
+            :disabled="followLoading"
+            class="px-4 py-2 text-sm font-semibold rounded-lg transition-colors flex items-center gap-2"
+            :class="
               !auth.authenticated
-                ? 'primary'
+                ? 'bg-primary-500 hover:bg-primary-600 text-white'
                 : isFollowing
-                  ? 'neutral'
-                  : 'primary'
+                  ? 'bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white'
+                  : 'bg-primary-500 hover:bg-primary-600 text-white'
             "
-            :variant="
-              !auth.authenticated ? 'solid' : isFollowing ? 'soft' : 'solid'
-            "
-            :loading="followLoading"
-            size="sm"
-            class="follow-btn"
             @click="toggleFollow"
           >
             <UIcon
+              v-if="!followLoading"
               :name="
                 !auth.authenticated
                   ? 'i-heroicons-arrow-right-on-rectangle-20-solid'
@@ -85,8 +82,9 @@
                     ? 'i-heroicons-user-minus-20-solid'
                     : 'i-heroicons-user-plus-20-solid'
               "
-              class="w-4 h-4 mr-1"
+              class="w-4 h-4"
             />
+            <div v-else class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
             {{
               !auth.authenticated
                 ? 'Sign in to Follow'
@@ -94,7 +92,7 @@
                   ? 'Unfollow'
                   : 'Follow'
             }}
-          </UButton>
+          </button>
         </div>
       </div>
 

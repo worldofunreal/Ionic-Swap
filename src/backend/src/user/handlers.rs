@@ -584,3 +584,21 @@ pub fn http_request(req: HttpRequest) -> HttpResponse {
             .build()
     }
 }
+
+// Privacy settings functions
+pub fn get_privacy_settings(caller: Principal) -> Result<PrivacySettings, UserError> {
+    let user = UserDatabase::get_user(caller)
+        .ok_or(UserError::UserNotFound)?;
+    
+    Ok(user.privacy_settings.unwrap_or_default())
+}
+
+pub fn update_privacy_settings(caller: Principal, privacy_settings: PrivacySettings) -> Result<User, UserError> {
+    let mut user = UserDatabase::get_user(caller)
+        .ok_or(UserError::UserNotFound)?;
+    
+    user.update_privacy_settings(privacy_settings);
+    UserDatabase::update_user(user.clone());
+    
+    Ok(user)
+}

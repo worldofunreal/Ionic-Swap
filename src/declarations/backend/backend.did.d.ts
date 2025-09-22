@@ -176,15 +176,25 @@ export interface PriceUpdateResult {
   'successful_sources' : number,
   'timestamp' : bigint,
 }
+export interface PrivacySettings {
+  'analytics_enabled' : boolean,
+  'wallet_visibility' : VisibilityLevel,
+  'marketing_enabled' : boolean,
+  'activity_visibility' : VisibilityLevel,
+  'profile_visibility' : VisibilityLevel,
+  'third_party_enabled' : boolean,
+}
 export type Result = { 'Ok' : string } |
   { 'Err' : string };
 export type Result_1 = { 'Ok' : null } |
   { 'Err' : UserError };
-export type Result_10 = { 'Ok' : SwapResult_1 } |
+export type Result_10 = { 'Ok' : EvmSwapResult } |
   { 'Err' : string };
-export type Result_11 = { 'Ok' : null } |
+export type Result_11 = { 'Ok' : SwapResult_1 } |
   { 'Err' : string };
-export type Result_12 = { 'Ok' : PriceUpdateResult } |
+export type Result_12 = { 'Ok' : null } |
+  { 'Err' : string };
+export type Result_13 = { 'Ok' : PriceUpdateResult } |
   { 'Err' : string };
 export type Result_2 = { 'Ok' : string } |
   { 'Err' : UserError };
@@ -192,16 +202,16 @@ export type Result_3 = { 'Ok' : User } |
   { 'Err' : UserError };
 export type Result_4 = { 'Ok' : TradingPair } |
   { 'Err' : string };
-export type Result_5 = { 'Ok' : PersonalUser } |
+export type Result_5 = { 'Ok' : PrivacySettings } |
   { 'Err' : UserError };
-export type Result_6 = { 'Ok' : boolean } |
-  { 'Err' : string };
-export type Result_7 = { 'Ok' : SwapResult } |
-  { 'Err' : string };
-export type Result_8 = { 'Ok' : Array<CompactProfile> } |
+export type Result_6 = { 'Ok' : PersonalUser } |
   { 'Err' : UserError };
-export type Result_9 = { 'Ok' : EvmSwapResult } |
+export type Result_7 = { 'Ok' : boolean } |
   { 'Err' : string };
+export type Result_8 = { 'Ok' : SwapResult } |
+  { 'Err' : string };
+export type Result_9 = { 'Ok' : Array<CompactProfile> } |
+  { 'Err' : UserError };
 export type SolanaNetwork = { 'Mainnet' : null } |
   { 'Testnet' : null } |
   { 'Devnet' : null };
@@ -274,9 +284,11 @@ export interface User {
   'solana_address' : [] | [string],
   'followers_count' : number,
   'location' : [] | [string],
+  'privacy_settings' : [] | [PrivacySettings],
 }
 export type UserError = { 'InvalidInput' : string } |
   { 'UsernameTaken' : null } |
+  { 'ProfilePrivate' : null } |
   { 'Unauthorized' : null } |
   { 'InternalError' : string } |
   { 'UserNotFound' : null };
@@ -291,6 +303,9 @@ export interface UserUpdate {
   'solana_address' : [] | [string],
   'location' : [] | [string],
 }
+export type VisibilityLevel = { 'Private' : null } |
+  { 'FollowersOnly' : null } |
+  { 'Public' : null };
 export interface _SERVICE {
   /**
    * Add more tokens to an existing position
@@ -433,6 +448,10 @@ export interface _SERVICE {
    */
   'get_portfolio_data' : ActorMethod<[Principal], PortfolioData>,
   /**
+   * Get privacy settings (requires signed call, owner only)
+   */
+  'get_privacy_settings' : ActorMethod<[], Result_5>,
+  /**
    * Get comprehensive Solana token balances for all known tokens
    */
   'get_solana_token_balances' : ActorMethod<[], Result>,
@@ -479,7 +498,7 @@ export interface _SERVICE {
   /**
    * Personal user lookup with follow state
    */
-  'get_user_personal' : ActorMethod<[Principal, Principal], Result_5>,
+  'get_user_personal' : ActorMethod<[Principal, Principal], Result_6>,
   /**
    * Get swap transaction history for a user
    */
@@ -529,7 +548,7 @@ export interface _SERVICE {
   /**
    * Check if token is deployed on chain
    */
-  'is_token_deployed' : ActorMethod<[string, string], Result_6>,
+  'is_token_deployed' : ActorMethod<[string, string], Result_7>,
   /**
    * Check if username is available
    */
@@ -537,7 +556,7 @@ export interface _SERVICE {
   /**
    * Execute a market swap between internal tokens
    */
-  'market_swap' : ActorMethod<[SwapRequest], Result_7>,
+  'market_swap' : ActorMethod<[SwapRequest], Result_8>,
   /**
    * Reload token registry from chain definitions (admin function)
    */
@@ -545,11 +564,11 @@ export interface _SERVICE {
   /**
    * Search users
    */
-  'search_users' : ActorMethod<[string, number], Result_8>,
+  'search_users' : ActorMethod<[string, number], Result_9>,
   /**
    * Personal search with follow state
    */
-  'search_users_personal' : ActorMethod<[string, number, Principal], Result_8>,
+  'search_users_personal' : ActorMethod<[string, number, Principal], Result_9>,
   /**
    * Set liquidity configuration (admin function for testing)
    */
@@ -595,13 +614,13 @@ export interface _SERVICE {
   /**
    * Submit atomic EVM swap transaction (permit + immediate token transfer)
    */
-  'swap_evm' : ActorMethod<[PermitRequest, EvmSwapRequest], Result_9>,
+  'swap_evm' : ActorMethod<[PermitRequest, EvmSwapRequest], Result_10>,
   /**
    * Submit atomic swap transaction (delegation + immediate liquidity transfer)
    */
   'swap_solana' : ActorMethod<
     [Uint8Array | number[], SwapRequest_1],
-    Result_10
+    Result_11
   >,
   /**
    * Test Ed25519 key generation and signing
@@ -620,7 +639,7 @@ export interface _SERVICE {
    */
   'transfer_tokens' : ActorMethod<
     [Principal, Principal, string, bigint],
-    Result_11
+    Result_12
   >,
   'unfollow_user' : ActorMethod<[Principal], Result_3>,
   'update_avatar' : ActorMethod<[string], Result_3>,
@@ -636,7 +655,11 @@ export interface _SERVICE {
   /**
    * Update all prices from all sources (manual trigger)
    */
-  'update_prices' : ActorMethod<[], Result_12>,
+  'update_prices' : ActorMethod<[], Result_13>,
+  /**
+   * Update privacy settings (requires signed call, owner only)
+   */
+  'update_privacy_settings' : ActorMethod<[PrivacySettings], Result_3>,
   /**
    * Update user profile (requires signed call, owner only)
    */

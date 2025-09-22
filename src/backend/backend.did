@@ -169,19 +169,28 @@ type PriceUpdateResult = record {
   successful_sources : nat8;
   timestamp : nat64;
 };
+type PrivacySettings = record {
+  analytics_enabled : bool;
+  wallet_visibility : VisibilityLevel;
+  marketing_enabled : bool;
+  activity_visibility : VisibilityLevel;
+  profile_visibility : VisibilityLevel;
+  third_party_enabled : bool;
+};
 type Result = variant { Ok : text; Err : text };
 type Result_1 = variant { Ok; Err : UserError };
-type Result_10 = variant { Ok : SwapResult_1; Err : text };
-type Result_11 = variant { Ok; Err : text };
-type Result_12 = variant { Ok : PriceUpdateResult; Err : text };
+type Result_10 = variant { Ok : EvmSwapResult; Err : text };
+type Result_11 = variant { Ok : SwapResult_1; Err : text };
+type Result_12 = variant { Ok; Err : text };
+type Result_13 = variant { Ok : PriceUpdateResult; Err : text };
 type Result_2 = variant { Ok : text; Err : UserError };
 type Result_3 = variant { Ok : User; Err : UserError };
 type Result_4 = variant { Ok : TradingPair; Err : text };
-type Result_5 = variant { Ok : PersonalUser; Err : UserError };
-type Result_6 = variant { Ok : bool; Err : text };
-type Result_7 = variant { Ok : SwapResult; Err : text };
-type Result_8 = variant { Ok : vec CompactProfile; Err : UserError };
-type Result_9 = variant { Ok : EvmSwapResult; Err : text };
+type Result_5 = variant { Ok : PrivacySettings; Err : UserError };
+type Result_6 = variant { Ok : PersonalUser; Err : UserError };
+type Result_7 = variant { Ok : bool; Err : text };
+type Result_8 = variant { Ok : SwapResult; Err : text };
+type Result_9 = variant { Ok : vec CompactProfile; Err : UserError };
 type SolanaNetwork = variant { Mainnet; Testnet; Devnet };
 type SwapRequest = record {
   to_token : text;
@@ -252,10 +261,12 @@ type User = record {
   solana_address : opt text;
   followers_count : nat32;
   location : opt text;
+  privacy_settings : opt PrivacySettings;
 };
 type UserError = variant {
   InvalidInput : text;
   UsernameTaken;
+  ProfilePrivate;
   Unauthorized;
   InternalError : text;
   UserNotFound;
@@ -271,6 +282,7 @@ type UserUpdate = record {
   solana_address : opt text;
   location : opt text;
 };
+type VisibilityLevel = variant { Private; FollowersOnly; Public };
 service : (InitArg) -> {
   // Add more tokens to an existing position
   add_to_position : (text, nat64) -> (Result);
@@ -345,6 +357,8 @@ service : (InitArg) -> {
   get_pair_price : (text) -> (Result_4) query;
   // Get complete portfolio data for a user
   get_portfolio_data : (principal) -> (PortfolioData);
+  // Get privacy settings (requires signed call, owner only)
+  get_privacy_settings : () -> (Result_5) query;
   // Get comprehensive Solana token balances for all known tokens
   get_solana_token_balances : () -> (Result);
   // Get token address on specific chain
@@ -368,7 +382,7 @@ service : (InitArg) -> {
   // Get total user count
   get_user_count : () -> (nat64) query;
   // Personal user lookup with follow state
-  get_user_personal : (principal, principal) -> (Result_5) query;
+  get_user_personal : (principal, principal) -> (Result_6) query;
   // Get swap transaction history for a user
   get_user_swap_history : (principal) -> (vec SwapTransaction) query;
   // Get swap transaction history for a user with pagination
@@ -392,17 +406,17 @@ service : (InitArg) -> {
   // Check if user is following another user
   is_following : (principal, principal) -> (bool) query;
   // Check if token is deployed on chain
-  is_token_deployed : (text, text) -> (Result_6) query;
+  is_token_deployed : (text, text) -> (Result_7) query;
   // Check if username is available
   is_username_available : (text) -> (bool) query;
   // Execute a market swap between internal tokens
-  market_swap : (SwapRequest) -> (Result_7);
+  market_swap : (SwapRequest) -> (Result_8);
   // Reload token registry from chain definitions (admin function)
   reload_token_registry : () -> (Result);
   // Search users
-  search_users : (text, nat32) -> (Result_8) query;
+  search_users : (text, nat32) -> (Result_9) query;
   // Personal search with follow state
-  search_users_personal : (text, nat32, principal) -> (Result_8) query;
+  search_users_personal : (text, nat32, principal) -> (Result_9) query;
   // Set liquidity configuration (admin function for testing)
   set_liquidity_config : (LiquidityConfig) -> (Result);
   // User registration (requires signed call)
@@ -421,9 +435,9 @@ service : (InitArg) -> {
   // Submit gasless permit transaction (user signs permit, canister pays gas)
   submit_gasless_permit : (PermitRequest) -> (Result);
   // Submit atomic EVM swap transaction (permit + immediate token transfer)
-  swap_evm : (PermitRequest, EvmSwapRequest) -> (Result_9);
+  swap_evm : (PermitRequest, EvmSwapRequest) -> (Result_10);
   // Submit atomic swap transaction (delegation + immediate liquidity transfer)
-  swap_solana : (blob, SwapRequest_1) -> (Result_10);
+  swap_solana : (blob, SwapRequest_1) -> (Result_11);
   // Test Ed25519 key generation and signing
   test_ed25519 : () -> (Result);
   // Test secp256k1 key generation and signing
@@ -431,7 +445,7 @@ service : (InitArg) -> {
   // Test simple EVM transaction (get nonce, etc.)
   test_simple_evm_transaction : () -> (Result);
   // Transfer tokens between users
-  transfer_tokens : (principal, principal, text, nat64) -> (Result_11);
+  transfer_tokens : (principal, principal, text, nat64) -> (Result_12);
   unfollow_user : (principal) -> (Result_3);
   update_avatar : (text) -> (Result_3);
   update_banner : (text) -> (Result_3);
@@ -442,7 +456,9 @@ service : (InitArg) -> {
   update_evm_address : (text) -> (Result_3);
   update_location : (text) -> (Result_3);
   // Update all prices from all sources (manual trigger)
-  update_prices : () -> (Result_12);
+  update_prices : () -> (Result_13);
+  // Update privacy settings (requires signed call, owner only)
+  update_privacy_settings : (PrivacySettings) -> (Result_3);
   // Update user profile (requires signed call, owner only)
   update_profile : (UserUpdate) -> (Result_3);
   update_solana_address : (text) -> (Result_3);

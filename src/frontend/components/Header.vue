@@ -43,13 +43,13 @@
               showSearchResults &&
               (searchResults.length > 0 || searchLoading || searchError)
             "
-            class="absolute top-full left-0 right-0 mt-1 bg-card rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-800 max-h-96 overflow-y-auto z-50"
+            class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-900 rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-700 max-h-96 overflow-y-auto z-50"
             @mousedown.prevent
           >
             <!-- Loading State -->
             <div v-if="searchLoading" class="p-4 text-center">
               <div
-                class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"
+                class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500 mx-auto"
               />
               <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
                 Searching...
@@ -66,7 +66,7 @@
             </div>
 
             <!-- Results -->
-            <div v-else-if="searchResults.length > 0" class="py-2">
+            <div v-else-if="searchResults.length > 0" class="py-2 px-2">
               <CompactProfile
                 v-for="user in searchResults"
                 :key="user.id.toText()"
