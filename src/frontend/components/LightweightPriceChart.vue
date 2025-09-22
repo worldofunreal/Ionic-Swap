@@ -5,7 +5,7 @@
   ]">
     <div class="flex justify-between items-center mb-2 px-4">
       <div class="flex items-center gap-3">
-        <div class="text-lg font-bold text-gray-900 dark:text-white">{{ tokenSymbol }}</div>
+        <div class="text-lg font-bold text-zinc-900 dark:text-white">{{ tokenSymbol }}</div>
         <div class="text-sm font-semibold flex items-center gap-1" :class="priceChangeClass">
           ${{ formatPrice(currentPrice) }}
           <span class="text-xs">
@@ -21,7 +21,7 @@
               'px-2 py-1 text-xs rounded-md transition-colors',
               chartType === 'candlesticks' 
                 ? 'bg-primary-500 text-white' 
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                : 'text-zinc-700 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             ]"
             @click="chartType = 'candlesticks'"
           >
@@ -32,7 +32,7 @@
               'px-2 py-1 text-xs rounded-md transition-colors',
               chartType === 'line' 
                 ? 'bg-primary-500 text-white' 
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                : 'text-zinc-700 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             ]"
             @click="chartType = 'line'"
           >
@@ -48,7 +48,7 @@
             'px-2 py-1 text-xs rounded-md transition-colors',
             selectedPeriod === period.value 
               ? 'bg-primary-500 text-white' 
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              : 'bg-gray-100 dark:bg-gray-700 text-zinc-700 dark:text-zinc-300 hover:bg-gray-200 dark:hover:bg-gray-600'
           ]"
           @click="selectedPeriod = period.value"
         >
@@ -60,7 +60,7 @@
     <!-- Chart Container -->
     <div ref="chartContainer" class="flex-1 w-full relative">
       <!-- Loading state -->
-      <div v-if="loading" class="absolute inset-0 flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-neutral-900 rounded-lg">
+      <div v-if="loading" class="absolute inset-0 flex items-center justify-center gap-2 text-zinc-500 dark:text-zinc-300 bg-gray-50 dark:bg-neutral-900 rounded-lg">
         <div class="w-4 h-4 border-2 border-gray-300 border-t-primary-500 rounded-full animate-spin" />
         <span>Loading chart data...</span>
       </div>
@@ -151,7 +151,7 @@ const timePeriods = [
 const priceChangeClass = computed(() => {
   if (priceChange.value > 0) return 'text-green-600 dark:text-green-400'
   if (priceChange.value < 0) return 'text-red-600 dark:text-red-400'
-  return 'text-gray-600 dark:text-gray-400'
+  return 'text-zinc-600 dark:text-zinc-300'
 })
 
 // Chart colors based on theme (non-reactive to prevent constant updates)

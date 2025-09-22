@@ -6,7 +6,7 @@
         <h2 class="text-2xl font-bold text-zinc-900 dark:text-white">
           Following
         </h2>
-        <p class="text-gray-600 dark:text-gray-400 mt-1">
+        <p class="text-zinc-600 dark:text-zinc-300 mt-1">
           {{
             isOwnProfile
               ? 'People you follow'
@@ -24,7 +24,7 @@
 
       <!-- Empty State -->
       <div v-else-if="following.length === 0" class="text-center py-12">
-        <div class="text-gray-400 dark:text-gray-500">
+        <div class="text-zinc-300 dark:text-zinc-500">
           <UIcon
             name="i-heroicons-user-group-20-solid"
             class="w-12 h-12 mx-auto mb-4"

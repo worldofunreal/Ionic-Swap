@@ -13,7 +13,7 @@
           :class="
             selectedStatus === status
               ? 'bg-primary-600 text-white border-primary-600'
-              : 'bg-zinc-50 dark:bg-neutral-950 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700'
+              : 'bg-zinc-50 dark:bg-neutral-950 text-zinc-700 dark:text-zinc-200 border-gray-200 dark:border-gray-700'
           "
           @click="selectedStatus = status"
         >

@@ -22,48 +22,48 @@
     <!-- Portfolio Content -->
     <div v-else class="space-y-6">
       <!-- Portfolio Overview Card -->
-      <div class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg shadow-sm border border-primary-400 text-white p-6">
+      <div class="bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 p-6">
         <div class="flex items-center justify-between mb-4">
           <div>
-            <h3 class="text-xl font-bold mb-1">
+            <h3 class="text-xl font-bold mb-1 text-zinc-900 dark:text-white">
               {{ isOwnProfile ? 'My Portfolio' : `${userProfile?.username || 'User'}'s Portfolio` }}
             </h3>
-            <p class="text-primary-100 text-sm">Total portfolio value across all assets</p>
+            <p class="text-zinc-500 dark:text-zinc-400 text-sm">Total portfolio value across all assets</p>
           </div>
           <div class="text-right">
-            <div class="text-2xl font-bold mb-1">
+            <div class="text-2xl font-bold mb-1 text-zinc-900 dark:text-white">
               {{ valueDisplay === 'usd' 
                 ? `$${portfolioTotalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
                 : `${(portfolioTotalValue / btcPrice).toFixed(8)} BTC` 
               }}
             </div>
-            <div class="text-primary-100 text-sm">
+            <div class="text-zinc-500 dark:text-zinc-400 text-sm">
               {{ portfolioStats.totalAssets }} total assets
             </div>
           </div>
         </div>
         
         <!-- Portfolio Breakdown -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-primary-400">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
           <div class="text-center">
-            <div class="text-lg font-semibold">{{ portfolioStats.tokenCount }}</div>
-            <div class="text-primary-100 text-xs">Token Balances</div>
+            <div class="text-lg font-semibold text-zinc-900 dark:text-white">{{ portfolioStats.tokenCount }}</div>
+            <div class="text-zinc-500 dark:text-zinc-400 text-xs">Token Balances</div>
           </div>
           <div class="text-center">
-            <div class="text-lg font-semibold">{{ portfolioStats.positionCount }}</div>
-            <div class="text-primary-100 text-xs">Staked Positions</div>
+            <div class="text-lg font-semibold text-zinc-900 dark:text-white">{{ portfolioStats.positionCount }}</div>
+            <div class="text-zinc-500 dark:text-zinc-400 text-xs">Staked Positions</div>
           </div>
           <div class="text-center">
-            <div class="text-lg font-semibold">
+            <div class="text-lg font-semibold text-zinc-900 dark:text-white">
               {{ valueDisplay === 'usd' 
                 ? `$${tokensWithBalances.reduce((sum, token) => sum + token.value, 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}` 
                 : `${(tokensWithBalances.reduce((sum, token) => sum + token.value, 0) / btcPrice).toFixed(4)} BTC`
               }}
             </div>
-            <div class="text-primary-100 text-xs">Liquid Assets</div>
+            <div class="text-zinc-500 dark:text-zinc-400 text-xs">Liquid Assets</div>
           </div>
           <div class="text-center">
-            <div class="text-lg font-semibold">
+            <div class="text-lg font-semibold text-zinc-900 dark:text-white">
               {{ valueDisplay === 'usd' 
                 ? `$${liquidityPositions.reduce((total, position) => {
                     const stakeAmount = Number(position.staked_amount) / Math.pow(10, TokenService.getTokenDecimals(position.token_symbol))
@@ -77,7 +77,7 @@
                   }, 0) / btcPrice).toFixed(4)} BTC`
               }}
             </div>
-            <div class="text-primary-100 text-xs">Staked Assets</div>
+            <div class="text-zinc-500 dark:text-zinc-400 text-xs">Staked Assets</div>
           </div>
         </div>
       </div>
@@ -182,7 +182,7 @@
                 <!-- Price Column -->
                 <td class="px-6 py-4 whitespace-nowrap text-right">
                   <div class="text-sm font-semibold text-foreground">
-                    {{ formatTokenPrice(token.price) }}
+                    {{ valueDisplay === 'usd' ? formatTokenPrice(token.price) : formatTokenPriceBTC(token.price) }}
                   </div>
             </td>
 
@@ -196,7 +196,7 @@
                 <!-- Value Column -->
                 <td class="px-6 py-4 whitespace-nowrap text-right">
                   <div class="text-sm font-semibold text-foreground">
-                    {{ formatTokenValue(token.value) }}
+                    {{ valueDisplay === 'usd' ? formatTokenValue(token.value) : formatTokenValueBTC(token.value) }}
                   </div>
             </td>
           </tr>
@@ -536,6 +536,17 @@
 
   const formatTokenPrice = (price: number) => {
     return `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
+
+  const formatTokenValueBTC = (value: number) => {
+    const btcValue = value / btcPrice.value
+    return `${btcValue.toFixed(8)} BTC`
+  }
+
+  const formatTokenPriceBTC = (price: number) => {
+    const btcPrice_val = btcPrice.value
+    const btcValue = price / btcPrice_val
+    return `${btcValue.toFixed(8)} BTC`
   }
 
   // Liquidity position helpers

@@ -6,7 +6,7 @@
         <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           Learn DeFi
         </h1>
-        <p class="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+        <p class="text-xl text-zinc-600 dark:text-zinc-300 max-w-3xl mx-auto">
           Master the fundamentals of decentralized finance, token standards, and
           cross-chain swapping. Start your journey into the future of finance.
         </p>
@@ -75,12 +75,12 @@
                 <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
                   Beginner
                 </h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   Start here if you're new to DeFi
                 </p>
               </div>
             </div>
-            <p class="text-gray-600 dark:text-gray-400 mb-4">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-4">
               Learn the basics of tokens, blockchain standards, and how DeFi
               works.
             </p>
@@ -94,7 +94,7 @@
                     name="i-heroicons-currency-dollar"
                     class="w-5 h-5 text-primary-600 dark:text-primary-400"
                   />
-                  <span class="text-gray-700 dark:text-gray-300"
+                  <span class="text-zinc-700 dark:text-zinc-300"
                     >What are Tokens?</span
                   >
                 </div>
@@ -108,7 +108,7 @@
                     name="i-heroicons-banknotes"
                     class="w-5 h-5 text-primary-600 dark:text-primary-400"
                   />
-                  <span class="text-gray-700 dark:text-gray-300"
+                  <span class="text-zinc-700 dark:text-zinc-300"
                     >DeFi Basics</span
                   >
                 </div>
@@ -133,12 +133,12 @@
                 <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
                   Intermediate
                 </h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   Understand the technical details
                 </p>
               </div>
             </div>
-            <p class="text-gray-600 dark:text-gray-400 mb-4">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-4">
               Dive deeper into token standards and cross-chain technology.
             </p>
             <div class="space-y-2">
@@ -151,7 +151,7 @@
                     name="i-heroicons-cog-6-tooth"
                     class="w-5 h-5 text-primary-600 dark:text-primary-400"
                   />
-                  <span class="text-gray-700 dark:text-gray-300"
+                  <span class="text-zinc-700 dark:text-zinc-300"
                     >Token Standards</span
                   >
                 </div>
@@ -165,7 +165,7 @@
                     name="i-heroicons-arrow-path"
                     class="w-5 h-5 text-primary-600 dark:text-primary-400"
                   />
-                  <span class="text-gray-700 dark:text-gray-300"
+                  <span class="text-zinc-700 dark:text-zinc-300"
                     >Cross-Chain Swapping</span
                   >
                 </div>
@@ -190,12 +190,12 @@
                 <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
                   Advanced
                 </h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   Master cutting-edge features
                 </p>
               </div>
             </div>
-            <p class="text-gray-600 dark:text-gray-400 mb-4">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-4">
               Learn about gasless transactions and advanced DeFi concepts.
             </p>
             <div class="space-y-2">
@@ -208,7 +208,7 @@
                     name="i-heroicons-bolt"
                     class="w-5 h-5 text-primary-600 dark:text-primary-400"
                   />
-                  <span class="text-gray-700 dark:text-gray-300"
+                  <span class="text-zinc-700 dark:text-zinc-300"
                     >Gasless Transactions</span
                   >
                 </div>
@@ -249,12 +249,12 @@
                 >
                   {{ article.title }}
                 </h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   {{ article.difficulty }}
                 </p>
               </div>
             </div>
-            <p class="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-4 line-clamp-2">
               {{ article.description }}
             </p>
             <div class="flex items-center justify-between">
@@ -281,7 +281,7 @@
           <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
             Ready to Start Swapping?
           </h2>
-          <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
+          <p class="text-zinc-600 dark:text-zinc-300 mb-6 max-w-2xl mx-auto">
             Now that you understand the basics, try swapping tokens across
             different blockchain networks with our gasless transaction system.
           </p>

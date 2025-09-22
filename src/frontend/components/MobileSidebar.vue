@@ -25,7 +25,7 @@
       >
         <UIcon
           name="i-heroicons-x-mark-20-solid"
-          class="w-6 h-6 text-gray-600 dark:text-gray-300"
+          class="w-6 h-6 text-zinc-600 dark:text-zinc-300"
         />
       </button>
     </div>
@@ -37,7 +37,7 @@
           v-for="item in menuItems"
           :key="item.label || 'hr'"
           :to="item.to"
-          class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          class="flex items-center gap-3 px-4 py-3 rounded-lg text-zinc-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           :class="
             route.path === item.to
               ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'

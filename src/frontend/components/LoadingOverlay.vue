@@ -14,11 +14,11 @@
       </div>
 
       <!-- Message -->
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+      <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2">
         {{ title }}
       </h3>
 
-      <p class="text-sm text-gray-600 dark:text-gray-300">
+      <p class="text-sm text-zinc-600 dark:text-zinc-300">
         {{ message }}
       </p>
 
@@ -30,7 +30,7 @@
             :style="{ width: `${progress}%` }"
           />
         </div>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        <p class="text-xs text-zinc-500 dark:text-zinc-300 mt-1">
           {{ progress }}%
         </p>
       </div>
@@ -38,7 +38,7 @@
       <!-- Cancel button (optional) -->
       <button
         v-if="showCancel"
-        class="mt-4 px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition"
+        class="mt-4 px-4 py-2 text-sm text-zinc-600 dark:text-zinc-300 hover:text-zinc-800 dark:hover:text-zinc-100 transition"
         @click="$emit('cancel')"
       >
         Cancel

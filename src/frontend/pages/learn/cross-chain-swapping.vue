@@ -8,7 +8,7 @@
             <li class="inline-flex items-center">
               <NuxtLink
                 to="/learn"
-                class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                class="text-zinc-500 hover:text-zinc-700 dark:text-zinc-300 dark:hover:text-zinc-300"
               >
                 Learn
               </NuxtLink>
@@ -16,7 +16,7 @@
             <li>
               <div class="flex items-center">
                 <svg
-                  class="w-6 h-6 text-gray-400"
+                  class="w-6 h-6 text-zinc-300"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -26,7 +26,7 @@
                     clip-rule="evenodd"
                   />
                 </svg>
-                <span class="ml-1 text-gray-500 md:ml-2 dark:text-gray-400"
+                <span class="ml-1 text-zinc-500 md:ml-2 dark:text-zinc-300"
                   >Cross-Chain Swapping</span
                 >
               </div>
@@ -37,7 +37,7 @@
         <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           Cross-Chain Swapping
         </h1>
-        <p class="text-xl text-gray-600 dark:text-gray-400">
+        <p class="text-xl text-zinc-600 dark:text-zinc-300">
           Swap tokens seamlessly across different blockchain networks
         </p>
       </div>
@@ -82,7 +82,7 @@
               >
                 1. Select Tokens
               </h3>
-              <p class="text-gray-600 dark:text-gray-400">
+              <p class="text-zinc-600 dark:text-zinc-300">
                 Choose the token you want to swap from and the token you want to
                 receive
               </p>
@@ -101,7 +101,7 @@
               >
                 2. Smart Routing
               </h3>
-              <p class="text-gray-600 dark:text-gray-400">
+              <p class="text-zinc-600 dark:text-zinc-300">
                 Our system finds the best route across multiple chains and
                 liquidity pools
               </p>
@@ -120,7 +120,7 @@
               >
                 3. Execute Swap
               </h3>
-              <p class="text-gray-600 dark:text-gray-400">
+              <p class="text-zinc-600 dark:text-zinc-300">
                 Complete the swap with gasless transactions and receive your
                 tokens
               </p>
@@ -154,12 +154,12 @@
                   >
                     EVM Chains
                   </h3>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
                     Ethereum-compatible networks
                   </p>
                 </div>
               </div>
-              <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+              <ul class="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
                 <li>• Ethereum (ETH)</li>
                 <li>• Polygon (MATIC)</li>
                 <li>• BSC (BNB)</li>
@@ -187,12 +187,12 @@
                   >
                     Solana
                   </h3>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
                     High-speed blockchain
                   </p>
                 </div>
               </div>
-              <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+              <ul class="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
                 <li>• Solana (SOL)</li>
                 <li>• USDT (SPL)</li>
                 <li>• Raydium (RAY)</li>
@@ -220,12 +220,12 @@
                   >
                     Internet Computer
                   </h3>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
                     Web3 infrastructure
                   </p>
                 </div>
               </div>
-              <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+              <ul class="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
                 <li>• ICP (Native)</li>
                 <li>• ckBTC</li>
                 <li>• ckETH</li>
@@ -256,7 +256,7 @@
                 <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Gasless Transactions
                 </h3>
-                <p class="text-gray-600 dark:text-gray-400">
+                <p class="text-zinc-600 dark:text-zinc-300">
                   Swap tokens without paying gas fees using our innovative
                   permit system
                 </p>
@@ -275,7 +275,7 @@
                 <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Best Rates
                 </h3>
-                <p class="text-gray-600 dark:text-gray-400">
+                <p class="text-zinc-600 dark:text-zinc-300">
                   Get the best exchange rates by comparing multiple liquidity
                   sources
                 </p>
@@ -294,7 +294,7 @@
                 <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Secure
                 </h3>
-                <p class="text-gray-600 dark:text-gray-400">
+                <p class="text-zinc-600 dark:text-zinc-300">
                   Non-custodial swaps with smart contract security and audit
                   verification
                 </p>
@@ -313,7 +313,7 @@
                 <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Fast
                 </h3>
-                <p class="text-gray-600 dark:text-gray-400">
+                <p class="text-zinc-600 dark:text-zinc-300">
                   Quick settlement times with optimized routing across multiple
                   chains
                 </p>

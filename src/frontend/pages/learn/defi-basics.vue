@@ -8,7 +8,7 @@
             <li class="inline-flex items-center">
               <NuxtLink
                 to="/learn"
-                class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                class="text-zinc-500 hover:text-zinc-700 dark:text-zinc-300 dark:hover:text-zinc-300"
               >
                 Learn
               </NuxtLink>
@@ -16,7 +16,7 @@
             <li>
               <div class="flex items-center">
                 <svg
-                  class="w-6 h-6 text-gray-400"
+                  class="w-6 h-6 text-zinc-300"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -26,7 +26,7 @@
                     clip-rule="evenodd"
                   />
                 </svg>
-                <span class="ml-1 text-gray-500 md:ml-2 dark:text-gray-400"
+                <span class="ml-1 text-zinc-500 md:ml-2 dark:text-zinc-300"
                   >DeFi Basics</span
                 >
               </div>
@@ -37,7 +37,7 @@
         <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           DeFi Basics
         </h1>
-        <p class="text-xl text-gray-600 dark:text-gray-400">
+        <p class="text-xl text-zinc-600 dark:text-zinc-300">
           Introduction to Decentralized Finance and trading protocols
         </p>
       </div>
@@ -68,7 +68,7 @@
           </h2>
 
           <div class="prose prose-lg dark:prose-invert max-w-none">
-            <p class="text-gray-600 dark:text-gray-400 mb-6">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-6">
               DeFi is a financial system built on blockchain technology that
               operates without traditional financial intermediaries like banks,
               brokers, or exchanges. It uses smart contracts to create financial
@@ -87,7 +87,7 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">
                   Decentralization
                 </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   No single entity controls the system. Decisions are made
                   through consensus mechanisms.
                 </p>
@@ -98,7 +98,7 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">
                   Transparency
                 </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   All transactions and smart contract code are publicly
                   verifiable on the blockchain.
                 </p>
@@ -109,7 +109,7 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">
                   Permissionless
                 </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   Anyone can access DeFi services without approval from
                   centralized authorities.
                 </p>
@@ -120,7 +120,7 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">
                   Interoperability
                 </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   Different DeFi protocols can work together to create complex
                   financial products.
                 </p>
@@ -149,7 +149,7 @@
                 <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Decentralized Exchanges (DEXs)
                 </h3>
-                <p class="text-gray-600 dark:text-gray-400">
+                <p class="text-zinc-600 dark:text-zinc-300">
                   Trade tokens directly with other users without intermediaries
                 </p>
               </div>
@@ -167,7 +167,7 @@
                 <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Lending & Borrowing
                 </h3>
-                <p class="text-gray-600 dark:text-gray-400">
+                <p class="text-zinc-600 dark:text-zinc-300">
                   Earn interest on deposits or borrow against collateral
                 </p>
               </div>
@@ -185,7 +185,7 @@
                 <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Yield Farming
                 </h3>
-                <p class="text-gray-600 dark:text-gray-400">
+                <p class="text-zinc-600 dark:text-zinc-300">
                   Provide liquidity to earn rewards and trading fees
                 </p>
               </div>
@@ -203,7 +203,7 @@
                 <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Insurance
                 </h3>
-                <p class="text-gray-600 dark:text-gray-400">
+                <p class="text-zinc-600 dark:text-zinc-300">
                   Protect against smart contract risks and protocol failures
                 </p>
               </div>
@@ -218,7 +218,7 @@
           </h2>
 
           <div class="prose prose-lg dark:prose-invert max-w-none">
-            <p class="text-gray-600 dark:text-gray-400 mb-6">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-6">
               Liquidity is the lifeblood of DeFi. Automated Market Makers (AMMs)
               use mathematical formulas to determine token prices based on
               supply and demand in liquidity pools.
@@ -242,7 +242,7 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Liquidity Providers
                 </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   Users deposit token pairs into pools to earn trading fees
                 </p>
               </div>
@@ -258,7 +258,7 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Price Discovery
                 </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   AMM algorithms automatically calculate token prices based on
                   pool ratios
                 </p>
@@ -275,7 +275,7 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Trading
                 </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   Users swap tokens directly with the pool, paying fees to
                   liquidity providers
                 </p>

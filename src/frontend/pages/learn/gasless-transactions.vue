@@ -8,7 +8,7 @@
             <li class="inline-flex items-center">
               <NuxtLink
                 to="/learn"
-                class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                class="text-zinc-500 hover:text-zinc-700 dark:text-zinc-300 dark:hover:text-zinc-300"
               >
                 Learn
               </NuxtLink>
@@ -16,7 +16,7 @@
             <li>
               <div class="flex items-center">
                 <svg
-                  class="w-6 h-6 text-gray-400"
+                  class="w-6 h-6 text-zinc-300"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -26,7 +26,7 @@
                     clip-rule="evenodd"
                   />
                 </svg>
-                <span class="ml-1 text-gray-500 md:ml-2 dark:text-gray-400"
+                <span class="ml-1 text-zinc-500 md:ml-2 dark:text-zinc-300"
                   >Gasless Transactions</span
                 >
               </div>
@@ -37,7 +37,7 @@
         <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           Gasless Transactions
         </h1>
-        <p class="text-xl text-gray-600 dark:text-gray-400">
+        <p class="text-xl text-zinc-600 dark:text-zinc-300">
           Swap tokens without paying gas fees using innovative permit technology
         </p>
       </div>
@@ -82,7 +82,7 @@
               >
                 1. Sign Permit
               </h3>
-              <p class="text-gray-600 dark:text-gray-400">
+              <p class="text-zinc-600 dark:text-zinc-300">
                 Sign a cryptographic permit that authorizes the transaction
                 without paying gas
               </p>
@@ -101,7 +101,7 @@
               >
                 2. Submit Transaction
               </h3>
-              <p class="text-gray-600 dark:text-gray-400">
+              <p class="text-zinc-600 dark:text-zinc-300">
                 Our system submits the transaction to the blockchain using the
                 signed permit
               </p>
@@ -120,7 +120,7 @@
               >
                 3. Transaction Complete
               </h3>
-              <p class="text-gray-600 dark:text-gray-400">
+              <p class="text-zinc-600 dark:text-zinc-300">
                 Receive your swapped tokens without ever paying gas fees
               </p>
             </div>
@@ -134,7 +134,7 @@
           </h2>
 
           <div class="prose prose-lg dark:prose-invert max-w-none">
-            <p class="text-gray-600 dark:text-gray-400 mb-6">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-6">
               Permits are cryptographic signatures that allow smart contracts to
               execute transactions on behalf of users without requiring them to
               pay gas fees. This technology is based on the EIP-2612 standard
@@ -153,12 +153,12 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">
                   Digital Signature
                 </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300 mb-4">
                   A cryptographic signature that proves you authorize the
                   transaction without revealing your private key.
                 </p>
                 <div
-                  class="bg-gray-100 dark:bg-gray-800 p-3 rounded text-xs font-mono text-gray-700 dark:text-gray-300"
+                  class="bg-gray-100 dark:bg-gray-800 p-3 rounded text-xs font-mono text-zinc-700 dark:text-zinc-300"
                 >
                   0x1234...5678
                 </div>
@@ -169,12 +169,12 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-3">
                   Transaction Data
                 </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300 mb-4">
                   Contains all the necessary information about the swap
                   including amounts, tokens, and deadlines.
                 </p>
                 <div
-                  class="bg-gray-100 dark:bg-gray-800 p-3 rounded text-xs font-mono text-gray-700 dark:text-gray-300"
+                  class="bg-gray-100 dark:bg-gray-800 p-3 rounded text-xs font-mono text-zinc-700 dark:text-zinc-300"
                 >
                   { amount: 100, token: "USDT", deadline: 1234567890 }
                 </div>
@@ -209,12 +209,12 @@
                   >
                     EVM Chains
                   </h3>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
                     EIP-2612 Standard
                   </p>
                 </div>
               </div>
-              <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+              <ul class="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
                 <li>• Ethereum (ETH)</li>
                 <li>• Polygon (MATIC)</li>
                 <li>• BSC (BNB)</li>
@@ -242,12 +242,12 @@
                   >
                     Solana
                   </h3>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
                     SPL Token Permits
                   </p>
                 </div>
               </div>
-              <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+              <ul class="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
                 <li>• Native SPL tokens</li>
                 <li>• USDT (SPL)</li>
                 <li>• Custom SPL tokens</li>
@@ -275,12 +275,12 @@
                   >
                     Internet Computer
                   </h3>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
                     ICRC Permits
                   </p>
                 </div>
               </div>
-              <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+              <ul class="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
                 <li>• ICP (Native)</li>
                 <li>• ckBTC</li>
                 <li>• ckETH</li>
@@ -311,7 +311,7 @@
                 <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Cost Savings
                 </h3>
-                <p class="text-gray-600 dark:text-gray-400">
+                <p class="text-zinc-600 dark:text-zinc-300">
                   Eliminate gas fees completely, saving money on every
                   transaction
                 </p>
@@ -330,7 +330,7 @@
                 <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Accessibility
                 </h3>
-                <p class="text-gray-600 dark:text-gray-400">
+                <p class="text-zinc-600 dark:text-zinc-300">
                   Make DeFi accessible to users who don't have native tokens for
                   gas
                 </p>
@@ -349,7 +349,7 @@
                 <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Security
                 </h3>
-                <p class="text-gray-600 dark:text-gray-400">
+                <p class="text-zinc-600 dark:text-zinc-300">
                   Maintain full security with cryptographic signatures and smart
                   contract verification
                 </p>
@@ -368,7 +368,7 @@
                 <h3 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   User Experience
                 </h3>
-                <p class="text-gray-600 dark:text-gray-400">
+                <p class="text-zinc-600 dark:text-zinc-300">
                   Seamless experience without worrying about gas price
                   fluctuations
                 </p>

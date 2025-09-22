@@ -19,19 +19,19 @@
           >
           <div class="w-full">
             <p
-              class="uppercase tracking-widest text-xs text-gray-500 dark:text-gray-400 font-semibold mb-2"
+              class="uppercase tracking-widest text-xs text-zinc-500 dark:text-zinc-300 font-semibold mb-2"
             >
               We're here to help you
             </p>
             <h1
-              class="text-3xl md:text-4xl font-black text-gray-800 dark:text-white mb-4 leading-tight"
+              class="text-3xl md:text-4xl font-black text-zinc-800 dark:text-white mb-4 leading-tight"
             >
               Say Hi!
               <span class="text-primary-600 dark:text-primary-400"
                 >and tell us about your ideas.</span
               >
             </h1>
-            <p class="text-gray-600 dark:text-gray-300 mb-6">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-6">
               Are you looking for top-quality development, AI agents, or Web3
               solutions tailored to your needs? Reach out to us.
             </p>
@@ -50,7 +50,7 @@
               href="https://x.com/worldofunreal"
               target="_blank"
               rel="noopener"
-              class="text-gray-400 hover:text-primary transition-colors text-xl"
+              class="text-zinc-300 hover:text-primary transition-colors text-xl"
               aria-label="Twitter"
             >
               <UIcon name="i-fa6-brands-twitter" />
@@ -59,7 +59,7 @@
               href="https://github.com/worldofunreal"
               target="_blank"
               rel="noopener"
-              class="text-gray-400 hover:text-primary transition-colors text-xl"
+              class="text-zinc-300 hover:text-primary transition-colors text-xl"
               aria-label="GitHub"
             >
               <UIcon name="i-fa6-brands-github" />
@@ -68,7 +68,7 @@
               href="https://www.linkedin.com/company/worldofunreal/"
               target="_blank"
               rel="noopener"
-              class="text-gray-400 hover:text-primary transition-colors text-xl"
+              class="text-zinc-300 hover:text-primary transition-colors text-xl"
               aria-label="LinkedIn"
             >
               <UIcon name="i-fa6-brands-linkedin" />
@@ -83,11 +83,11 @@
         >
           <div class="text-center md:text-left">
             <h2
-              class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-2"
+              class="text-2xl md:text-3xl font-bold text-zinc-800 dark:text-white mb-2"
             >
               Get in touch
             </h2>
-            <p class="text-gray-600 dark:text-gray-300">
+            <p class="text-zinc-600 dark:text-zinc-300">
               We'd love to hear from you!
             </p>
           </div>
@@ -141,7 +141,7 @@
             </UButton>
           </UForm>
           <div
-            class="text-center text-sm text-gray-500 dark:text-gray-400 mt-2"
+            class="text-center text-sm text-zinc-500 dark:text-zinc-300 mt-2"
           >
             We'll get back to you within 5-7 business days.
           </div>

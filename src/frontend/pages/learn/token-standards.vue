@@ -8,7 +8,7 @@
             <li class="inline-flex items-center">
               <NuxtLink
                 to="/learn"
-                class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                class="text-zinc-500 hover:text-zinc-700 dark:text-zinc-300 dark:hover:text-zinc-300"
               >
                 Learn
               </NuxtLink>
@@ -16,7 +16,7 @@
             <li>
               <div class="flex items-center">
                 <svg
-                  class="w-6 h-6 text-gray-400"
+                  class="w-6 h-6 text-zinc-300"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -26,7 +26,7 @@
                     clip-rule="evenodd"
                   />
                 </svg>
-                <span class="ml-1 text-gray-500 md:ml-2 dark:text-gray-400"
+                <span class="ml-1 text-zinc-500 md:ml-2 dark:text-zinc-300"
                   >Token Standards</span
                 >
               </div>
@@ -37,7 +37,7 @@
         <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           Token Standards
         </h1>
-        <p class="text-xl text-gray-600 dark:text-gray-400">
+        <p class="text-xl text-zinc-600 dark:text-zinc-300">
           Understanding ERC-20, SPL, and ICRC token standards
         </p>
       </div>
@@ -74,14 +74,14 @@
               <h2 class="text-2xl font-bold text-zinc-900 dark:text-white">
                 ERC-20
               </h2>
-              <p class="text-gray-600 dark:text-gray-400">
+              <p class="text-zinc-600 dark:text-zinc-300">
                 Ethereum Request for Comments 20
               </p>
             </div>
           </div>
 
           <div class="prose prose-lg dark:prose-invert max-w-none">
-            <p class="text-gray-600 dark:text-gray-400 mb-4">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-4">
               ERC-20 is the most widely adopted token standard on the Ethereum
               blockchain. It defines a common set of rules that all Ethereum
               tokens must follow.
@@ -93,7 +93,7 @@
               Key Features
             </h3>
             <ul
-              class="list-disc pl-6 space-y-2 text-gray-600 dark:text-gray-400 mb-6"
+              class="list-disc pl-6 space-y-2 text-zinc-600 dark:text-zinc-300 mb-6"
             >
               <li><strong>Transfer:</strong> Move tokens between addresses</li>
               <li>
@@ -122,7 +122,7 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white">
                   USDT
                 </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   Tether - Stablecoin
                 </p>
               </div>
@@ -132,7 +132,7 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white">
                   LINK
                 </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   Chainlink - Oracle
                 </p>
               </div>
@@ -155,14 +155,14 @@
               <h2 class="text-2xl font-bold text-zinc-900 dark:text-white">
                 SPL
               </h2>
-              <p class="text-gray-600 dark:text-gray-400">
+              <p class="text-zinc-600 dark:text-zinc-300">
                 Solana Program Library
               </p>
             </div>
           </div>
 
           <div class="prose prose-lg dark:prose-invert max-w-none">
-            <p class="text-gray-600 dark:text-gray-400 mb-4">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-4">
               SPL tokens are the standard for fungible tokens on the Solana
               blockchain. They leverage Solana's high-speed, low-cost
               architecture.
@@ -174,7 +174,7 @@
               Key Features
             </h3>
             <ul
-              class="list-disc pl-6 space-y-2 text-gray-600 dark:text-gray-400 mb-6"
+              class="list-disc pl-6 space-y-2 text-zinc-600 dark:text-zinc-300 mb-6"
             >
               <li>
                 <strong>Fast Transactions:</strong> Sub-second confirmation
@@ -202,7 +202,7 @@
                 class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
               >
                 <h4 class="font-semibold text-zinc-900 dark:text-white">SOL</h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   Solana - Native token
                 </p>
               </div>
@@ -210,7 +210,7 @@
                 class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
               >
                 <h4 class="font-semibold text-zinc-900 dark:text-white">RAY</h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   Raydium - DEX token
                 </p>
               </div>
@@ -233,14 +233,14 @@
               <h2 class="text-2xl font-bold text-zinc-900 dark:text-white">
                 ICRC
               </h2>
-              <p class="text-gray-600 dark:text-gray-400">
+              <p class="text-zinc-600 dark:text-zinc-300">
                 Internet Computer Request for Comments
               </p>
             </div>
           </div>
 
           <div class="prose prose-lg dark:prose-invert max-w-none">
-            <p class="text-gray-600 dark:text-gray-400 mb-4">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-4">
               ICRC is the token standard for the Internet Computer blockchain.
               It provides a unified interface for fungible tokens with enhanced
               security and governance.
@@ -252,7 +252,7 @@
               Key Features
             </h3>
             <ul
-              class="list-disc pl-6 space-y-2 text-gray-600 dark:text-gray-400 mb-6"
+              class="list-disc pl-6 space-y-2 text-zinc-600 dark:text-zinc-300 mb-6"
             >
               <li>
                 <strong>Canister-based:</strong> Tokens run as smart contracts
@@ -281,7 +281,7 @@
                 class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
               >
                 <h4 class="font-semibold text-zinc-900 dark:text-white">ICP</h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   Internet Computer - Native token
                 </p>
               </div>
@@ -289,7 +289,7 @@
                 class="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
               >
                 <h4 class="font-semibold text-zinc-900 dark:text-white">SNS</h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   Service Nervous System tokens
                 </p>
               </div>
@@ -299,7 +299,7 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white">
                   ckBTC
                 </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
                   Chain-key Bitcoin
                 </p>
               </div>

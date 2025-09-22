@@ -8,7 +8,7 @@
             <li class="inline-flex items-center">
               <NuxtLink
                 to="/learn"
-                class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                class="text-zinc-500 hover:text-zinc-700 dark:text-zinc-300 dark:hover:text-zinc-300"
               >
                 Learn
               </NuxtLink>
@@ -16,7 +16,7 @@
             <li>
               <div class="flex items-center">
                 <svg
-                  class="w-6 h-6 text-gray-400"
+                  class="w-6 h-6 text-zinc-300"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -26,7 +26,7 @@
                     clip-rule="evenodd"
                   />
                 </svg>
-                <span class="ml-1 text-gray-500 md:ml-2 dark:text-gray-400"
+                <span class="ml-1 text-zinc-500 md:ml-2 dark:text-zinc-300"
                   >Web3 Basics</span
                 >
               </div>
@@ -37,7 +37,7 @@
         <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           Web3 Basics
         </h1>
-        <p class="text-xl text-gray-600 dark:text-gray-400">
+        <p class="text-xl text-zinc-600 dark:text-zinc-300">
           Understanding the next evolution of the internet
         </p>
       </div>
@@ -79,7 +79,7 @@
             <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               What is Web3?
             </h3>
-            <p class="text-gray-600 dark:text-gray-400 mb-6">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-6">
               Web3 is the third generation of the internet, characterized by
               decentralization, blockchain technology, and user ownership of
               data and digital assets. It represents a fundamental shift from
@@ -91,7 +91,7 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Key Characteristics
                 </h4>
-                <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <ul class="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
                   <li>• Decentralized infrastructure</li>
                   <li>• User ownership of data</li>
                   <li>• Trustless interactions</li>
@@ -103,7 +103,7 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Core Technologies
                 </h4>
-                <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <ul class="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
                   <li>• Blockchain networks</li>
                   <li>• Smart contracts</li>
                   <li>• Cryptocurrencies</li>
@@ -126,12 +126,12 @@
                 >
                   Web1 (1990s - 2000s)
                 </h4>
-                <p class="text-gray-600 dark:text-gray-400 mb-2">
+                <p class="text-zinc-600 dark:text-zinc-300 mb-2">
                   The first version of the web was primarily static and
                   read-only. Users could browse websites and consume content,
                   but interaction was limited.
                 </p>
-                <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                <ul class="text-sm text-zinc-500 dark:text-zinc-300 space-y-1">
                   <li>• Static HTML pages</li>
                   <li>• Limited user interaction</li>
                   <li>• Centralized content creation</li>
@@ -145,12 +145,12 @@
                 >
                   Web2 (2000s - Present)
                 </h4>
-                <p class="text-gray-600 dark:text-gray-400 mb-2">
+                <p class="text-zinc-600 dark:text-zinc-300 mb-2">
                   The social web enabled user-generated content, social media,
                   and interactive applications. However, data and value are
                   controlled by centralized platforms.
                 </p>
-                <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                <ul class="text-sm text-zinc-500 dark:text-zinc-300 space-y-1">
                   <li>• Social media platforms</li>
                   <li>• User-generated content</li>
                   <li>• Centralized data ownership</li>
@@ -164,12 +164,12 @@
                 >
                   Web3 (Emerging)
                 </h4>
-                <p class="text-gray-600 dark:text-gray-400 mb-2">
+                <p class="text-zinc-600 dark:text-zinc-300 mb-2">
                   The decentralized web gives users ownership of their data and
                   digital assets through blockchain technology and decentralized
                   applications (dApps).
                 </p>
-                <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                <ul class="text-sm text-zinc-500 dark:text-zinc-300 space-y-1">
                   <li>• Decentralized applications</li>
                   <li>• User-owned data</li>
                   <li>• Cryptocurrency integration</li>
@@ -184,7 +184,7 @@
             <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               Blockchain Technology
             </h3>
-            <p class="text-gray-600 dark:text-gray-400 mb-6">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-6">
               Blockchain is the foundational technology that powers Web3. It's a
               distributed ledger that records transactions across a network of
               computers in a secure, transparent, and immutable way.
@@ -211,7 +211,7 @@
                       >
                         Transaction Creation
                       </h5>
-                      <p class="text-gray-600 dark:text-gray-400 text-sm">
+                      <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                         A transaction is created and broadcast to the network
                       </p>
                     </div>
@@ -231,7 +231,7 @@
                       >
                         Validation
                       </h5>
-                      <p class="text-gray-600 dark:text-gray-400 text-sm">
+                      <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                         Network nodes validate the transaction
                       </p>
                     </div>
@@ -251,7 +251,7 @@
                       >
                         Block Creation
                       </h5>
-                      <p class="text-gray-600 dark:text-gray-400 text-sm">
+                      <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                         Valid transactions are grouped into blocks
                       </p>
                     </div>
@@ -271,7 +271,7 @@
                       >
                         Chain Addition
                       </h5>
-                      <p class="text-gray-600 dark:text-gray-400 text-sm">
+                      <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                         Blocks are added to the chain permanently
                       </p>
                     </div>
@@ -302,7 +302,7 @@
                       >
                         Decentralization
                       </h5>
-                      <p class="text-gray-600 dark:text-gray-400 text-sm">
+                      <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                         No single point of control or failure
                       </p>
                     </div>
@@ -325,7 +325,7 @@
                       >
                         Immutability
                       </h5>
-                      <p class="text-gray-600 dark:text-gray-400 text-sm">
+                      <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                         Data cannot be altered once recorded
                       </p>
                     </div>
@@ -348,7 +348,7 @@
                       >
                         Transparency
                       </h5>
-                      <p class="text-gray-600 dark:text-gray-400 text-sm">
+                      <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                         All transactions are publicly visible
                       </p>
                     </div>
@@ -371,7 +371,7 @@
                       >
                         Security
                       </h5>
-                      <p class="text-gray-600 dark:text-gray-400 text-sm">
+                      <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                         Cryptographic protection against tampering
                       </p>
                     </div>
@@ -386,7 +386,7 @@
             <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               Smart Contracts
             </h3>
-            <p class="text-gray-600 dark:text-gray-400 mb-6">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-6">
               Smart contracts are self-executing programs that run on the
               blockchain. They automatically execute when predetermined
               conditions are met, enabling trustless and automated transactions.
@@ -445,7 +445,7 @@
                 <h5 class="font-semibold text-zinc-900 dark:text-white">
                   Automated
                 </h5>
-                <p class="text-gray-600 dark:text-gray-400 text-sm">
+                <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                   Execute automatically when conditions are met
                 </p>
               </div>
@@ -472,7 +472,7 @@
                 <h5 class="font-semibold text-zinc-900 dark:text-white">
                   Trustless
                 </h5>
-                <p class="text-gray-600 dark:text-gray-400 text-sm">
+                <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                   No need to trust intermediaries
                 </p>
               </div>
@@ -499,7 +499,7 @@
                 <h5 class="font-semibold text-zinc-900 dark:text-white">
                   Programmable
                 </h5>
-                <p class="text-gray-600 dark:text-gray-400 text-sm">
+                <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                   Can implement complex business logic
                 </p>
               </div>
@@ -511,7 +511,7 @@
             <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               Web3 Applications
             </h3>
-            <p class="text-gray-600 dark:text-gray-400 mb-6">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-6">
               Web3 applications (dApps) are decentralized applications that run
               on blockchain networks. They provide the same functionality as
               traditional apps but with added benefits of decentralization.
@@ -541,11 +541,11 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   DeFi (Decentralized Finance)
                 </h4>
-                <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">
+                <p class="text-zinc-600 dark:text-zinc-300 text-sm mb-3">
                   Financial services built on blockchain technology, including
                   lending, borrowing, trading, and yield farming.
                 </p>
-                <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                <ul class="text-sm text-zinc-500 dark:text-zinc-300 space-y-1">
                   <li>• Uniswap - Decentralized exchange</li>
                   <li>• Aave - Lending platform</li>
                   <li>• Compound - Interest-earning</li>
@@ -575,11 +575,11 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   NFT Marketplaces
                 </h4>
-                <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">
+                <p class="text-zinc-600 dark:text-zinc-300 text-sm mb-3">
                   Platforms for buying, selling, and trading non-fungible tokens
                   and digital collectibles.
                 </p>
-                <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                <ul class="text-sm text-zinc-500 dark:text-zinc-300 space-y-1">
                   <li>• OpenSea - Largest NFT marketplace</li>
                   <li>• Rarible - Community-owned</li>
                   <li>• Foundation - Curated art</li>
@@ -609,11 +609,11 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   DAOs (Decentralized Autonomous Organizations)
                 </h4>
-                <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">
+                <p class="text-zinc-600 dark:text-zinc-300 text-sm mb-3">
                   Community-governed organizations that operate through smart
                   contracts and token voting.
                 </p>
-                <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                <ul class="text-sm text-zinc-500 dark:text-zinc-300 space-y-1">
                   <li>• MakerDAO - Stablecoin governance</li>
                   <li>• Uniswap DAO - Protocol governance</li>
                   <li>• ConstitutionDAO - Community funding</li>
@@ -643,11 +643,11 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Gaming & Metaverse
                 </h4>
-                <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">
+                <p class="text-zinc-600 dark:text-zinc-300 text-sm mb-3">
                   Blockchain-based games and virtual worlds where players own
                   their in-game assets.
                 </p>
-                <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                <ul class="text-sm text-zinc-500 dark:text-zinc-300 space-y-1">
                   <li>• Axie Infinity - Play-to-earn game</li>
                   <li>• Decentraland - Virtual world</li>
                   <li>• The Sandbox - Gaming platform</li>
@@ -704,25 +704,25 @@
             <div class="space-y-3">
               <div>
                 <dt class="font-medium text-zinc-900 dark:text-white">dApp</dt>
-                <dd class="text-sm text-gray-600 dark:text-gray-400">
+                <dd class="text-sm text-zinc-600 dark:text-zinc-300">
                   Decentralized application running on blockchain
                 </dd>
               </div>
               <div>
                 <dt class="font-medium text-zinc-900 dark:text-white">DeFi</dt>
-                <dd class="text-sm text-gray-600 dark:text-gray-400">
+                <dd class="text-sm text-zinc-600 dark:text-zinc-300">
                   Decentralized finance applications
                 </dd>
               </div>
               <div>
                 <dt class="font-medium text-zinc-900 dark:text-white">DAO</dt>
-                <dd class="text-sm text-gray-600 dark:text-gray-400">
+                <dd class="text-sm text-zinc-600 dark:text-zinc-300">
                   Decentralized Autonomous Organization
                 </dd>
               </div>
               <div>
                 <dt class="font-medium text-zinc-900 dark:text-white">Gas</dt>
-                <dd class="text-sm text-gray-600 dark:text-gray-400">
+                <dd class="text-sm text-zinc-600 dark:text-zinc-300">
                   Fee paid for blockchain transactions
                 </dd>
               </div>
@@ -730,7 +730,7 @@
                 <dt class="font-medium text-zinc-900 dark:text-white">
                   Consensus
                 </dt>
-                <dd class="text-sm text-gray-600 dark:text-gray-400">
+                <dd class="text-sm text-zinc-600 dark:text-zinc-300">
                   Agreement mechanism for blockchain validation
                 </dd>
               </div>

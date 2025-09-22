@@ -8,7 +8,7 @@
             <li class="inline-flex items-center">
               <NuxtLink
                 to="/learn"
-                class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                class="text-zinc-500 hover:text-zinc-700 dark:text-zinc-300 dark:hover:text-zinc-300"
               >
                 Learn
               </NuxtLink>
@@ -16,7 +16,7 @@
             <li>
               <div class="flex items-center">
                 <svg
-                  class="w-6 h-6 text-gray-400"
+                  class="w-6 h-6 text-zinc-300"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -26,7 +26,7 @@
                     clip-rule="evenodd"
                   />
                 </svg>
-                <span class="ml-1 text-gray-500 md:ml-2 dark:text-gray-400"
+                <span class="ml-1 text-zinc-500 md:ml-2 dark:text-zinc-300"
                   >Crypto Wallets</span
                 >
               </div>
@@ -37,7 +37,7 @@
         <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           Crypto Wallets
         </h1>
-        <p class="text-xl text-gray-600 dark:text-gray-400">
+        <p class="text-xl text-zinc-600 dark:text-zinc-300">
           Your gateway to the world of cryptocurrencies and NFTs
         </p>
       </div>
@@ -80,7 +80,7 @@
             <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               What is a Crypto Wallet?
             </h3>
-            <p class="text-gray-600 dark:text-gray-400 mb-6">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-6">
               A cryptocurrency wallet is a software program or hardware device
               that stores your private keys and allows you to interact with
               blockchain networks. It doesn't actually store your
@@ -93,7 +93,7 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Private Key
                 </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300 mb-3">
                   A secret code that proves ownership of your cryptocurrencies
                   and allows you to sign transactions.
                 </p>
@@ -107,7 +107,7 @@
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Public Address
                 </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                <p class="text-sm text-zinc-600 dark:text-zinc-300 mb-3">
                   A public identifier that others can use to send you
                   cryptocurrencies.
                 </p>
@@ -154,7 +154,7 @@
                     >
                       Hot Wallets
                     </h4>
-                    <p class="text-gray-600 dark:text-gray-400">
+                    <p class="text-zinc-600 dark:text-zinc-300">
                       Connected to the internet for easy access
                     </p>
                   </div>
@@ -166,7 +166,7 @@
                       Types
                     </h5>
                     <ul
-                      class="text-sm text-gray-600 dark:text-gray-400 space-y-1"
+                      class="text-sm text-zinc-600 dark:text-zinc-300 space-y-1"
                     >
                       <li>• Web wallets (MetaMask, WalletConnect)</li>
                       <li>• Mobile wallets (Trust Wallet, Coinbase Wallet)</li>
@@ -190,7 +190,7 @@
                             clip-rule="evenodd"
                           />
                         </svg>
-                        <span class="text-sm text-gray-600 dark:text-gray-400"
+                        <span class="text-sm text-zinc-600 dark:text-zinc-300"
                           >Easy to use, convenient access</span
                         >
                       </div>
@@ -206,7 +206,7 @@
                             clip-rule="evenodd"
                           />
                         </svg>
-                        <span class="text-sm text-gray-600 dark:text-gray-400"
+                        <span class="text-sm text-zinc-600 dark:text-zinc-300"
                           >Vulnerable to online attacks</span
                         >
                       </div>
@@ -243,7 +243,7 @@
                     >
                       Cold Wallets
                     </h4>
-                    <p class="text-gray-600 dark:text-gray-400">
+                    <p class="text-zinc-600 dark:text-zinc-300">
                       Offline storage for maximum security
                     </p>
                   </div>
@@ -255,7 +255,7 @@
                       Types
                     </h5>
                     <ul
-                      class="text-sm text-gray-600 dark:text-gray-400 space-y-1"
+                      class="text-sm text-zinc-600 dark:text-zinc-300 space-y-1"
                     >
                       <li>• Hardware wallets (Ledger, Trezor)</li>
                       <li>• Paper wallets (printed private keys)</li>
@@ -279,7 +279,7 @@
                             clip-rule="evenodd"
                           />
                         </svg>
-                        <span class="text-sm text-gray-600 dark:text-gray-400"
+                        <span class="text-sm text-zinc-600 dark:text-zinc-300"
                           >Maximum security, offline protection</span
                         >
                       </div>
@@ -295,7 +295,7 @@
                             clip-rule="evenodd"
                           />
                         </svg>
-                        <span class="text-sm text-gray-600 dark:text-gray-400"
+                        <span class="text-sm text-zinc-600 dark:text-zinc-300"
                           >Less convenient, requires physical device</span
                         >
                       </div>
@@ -329,12 +329,12 @@
                     <h4 class="font-semibold text-zinc-900 dark:text-white">
                       MetaMask
                     </h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                    <p class="text-sm text-zinc-600 dark:text-zinc-300">
                       Browser extension wallet
                     </p>
                   </div>
                 </div>
-                <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <div class="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
                   <div class="flex items-center space-x-2">
                     <svg
                       class="w-4 h-4 text-green-500"
@@ -397,12 +397,12 @@
                     <h4 class="font-semibold text-zinc-900 dark:text-white">
                       Trust Wallet
                     </h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                    <p class="text-sm text-zinc-600 dark:text-zinc-300">
                       Mobile wallet
                     </p>
                   </div>
                 </div>
-                <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <div class="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
                   <div class="flex items-center space-x-2">
                     <svg
                       class="w-4 h-4 text-green-500"
@@ -465,12 +465,12 @@
                     <h4 class="font-semibold text-zinc-900 dark:text-white">
                       Ledger
                     </h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                    <p class="text-sm text-zinc-600 dark:text-zinc-300">
                       Hardware wallet
                     </p>
                   </div>
                 </div>
-                <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <div class="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
                   <div class="flex items-center space-x-2">
                     <svg
                       class="w-4 h-4 text-green-500"
@@ -533,12 +533,12 @@
                     <h4 class="font-semibold text-zinc-900 dark:text-white">
                       Coinbase Wallet
                     </h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                    <p class="text-sm text-zinc-600 dark:text-zinc-300">
                       Mobile & browser wallet
                     </p>
                   </div>
                 </div>
-                <div class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <div class="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
                   <div class="flex items-center space-x-2">
                     <svg
                       class="w-4 h-4 text-green-500"
@@ -616,7 +616,7 @@
                         >
                           Never Share Private Keys
                         </h5>
-                        <p class="text-gray-600 dark:text-gray-400 text-sm">
+                        <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                           Keep your private keys secret and never share them
                           with anyone
                         </p>
@@ -640,7 +640,7 @@
                         >
                           Backup Seed Phrase
                         </h5>
-                        <p class="text-gray-600 dark:text-gray-400 text-sm">
+                        <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                           Write down your seed phrase and store it securely
                           offline
                         </p>
@@ -664,7 +664,7 @@
                         >
                           Use Hardware Wallets
                         </h5>
-                        <p class="text-gray-600 dark:text-gray-400 text-sm">
+                        <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                           For large amounts, use hardware wallets for maximum
                           security
                         </p>
@@ -696,7 +696,7 @@
                         >
                           Verify URLs
                         </h5>
-                        <p class="text-gray-600 dark:text-gray-400 text-sm">
+                        <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                           Always verify you're on the official website
                         </p>
                       </div>
@@ -719,7 +719,7 @@
                         >
                           Enable 2FA
                         </h5>
-                        <p class="text-gray-600 dark:text-gray-400 text-sm">
+                        <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                           Use two-factor authentication when available
                         </p>
                       </div>
@@ -742,7 +742,7 @@
                         >
                           Test Small Amounts
                         </h5>
-                        <p class="text-gray-600 dark:text-gray-400 text-sm">
+                        <p class="text-zinc-600 dark:text-zinc-300 text-sm">
                           Test with small amounts before large transactions
                         </p>
                       </div>
@@ -828,7 +828,7 @@
             </h3>
             <div class="space-y-4">
               <div class="flex justify-between items-center">
-                <span class="text-gray-600 dark:text-gray-400"
+                <span class="text-zinc-600 dark:text-zinc-300"
                   >Security Level</span
                 >
                 <div class="flex space-x-1">
@@ -838,7 +838,7 @@
                 </div>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-gray-600 dark:text-gray-400"
+                <span class="text-zinc-600 dark:text-zinc-300"
                   >Ease of Use</span
                 >
                 <div class="flex space-x-1">
@@ -848,14 +848,14 @@
                 </div>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-gray-600 dark:text-gray-400">Cost</span>
+                <span class="text-zinc-600 dark:text-zinc-300">Cost</span>
                 <div class="flex space-x-1">
                   <div class="w-3 h-3 bg-green-400 rounded" />
                   <div class="w-3 h-3 bg-green-400 rounded" />
                   <div class="w-3 h-3 bg-red-400 rounded" />
                 </div>
               </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
+              <div class="text-xs text-zinc-500 dark:text-zinc-300 text-center">
                 Hot Wallets • Hardware Wallets
               </div>
             </div>

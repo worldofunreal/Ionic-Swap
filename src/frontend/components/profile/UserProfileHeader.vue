@@ -4,8 +4,8 @@
   >
     <!-- Compact Banner Section -->
     <div
-      class="relative bg-gradient-to-r from-blue-500 to-purple-600"
-      style="height: 120px"
+      class="relative"
+      style="height: 120px; background: linear-gradient(to right, #4F8CEE, #64C4AA);"
     >
       <img
         v-if="bannerUrl"
@@ -18,12 +18,25 @@
       <div v-else class="w-full h-full flex items-center justify-center">
         <!-- Empty banner placeholder -->
       </div>
+      
+      <!-- Edit Profile Button (positioned on banner) -->
+      <button
+        v-if="isOwnProfile"
+        class="absolute top-18 right-2 px-4 py-2 bg-zinc-100 hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 text-sm font-semibold rounded-lg transition-colors edit-profile-btn"
+        @click="editProfile"
+      >
+        <UIcon
+          name="i-heroicons-pencil-square-20-solid"
+          class="w-4 h-4 mr-1"
+        />
+        Edit Profile
+      </button>
     </div>
 
     <!-- Profile Info Section -->
     <div class="px-4 pb-4">
       <!-- Avatar Section -->
-      <div class="flex justify-between items-start -mt-12 mb-4">
+      <div class="flex justify-between items-end -mt-12 mb-4">
         <div class="relative">
           <img
             v-if="avatarUrl"
@@ -35,7 +48,8 @@
           >
           <div
             v-else
-            class="w-20 h-20 rounded-full border-4 border-zinc-100 dark:border-zinc-900 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
+            class="w-20 h-20 rounded-full border-4 border-zinc-100 dark:border-zinc-900 flex items-center justify-center"
+            style="background: linear-gradient(to bottom right, #4F8CEE, #64C4AA);"
           >
             <span class="text-white font-bold text-2xl">{{
               avatarInitial
@@ -44,7 +58,7 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex gap-2 mt-4 relative z-10">
+        <div class="flex gap-2 relative z-10">
           <!-- Follow/Unfollow Button (only for other users) -->
           <UButton
             v-if="!isOwnProfile"
@@ -81,22 +95,6 @@
                   : 'Follow'
             }}
           </UButton>
-
-          <!-- Edit Profile Button (own profile only) -->
-          <UButton
-            v-if="isOwnProfile"
-            color="primary"
-            variant="outline"
-            size="sm"
-            class="edit-profile-btn"
-            @click="editProfile"
-          >
-            <UIcon
-              name="i-heroicons-pencil-square-20-solid"
-              class="w-4 h-4 mr-1"
-            />
-            Edit Profile
-          </UButton>
         </div>
       </div>
 
@@ -129,18 +127,24 @@
 
           <!-- Social Stats -->
           <div class="flex items-center gap-6 text-sm">
-            <div class="text-center">
+            <button 
+              class="text-center hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg p-2 transition-colors"
+              @click="openFollowersModal('following')"
+            >
               <div class="font-semibold text-zinc-900 dark:text-white text-lg">
                 {{ userProfile?.following_count || 0 }}
               </div>
               <div class="text-zinc-600 dark:text-zinc-400 text-xs">Following</div>
-            </div>
-            <div class="text-center">
+            </button>
+            <button 
+              class="text-center hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg p-2 transition-colors"
+              @click="openFollowersModal('followers')"
+            >
               <div class="font-semibold text-zinc-900 dark:text-white text-lg">
                 {{ userProfile?.followers_count || 0 }}
               </div>
               <div class="text-zinc-600 dark:text-zinc-400 text-xs">Followers</div>
-            </div>
+            </button>
           </div>
         </div>
 
@@ -215,6 +219,13 @@
 
   <!-- Edit Profile Modal -->
   <EditProfileModal ref="editProfileModalRef" />
+  
+  <!-- Followers/Following Modal -->
+  <FollowersFollowingModal 
+    ref="followersModalRef" 
+    :user-profile="userProfile" 
+    :is-own-profile="isOwnProfile" 
+  />
 </template>
 
 <script setup lang="ts">
@@ -225,6 +236,7 @@
   import { useToast, navigateTo } from '#imports'
   import { useRoute } from 'vue-router'
   import EditProfileModal from '../EditProfileModal.vue'
+  import FollowersFollowingModal from '../FollowersFollowingModal.vue'
 
   // Inject login panel ref
   const loginPanelRef = inject('loginPanelRef') as Ref<{
@@ -259,6 +271,7 @@
   const _route = useRoute()
   const followLoading = ref(false)
   const editProfileModalRef = ref<{ open: () => void } | null>(null)
+  const followersModalRef = ref<{ open: (tab: 'followers' | 'following') => void } | null>(null)
   const isFollowing = ref(false)
 
   // User profile data - use props if provided, otherwise use auth store
@@ -584,6 +597,13 @@
   const editProfile = () => {
     if (editProfileModalRef.value) {
       editProfileModalRef.value.open()
+    }
+  }
+
+  // Open followers/following modal
+  const openFollowersModal = (tab: 'followers' | 'following') => {
+    if (followersModalRef.value) {
+      followersModalRef.value.open(tab)
     }
   }
 

@@ -105,7 +105,7 @@
     </div>
 
     <div v-else class="flex flex-col items-center justify-center py-8 text-center">
-      <UIcon name="i-heroicons-chart-bar" class="text-gray-400 text-2xl mb-2" />
+      <UIcon name="i-heroicons-chart-bar" class="text-zinc-300 text-2xl mb-2" />
       <p class="text-zinc-500 dark:text-zinc-400 text-sm">No portfolio data available</p>
     </div>
   </div>

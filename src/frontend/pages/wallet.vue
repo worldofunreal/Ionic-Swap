@@ -186,7 +186,7 @@
                           <span v-else>••••••••</span>
                         </div>
                         <div class="text-xs text-zinc-500 dark:text-zinc-400">
-                          <span v-if="balancesVisible">{{ formatTokenValue(token.value) }}</span>
+                          <span v-if="balancesVisible">{{ valueDisplay === 'usd' ? formatTokenValue(token.value) : formatTokenValueBTC(token.value) }}</span>
                           <span v-else>••••••</span>
                         </div>
                       </td>
@@ -194,7 +194,7 @@
                       <!-- Coin Price / Cost Price Column -->
                       <td class="px-6 py-4 whitespace-nowrap text-right">
                         <div class="text-sm font-semibold text-zinc-900 dark:text-white">
-                          <span v-if="balancesVisible">{{ formatTokenPrice(token.price) }}</span>
+                          <span v-if="balancesVisible">{{ valueDisplay === 'usd' ? formatTokenPrice(token.price) : formatTokenPriceBTC(token.price) }}</span>
                           <span v-else>••••••</span>
                         </div>
                       </td>
@@ -676,6 +676,18 @@
     return `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 
+  // Format token value in BTC
+  const formatTokenValueBTC = (value: number) => {
+    const btcValue = value / btcPrice.value
+    return `${btcValue.toFixed(8)} BTC`
+  }
+
+  // Format token price in BTC
+  const formatTokenPriceBTC = (price: number) => {
+    const btcValue = price / btcPrice.value
+    return `${btcValue.toFixed(8)} BTC`
+  }
+
   // Get token color for display
   const getTokenColor = (symbol: string) => {
     const colors: Record<string, string> = {
@@ -720,11 +732,11 @@
   // Get change class for styling
   const getChangeClass = (symbol: string) => {
     const price = tokenPrices.value[symbol]
-    if (!price) return 'text-gray-600 dark:text-gray-400'
+    if (!price) return 'text-zinc-600 dark:text-zinc-300'
     
     if (price.change24h > 0) return 'text-green-600 dark:text-green-400'
     if (price.change24h < 0) return 'text-red-600 dark:text-red-400'
-    return 'text-gray-600 dark:text-gray-400'
+    return 'text-zinc-600 dark:text-zinc-300'
   }
 
   // Calculate claimable fees for a position

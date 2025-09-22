@@ -3,10 +3,10 @@
     <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
       <div class="text-center mb-12">
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           Support Center
         </h1>
-        <p class="text-xl text-gray-600 dark:text-gray-400">
+        <p class="text-xl text-zinc-600 dark:text-zinc-300">
           Get help with cross-chain swapping, gasless transactions, and token
           trading
         </p>
@@ -25,10 +25,10 @@
               class="w-6 h-6 text-blue-600 dark:text-blue-400"
             />
           </div>
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          <h3 class="text-lg font-medium text-zinc-900 dark:text-white mb-2">
             FAQ
           </h3>
-          <p class="text-gray-600 dark:text-gray-400 mb-4">
+          <p class="text-zinc-600 dark:text-zinc-300 mb-4">
             Find answers to common questions about swapping and DeFi
           </p>
           <button
@@ -50,10 +50,10 @@
               class="w-6 h-6 text-green-600 dark:text-green-400"
             />
           </div>
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          <h3 class="text-lg font-medium text-zinc-900 dark:text-white mb-2">
             Live Chat
           </h3>
-          <p class="text-gray-600 dark:text-gray-400 mb-4">
+          <p class="text-zinc-600 dark:text-zinc-300 mb-4">
             Chat with our support team in real-time
           </p>
           <button
@@ -75,10 +75,10 @@
               class="w-6 h-6 text-purple-600 dark:text-purple-400"
             />
           </div>
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          <h3 class="text-lg font-medium text-zinc-900 dark:text-white mb-2">
             Email Support
           </h3>
-          <p class="text-gray-600 dark:text-gray-400 mb-4">
+          <p class="text-zinc-600 dark:text-zinc-300 mb-4">
             Send us a detailed message about your issue
           </p>
           <button
@@ -97,7 +97,7 @@
           v-if="activeSection === 'faq'"
           class="bg-zinc-50 dark:bg-neutral-800 rounded-lg shadow p-8"
         >
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-6">
             Frequently Asked Questions
           </h2>
 
@@ -108,11 +108,11 @@
               class="border-b border-gray-200 dark:border-gray-700 pb-6"
             >
               <h3
-                class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
+                class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"
               >
                 {{ faq.question }}
               </h3>
-              <p class="text-gray-600 dark:text-gray-400">
+              <p class="text-zinc-600 dark:text-zinc-300">
                 {{ faq.answer }}
               </p>
             </div>
@@ -124,19 +124,19 @@
           v-if="activeSection === 'chat'"
           class="bg-zinc-50 dark:bg-neutral-800 rounded-lg shadow p-8"
         >
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-6">
             Live Chat Support
           </h2>
-          <p class="text-gray-600 dark:text-gray-400 mb-6">
+          <p class="text-zinc-600 dark:text-zinc-300 mb-6">
             Our support team is available 24/7 to help you with any questions
             about cross-chain swapping, gasless transactions, or token trading.
           </p>
           <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 text-center">
             <UIcon
               name="i-heroicons-chat-bubble-left-right"
-              class="w-12 h-12 text-gray-400 mx-auto mb-4"
+              class="w-12 h-12 text-zinc-300 mx-auto mb-4"
             />
-            <p class="text-gray-600 dark:text-gray-400 mb-4">
+            <p class="text-zinc-600 dark:text-zinc-300 mb-4">
               Live chat is coming soon! For now, please use email support.
             </p>
             <UButton color="primary" @click="activeSection = 'email'">
@@ -150,10 +150,10 @@
           v-if="activeSection === 'email'"
           class="bg-zinc-50 dark:bg-neutral-800 rounded-lg shadow p-8"
         >
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-6">
             Email Support
           </h2>
-          <p class="text-gray-600 dark:text-gray-400 mb-6">
+          <p class="text-zinc-600 dark:text-zinc-300 mb-6">
             Send us a detailed message about your issue and we'll get back to
             you within 24 hours.
           </p>
@@ -161,7 +161,7 @@
           <div class="space-y-4">
             <div>
               <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"
               >
                 Subject
               </label>
@@ -173,7 +173,7 @@
             </div>
             <div>
               <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"
               >
                 Message
               </label>
@@ -186,7 +186,7 @@
             </div>
             <div>
               <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"
               >
                 Your Email
               </label>

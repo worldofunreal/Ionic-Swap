@@ -37,7 +37,7 @@
         <h2 class="text-2xl font-semibold mb-4">
           Terms of Service – Ionic-Swap (MVP)
         </h2>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mb-8">
+        <p class="text-sm text-zinc-600 dark:text-zinc-300 mb-8">
           Effective Date: 16th September 2025
         </p>
 

@@ -3,45 +3,43 @@
     <div class="flex items-center gap-2 cursor-pointer" @click="toggleUserMenu">
       <!-- Avatar with Wallet Icon Overlay -->
       <div class="relative">
-        <UAvatar
+        <img
+          v-if="userAvatar"
           :src="userAvatar"
-          size="md"
-          class="hover:opacity-80 transition-opacity"
           :alt="authStore.userProfile?.username || 'User profile'"
+          class="w-8 h-8 rounded-full hover:opacity-80 transition-opacity object-cover"
         >
-          <template #fallback>
-            <div
-              class="w-full h-full rounded-full flex items-center justify-center text-white font-bold text-sm"
-              :class="`bg-${currentTheme}-500`"
-            >
-              {{
-                authStore.userProfile?.username?.charAt(0).toUpperCase() || 'U'
-              }}
-            </div>
-          </template>
-        </UAvatar>
+        <div
+          v-else
+          class="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity"
+          style="background: linear-gradient(to bottom right, #4F8CEE, #64C4AA);"
+        >
+          <span class="text-white font-bold text-xs">
+            {{ authStore.userProfile?.username?.charAt(0).toUpperCase() || 'U' }}
+          </span>
+        </div>
         <!-- Wallet Icon Overlay -->
         <div
-          class="absolute -bottom-1 -right-1 w-5 h-5 bg-zinc-100 dark:bg-zinc-800 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center"
+          class="absolute -bottom-1 -right-1 w-5 h-5 bg-zinc-100 dark:bg-zinc-800 rounded-full border border-zinc-100 dark:border-zinc-900 flex items-center justify-center"
         >
           <component
             :is="getWalletIcon(authStore.nativeWallet).type"
             :src="getWalletIcon(authStore.nativeWallet).src"
             :name="getWalletIcon(authStore.nativeWallet).name"
             :alt="getWalletIcon(authStore.nativeWallet).alt"
-            class="w-3 h-3 text-zinc-500 dark:text-zinc-400"
+            class="w-3 h-3  text-zinc-500 dark:text-zinc-400"
           />
         </div>
       </div>
 
       <!-- Username and Arrow -->
       <div class="flex items-center gap-1">
-        <span class="text-sm font-medium text-zinc-900 dark:text-white">
+        <span class="text-sm font-semibold text-zinc-900 dark:text-white">
           {{ authStore.userProfile?.username || 'User' }}
         </span>
         <UIcon
           :name="showUserMenu ? 'bxs:up-arrow' : 'bxs:down-arrow'"
-          class="w-4 h-4 text-zinc-500 dark:text-zinc-400 transition-transform"
+          class="w-4 h-4  text-zinc-500 dark:text-zinc-400 transition-transform"
         />
       </div>
     </div>
@@ -49,33 +47,31 @@
     <!-- User Menu Dropdown -->
     <div
       v-if="showUserMenu"
-      class="absolute right-0 mt-2 w-80 bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-800 z-50"
+      class="absolute right-0 mt-2 w-80 bg-zinc-100 dark:bg-zinc-900 rounded-lg shadow-lg border border-zinc-100 dark:border-zinc-800 z-50"
     >
-      <div class="p-3">
+      <div class="p-2">
         <!-- User Info -->
         <div class="flex items-center gap-3 mb-3">
-          <UAvatar
+          <img
+            v-if="userAvatar"
             :src="userAvatar"
-            size="lg"
             :alt="authStore.userProfile?.username || 'User profile'"
+            class="w-14 h-14 rounded-full object-cover"
           >
-            <template #fallback>
-              <div
-                class="w-full h-full rounded-full flex items-center justify-center text-white font-bold text-lg"
-                :class="`bg-${currentTheme}-500`"
-              >
-                {{
-                  authStore.userProfile?.username?.charAt(0).toUpperCase() ||
-                  'U'
-                }}
-              </div>
-            </template>
-          </UAvatar>
+          <div
+            v-else
+            class="w-14 h-14 rounded-full flex items-center justify-center"
+            style="background: linear-gradient(to bottom right, #4F8CEE, #64C4AA);"
+          >
+            <span class="text-white font-bold text-xl">
+              {{ authStore.userProfile?.username?.charAt(0).toUpperCase() || 'U' }}
+            </span>
+          </div>
           <div class="flex-1 min-w-0">
             <div class="font-semibold text-zinc-900 dark:text-white truncate">
               {{ authStore.userProfile?.username || 'User' }}
             </div>
-            <div class="text-sm text-zinc-500 dark:text-zinc-400">
+            <div class="text-xs text-zinc-500 dark:text-zinc-400">
               {{ getWalletDisplayName(authStore.nativeWallet) }}
             </div>
           </div>
@@ -113,80 +109,80 @@
           </div>
 
           <!-- ICP Principal -->
-          <div v-if="authStore.principal" class="mb-2">
+          <div v-if="authStore.principal" class="mb-3">
             <div
-              class="flex items-center justify-between gap-2 p-2 bg-zinc-50 dark:bg-zinc-800 rounded-md"
+              class="flex items-center justify-between gap-3 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
             >
-              <div class="flex items-center gap-2 min-w-0">
-                <img :src="TokenService.getTokenIcon('ICP')" alt="ICP icon" class="w-3 h-3 flex-shrink-0" />
-                <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex-shrink-0">ICP</span>
-                <span class="text-xs font-mono text-zinc-900 dark:text-white truncate">
+              <div class="flex items-center gap-3 min-w-0 flex-1">
+                <img :src="TokenService.getTokenIcon('ICP')" alt="ICP icon" class="w-5 h-5 flex-shrink-0" />
+                <span class="text-sm font-medium text-zinc-500 dark:text-zinc-400 flex-shrink-0">ICP</span>
+                <span class="text-sm font-mono text-zinc-900 dark:text-white truncate">
                   {{ formatCompactAddress(authStore.principal) }}
                 </span>
               </div>
               <UIcon
                 name="i-heroicons-document-duplicate-20-solid"
-                class="w-3 h-3 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition flex-shrink-0"
+                class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition flex-shrink-0"
                 @click="copyToClipboard(authStore.principal, 'ICP')"
               />
             </div>
           </div>
 
           <!-- EVM Address -->
-          <div v-if="authStore.evmAddress" class="mb-2">
+          <div v-if="authStore.evmAddress" class="mb-3">
             <div
-              class="flex items-center justify-between gap-2 p-2 bg-zinc-50 dark:bg-zinc-800 rounded-md"
+              class="flex items-center justify-between gap-3 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
             >
-              <div class="flex items-center gap-2 min-w-0">
-                <img :src="TokenService.getTokenIcon('ETH')" alt="Ethereum icon" class="w-3 h-3 flex-shrink-0" />
-                <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex-shrink-0">EVM</span>
-                <span class="text-xs font-mono text-zinc-900 dark:text-white truncate">
+              <div class="flex items-center gap-3 min-w-0 flex-1">
+                <img :src="TokenService.getTokenIcon('ETH')" alt="Ethereum icon" class="w-5 h-5 flex-shrink-0" />
+                <span class="text-sm font-medium text-zinc-500 dark:text-zinc-400 flex-shrink-0">EVM</span>
+                <span class="text-sm font-mono text-zinc-900 dark:text-white truncate">
                   {{ formatCompactAddress(authStore.evmAddress) }}
                 </span>
               </div>
               <UIcon
                 name="i-heroicons-document-duplicate-20-solid"
-                class="w-3 h-3 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition flex-shrink-0"
+                class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition flex-shrink-0"
                 @click="copyToClipboard(authStore.evmAddress, 'EVM')"
               />
             </div>
           </div>
 
           <!-- Solana Address -->
-          <div v-if="authStore.solAddress" class="mb-2">
+          <div v-if="authStore.solAddress" class="mb-3">
             <div
-              class="flex items-center justify-between gap-2 p-2 bg-zinc-50 dark:bg-zinc-800 rounded-md"
+              class="flex items-center justify-between gap-3 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
             >
-              <div class="flex items-center gap-2 min-w-0">
-                <img :src="TokenService.getTokenIcon('SOL')" alt="Solana icon" class="w-3 h-3 flex-shrink-0" />
-                <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex-shrink-0">SOL</span>
-                <span class="text-xs font-mono text-zinc-900 dark:text-white truncate">
+              <div class="flex items-center gap-3 min-w-0 flex-1">
+                <img :src="TokenService.getTokenIcon('SOL')" alt="Solana icon" class="w-5 h-5 flex-shrink-0" />
+                <span class="text-sm font-medium text-zinc-500 dark:text-zinc-400 flex-shrink-0">SOL</span>
+                <span class="text-sm font-mono text-zinc-900 dark:text-white truncate">
                   {{ formatCompactAddress(authStore.solAddress) }}
                 </span>
               </div>
               <UIcon
                 name="i-heroicons-document-duplicate-20-solid"
-                class="w-3 h-3 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition flex-shrink-0"
+                class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition flex-shrink-0"
                 @click="copyToClipboard(authStore.solAddress, 'Solana')"
               />
             </div>
           </div>
 
           <!-- Bitcoin Address -->
-          <div v-if="authStore.btcAddress" class="mb-2">
+          <div v-if="authStore.btcAddress" class="mb-3">
             <div
-              class="flex items-center justify-between gap-2 p-2 bg-zinc-50 dark:bg-zinc-800 rounded-md"
+              class="flex items-center justify-between gap-3 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
             >
-              <div class="flex items-center gap-2 min-w-0">
-                <img :src="TokenService.getTokenIcon('BTC')" alt="Bitcoin icon" class="w-3 h-3 flex-shrink-0" />
-                <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400 flex-shrink-0">BTC</span>
-                <span class="text-xs font-mono text-zinc-900 dark:text-white truncate">
+              <div class="flex items-center gap-3 min-w-0 flex-1">
+                <img :src="TokenService.getTokenIcon('BTC')" alt="Bitcoin icon" class="w-5 h-5 flex-shrink-0" />
+                <span class="text-sm font-medium text-zinc-500 dark:text-zinc-400 flex-shrink-0">BTC</span>
+                <span class="text-sm font-mono text-zinc-900 dark:text-white truncate">
                   {{ formatCompactAddress(authStore.btcAddress) }}
                 </span>
               </div>
               <UIcon
                 name="i-heroicons-document-duplicate-20-solid"
-                class="w-3 h-3 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-900 dark:hover:text-white transition flex-shrink-0"
+                class="w-4 h-4 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-zinc-700 dark:hover:text-zinc-200 transition flex-shrink-0"
                 @click="copyToClipboard(authStore.btcAddress, 'Bitcoin')"
               />
             </div>
@@ -198,30 +194,31 @@
           class="border-t border-zinc-200 dark:border-zinc-800 pt-2 space-y-2"
         >
           <!-- Profile Button -->
-          <UButton
-            block
-            color="primary"
-            variant="soft"
-            icon="iconamoon:profile-fill"
-            :to="
-              authStore.userProfile?.username
-                ? `/@${authStore.userProfile.username}`
-                : '/profile'
-            "
+          <button
+            class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-semibold rounded-lg transition-colors text-sm"
+            @click="navigateToProfile"
           >
+            <UIcon name="iconamoon:profile-fill" class="w-4 h-4" />
             View Profile
-          </UButton>
+          </button>
+
+          <!-- Settings Button -->
+          <button
+            class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-semibold rounded-lg transition-colors text-sm"
+            @click="navigateToSettings"
+          >
+            <UIcon name="iconamoon:settings-fill" class="w-4 h-4" />
+            Settings
+          </button>
 
           <!-- Logout Button -->
-          <UButton
-            block
-            color="error"
-            variant="soft"
-            icon="solar:logout-2-bold"
+          <button
+            class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors text-sm"
             @click="logout"
           >
+            <UIcon name="solar:logout-2-bold" class="w-4 h-4" />
             Logout
-          </UButton>
+          </button>
         </div>
       </div>
     </div>
@@ -483,6 +480,20 @@
           textType: text.includes('icp') ? 'ICP Principal' : 'Wallet Address',
         })
       })
+  }
+
+  function navigateToProfile() {
+    const profileUrl = authStore.userProfile?.username
+      ? `/@${authStore.userProfile.username}`
+      : '/profile'
+    
+    showUserMenu.value = false
+    navigateTo(profileUrl)
+  }
+
+  function navigateToSettings() {
+    showUserMenu.value = false
+    navigateTo('/settings')
   }
 
   function logout() {

@@ -51,7 +51,7 @@
           <button
             @click="refreshData"
             :disabled="loading"
-            class="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-50"
+            class="p-2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 disabled:opacity-50"
           >
             <UIcon 
               :name="loading ? 'i-heroicons-arrow-path' : 'i-heroicons-arrow-path'" 
@@ -195,7 +195,7 @@
               'flex-1 px-4 py-3 text-sm font-medium transition-colors',
               activeDetailTab === tab.value
                 ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-gray-300',
+                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300',
             ]"
             @click="activeDetailTab = tab.value"
           >
@@ -429,7 +429,7 @@
                   <div>
                     <div class="text-zinc-500 dark:text-zinc-400">Voting Power</div>
                     <div class="font-semibold text-foreground">{{ calculateVotingPower(position).toFixed(2) }}</div>
-                    <div class="text-xs text-zinc-400 dark:text-gray-500">
+                    <div class="text-xs text-zinc-400 dark:text-zinc-500">
                       {{ calculateVotingPowerPercentage(position, selectedPool).toFixed(2) }}% of pool
                     </div>
                   </div>
@@ -438,7 +438,7 @@
                     <div class="font-semibold text-foreground">
                       {{ calculateClaimableFees(position).toFixed(6) }} {{ position.token_symbol }}
                     </div>
-                    <div class="text-xs text-zinc-400 dark:text-gray-500">
+                    <div class="text-xs text-zinc-400 dark:text-zinc-500">
                       ≈ ${{ (calculateClaimableFees(position) * getPositionPrice(position)).toFixed(2) }}
                     </div>
                   </div>
@@ -900,12 +900,12 @@
   }
 
   const getPoolStatusClass = (status: any) => {
-    if (!status) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+    if (!status) return 'bg-gray-100 text-zinc-800 dark:bg-gray-900 dark:text-zinc-200'
     if (status.Healthy !== undefined) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
     if (status.NeedsRebalance !== undefined) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
     if (status.Critical !== undefined) return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
     if (status.Halted !== undefined) return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-    return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+    return 'bg-gray-100 text-zinc-800 dark:bg-gray-900 dark:text-zinc-200'
   }
 
   const formatNeuronState = (state: any) => {
@@ -926,7 +926,7 @@
     if (state.Locked) return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
     if (state.Dissolving) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
     if (state.Dissolved) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-    return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+    return 'bg-gray-100 text-zinc-800 dark:bg-gray-900 dark:text-zinc-200'
   }
 
   const formatDuration = (seconds: number | bigint) => {

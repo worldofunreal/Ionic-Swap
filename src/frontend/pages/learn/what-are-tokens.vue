@@ -8,7 +8,7 @@
             <li class="inline-flex items-center">
               <NuxtLink
                 to="/learn"
-                class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                class="text-zinc-500 hover:text-zinc-700 dark:text-zinc-300 dark:hover:text-zinc-300"
               >
                 Learn
               </NuxtLink>
@@ -16,7 +16,7 @@
             <li>
               <div class="flex items-center">
                 <svg
-                  class="w-6 h-6 text-gray-400"
+                  class="w-6 h-6 text-zinc-300"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -26,7 +26,7 @@
                     clip-rule="evenodd"
                   />
                 </svg>
-                <span class="ml-1 text-gray-500 md:ml-2 dark:text-gray-400"
+                <span class="ml-1 text-zinc-500 md:ml-2 dark:text-zinc-300"
                   >What are Tokens?</span
                 >
               </div>
@@ -37,7 +37,7 @@
         <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
           What are Tokens?
         </h1>
-        <p class="text-xl text-gray-600 dark:text-gray-400">
+        <p class="text-xl text-zinc-600 dark:text-zinc-300">
           A comprehensive guide to digital tokens and blockchain standards
         </p>
       </div>
@@ -67,7 +67,7 @@
             </h2>
 
             <div class="prose prose-lg dark:prose-invert max-w-none">
-              <p class="text-gray-600 dark:text-gray-400 mb-6">
+              <p class="text-zinc-600 dark:text-zinc-300 mb-6">
                 Digital tokens are programmable digital assets that exist on
                 blockchain networks. They can represent various forms of value,
                 from currencies and commodities to access rights and governance
@@ -80,7 +80,7 @@
                 Key Characteristics
               </h3>
               <ul
-                class="list-disc pl-6 space-y-2 text-gray-600 dark:text-gray-400 mb-6"
+                class="list-disc pl-6 space-y-2 text-zinc-600 dark:text-zinc-300 mb-6"
               >
                 <li>
                   <strong>Fungible:</strong> Each token is identical and
@@ -116,7 +116,7 @@
                   <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                     Utility Tokens
                   </h4>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
                     Provide access to services or products within a specific
                     ecosystem
                   </p>
@@ -127,7 +127,7 @@
                   <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                     Payment Tokens
                   </h4>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
                     Used as digital currency for transactions and value transfer
                   </p>
                 </div>
@@ -137,7 +137,7 @@
                   <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                     Governance Tokens
                   </h4>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
                     Enable holders to participate in protocol decision-making
                   </p>
                 </div>
@@ -147,7 +147,7 @@
                   <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                     Stablecoins
                   </h4>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
                     Maintain stable value pegged to fiat currencies or
                     commodities
                   </p>
@@ -180,7 +180,7 @@
                   <h4 class="font-medium text-zinc-900 dark:text-white">
                     ERC-20
                   </h4>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
                     Ethereum standard for fungible tokens
                   </p>
                 </div>
@@ -196,7 +196,7 @@
                 </div>
                 <div>
                   <h4 class="font-medium text-zinc-900 dark:text-white">SPL</h4>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
                     Solana Program Library tokens
                   </p>
                 </div>
@@ -214,7 +214,7 @@
                   <h4 class="font-medium text-zinc-900 dark:text-white">
                     ICRC
                   </h4>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
                     Internet Computer token standard
                   </p>
                 </div>
@@ -238,7 +238,7 @@
                   name="i-heroicons-cog-6-tooth"
                   class="w-5 h-5 text-primary-600 dark:text-primary-400"
                 />
-                <span class="text-gray-700 dark:text-gray-300"
+                <span class="text-zinc-700 dark:text-zinc-300"
                   >Token Standards</span
                 >
               </NuxtLink>
@@ -250,7 +250,7 @@
                   name="i-heroicons-arrow-path"
                   class="w-5 h-5 text-primary-600 dark:text-primary-400"
                 />
-                <span class="text-gray-700 dark:text-gray-300"
+                <span class="text-zinc-700 dark:text-zinc-300"
                   >Cross-Chain Swapping</span
                 >
               </NuxtLink>
@@ -262,7 +262,7 @@
                   name="i-heroicons-bolt"
                   class="w-5 h-5 text-primary-600 dark:text-primary-400"
                 />
-                <span class="text-gray-700 dark:text-gray-300"
+                <span class="text-zinc-700 dark:text-zinc-300"
                   >Gasless Transactions</span
                 >
               </NuxtLink>
