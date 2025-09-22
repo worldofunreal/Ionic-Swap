@@ -75,7 +75,7 @@
         <!-- Main Content -->
         <div class="lg:col-span-2 space-y-8">
           <!-- What is Web3 -->
-          <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <section class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-6 shadow">
             <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               What is Web3?
             </h3>
@@ -87,7 +87,7 @@
             </p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="bg-neutral-50 dark:bg-neutral-700 p-4 rounded-lg">
+              <div class="bg-zinc-50 dark:bg-zinc-700 p-4 rounded-lg">
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Key Characteristics
                 </h4>
@@ -99,7 +99,7 @@
                   <li>• Censorship resistance</li>
                 </ul>
               </div>
-              <div class="bg-neutral-50 dark:bg-neutral-700 p-4 rounded-lg">
+              <div class="bg-zinc-50 dark:bg-zinc-700 p-4 rounded-lg">
                 <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                   Core Technologies
                 </h4>
@@ -115,12 +115,12 @@
           </section>
 
           <!-- Web Evolution -->
-          <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <section class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-6 shadow">
             <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               The Evolution of the Web
             </h3>
             <div class="space-y-6">
-              <div class="border-l-4 border-gray-300 dark:border-gray-600 pl-6">
+              <div class="border-l-4 border-zinc-300 dark:border-zinc-600 pl-6">
                 <h4
                   class="text-lg font-semibold text-zinc-900 dark:text-white mb-2"
                 >
@@ -180,7 +180,7 @@
           </section>
 
           <!-- Blockchain Technology -->
-          <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <section class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-6 shadow">
             <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               Blockchain Technology
             </h3>
@@ -382,7 +382,7 @@
           </section>
 
           <!-- Smart Contracts -->
-          <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <section class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-6 shadow">
             <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               Smart Contracts
             </h3>
@@ -392,7 +392,7 @@
               conditions are met, enabling trustless and automated transactions.
             </p>
 
-            <div class="bg-neutral-50 dark:bg-neutral-700 rounded-lg p-4 mb-6">
+            <div class="bg-zinc-50 dark:bg-zinc-700 rounded-lg p-4 mb-6">
               <h4 class="font-semibold text-zinc-900 dark:text-white mb-2">
                 Example: NFT Marketplace Smart Contract
               </h4>
@@ -507,7 +507,7 @@
           </section>
 
           <!-- Web3 Applications -->
-          <section class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <section class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-6 shadow">
             <h3 class="text-2xl font-bold text-zinc-900 dark:text-white mb-4">
               Web3 Applications
             </h3>
@@ -660,7 +660,7 @@
         <!-- Sidebar -->
         <div class="space-y-6">
           <!-- Quick Navigation -->
-          <div class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <div class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-6 shadow">
             <h3
               class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"
             >
@@ -695,7 +695,7 @@
           </div>
 
           <!-- Key Terms -->
-          <div class="bg-zinc-50 dark:bg-neutral-800 rounded-lg p-6 shadow">
+          <div class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-6 shadow">
             <h3
               class="text-lg font-semibold text-zinc-900 dark:text-white mb-4"
             >

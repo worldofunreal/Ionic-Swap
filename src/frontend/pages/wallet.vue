@@ -220,13 +220,13 @@
                           </button>
                           <button
                             @click="stakeToken(token.symbol)"
-                            class="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold rounded-lg transition-colors"
+                            class="px-4 py-2 bg-zinc-700 hover:bg-zinc-800 text-white text-sm font-semibold rounded-lg transition-colors"
                           >
                             Stake
                           </button>
                           <button
                             @click="openWithdrawModal(token.symbol)"
-                            class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                            class="px-4 py-2 bg-zinc-500 hover:bg-zinc-600 text-white text-sm font-semibold rounded-lg transition-colors"
                           >
                             Withdraw
                           </button>
@@ -696,13 +696,13 @@
       'ETH': 'bg-blue-500',
       'SOL': 'bg-purple-500',
       'BNB': 'bg-yellow-500',
-      'XRP': 'bg-gray-500',
+      'XRP': 'bg-zinc-500',
       'DOGE': 'bg-yellow-600',
       'ADA': 'bg-blue-600',
       'TRX': 'bg-red-500',
       'ICP': 'bg-cyan-500',
     }
-    return colors[symbol] || 'bg-gray-400'
+    return colors[symbol] || 'bg-zinc-400'
   }
 
 

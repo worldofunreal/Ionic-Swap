@@ -77,34 +77,33 @@
                     class="w-full"
                   />
                   <div class="flex gap-2">
-                    <UButton
-                      color="primary"
-                      size="sm"
-                      :loading="updatingWallet"
+                    <button
+                      class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
+                      :disabled="updatingWallet"
                       @click="updateWalletAddress('evm')"
                     >
+                      <UIcon v-if="updatingWallet" name="i-heroicons-arrow-path" class="w-4 h-4 animate-spin" />
+                      <UIcon v-else name="i-heroicons-check-20-solid" class="w-4 h-4" />
                       {{ updatingWallet ? 'Updating...' : 'Update' }}
-                    </UButton>
-                    <UButton
-                      color="neutral"
-                      variant="soft"
-                      size="sm"
+                    </button>
+                    <button
+                      class="px-4 py-3 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
                       @click="cancelEditWallet('evm')"
                     >
+                      <UIcon name="i-heroicons-x-mark-20-solid" class="w-4 h-4" />
                       Cancel
-                    </UButton>
+                    </button>
                   </div>
                 </div>
 
-                <UButton
+                <button
                   v-else
-                  color="primary"
-                  variant="soft"
-                  size="sm"
+                  class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
                   @click="editWalletAddress('evm')"
                 >
-                  {{ userProfile?.evm_address?.[0] ? 'Update' : 'Connect' }}
-                </UButton>
+                  <UIcon name="i-heroicons-link-20-solid" class="w-4 h-4" />
+                  {{ userProfile?.evm_address?.[0] ? 'Update Address' : 'Connect Wallet' }}
+                </button>
               </div>
 
               <!-- Bitcoin Address -->
@@ -138,34 +137,33 @@
                     class="w-full"
                   />
                   <div class="flex gap-2">
-                    <UButton
-                      color="primary"
-                      size="sm"
-                      :loading="updatingWallet"
+                    <button
+                      class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
+                      :disabled="updatingWallet"
                       @click="updateWalletAddress('bitcoin')"
                     >
+                      <UIcon v-if="updatingWallet" name="i-heroicons-arrow-path" class="w-4 h-4 animate-spin" />
+                      <UIcon v-else name="i-heroicons-check-20-solid" class="w-4 h-4" />
                       {{ updatingWallet ? 'Updating...' : 'Update' }}
-                    </UButton>
-                    <UButton
-                      color="neutral"
-                      variant="soft"
-                      size="sm"
+                    </button>
+                    <button
+                      class="px-4 py-3 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
                       @click="cancelEditWallet('bitcoin')"
                     >
+                      <UIcon name="i-heroicons-x-mark-20-solid" class="w-4 h-4" />
                       Cancel
-                    </UButton>
+                    </button>
                   </div>
                 </div>
 
-                <UButton
+                <button
                   v-else
-                  color="primary"
-                  variant="soft"
-                  size="sm"
+                  class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
                   @click="editWalletAddress('bitcoin')"
                 >
-                  {{ userProfile?.bitcoin_address?.[0] ? 'Update' : 'Connect' }}
-                </UButton>
+                  <UIcon name="i-heroicons-link-20-solid" class="w-4 h-4" />
+                  {{ userProfile?.bitcoin_address?.[0] ? 'Update Address' : 'Connect Wallet' }}
+                </button>
               </div>
 
               <!-- Solana Address -->
@@ -199,34 +197,33 @@
                     class="w-full"
                   />
                   <div class="flex gap-2">
-                    <UButton
-                      color="primary"
-                      size="sm"
-                      :loading="updatingWallet"
+                    <button
+                      class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
+                      :disabled="updatingWallet"
                       @click="updateWalletAddress('solana')"
                     >
+                      <UIcon v-if="updatingWallet" name="i-heroicons-arrow-path" class="w-4 h-4 animate-spin" />
+                      <UIcon v-else name="i-heroicons-check-20-solid" class="w-4 h-4" />
                       {{ updatingWallet ? 'Updating...' : 'Update' }}
-                    </UButton>
-                    <UButton
-                      color="neutral"
-                      variant="soft"
-                      size="sm"
+                    </button>
+                    <button
+                      class="px-4 py-3 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
                       @click="cancelEditWallet('solana')"
                     >
+                      <UIcon name="i-heroicons-x-mark-20-solid" class="w-4 h-4" />
                       Cancel
-                    </UButton>
+                    </button>
                   </div>
                 </div>
 
-                <UButton
+                <button
                   v-else
-                  color="primary"
-                  variant="soft"
-                  size="sm"
+                  class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
                   @click="editWalletAddress('solana')"
                 >
-                  {{ userProfile?.solana_address?.[0] ? 'Update' : 'Connect' }}
-                </UButton>
+                  <UIcon name="i-heroicons-link-20-solid" class="w-4 h-4" />
+                  {{ userProfile?.solana_address?.[0] ? 'Update Address' : 'Connect Wallet' }}
+                </button>
               </div>
 
               <!-- ICP Principal -->
@@ -302,14 +299,19 @@
                     </p>
                   </div>
                 </div>
-                <UButton
-                  :color="colorMode.value === 'dark' ? 'primary' : 'neutral'"
-                  variant="soft"
-                  size="sm"
+                <button
+                  class="px-4 py-3 font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
+                  :class="colorMode.value === 'dark' 
+                    ? 'bg-primary-500 hover:bg-primary-600 text-white' 
+                    : 'bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white'"
                   @click="toggleTheme"
                 >
-                  {{ colorMode.value === 'dark' ? 'Dark' : 'Light' }}
-                </UButton>
+                  <UIcon 
+                    :name="colorMode.value === 'dark' ? 'i-heroicons-moon-20-solid' : 'i-heroicons-sun-20-solid'" 
+                    class="w-4 h-4" 
+                  />
+                  {{ colorMode.value === 'dark' ? 'Dark Mode' : 'Light Mode' }}
+                </button>
               </div>
 
               <!-- Color Theme -->
@@ -325,7 +327,7 @@
                     :class="[
                       colorTheme === theme
                         ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                        : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-gray-800',
+                        : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800',
                     ]"
                     @click="setTheme(theme as any)"
                   >
@@ -530,14 +532,13 @@
                     </p>
                   </div>
                 </div>
-                <UButton
-                  color="primary"
-                  variant="soft"
-                  size="sm"
+                <button
+                  class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
                   @click="openUsernameModal"
                 >
+                  <UIcon name="i-heroicons-at-symbol-20-solid" class="w-4 h-4" />
                   Change Username
-                </UButton>
+                </button>
               </div>
 
               <!-- Profile Management -->
@@ -565,14 +566,13 @@
                     </p>
                   </div>
                 </div>
-                <UButton
-                  color="primary"
-                  variant="soft"
-                  size="sm"
+                <button
+                  class="px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
                   @click="openEditProfileModal"
                 >
+                  <UIcon name="i-heroicons-user-circle-20-solid" class="w-4 h-4" />
                   Edit Profile
-                </UButton>
+                </button>
               </div>
 
               <!-- Ionic Wallet Recovery (only show for local wallet users) -->
@@ -580,52 +580,49 @@
                 v-if="userProfile && auth.nativeWallet === 'local'" 
                 class="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800"
               >
-                <div class="flex items-center gap-3 mb-3">
-                  <img src="/logo.svg" alt="Ionic Wallet" class="w-10 h-10" />
-                  <div>
-                    <h4 class="text-sm font-medium text-amber-900 dark:text-amber-100">
-                      Ionic Wallet Recovery Phrase
-                    </h4>
-                    <p class="text-sm text-amber-700 dark:text-amber-300">
-                      {{ showSeed ? 'Keep this phrase safe and private' : 'Click to reveal your 12-word recovery phrase' }}
-                    </p>
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-3">
+                    <img src="/logo.svg" alt="Ionic Wallet" class="w-10 h-10" />
+                    <div>
+                      <h4 class="text-sm font-medium text-amber-900 dark:text-amber-100">
+                        Ionic Wallet Recovery Phrase
+                      </h4>
+                      <p class="text-sm text-amber-700 dark:text-amber-300">
+                        {{ showSeed ? 'Keep this phrase safe and private' : 'Click to reveal your 12-word recovery phrase' }}
+                      </p>
+                    </div>
                   </div>
+                  
+                  <!-- Show Recovery Button (top right) -->
+                  <button
+                    v-if="!showSeed"
+                    class="px-4 py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
+                    @click="revealSeed"
+                  >
+                    <UIcon name="i-heroicons-eye-20-solid" class="w-4 h-4" />
+                    Show Recovery Phrase
+                  </button>
                 </div>
 
                 <div v-if="showSeed" class="mb-3 p-3 bg-zinc-100 dark:bg-zinc-800 rounded border font-mono text-sm">
                   {{ userSeed || 'Loading...' }}
                 </div>
 
-                <div class="flex gap-2">
-                  <UButton
-                    v-if="!showSeed"
-                    color="warning"
-                    variant="soft"
-                    size="sm"
-                    @click="revealSeed"
-                  >
-                    <UIcon name="i-heroicons-eye-20-solid" class="w-4 h-4 mr-2" />
-                    Show Recovery Phrase
-                  </UButton>
-                  <template v-else>
-                    <UButton
-                      color="warning"
-                      variant="soft"
-                      size="sm"
+                <div v-if="showSeed" class="flex gap-2">
+                    <button
+                      class="px-4 py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
                       @click="copySeed"
                     >
-                      <UIcon name="i-heroicons-clipboard-20-solid" class="w-4 h-4 mr-2" />
+                      <UIcon name="i-heroicons-clipboard-20-solid" class="w-4 h-4" />
                       Copy
-                    </UButton>
-                    <UButton
-                      color="neutral"
-                      variant="soft"
-                      size="sm"
+                    </button>
+                    <button
+                      class="px-4 py-3 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
                       @click="hideSeed"
                     >
-                      <UIcon name="i-heroicons-eye-slash-20-solid" class="w-4 h-4 mr-2" />
+                      <UIcon name="i-heroicons-eye-slash-20-solid" class="w-4 h-4" />
                       Hide
-                    </UButton>
+                    </button>
                   </template>
                 </div>
               </div>
@@ -654,14 +651,13 @@
                     </p>
                   </div>
                 </div>
-                <UButton
-                  color="error"
-                  variant="soft"
-                  size="sm"
+                <button
+                  class="px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors text-sm flex items-center gap-2"
                   @click="deleteAccount"
                 >
-                  Delete
-                </UButton>
+                  <UIcon name="i-heroicons-trash-20-solid" class="w-4 h-4" />
+                  Delete Account
+                </button>
               </div>
             </div>
           </div>

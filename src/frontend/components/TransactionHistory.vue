@@ -358,10 +358,10 @@ const getTransactionTypeColor = (tx: any) => {
     case 'Stake': return 'bg-green-500'
     case 'ClaimFees': return 'bg-purple-500'
     case 'StartDissolving': return 'bg-yellow-500'
-    case 'CancelDissolving': return 'bg-gray-500'
+    case 'CancelDissolving': return 'bg-zinc-500'
     case 'PartialWithdraw':
     case 'FullWithdraw': return 'bg-orange-500'
-    default: return 'bg-gray-500'
+    default: return 'bg-zinc-500'
   }
 }
 

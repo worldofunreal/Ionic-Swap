@@ -199,7 +199,7 @@
     @click="imageModalOpen = false"
   >
     <div
-      class="bg-zinc-50 dark:bg-gray-800 rounded-lg p-6 max-w-4xl mx-4"
+      class="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-6 max-w-4xl mx-4"
       @click.stop
     >
       <div class="text-center">

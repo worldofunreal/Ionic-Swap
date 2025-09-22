@@ -128,7 +128,7 @@
             <div class="space-y-6">
               <!-- Hot Wallets -->
               <div
-                class="border border-gray-200 dark:border-gray-700 rounded-lg p-6"
+                class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-6"
               >
                 <div class="flex items-center space-x-4 mb-4">
                   <div
@@ -217,7 +217,7 @@
 
               <!-- Cold Wallets -->
               <div
-                class="border border-gray-200 dark:border-gray-700 rounded-lg p-6"
+                class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-6"
               >
                 <div class="flex items-center space-x-4 mb-4">
                   <div
@@ -314,7 +314,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <!-- MetaMask -->
               <div
-                class="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-4"
               >
                 <div class="flex items-center space-x-3 mb-3">
                   <div
@@ -382,7 +382,7 @@
 
               <!-- Trust Wallet -->
               <div
-                class="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-4"
               >
                 <div class="flex items-center space-x-3 mb-3">
                   <div
@@ -450,7 +450,7 @@
 
               <!-- Ledger -->
               <div
-                class="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-4"
               >
                 <div class="flex items-center space-x-3 mb-3">
                   <div
@@ -518,7 +518,7 @@
 
               <!-- Coinbase Wallet -->
               <div
-                class="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-4"
               >
                 <div class="flex items-center space-x-3 mb-3">
                   <div

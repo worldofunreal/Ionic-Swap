@@ -90,7 +90,7 @@
                     <div
                       v-for="chain in feature.chains"
                       :key="chain"
-                      class="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800"
+                      class="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800"
                     >
                       <div
                         class="w-2 h-2 rounded-full"
@@ -210,7 +210,7 @@
       Solana: 'bg-purple-500',
       ICP: 'bg-cyan-500',
     }
-    return colors[chain as keyof typeof colors] || 'bg-gray-500'
+    return colors[chain as keyof typeof colors] || 'bg-zinc-500'
   }
 
   const scrollLeft = () => {

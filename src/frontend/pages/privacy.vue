@@ -154,7 +154,7 @@
             <p class="mb-4">
               For privacy or support questions, contact us through:
             </p>
-            <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+            <div class="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-lg">
               <p class="flex items-center gap-2">
                 <UIcon name="i-heroicons-envelope" class="w-5 h-5" />
                 <span>Email: support@ionicswap.com</span>

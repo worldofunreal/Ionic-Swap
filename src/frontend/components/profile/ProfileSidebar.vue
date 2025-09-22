@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex flex-col gap-6 w-[220px] max-w-[260px] p-4 bg-zinc-50 dark:bg-neutral-950 rounded-lg border border-gray-200 dark:border-gray-800"
+    class="flex flex-col gap-6 w-[220px] max-w-[260px] p-4 bg-zinc-50 dark:bg-neutral-950 rounded-lg border border-zinc-200 dark:border-zinc-800"
   >
     <!-- Status -->
     <div>
@@ -13,7 +13,7 @@
           :class="
             selectedStatus === status
               ? 'bg-primary-600 text-white border-primary-600'
-              : 'bg-zinc-50 dark:bg-neutral-950 text-zinc-700 dark:text-zinc-200 border-gray-200 dark:border-gray-700'
+              : 'bg-zinc-50 dark:bg-neutral-950 text-zinc-700 dark:text-zinc-200 border-zinc-200 dark:border-zinc-700'
           "
           @click="selectedStatus = status"
         >
@@ -27,7 +27,7 @@
       <input
         type="text"
         placeholder="Search chains..."
-        class="w-full px-3 py-2 rounded border border-gray-200 dark:border-gray-700 bg-zinc-50 dark:bg-neutral-950 mb-2"
+        class="w-full px-3 py-2 rounded border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-neutral-950 mb-2"
       >
       <div class="flex flex-wrap gap-2">
         <button
@@ -46,7 +46,7 @@
       <input
         type="text"
         placeholder="Search collections..."
-        class="w-full px-3 py-2 rounded border border-gray-200 dark:border-gray-700 bg-zinc-50 dark:bg-neutral-950 mb-2"
+        class="w-full px-3 py-2 rounded border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-neutral-950 mb-2"
       >
     </div>
   </div>

@@ -63,9 +63,9 @@
       </div>
     </div>
 
-    <div class="flex h-full">
+    <div class="flex h-full min-h-0">
       <!-- Left Column - Pool List -->
-      <div class="flex-1 flex flex-col">
+      <div class="flex-1 flex flex-col min-h-0">
         <!-- Pool Controls -->
         <div
           class="bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 py-2 flex-shrink-0"
@@ -96,7 +96,7 @@
         </div>
 
         <!-- Pool List -->
-        <div class="flex-1 bg-zinc-100 dark:bg-zinc-900 overflow-auto">
+        <div class="flex-1 bg-zinc-100 dark:bg-zinc-900 overflow-y-auto overflow-x-hidden min-h-0">
           <!-- Loading State -->
           <div v-if="loading && allPools.length === 0" class="p-8 text-center">
             <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 mx-auto mb-2 animate-spin text-zinc-400" />
@@ -184,10 +184,10 @@
 
       <!-- Right Column - Pool Details & Actions -->
       <div
-        class="w-96 bg-zinc-100 dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 flex flex-col"
+        class="w-96 bg-zinc-100 dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 flex flex-col min-h-0"
       >
         <!-- Pool Details Tabs -->
-        <div class="flex border-b border-zinc-200 dark:border-zinc-800">
+        <div class="flex border-b border-zinc-200 dark:border-zinc-800 flex-shrink-0">
           <button
             v-for="tab in detailTabs"
             :key="tab.value"
@@ -204,7 +204,7 @@
         </div>
 
         <!-- Pool Details Content -->
-        <div class="flex-1 p-4 overflow-auto">
+        <div class="flex-1 p-4 overflow-y-auto overflow-x-hidden min-h-0">
           <!-- No Pool Selected -->
           <div v-if="!selectedPool" class="text-center py-8">
             <UIcon name="i-heroicons-cursor-arrow-rays" class="w-12 h-12 mx-auto mb-4 text-zinc-300 dark:text-zinc-600" />

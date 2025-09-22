@@ -19,7 +19,7 @@
         >
       </div>
       <button
-        class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        class="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
         aria-label="Close sidebar"
         @click="closeSidebar"
       >
@@ -37,7 +37,7 @@
           v-for="item in menuItems"
           :key="item.label || 'hr'"
           :to="item.to"
-          class="flex items-center gap-3 px-4 py-3 rounded-lg text-zinc-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          class="flex items-center gap-3 px-4 py-3 rounded-lg text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           :class="
             route.path === item.to
               ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'

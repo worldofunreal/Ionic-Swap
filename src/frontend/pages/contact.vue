@@ -79,7 +79,7 @@
       <!-- Form Section -->
       <div class="flex-1 flex items-center justify-center">
         <div
-          class="bg-zinc-50 dark:bg-neutral-800 rounded-2xl shadow-xl p-8 md:p-12 flex flex-col gap-8 border border-gray-200 dark:border-gray-700 w-full max-w-lg mx-auto"
+          class="bg-zinc-50 dark:bg-neutral-800 rounded-2xl shadow-xl p-8 md:p-12 flex flex-col gap-8 border border-zinc-200 dark:border-zinc-700 w-full max-w-lg mx-auto"
         >
           <div class="text-center md:text-left">
             <h2
@@ -98,7 +98,7 @@
                   v-model="state.name"
                   placeholder="Your name"
                   size="lg"
-                  class="w-full dark:bg-neutral-700 dark:text-white dark:border-gray-600 dark:focus:ring-primary"
+                  class="w-full dark:bg-neutral-700 dark:text-white dark:border-zinc-600 dark:focus:ring-primary"
                 />
               </UFormField>
               <UFormField label="Email" name="email">
@@ -107,7 +107,7 @@
                   type="email"
                   placeholder="your@email.com"
                   size="lg"
-                  class="w-full dark:bg-neutral-700 dark:text-white dark:border-gray-600 dark:focus:ring-primary"
+                  class="w-full dark:bg-neutral-700 dark:text-white dark:border-zinc-600 dark:focus:ring-primary"
                 />
               </UFormField>
               <UFormField label="Company" name="company">
@@ -115,7 +115,7 @@
                   v-model="state.company"
                   placeholder="Your company"
                   size="lg"
-                  class="w-full dark:bg-neutral-700 dark:text-white dark:border-gray-600 dark:focus:ring-primary"
+                  class="w-full dark:bg-neutral-700 dark:text-white dark:border-zinc-600 dark:focus:ring-primary"
                 />
               </UFormField>
               <UFormField label="Message" name="message">
@@ -124,7 +124,7 @@
                   placeholder="Tell us about your inquiry..."
                   :rows="4"
                   size="lg"
-                  class="w-full dark:bg-neutral-700 dark:text-white dark:border-gray-600 dark:focus:ring-primary"
+                  class="w-full dark:bg-neutral-700 dark:text-white dark:border-zinc-600 dark:focus:ring-primary"
                 />
               </UFormField>
             </div>
