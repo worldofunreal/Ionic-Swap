@@ -12,11 +12,16 @@ export default defineEventHandler(async event => {
       })
     }
 
-    // Make request to Binance API
-    const binanceUrl = `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(symbols)}`
+    // Use SSH tunnel to access Binance API
+    const binanceUrl = `https://127.0.0.1:9443/api/v3/ticker/24hr?symbols=${encodeURIComponent(symbols)}`
     // console.log('Binance URL:', binanceUrl)
 
-    const response = await fetch(binanceUrl)
+    const response = await fetch(binanceUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Host': 'api.binance.com'
+      }
+    })
 
     if (!response.ok) {
       const errorText = await response.text()

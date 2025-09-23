@@ -13,16 +13,20 @@ export default defineEventHandler(async event => {
       })
     }
 
-    // Build Binance API URL with optional endTime parameter
-    let binanceUrl = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
+    // Use SSH tunnel to access Binance API
+    let binanceUrl = `https://127.0.0.1:9443/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
 
     // Add endTime parameter if provided (for fetching historical data)
     if (endTime) {
       binanceUrl += `&endTime=${endTime}`
     }
 
-    // Make request to Binance API
-    const response = await fetch(binanceUrl)
+    const response = await fetch(binanceUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Host': 'api.binance.com'
+      }
+    })
 
     if (!response.ok) {
       throw createError({
