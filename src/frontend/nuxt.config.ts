@@ -125,6 +125,7 @@ export default defineNuxtConfig({
         '@dfinity/agent',
         '@dfinity/candid',
         '@solana/web3.js',
+        'qrcode',
       ],
       exclude: ['@microsoft/clarity'],
     },
@@ -199,6 +200,7 @@ export default defineNuxtConfig({
       '@dfinity/candid',
       '@dfinity/identity',
       '@dfinity/auth-client',
+      'qrcode',
     ],
   },
   // Disable source maps in production for better performance
