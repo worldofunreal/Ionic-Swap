@@ -13,8 +13,11 @@ export default defineEventHandler(async event => {
       })
     }
 
-    // Use SSH tunnel to access Binance API
-    let binanceUrl = `https://127.0.0.1:9443/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
+    // Determine if we're in production (using SSH tunnel) or local development
+    const isProduction = process.env.NODE_ENV === 'production'
+    let binanceUrl = isProduction 
+      ? `https://127.0.0.1:9443/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
+      : `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
 
     // Add endTime parameter if provided (for fetching historical data)
     if (endTime) {
@@ -24,7 +27,7 @@ export default defineEventHandler(async event => {
     const response = await fetch(binanceUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Host': 'api.binance.com'
+        ...(isProduction && { 'Host': 'api.binance.com' })
       }
     })
 

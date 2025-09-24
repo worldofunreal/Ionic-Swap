@@ -59,7 +59,7 @@
 <script setup lang="ts">
 import { ref, nextTick, watch } from 'vue'
 import { useToast } from '#imports'
-import QRCode from 'qrcode'
+// Dynamic import for QRCode to avoid browser compatibility issues
 
 // Props
 interface Props {
@@ -110,6 +110,8 @@ const generateQRCode = async () => {
   if (!props.address || !qrCanvas.value) return
   
   try {
+    // Dynamic import to avoid browser compatibility issues
+    const QRCode = await import('qrcode')
     await QRCode.toCanvas(qrCanvas.value, props.address, {
       width: 200,
       margin: 2,
