@@ -81,6 +81,7 @@
   }
 
   const loading = ref(false)
+  const isClient = ref(false)
   const auth = useAuthStore()
 
   // Inject the login panel ref from the app
@@ -170,16 +171,27 @@
 
   // Get tokens with real-time prices from PriceService
   const tokens = computed(() => {
-    const prices = priceService.getPrices()
-    return tokenList.map(token => {
-      const priceData = prices.get(token.symbol)
-      return {
+    // Only use real price data on client-side to avoid hydration mismatches
+    if (isClient.value) {
+      const prices = priceService.getPrices()
+      return tokenList.map(token => {
+        const priceData = prices.get(token.symbol)
+        return {
+          ...token,
+          name: TokenService.getTokenName(token.symbol),
+          price: priceData?.price || 0,
+          change: priceData?.change24h || 0,
+        }
+      })
+    } else {
+      // Server-side: return consistent initial data
+      return tokenList.map(token => ({
         ...token,
         name: TokenService.getTokenName(token.symbol),
-        price: priceData?.price || 0,
-        change: priceData?.change24h || 0,
-      }
-    })
+        price: 0,
+        change: 0,
+      }))
+    }
   })
 
   // Price service subscription
@@ -202,6 +214,9 @@
   }
 
   onMounted(() => {
+    // Mark as client-side
+    isClient.value = true
+    
     // Subscribe to price updates
     unsubscribe = priceService.subscribe(_prices => {
       // Price updates are handled automatically

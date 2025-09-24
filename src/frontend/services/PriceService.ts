@@ -54,13 +54,20 @@ class PriceService {
 
   constructor() {
     if (!this.isInitialized) {
-      this.initializeWebSocket()
-      this.isInitialized = true
+      // Only initialize on client-side to avoid SSR issues
+      if (typeof window !== 'undefined') {
+        this.initializeWebSocket()
+        this.isInitialized = true
+      }
     }
   }
 
   // Get current prices
   getPrices(): Map<string, TokenPrice> {
+    // Return empty map during SSR to avoid hydration mismatches
+    if (typeof window === 'undefined') {
+      return new Map()
+    }
     return new Map(this.prices)
   }
 
