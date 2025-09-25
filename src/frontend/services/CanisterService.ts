@@ -53,14 +53,22 @@ class CanisterService {
     try {
       this.identity = identity || null
 
+      // Determine if we're in production (using VPS proxy) or local development
+      const isProduction = process.env.NODE_ENV === 'production'
+      const host = isProduction 
+        ? 'https://ionicswap.com:7777' // Use VPS dfx local with HTTPS
+        : 'http://127.0.0.1:4943' // Use local development
+
       // Create HTTP agent with proper configuration
       this.agent = new HttpAgent({
-        host: 'http://127.0.0.1:4943', // Use local development
+        host,
         identity: this.identity || undefined,
+        verifyQuerySignatures: false,
+        verifyUpdateSignatures: false,
       })
 
-      // For local development, fetch the local replica's root key
-      console.log('Using local development agent...')
+      // Fetch the replica's root key
+      console.log(`Using ${isProduction ? 'VPS proxy' : 'local development'} agent...`)
       await this.agent.fetchRootKey()
 
       // Create backend actor
@@ -80,13 +88,21 @@ class CanisterService {
   // Initialize the service anonymously for public access (SSR)
   async initializeAnonymous(): Promise<boolean> {
     try {
+      // Determine if we're in production (using VPS proxy) or local development
+      const isProduction = process.env.NODE_ENV === 'production'
+      const host = isProduction 
+        ? 'https://ionicswap.com:7777' // Use VPS dfx local with HTTPS
+        : 'http://127.0.0.1:4943' // Use local development
+
       // Create HTTP agent without identity for anonymous access
       this.agent = new HttpAgent({
-        host: 'http://127.0.0.1:4943', // Use local development
+        host,
+        verifyQuerySignatures: false,
+        verifyUpdateSignatures: false,
       })
 
-      // For local development, fetch the local replica's root key
-      console.log('Using local development agent (anonymous)...')
+      // Fetch the replica's root key
+      console.log(`Using ${isProduction ? 'VPS proxy' : 'local development'} agent (anonymous)...`)
       await this.agent.fetchRootKey()
 
       // Create backend actor for anonymous queries
@@ -1137,7 +1153,13 @@ class CanisterService {
   // Get asset URL
   getAssetUrl(filePath: string): string {
     const backendCanisterId = getBackendCanisterId()
-    return `http://${backendCanisterId}.localhost:4943${filePath}`
+    const isProduction = process.env.NODE_ENV === 'production'
+    
+    if (isProduction) {
+      return `https://ionicswap.com:7777${filePath}`
+    } else {
+      return `http://${backendCanisterId}.localhost:4943${filePath}`
+    }
   }
 
   // ============================================================================
