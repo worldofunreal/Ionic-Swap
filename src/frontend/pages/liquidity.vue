@@ -970,17 +970,6 @@
     
     const votingPower = stakeAmount * delayMultiplier * ageMultiplier
     
-    // Debug logging
-    console.log(`🔍 Voting Power Calculation for ${position.token_symbol}:`, {
-      lockedAmount,
-      stakeAmount,
-      delay_days,
-      delayMultiplier,
-      age_seconds,
-      age_years,
-      ageMultiplier,
-      finalVotingPower: votingPower
-    })
     
     return votingPower
   }
@@ -1013,17 +1002,6 @@
     const feeIndexDifference = pool.global_fee_index - (position.last_fee_index || 0)
     const claimableFeesRaw = feeIndexDifference * rawVotingPower
     
-    // Debug logging
-    console.log(`🔍 Fee calculation for position ${position.id} (${position.token_symbol}):`, {
-      stakeAmount,
-      rawVotingPower,
-      globalFeeIndex: pool.global_fee_index,
-      lastFeeIndex: position.last_fee_index || 0,
-      feeIndexDifference,
-      claimableFeesRaw,
-      decimals: TokenService.getTokenDecimals(position.token_symbol),
-      finalAmount: claimableFeesRaw / Math.pow(10, TokenService.getTokenDecimals(position.token_symbol))
-    })
     
     return claimableFeesRaw / Math.pow(10, TokenService.getTokenDecimals(position.token_symbol))
   }
@@ -1244,13 +1222,6 @@
       const pools = await canisterService.getAllLiquidityPools()
       allPools.value = pools
       
-      // Debug logging to check pool voting power data
-      console.log('🔍 Pool Data Debug:', pools.map(p => ({
-        token: p.token_symbol,
-        totalVotingPower: p.total_voting_power,
-        totalStaked: p.total_staked,
-        availableLiquidity: p.available_liquidity
-      })))
       
       // Auto-select first pool if none selected (URL watcher will handle URL-based selection)
       if (!selectedPool.value && pools.length > 0 && !useRoute().query.token) {
@@ -1280,15 +1251,6 @@
         totalPositions: Number(stats[0])    // total_positions (index 0)
       }
       
-      // Debug logging
-      console.log('🔍 System Stats Debug:', {
-        backendStats: stats,
-        calculatedVotingPower: totalVotingPower,
-        poolVotingPowers: allPools.value.map(p => ({
-          token: p.token_symbol,
-          votingPower: p.total_voting_power
-        }))
-      })
     } catch (error) {
       console.error('Error loading system stats:', error)
     }
@@ -1659,7 +1621,6 @@
   // Single watcher that handles URL parameters when pools are loaded
   watch([urlToken, urlAction, allPools], async ([token, action, pools]) => {
     if (token && pools.length > 0) {
-      console.log('🎯 Processing URL navigation:', { token, action })
       
       const targetPool = pools.find(pool => 
         pool.token_symbol.toLowerCase() === token.toLowerCase()
@@ -1673,7 +1634,6 @@
           activeDetailTab.value = 'stake'
         }
         
-        console.log('✅ Successfully navigated to', targetPool.token_symbol, action ? `(${action} tab)` : '')
       } else {
         console.error('Token not found:', token, 'Available:', pools.map(p => p.token_symbol))
       }
