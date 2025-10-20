@@ -411,7 +411,7 @@
                 </div>
                 <select
                   v-model="privacySettings.profileVisibility"
-                  @change="savePrivacySettings"
+                  @change="handleProfileVisibilityChange"
                   class="px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white w-40"
                 >
                   <option value="public">Public</option>
@@ -434,7 +434,7 @@
                 </div>
                 <select
                   v-model="privacySettings.activityVisibility"
-                  @change="savePrivacySettings"
+                  @change="handleActivityVisibilityChange"
                   class="px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white w-40"
                 >
                   <option value="public">Public</option>
@@ -457,7 +457,7 @@
                 </div>
                 <select
                   v-model="privacySettings.walletVisibility"
-                  @change="savePrivacySettings"
+                  @change="handleWalletVisibilityChange"
                   class="px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-white w-40"
                 >
                   <option value="public">Public</option>
@@ -928,22 +928,194 @@
     }
   }
 
+  // Individual privacy setting change handlers
+  const handleProfileVisibilityChange = async () => {
+    if (!auth.authenticated) return
+
+    saving.value = true
+    try {
+      const backendSettings: PrivacySettings = {
+        profile_visibility: createVisibilityLevel(privacySettings.value.profileVisibility),
+        activity_visibility: createVisibilityLevel(privacySettings.value.activityVisibility),
+        wallet_visibility: createVisibilityLevel(privacySettings.value.walletVisibility),
+        analytics_enabled: privacySettings.value.analyticsEnabled,
+        marketing_enabled: false,
+        third_party_enabled: false,
+      }
+      
+      await canisterService.updatePrivacySettings(backendSettings)
+      
+      const toast = useToast()
+      let message = ''
+      if (privacySettings.value.profileVisibility === 'private') {
+        message = 'Profile set to Private'
+      } else if (privacySettings.value.profileVisibility === 'followers') {
+        message = 'Profile set to Followers Only'
+      } else {
+        message = 'Profile set to Public'
+      }
+      
+      toast.add({
+        title: 'Profile Visibility Updated',
+        description: message,
+        color: 'success',
+      })
+    } catch (error) {
+      console.error('❌ Failed to save profile visibility:', error)
+      const toast = useToast()
+      toast.add({
+        title: 'Save Failed',
+        description: 'Failed to save profile visibility. Please try again.',
+        color: 'error',
+      })
+    } finally {
+      saving.value = false
+    }
+  }
+
+  const handleActivityVisibilityChange = async () => {
+    if (!auth.authenticated) return
+
+    saving.value = true
+    try {
+      const backendSettings: PrivacySettings = {
+        profile_visibility: createVisibilityLevel(privacySettings.value.profileVisibility),
+        activity_visibility: createVisibilityLevel(privacySettings.value.activityVisibility),
+        wallet_visibility: createVisibilityLevel(privacySettings.value.walletVisibility),
+        analytics_enabled: privacySettings.value.analyticsEnabled,
+        marketing_enabled: false,
+        third_party_enabled: false,
+      }
+      
+      await canisterService.updatePrivacySettings(backendSettings)
+      
+      const toast = useToast()
+      let message = ''
+      if (privacySettings.value.activityVisibility === 'private') {
+        message = 'Activity set to Private'
+      } else if (privacySettings.value.activityVisibility === 'followers') {
+        message = 'Activity set to Followers Only'
+      } else {
+        message = 'Activity set to Public'
+      }
+      
+      toast.add({
+        title: 'Activity Visibility Updated',
+        description: message,
+        color: 'success',
+      })
+    } catch (error) {
+      console.error('❌ Failed to save activity visibility:', error)
+      const toast = useToast()
+      toast.add({
+        title: 'Save Failed',
+        description: 'Failed to save activity visibility. Please try again.',
+        color: 'error',
+      })
+    } finally {
+      saving.value = false
+    }
+  }
+
+  const handleWalletVisibilityChange = async () => {
+    if (!auth.authenticated) return
+
+    saving.value = true
+    try {
+      const backendSettings: PrivacySettings = {
+        profile_visibility: createVisibilityLevel(privacySettings.value.profileVisibility),
+        activity_visibility: createVisibilityLevel(privacySettings.value.activityVisibility),
+        wallet_visibility: createVisibilityLevel(privacySettings.value.walletVisibility),
+        analytics_enabled: privacySettings.value.analyticsEnabled,
+        marketing_enabled: false,
+        third_party_enabled: false,
+      }
+      
+      await canisterService.updatePrivacySettings(backendSettings)
+      
+      const toast = useToast()
+      let message = ''
+      if (privacySettings.value.walletVisibility === 'private') {
+        message = 'Wallet addresses set to Private'
+      } else if (privacySettings.value.walletVisibility === 'followers') {
+        message = 'Wallet addresses set to Followers Only'
+      } else {
+        message = 'Wallet addresses set to Public'
+      }
+      
+      toast.add({
+        title: 'Wallet Visibility Updated',
+        description: message,
+        color: 'success',
+      })
+    } catch (error) {
+      console.error('❌ Failed to save wallet visibility:', error)
+      const toast = useToast()
+      toast.add({
+        title: 'Save Failed',
+        description: 'Failed to save wallet visibility. Please try again.',
+        color: 'error',
+      })
+    } finally {
+      saving.value = false
+    }
+  }
+
   const saveChanges = async () => {
     await savePrivacySettings()
   }
 
   // Handle analytics toggle with Microsoft Clarity integration
   const handleAnalyticsToggle = async () => {
-    // Save privacy settings first
-    await savePrivacySettings()
+    if (!auth.authenticated) {
+      console.log('❌ Not authenticated, cannot save privacy settings')
+      return
+    }
+
+    saving.value = true
     
-    // Handle Microsoft Clarity based on analytics setting
-    if (privacySettings.value.analyticsEnabled) {
-      // Enable Microsoft Clarity
-      enableMicrosoftClarity()
-    } else {
-      // Disable Microsoft Clarity
-      disableMicrosoftClarity()
+    try {
+      // Convert frontend format to backend format
+      const backendSettings: PrivacySettings = {
+        profile_visibility: createVisibilityLevel(privacySettings.value.profileVisibility),
+        activity_visibility: createVisibilityLevel(privacySettings.value.activityVisibility),
+        wallet_visibility: createVisibilityLevel(privacySettings.value.walletVisibility),
+        analytics_enabled: privacySettings.value.analyticsEnabled,
+        marketing_enabled: false, // Always disabled
+        third_party_enabled: false, // Always disabled
+      }
+      
+      await canisterService.updatePrivacySettings(backendSettings)
+      
+      // Show specific analytics message
+      const toast = useToast()
+      if (privacySettings.value.analyticsEnabled) {
+        toast.add({
+          title: 'Analytics Enabled',
+          description: 'Anonymous usage data collection is now enabled to help improve the platform',
+          color: 'success',
+        })
+        // Enable Microsoft Clarity
+        enableMicrosoftClarity()
+      } else {
+        toast.add({
+          title: 'Analytics Disabled',
+          description: 'Anonymous usage data collection has been turned off',
+          color: 'success',
+        })
+        // Disable Microsoft Clarity
+        disableMicrosoftClarity()
+      }
+    } catch (error) {
+      console.error('❌ Failed to save analytics setting:', error)
+      const toast = useToast()
+      toast.add({
+        title: 'Save Failed',
+        description: 'Failed to save analytics setting. Please try again.',
+        color: 'error',
+      })
+    } finally {
+      saving.value = false
     }
   }
 

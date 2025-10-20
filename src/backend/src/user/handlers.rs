@@ -20,6 +20,39 @@ thread_local! {
     );
 }
 
+// Helper function to check if user profile should be visible to caller
+pub fn is_profile_visible_to_caller(user: &User, caller: Option<Principal>) -> bool {
+    let default_settings = PrivacySettings::default();
+    let privacy_settings = user.privacy_settings.as_ref().unwrap_or(&default_settings);
+    
+    match privacy_settings.profile_visibility {
+        VisibilityLevel::Private => {
+            // Private profiles are only visible to the owner
+            if let Some(caller_principal) = caller {
+                user.id == caller_principal
+            } else {
+                false // No caller context means not visible
+            }
+        },
+        VisibilityLevel::FollowersOnly => {
+            // Followers-only profiles are visible to the owner and followers
+            if let Some(caller_principal) = caller {
+                if user.id == caller_principal {
+                    true // Owner can always see their own profile
+                } else {
+                    UserDatabase::is_following(caller_principal, user.id)
+                }
+            } else {
+                false // No caller context means not visible
+            }
+        },
+        VisibilityLevel::Public => {
+            // Public profiles are visible to everyone
+            true
+        }
+    }
+}
+
 // Validation functions
 pub fn validate_username(username: &str) -> Result<(), UserError> {
     if username.len() > 16 {
@@ -245,6 +278,11 @@ pub fn search_users(query: String, limit: u32) -> Result<Vec<CompactProfile>, Us
     let mut profiles = Vec::new();
     
     for user in users {
+        // Privacy check: Skip profiles that are not visible in public search
+        if !is_profile_visible_to_caller(&user, None) {
+            continue;
+        }
+        
         profiles.push(CompactProfile {
             id: user.id,
             username: user.username,
@@ -266,6 +304,11 @@ pub fn search_users_personal(query: String, limit: u32, caller: Principal) -> Re
     let mut profiles = Vec::new();
     
     for user in users {
+        // Privacy check: Respect profile visibility settings
+        if !is_profile_visible_to_caller(&user, Some(caller)) {
+            continue;
+        }
+        
         let is_following_me = UserDatabase::is_following(user.id, caller);
         let am_following_them = UserDatabase::is_following(caller, user.id);
         
