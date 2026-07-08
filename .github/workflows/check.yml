@@ -4,10 +4,15 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: 'npm'
-      - run: npm ci
-      - run: npm run build
+          cache-dependency-path: src/frontend/package-lock.json
+      - name: Install dependencies
+        working-directory: src/frontend
+        run: npm ci
+      - name: Build frontend
+        working-directory: src/frontend
+        run: npm run build
