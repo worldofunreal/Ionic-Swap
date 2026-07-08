@@ -22,3 +22,26 @@ jobs:
       - run: npm ci
       - run: npm run compile
       - run: npm test
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - uses: dtolnay/rust-toolchain@stable
+      - run: npm ci
+      - run: npm run compile
+      - uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Add Server to Known Hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      - name: Deploy to PTR via Rsync
+        run: |
+          rsync -avz --delete artifacts/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/zroot/jails/ionicswap/var/www/ptr.ionicswap.com/dist/
