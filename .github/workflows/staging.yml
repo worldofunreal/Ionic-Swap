@@ -35,6 +35,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: npm ci
       - run: npm run compile
+      - name: Add PTR robots.txt
+        run: echo -e "User-agent: *\nDisallow: /" > artifacts/robots.txt
       - uses: webfactory/ssh-agent@v0.10.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
