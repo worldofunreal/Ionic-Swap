@@ -18,15 +18,12 @@ jobs:
       with:
         node-version: '22'
         cache: 'npm'
-        cache-dependency-path: src/frontend/package-lock.json
     - name: Install dependencies
-      working-directory: src/frontend
       run: npm ci
     - name: Build frontend
-      working-directory: src/frontend
       run: npm run build
     - name: Add PTR robots.txt
-      run: echo -e "User-agent: *\nDisallow: /" > src/frontend/.output/public/robots.txt
+      run: echo -e "User-agent: *\nDisallow: /" > dist/robots.txt
     - uses: webfactory/ssh-agent@v0.10.0
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -36,4 +33,4 @@ jobs:
         ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
     - name: Deploy to PTR via Rsync
       run: |
-        rsync -avz --delete src/frontend/.output/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/zroot/jails/ionicswap/var/www/ptr.ionicswap.com/.output/
+        rsync -avz --delete dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/zroot/jails/ionicswap/var/www/ptr.ionicswap.com/dist/

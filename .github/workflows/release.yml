@@ -17,12 +17,9 @@ jobs:
       with:
         node-version: '22'
         cache: 'npm'
-        cache-dependency-path: src/frontend/package-lock.json
     - name: Install dependencies
-      working-directory: src/frontend
       run: npm ci
     - name: Build frontend
-      working-directory: src/frontend
       run: npm run build
     - uses: webfactory/ssh-agent@v0.10.0
       with:
@@ -33,4 +30,4 @@ jobs:
         ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
     - name: Deploy via Rsync
       run: |
-        rsync -avz --delete src/frontend/.output/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/zroot/jails/ionicswap/var/www/ionicswap.com/.output/
+        rsync -avz --delete dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/zroot/jails/ionicswap/var/www/ionicswap.com/dist/
