@@ -1,0 +1,64 @@
+---
+interface Props {
+  activeSection?: string;
+}
+---
+
+<header class="w-full max-w-7xl mx-auto flex justify-between items-center z-20 pb-4 border-b border-white/5 relative">
+  <a href="/" class="flex flex-col select-none group">
+    <div class="flex items-center space-x-2">
+      <div class="w-2.5 h-2.5 bg-emerald-500 rounded-sm"></div>
+      <span class="text-lg md:text-xl font-black tracking-widest text-white font-mono group-hover:text-emerald-400 transition-colors uppercase">
+        IONIC_SWAP
+      </span>
+    </div>
+    <span class="text-[7px] md:text-[8px] text-slate-500 font-mono tracking-widest leading-none mt-1">[ GASLESS_CROSS_CHAIN_ROUTER ]</span>
+  </a>
+
+  <!-- Connect Button Simulation -->
+  <div class="flex items-center space-x-4">
+    <div id="logged-in" class="hidden items-center space-x-2 font-mono text-[9px] md:text-xs">
+      <div class="flex items-center space-x-1.5 bg-slate-950/60 border border-emerald-500/30 px-3 py-1.5 rounded-lg backdrop-blur-md">
+        <span class="text-white">0x71C...9312</span>
+        <span class="text-emerald-400 font-bold">[CONNECTED]</span>
+      </div>
+    </div>
+    
+    <div id="logged-out" class="flex items-center">
+      <button id="btn-connect" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-mono text-[10px] md:text-xs tracking-widest uppercase rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.2)] transition-all duration-300 active:scale-95">
+        Connect Wallet
+      </button>
+    </div>
+  </div>
+</header>
+
+<script>
+  const loggedIn = document.getElementById('logged-in');
+  const loggedOut = document.getElementById('logged-out');
+  const btnConnect = document.getElementById('btn-connect');
+
+  const updateState = () => {
+    const connected = sessionStorage.getItem('ionic_connected') === 'true';
+    if (connected) {
+      loggedIn?.classList.remove('hidden');
+      loggedIn?.classList.add('flex');
+      loggedOut?.classList.add('hidden');
+    } else {
+      loggedIn?.classList.add('hidden');
+      loggedIn?.classList.remove('flex');
+      loggedOut?.classList.remove('hidden');
+    }
+  };
+
+  btnConnect?.addEventListener('click', () => {
+    sessionStorage.setItem('ionic_connected', 'true');
+    updateState();
+  });
+
+  loggedIn?.addEventListener('click', () => {
+    sessionStorage.removeItem('ionic_connected');
+    updateState();
+  });
+
+  updateState();
+</script>

@@ -1,0 +1,278 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Starfield from '../components/Starfield.astro';
+import Header from '../components/Header.astro';
+import Panel from '../components/Panel.astro';
+---
+
+<Layout title="IONIC SWAP | Gasless Multi-Chain Exchange">
+  <!-- Main Viewport-Locked Container -->
+  <div class="fixed inset-0 h-screen w-screen overflow-hidden flex flex-col justify-between p-6 md:p-10 select-none z-10 bg-[#010402]">
+    <!-- Starfield Animated Background -->
+    <Starfield />
+
+    <!-- Ambient Grid & Scanline FX for sci-fi atmosphere -->
+    <div class="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.15)_50%),linear-gradient(90deg,rgba(34,197,94,0.02),rgba(0,0,0,0.12),rgba(16,185,129,0.02))] bg-[size:100%_4px,6px_100%] pointer-events-none z-0 opacity-15"></div>
+    
+    <!-- Ambient Nebulous Glows -->
+    <div id="nebula-emerald" class="absolute top-1/4 left-1/3 w-[600px] h-[500px] pointer-events-none z-0 transition-transform duration-500 ease-out animate-pulse-slow" style="background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%);"></div>
+
+    <!-- Header component -->
+    <Header />
+
+    <!-- Main Dynamic Section -->
+    <main class="w-full max-w-7xl mx-auto flex-1 flex flex-col lg:flex-row items-center justify-center z-10 gap-6 lg:gap-10 overflow-hidden my-4" style="perspective: 1000px;">
+      
+      <!-- Left side: Interactive Price Charts & Analytics -->
+      <div id="chart-card" class="w-full lg:w-6/12 flex flex-col justify-center transition-transform duration-300 ease-out" style="transform-style: preserve-3d;">
+        <Panel class="p-6 md:p-8" status="ANALYTICS" title="IONIC_USD">
+          <div class="flex items-center justify-between mb-4 font-mono">
+            <div>
+              <span class="text-xs text-slate-500">MARKET PRICE</span>
+              <div class="text-2xl font-black text-white">$1.84 <span class="text-emerald-400 text-xs font-bold leading-none ml-1">+8.25%</span></div>
+            </div>
+            <div class="text-right">
+              <span class="text-xs text-slate-500">24H HIGH</span>
+              <div class="text-xs text-slate-300 font-bold">$1.92</div>
+            </div>
+          </div>
+
+          <!-- Dynamic SVG Vector Chart -->
+          <div class="relative h-44 w-full border border-white/5 rounded-lg bg-black/40 overflow-hidden flex items-end p-2 select-none">
+            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <!-- Radial Glow under line -->
+              <defs>
+                <linearGradient id="chart-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#10b981" stop-opacity="0.15"/>
+                  <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="M0,100 L0,70 L15,55 L30,68 L45,45 L60,52 L75,35 L90,42 L100,20 L100,100 Z" fill="url(#chart-grad)"></path>
+              <!-- Price Line -->
+              <path d="M0,70 L15,55 L30,68 L45,45 L60,52 L75,35 L90,42 L100,20" fill="none" stroke="#10b981" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+              
+              <!-- Ticking Dot -->
+              <circle cx="100" cy="20" r="3" fill="#10b981" class="animate-pulse"></circle>
+            </svg>
+            <div class="absolute bottom-2 left-2 text-[8px] font-mono text-slate-500">DATA_FEED: BINANCE_WS</div>
+          </div>
+
+          <!-- Price ticker tape -->
+          <div class="mt-4 flex items-center justify-between font-mono text-[9px] text-slate-400 border-t border-white/10 pt-4">
+            <span class="flex items-center gap-1"><span class="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span> SOL/USD: <b class="text-white">$142.25</b></span>
+            <span class="flex items-center gap-1"><span class="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span> ICP/USD: <b class="text-white">$8.91</b></span>
+            <span class="flex items-center gap-1"><span class="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span> ETH/USD: <b class="text-white">$3,120.40</b></span>
+          </div>
+        </Panel>
+      </div>
+
+      <!-- Right side: Interactive Swap Station widget -->
+      <div id="swap-card" class="w-full lg:w-5/12 flex flex-col justify-center transition-transform duration-300 ease-out" style="transform-style: preserve-3d;">
+        <Panel class="p-6 md:p-8" status="TRADE" title="GASLESS_EXCHANGE">
+          
+          <div class="space-y-4 text-left font-mono">
+            
+            <!-- From Input -->
+            <div class="p-3 bg-white/5 border border-white/5 rounded-xl flex justify-between items-center hover:border-emerald-500/20 transition-all duration-300">
+              <div class="flex flex-col">
+                <span class="text-[9px] text-slate-500">PAY FROM</span>
+                <input id="input-pay" type="number" value="1.0" class="bg-transparent border-none text-xl font-bold text-white outline-none w-full p-0 leading-none mt-1 focus:ring-0" />
+              </div>
+              <div class="flex flex-col items-end">
+                <select id="select-pay" class="bg-slate-900 border border-white/10 rounded text-xs p-1 font-bold text-white outline-none">
+                  <option value="SOL">SOL (SOLANA)</option>
+                  <option value="ICP">ICP (INTERNET_IDENTITY)</option>
+                  <option value="ETH">ETH (ETHEREUM)</option>
+                </select>
+                <span class="text-[8px] text-slate-500 mt-1 leading-none">BAL: 12.45</span>
+              </div>
+            </div>
+
+            <!-- Arrow divider -->
+            <div class="flex justify-center -my-2">
+              <button id="btn-reverse" class="p-1.5 rounded-full border border-white/5 bg-slate-950/80 text-emerald-400 hover:border-emerald-400/40 hover:scale-105 transition-all duration-300 z-10">
+                ⇅
+              </button>
+            </div>
+
+            <!-- To Input -->
+            <div class="p-3 bg-white/5 border border-white/5 rounded-xl flex justify-between items-center hover:border-emerald-500/20 transition-all duration-300">
+              <div class="flex flex-col">
+                <span class="text-[9px] text-slate-500">RECEIVE EST.</span>
+                <div id="input-receive" class="text-xl font-bold text-white p-0 leading-none mt-1 select-all">77.30</div>
+              </div>
+              <div class="flex flex-col items-end">
+                <div class="bg-slate-950 border border-emerald-500/20 rounded text-xs px-2 py-1 font-bold text-emerald-400 select-none">
+                  $IONIC
+                </div>
+                <span class="text-[8px] text-slate-500 mt-1.5 leading-none">BAL: 0.00</span>
+              </div>
+            </div>
+
+            <!-- Dynamic Swap Rate Readout -->
+            <div class="flex justify-between items-center text-[9px] text-slate-500 px-1">
+              <span>RATE: 1 <span id="lbl-pay">SOL</span> ≈ <span id="lbl-rate">77.30</span> IONIC</span>
+              <span class="text-emerald-400 font-bold">[ GAS_SUBSIDIZED ]</span>
+            </div>
+
+            <!-- Execute Swap Button -->
+            <button id="btn-execute-swap" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs tracking-widest uppercase rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.15)] transition-all duration-300 transform active:scale-95 text-center select-none">
+              INITIATE GASLESS SWAP
+            </button>
+          </div>
+
+        </Panel>
+      </div>
+    </main>
+
+    <!-- Signing Simulation Overlay -->
+    <div id="signing-overlay" class="fixed inset-0 z-[10000] hidden items-center justify-center bg-slate-950/75 backdrop-blur-md font-mono select-none">
+      <Panel class="w-full max-w-sm p-6 text-center" status="TRANSACTION" title="ROUTING">
+        <div class="w-10 h-10 border border-t-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <h2 id="signing-title" class="text-sm font-bold text-white uppercase tracking-widest">SIGNING TRANSMISSION</h2>
+        <p id="signing-desc" class="text-[10px] text-slate-400 leading-relaxed mt-2">
+          Submitting gasless transaction to multi-chain relay nodes. Please hold secure line...
+        </p>
+      </Panel>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 z-[10000] hidden items-center justify-center bg-slate-950/75 backdrop-blur-md font-mono select-none p-4">
+      <Panel class="w-full max-w-md p-6 text-center" status="CONFIRMED" title="RECEIPT">
+        <div class="w-12 h-12 rounded-full border-2 border-emerald-500 flex items-center justify-center mx-auto text-emerald-400 text-xl font-bold mb-4 animate-bounce">✓</div>
+        <h2 class="text-md font-black text-white uppercase tracking-wider">SWAP EXECUTED</h2>
+        <p class="text-[10px] text-slate-400 leading-relaxed mt-1">Your multi-chain gasless swap has been successfully pre-routed and verified on-chain.</p>
+        
+        <div class="mt-4 p-3 bg-white/5 rounded-lg text-left text-[9px] border border-white/5 space-y-1">
+          <div class="flex justify-between"><span>TX_HASH:</span> <span class="text-slate-300 font-bold">0x8bc3...f89c</span></div>
+          <div class="flex justify-between"><span>SWAPPED:</span> <span class="text-white font-bold"><span id="rec-pay">1.0</span> <span id="rec-pay-name">SOL</span></span></div>
+          <div class="flex justify-between"><span>RECEIVED:</span> <span class="text-emerald-400 font-bold"><span id="rec-get">77.30</span> IONIC</span></div>
+          <div class="flex justify-between"><span>GAS FEE:</span> <span class="text-emerald-400 font-bold">$0.00 (GASLESS)</span></div>
+        </div>
+
+        <button id="btn-close-success" class="mt-6 w-full py-2 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 font-mono text-[9px] tracking-widest uppercase rounded transition-all duration-300">
+          RETURN TO COCKPIT
+        </button>
+      </Panel>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center z-10 gap-4 border-t border-white/5 pt-4 font-mono text-[9px] md:text-xs text-slate-500">
+      <div>&copy; 2026 WORLD OF UNREAL. ALL RIGHTS RESERVED.</div>
+      <div class="flex items-center space-x-4">
+        <span>RELAY_FEEDS: ACTIVE</span>
+        <span>VERSION: 3.1.2-ASTRO</span>
+      </div>
+    </footer>
+  </div>
+</Layout>
+
+<style>
+  :global(body) {
+    overflow: hidden !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 0.8; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.02); }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 8s ease-in-out infinite;
+  }
+</style>
+
+<script>
+  // ponytail: ultra-light, hardware-accelerated dual card interactive tilt mouse parallax
+  const chartCard = document.getElementById('chart-card');
+  const swapCard = document.getElementById('swap-card');
+  const greenGlow = document.getElementById('nebula-emerald');
+
+  window.addEventListener('mousemove', (e) => {
+    const halfW = window.innerWidth / 2;
+    const halfH = window.innerHeight / 2;
+    const rotateX = -((e.clientY - halfH) / halfH) * 5; 
+    const rotateY = ((e.clientX - halfW) / halfW) * 5;
+    
+    if (chartCard) {
+      chartCard.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    }
+    if (swapCard) {
+      swapCard.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    }
+    
+    const dx = (e.clientX - halfW) * 0.02;
+    const dy = (e.clientY - halfH) * 0.02;
+    if (greenGlow) greenGlow.style.transform = `translate(${dx}px, ${dy}px)`;
+  }, { passive: true });
+
+  window.addEventListener('mouseleave', () => {
+    if (chartCard) chartCard.style.transform = 'rotateX(0deg) rotateY(0deg)';
+    if (swapCard) swapCard.style.transform = 'rotateX(0deg) rotateY(0deg)';
+    if (greenGlow) greenGlow.style.transform = 'translate(0px, 0px)';
+  });
+
+  // Swap Interactive Calculator logic
+  const inputPay = document.getElementById('input-pay') as HTMLInputElement;
+  const selectPay = document.getElementById('select-pay') as HTMLSelectElement;
+  const inputReceive = document.getElementById('input-receive');
+  const lblPay = document.getElementById('lbl-pay');
+  const lblRate = document.getElementById('lbl-rate');
+
+  const rates: Record<string, number> = {
+    SOL: 77.30,
+    ICP: 4.85,
+    ETH: 1695.20
+  };
+
+  const calculateSwap = () => {
+    const asset = selectPay.value;
+    const val = parseFloat(inputPay.value) || 0;
+    const rate = rates[asset];
+    
+    if (lblPay) lblPay.innerText = asset;
+    if (lblRate) lblRate.innerText = rate.toFixed(2);
+    if (inputReceive) inputReceive.innerText = (val * rate).toFixed(2);
+  };
+
+  inputPay?.addEventListener('input', calculateSwap);
+  selectPay?.addEventListener('change', calculateSwap);
+
+  // Trigger Swap Animation
+  const btnExecute = document.getElementById('btn-execute-swap');
+  const signingOverlay = document.getElementById('signing-overlay');
+  const successModal = document.getElementById('success-modal');
+  const btnCloseSuccess = document.getElementById('btn-close-success');
+
+  const recPay = document.getElementById('rec-pay');
+  const recPayName = document.getElementById('rec-pay-name');
+  const recGet = document.getElementById('rec-get');
+
+  btnExecute?.addEventListener('click', () => {
+    // Populate receipt values
+    if (recPay) recPay.innerText = inputPay.value || "0";
+    if (recPayName) recPayName.innerText = selectPay.value;
+    if (recGet && inputReceive) recGet.innerText = inputReceive.innerText;
+
+    // Show routing animation
+    signingOverlay?.classList.remove('hidden');
+    signingOverlay?.classList.add('flex');
+
+    setTimeout(() => {
+      signingOverlay?.classList.add('hidden');
+      signingOverlay?.classList.remove('flex');
+      
+      // Show confirmation
+      successModal?.classList.remove('hidden');
+      successModal?.classList.add('flex');
+    }, 2000);
+  });
+
+  btnCloseSuccess?.addEventListener('click', () => {
+    successModal?.classList.add('hidden');
+    successModal?.classList.remove('flex');
+  });
+</script>

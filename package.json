@@ -1,48 +1,17 @@
 {
-  "name": "bridgeless-token",
+  "name": "ionic-swap-frontend",
+  "type": "module",
   "version": "1.0.0",
-  "description": "Bridgeless Multi-Chain Token System",
-  "main": "index.js",
   "scripts": {
-    "compile": "hardhat compile",
-    "test": "hardhat test",
-    "deploy:local": "hardhat run scripts/deploy-bridgeless-token.js --network localhost",
-    "deploy:sepolia": "hardhat run scripts/deploy-bridgeless-token.js --network sepolia",
-    "test:local": "hardhat run scripts/test-bridgeless-token.js --network localhost",
-    "test:sepolia": "hardhat run scripts/test-bridgeless-token.js --network sepolia",
-    "node": "hardhat node",
-    "clean": "hardhat clean",
-    "bots": "npx ts-node bots/index.ts"
-  },
-  "keywords": [
-    "blockchain",
-    "ethereum",
-    "cross-chain",
-    "bridgeless",
-    "token",
-    "defi"
-  ],
-  "author": "World of Unreal",
-  "license": "MIT",
-  "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-    "hardhat": "^2.19.1",
-    "hardhat-gas-reporter": "^1.0.9",
-    "solidity-coverage": "^0.8.5"
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
   },
   "dependencies": {
-    "@dfinity/agent": "^3.2.3",
-    "@dfinity/candid": "^3.2.3",
-    "@dfinity/identity": "^3.2.4",
-    "@dfinity/principal": "^3.2.3",
-    "@openzeppelin/contracts": "^5.0.0",
-    "@solana/spl-token": "^0.4.14",
-    "@solana/web3.js": "^1.98.4",
-    "@types/node": "^20.0.0",
-    "bip39": "^3.1.0",
-    "dotenv": "^16.3.1",
-    "ts-node": "^10.9.0",
-    "typescript": "^5.0.0",
-    "uuid": "^9.0.0"
+    "@tailwindcss/vite": "^4.3.2",
+    "astro": "^7.0.6",
+    "tailwindcss": "^4.3.2"
   }
 }
