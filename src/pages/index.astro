@@ -1,88 +1,92 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Starfield from '../components/Starfield.astro';
 ---
 
-<Layout title="IONIC SWAP | Multi-Chain Gasless Exchange Cockpit">
-  <!-- Viewport Locked Main Container -->
-  <div class="fixed inset-0 h-screen w-screen overflow-hidden flex bg-[#030704] text-white font-sans select-none z-10">
-    <!-- Canvas animated space background -->
-    <Starfield />
-
-    <!-- Cyberpunk Scanline overlay -->
-    <div class="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.15)_50%),linear-gradient(90deg,rgba(34,197,94,0.015),rgba(0,0,0,0.1),rgba(16,185,129,0.015))] bg-[size:100%_4px,6px_100%] pointer-events-none z-0 opacity-20"></div>
-    <div class="absolute inset-0 bg-radial from-transparent via-[#010301]/80 to-[#000]/95 pointer-events-none z-0"></div>
-
-    <!-- LEFT SIDEBAR: Standard Expanding Navigation -->
-    <aside id="sidebar" class="hidden md:flex flex-col justify-between items-center z-50 fixed top-0 left-0 h-screen bg-[#020502]/90 border-r border-emerald-500/10 w-16 hover:w-52 transition-all duration-300 ease-out group backdrop-blur-md">
-      <!-- Top Logo -->
-      <div class="w-full flex items-center justify-start p-4 gap-3 select-none border-b border-white/5 h-16">
+<Layout title="Ionic Swap | Cross-Chain Token Swapping with Gasless Transactions">
+  <!-- Viewport-Locked Container -->
+  <div class="fixed inset-0 h-screen w-screen overflow-hidden flex bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-sans select-none z-10">
+    
+    <!-- LEFT SIDEBAR: Navigational Menu (Collapsible/Expanding) -->
+    <aside id="sidebar" class="hidden md:flex flex-col justify-between items-center z-50 fixed top-0 left-0 h-screen bg-zinc-50 dark:bg-[#1e1e24] border-r border-zinc-200 dark:border-zinc-800 w-16 hover:w-52 transition-all duration-300 ease-out group backdrop-blur-md">
+      <!-- Brand Logo -->
+      <div class="w-full flex items-center justify-start p-4 gap-3 select-none border-b border-zinc-200 dark:border-zinc-800 h-16">
         <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center flex-shrink-0">
-          <span class="text-emerald-400 font-bold font-mono">I</span>
+          <!-- Ionic Swap Circle Logo -->
+          <svg class="w-5 h-5 text-emerald-500" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="8">
+            <path d="M30,50 L50,20 L70,50 L50,80 Z"></path>
+            <circle cx="50" cy="50" r="10" fill="currentColor"></circle>
+          </svg>
         </div>
-        <span class="text-sm font-black font-mono tracking-widest text-white uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-200">IONIC_SWAP</span>
+        <span class="text-sm font-bold font-mono tracking-widest text-zinc-900 dark:text-white uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-200">IONIC_SWAP</span>
       </div>
 
-      <!-- Center navigation icons -->
+      <!-- Navigation Icons -->
       <nav class="w-full flex-1 flex flex-col gap-1 py-4 px-2">
+        <!-- Discovery (Home) -->
+        <button data-target="discovery" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/5 hover:text-emerald-400 transition-all duration-200 text-left">
+          <span class="text-lg leading-none">🧭</span>
+          <span class="text-xs font-semibold tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-200">Discovery</span>
+        </button>
+
         <!-- Markets -->
-        <button data-target="markets" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-emerald-400 bg-emerald-500/10 border border-emerald-400/20 hover:text-white transition-all duration-200 text-left">
-          <span class="text-lg font-mono leading-none">🧭</span>
-          <span class="text-[10px] font-bold font-mono tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-200">MARKETS</span>
+        <button data-target="markets" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-all duration-200 text-left">
+          <span class="text-lg leading-none">🏦</span>
+          <span class="text-xs font-semibold tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-200">Markets</span>
         </button>
 
         <!-- Trade -->
-        <button data-target="trade" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition-all duration-200 text-left mt-1">
-          <span class="text-lg font-mono leading-none">📈</span>
-          <span class="text-[10px] font-bold font-mono tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-200">TRADE</span>
+        <button data-target="trade" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-all duration-200 text-left">
+          <span class="text-lg leading-none">📈</span>
+          <span class="text-xs font-semibold tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-200">Trade</span>
         </button>
 
         <!-- Wallet -->
-        <button data-target="wallet" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition-all duration-200 text-left mt-1">
-          <span class="text-lg font-mono leading-none">💼</span>
-          <span class="text-[10px] font-bold font-mono tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-200">WALLET</span>
+        <button data-target="wallet" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-all duration-200 text-left">
+          <span class="text-lg leading-none">💼</span>
+          <span class="text-xs font-semibold tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-200">Wallet</span>
         </button>
 
         <!-- Liquidity -->
-        <button data-target="liquidity" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition-all duration-200 text-left mt-1">
-          <span class="text-lg font-mono leading-none">🧪</span>
-          <span class="text-[10px] font-bold font-mono tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-200">LIQUIDITY</span>
+        <button data-target="liquidity" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-all duration-200 text-left">
+          <span class="text-lg leading-none">🧪</span>
+          <span class="text-xs font-semibold tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-200">Liquidity</span>
         </button>
       </nav>
 
-      <!-- Bottom Settings indicator -->
-      <div class="w-full p-4 border-t border-white/5 flex items-center justify-start gap-3 h-16">
-        <span class="text-lg leading-none select-none">⚙️</span>
-        <span class="text-[9px] font-mono text-slate-500 uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity duration-200">SYSTEM: v3.1.2</span>
+      <!-- Bottom Settings/Theme Switcher -->
+      <div class="w-full p-4 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between h-16 relative">
+        <button id="theme-toggle" class="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-500 dark:text-zinc-400">
+          <span class="text-lg leading-none select-none dark:hidden">🌙</span>
+          <span class="text-lg leading-none select-none hidden dark:inline">☀️</span>
+        </button>
+        <span class="text-[9px] font-mono text-zinc-400 dark:text-zinc-500 uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity duration-200">v3.1.2</span>
       </div>
     </aside>
 
-    <!-- RIGHT SECTION: Main Console Area -->
-    <div class="flex-1 flex flex-col min-h-screen md:ml-16 relative">
+    <!-- RIGHT SECTION: Main Content Frame -->
+    <div class="flex-1 flex flex-col min-h-screen md:ml-16 relative overflow-hidden">
       
       <!-- TOP HEADER -->
-      <header class="w-full h-16 border-b border-white/5 px-6 flex items-center justify-between z-10 backdrop-blur-md bg-[#020502]/40 select-none">
-        <div class="flex flex-col">
-          <div class="flex items-center space-x-2">
-            <span class="text-sm font-bold tracking-widest text-emerald-400 font-mono uppercase">EXCHANGE_CONOPS</span>
-            <span class="text-[8px] bg-emerald-500/10 border border-emerald-400/20 text-emerald-400 px-1.5 py-0.5 rounded font-mono">[ ACTIVE_TUNNEL ]</span>
-          </div>
-          <span class="text-[7px] text-slate-500 font-mono tracking-widest leading-none mt-0.5">PEER_NODES: IONOS + LOCAL_STANDBY</span>
+      <header class="w-full h-16 border-b border-zinc-200 dark:border-zinc-800 px-6 flex items-center justify-between z-10 backdrop-blur-md bg-zinc-100/80 dark:bg-zinc-900/80 select-none">
+        <!-- Search bar -->
+        <div class="flex items-center flex-1 max-w-md relative">
+          <span class="absolute left-3 text-zinc-400">🔍</span>
+          <input type="text" placeholder="Search tokens, positions..." class="w-full pl-10 pr-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500" />
         </div>
 
-        <!-- Connection / User Avatar -->
+        <!-- Right Side: Wallet state & Profile -->
         <div class="flex items-center space-x-4">
-          <div id="wallet-connected" class="flex items-center space-x-3 bg-[#050e06]/60 border border-emerald-500/25 pl-3 pr-2 py-1 rounded-xl backdrop-blur-md cursor-pointer group hover:border-emerald-400/40 transition-colors">
-            <div class="flex flex-col text-right font-mono">
-              <span class="text-[9px] font-bold text-white leading-none">PLAYER_0x1337</span>
-              <span class="text-[7px] text-emerald-400 tracking-wider leading-none flex items-center justify-end gap-1 mt-0.5">
-                <span class="inline-block w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></span>
+          <div id="btn-login-trigger" class="flex items-center space-x-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 pl-3 pr-2 py-1.5 rounded-xl cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-750 transition-all">
+            <div class="flex flex-col text-right font-sans">
+              <span class="text-[10px] font-bold text-zinc-900 dark:text-white leading-none">BIZKIT_0x1337</span>
+              <span class="text-[8px] text-emerald-500 font-bold tracking-wider leading-none flex items-center justify-end gap-1 mt-1">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 ICP_MAINNET
               </span>
             </div>
-            <!-- Custom user icon mock -->
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 border border-emerald-400/30 flex items-center justify-center text-white font-mono font-bold text-xs select-none">
-              BIZ
+            <!-- Custom Avatar -->
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 border border-emerald-400/20 flex items-center justify-center text-white font-bold text-xs select-none">
+              U
             </div>
           </div>
         </div>
@@ -91,313 +95,197 @@ import Starfield from '../components/Starfield.astro';
       <!-- CENTER DISPLAY CONTAINER -->
       <div class="flex-1 overflow-hidden p-6 relative">
 
-        <!-- 🧭 MODULE 1: DISCOVERY & MARKETS -->
-        <div id="panel-markets" class="module-view active w-full h-full flex flex-col justify-between" style="perspective: 1000px;">
-          <!-- Master Grid Layout -->
+        <!-- 🧭 MODULE 1: DISCOVERY (HOME) -->
+        <div id="panel-discovery" class="module-view active w-full h-full flex flex-col justify-between overflow-y-auto scrollbar-thin pr-1">
           <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0">
-            <!-- Left side: Market Overview & Token Grid -->
-            <div class="lg:col-span-3 flex flex-col gap-4 overflow-hidden h-full">
-              <!-- Glassmorphic Card Panel container -->
-              <div class="relative border border-emerald-500/10 rounded-xl bg-slate-950/40 backdrop-blur-lg flex-1 flex flex-col overflow-hidden p-6">
-                <!-- Cyber Brackets -->
-                <div class="absolute top-0 left-0 w-4 h-4 border-t border-l rounded-tl-xl border-emerald-400/30"></div>
-                <div class="absolute top-0 right-0 w-4 h-4 border-t border-r rounded-tr-xl border-emerald-400/30"></div>
-                <div class="absolute bottom-0 left-0 w-4 h-4 border-b border-l rounded-bl-xl border-emerald-400/30"></div>
-                <div class="absolute bottom-0 right-0 w-4 h-4 border-b border-r rounded-br-xl border-emerald-400/30"></div>
-
-                <!-- Card header status -->
-                <div class="flex items-center justify-between text-[9px] font-mono tracking-widest uppercase mb-4 border-b border-white/5 pb-2">
-                  <span class="text-emerald-400">[ STATUS: ASSET_CATALOG ]</span>
-                  <span class="text-slate-500">MARKET_BOARDS</span>
-                </div>
-
-                <!-- Price Catalog Table -->
-                <div class="flex-1 overflow-y-auto scrollbar-thin pr-1 text-left select-text">
-                  <table class="w-full font-mono text-xs text-left">
-                    <thead>
-                      <tr class="border-b border-white/5 text-slate-500 text-[10px] tracking-widest">
-                        <th class="py-2.5 font-light">ASSET</th>
-                        <th class="py-2.5 font-light text-right">PRICE</th>
-                        <th class="py-2.5 font-light text-right">24H_CHANGE</th>
-                        <th class="py-2.5 font-light text-right">MARKET_CAP</th>
-                        <th class="py-2.5 font-light text-right">ACTION</th>
-                      </tr>
-                    </thead>
-                    <tbody id="markets-table-body" class="divide-y divide-white/5">
-                      <!-- BTC -->
-                      <tr class="hover:bg-white/5 transition-colors group cursor-pointer" data-symbol="BTC">
-                        <td class="py-3 flex items-center gap-2">
-                          <span class="text-lg">🪙</span>
-                          <div>
-                            <div class="font-bold text-white">BTC</div>
-                            <span class="text-[9px] text-slate-500">Bitcoin</span>
-                          </div>
-                        </td>
-                        <td class="py-3 text-right font-bold text-white leading-none">$58,451.25</td>
-                        <td class="py-3 text-right text-emerald-400 font-bold">+4.12%</td>
-                        <td class="py-3 text-right text-slate-400">$1.15T</td>
-                        <td class="py-3 text-right">
-                          <button class="quick-trade-btn px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/25 text-emerald-400 font-bold rounded-lg text-[10px] tracking-wider uppercase transition-all duration-300">TRADE</button>
-                        </td>
-                      </tr>
-                      <!-- ETH -->
-                      <tr class="hover:bg-white/5 transition-colors group cursor-pointer" data-symbol="ETH">
-                        <td class="py-3 flex items-center gap-2">
-                          <span class="text-lg">🔷</span>
-                          <div>
-                            <div class="font-bold text-white">ETH</div>
-                            <span class="text-[9px] text-slate-500">Ethereum</span>
-                          </div>
-                        </td>
-                        <td class="py-3 text-right font-bold text-white leading-none">$3,120.40</td>
-                        <td class="py-3 text-right text-emerald-400 font-bold">+2.84%</td>
-                        <td class="py-3 text-right text-slate-400">$374.5B</td>
-                        <td class="py-3 text-right">
-                          <button class="quick-trade-btn px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/25 text-emerald-400 font-bold rounded-lg text-[10px] tracking-wider uppercase transition-all duration-300">TRADE</button>
-                        </td>
-                      </tr>
-                      <!-- SOL -->
-                      <tr class="hover:bg-white/5 transition-colors group cursor-pointer" data-symbol="SOL">
-                        <td class="py-3 flex items-center gap-2">
-                          <span class="text-lg">☀️</span>
-                          <div>
-                            <div class="font-bold text-white">SOL</div>
-                            <span class="text-[9px] text-slate-500">Solana</span>
-                          </div>
-                        </td>
-                        <td class="py-3 text-right font-bold text-white leading-none">$142.25</td>
-                        <td class="py-3 text-right text-emerald-400 font-bold">+8.25%</td>
-                        <td class="py-3 text-right text-slate-400">$66.4B</td>
-                        <td class="py-3 text-right">
-                          <button class="quick-trade-btn px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/25 text-emerald-400 font-bold rounded-lg text-[10px] tracking-wider uppercase transition-all duration-300">TRADE</button>
-                        </td>
-                      </tr>
-                      <!-- ICP -->
-                      <tr class="hover:bg-white/5 transition-colors group cursor-pointer" data-symbol="ICP">
-                        <td class="py-3 flex items-center gap-2">
-                          <span class="text-lg">♾️</span>
-                          <div>
-                            <div class="font-bold text-white">ICP</div>
-                            <span class="text-[9px] text-slate-500">Internet Computer</span>
-                          </div>
-                        </td>
-                        <td class="py-3 text-right font-bold text-white leading-none">$8.91</td>
-                        <td class="py-3 text-right text-rose-500 font-bold">-1.15%</td>
-                        <td class="py-3 text-right text-slate-400">$4.1B</td>
-                        <td class="py-3 text-right">
-                          <button class="quick-trade-btn px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/25 text-emerald-400 font-bold rounded-lg text-[10px] tracking-wider uppercase transition-all duration-300">TRADE</button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right side: Discovery Carousel and DeFi 101 Guide -->
-            <div class="lg:col-span-1 flex flex-col gap-4 overflow-hidden h-full">
-              <!-- DeFi 101 Panel -->
-              <div class="relative border border-emerald-500/10 rounded-xl bg-slate-950/40 backdrop-blur-lg flex-1 flex flex-col p-6 text-left">
-                <!-- Cyber Brackets -->
-                <div class="absolute top-0 left-0 w-4 h-4 border-t border-l rounded-tl-xl border-emerald-400/30"></div>
-                <div class="absolute top-0 right-0 w-4 h-4 border-t border-r rounded-tr-xl border-emerald-400/30"></div>
-                <div class="absolute bottom-0 left-0 w-4 h-4 border-b border-l rounded-bl-xl border-emerald-400/30"></div>
-                <div class="absolute bottom-0 right-0 w-4 h-4 border-b border-r rounded-br-xl border-emerald-400/30"></div>
-
-                <div class="flex items-center justify-between text-[9px] font-mono tracking-widest uppercase mb-4 border-b border-white/5 pb-2">
-                  <span class="text-emerald-400">[ ACADEMY ]</span>
-                  <span class="text-slate-500">GUIDE</span>
-                </div>
-
-                <div class="flex-1 overflow-y-auto scrollbar-thin pr-1 space-y-4">
-                  <div class="space-y-1">
-                    <span class="text-[8px] font-mono text-emerald-400">[ STAGE_01 ]</span>
-                    <h4 class="text-xs font-bold text-white uppercase tracking-tight">GASLESS_SWAPPING_EXPLAINED</h4>
-                    <p class="text-[10px] text-slate-400 leading-normal">Our relay nodes pay the execution fee directly on the target network, shielding the player's account from holding gas assets.</p>
-                  </div>
-                  <div class="space-y-1">
-                    <span class="text-[8px] font-mono text-emerald-400">[ STAGE_02 ]</span>
-                    <h4 class="text-xs font-bold text-white uppercase tracking-tight">ZFS_ORTHOGONAL_MUTATIONS</h4>
-                    <p class="text-[10px] text-slate-400 leading-normal">Your state directories write block changes directly to ZFS pool segments, which are mirrored in atomic micro-bursts to backup jails.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- 📈 MODULE 2: TRADING CONSOLE -->
-        <div id="panel-trade" class="module-view w-full h-full flex flex-col justify-between" style="perspective: 1000px;">
-          <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0">
-            <!-- Left side: Live Charting Panel -->
-            <div class="lg:col-span-3 flex flex-col gap-4 overflow-hidden h-full">
-              <!-- Candle chart Panel -->
-              <div class="relative border border-emerald-500/10 rounded-xl bg-slate-950/40 backdrop-blur-lg flex-1 flex flex-col p-6">
-                <!-- Cyber Brackets -->
-                <div class="absolute top-0 left-0 w-4 h-4 border-t border-l rounded-tl-xl border-emerald-400/30"></div>
-                <div class="absolute top-0 right-0 w-4 h-4 border-t border-r rounded-tr-xl border-emerald-400/30"></div>
-                <div class="absolute bottom-0 left-0 w-4 h-4 border-b border-l rounded-bl-xl border-emerald-400/30"></div>
-                <div class="absolute bottom-0 right-0 w-4 h-4 border-b border-r rounded-br-xl border-emerald-400/30"></div>
-
-                <div class="flex items-center justify-between text-[9px] font-mono tracking-widest uppercase mb-4 border-b border-white/5 pb-2">
-                  <span class="text-emerald-400">[ CHART_GRAPH_FEED ]</span>
-                  <span id="chart-pair" class="text-white font-bold font-mono">BTC/USDT</span>
-                </div>
-
-                <!-- High-Fidelity SVG chart mock -->
-                <div class="flex-1 w-full bg-black/40 border border-white/5 rounded-lg overflow-hidden relative flex items-end p-2 select-none">
-                  <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <path d="M0,100 L0,80 L20,70 L40,82 L60,40 L80,55 L100,15 L100,100 Z" fill="url(#chart-grad)"></path>
-                    <path d="M0,80 L20,70 L40,82 L60,40 L80,55 L100,15" fill="none" stroke="#22c55e" stroke-width="2" vector-effect="non-scaling-stroke"></path>
-                    <circle cx="100" cy="15" r="3" fill="#22c55e" class="animate-pulse"></circle>
-                  </svg>
-                  <div class="absolute bottom-2 left-2 text-[8px] font-mono text-slate-500">LIVE FEED: BINANCE COCKPIT</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right side: Trading Inputs Panel -->
-            <div class="lg:col-span-1 flex flex-col gap-4 overflow-hidden h-full text-left">
-              <!-- Trade cockpit forms -->
-              <div class="relative border border-emerald-500/10 rounded-xl bg-slate-950/40 backdrop-blur-lg flex-1 flex flex-col p-6">
-                <!-- Cyber Brackets -->
-                <div class="absolute top-0 left-0 w-4 h-4 border-t border-l rounded-tl-xl border-emerald-400/30"></div>
-                <div class="absolute top-0 right-0 w-4 h-4 border-t border-r rounded-tr-xl border-emerald-400/30"></div>
-                <div class="absolute bottom-0 left-0 w-4 h-4 border-b border-l rounded-bl-xl border-emerald-400/30"></div>
-                <div class="absolute bottom-0 right-0 w-4 h-4 border-b border-r rounded-br-xl border-emerald-400/30"></div>
-
-                <div class="flex items-center justify-between text-[9px] font-mono tracking-widest uppercase mb-4 border-b border-white/5 pb-2">
-                  <span class="text-emerald-400">[ ORDER_DECK ]</span>
-                  <span class="text-slate-500">COCKPIT_FORM</span>
-                </div>
-
-                <div class="space-y-4 font-mono text-[9px] flex-1 flex flex-col justify-between">
-                  <!-- Inputs container -->
-                  <div class="space-y-3">
-                    <div class="p-2.5 bg-white/5 border border-white/5 rounded-lg flex justify-between items-center">
-                      <div class="flex flex-col">
-                        <span class="text-slate-500 uppercase">BUY AMOUNT (USDT)</span>
-                        <input id="trade-buy-input" type="number" value="100" class="bg-transparent border-none text-sm font-bold text-white outline-none w-full p-0 leading-none mt-1 focus:ring-0" />
+            <!-- Left side: DiscoverCarousel & DeFi 101 -->
+            <div class="lg:col-span-3 flex flex-col gap-6 text-left h-full">
+              
+              <!-- DiscoverCarousel -->
+              <div class="relative w-full overflow-hidden bg-zinc-50 dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-850 shadow-sm p-8" style="height: 340px;">
+                <!-- Slides Container -->
+                <div id="carousel-track" class="h-full flex transition-transform duration-500 ease-in-out w-full">
+                  
+                  <!-- Slide 1: Cross-Chain Swaps -->
+                  <div class="w-full flex-shrink-0 flex flex-col justify-between h-full" style="min-width: 100%;">
+                    <div class="flex justify-between items-start">
+                      <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 flex items-center justify-center text-lg text-emerald-500">🔄</div>
+                        <div>
+                          <h3 class="text-lg font-bold text-zinc-900 dark:text-white">Cross-Chain Swaps</h3>
+                          <p class="text-xs text-zinc-500">Seamless token swapping across multiple blockchains</p>
+                        </div>
                       </div>
-                      <span class="text-slate-400 font-bold">USDT</span>
-                    </div>
-
-                    <div class="flex gap-1">
-                      <button class="percent-btn flex-1 py-1 bg-white/5 border border-white/5 hover:bg-emerald-500/10 hover:border-emerald-400/20 text-slate-400 hover:text-emerald-400 rounded-lg text-center" data-val="25">25%</button>
-                      <button class="percent-btn flex-1 py-1 bg-white/5 border border-white/5 hover:bg-emerald-500/10 hover:border-emerald-400/20 text-slate-400 hover:text-emerald-400 rounded-lg text-center" data-val="50">50%</button>
-                      <button class="percent-btn flex-1 py-1 bg-white/5 border border-white/5 hover:bg-emerald-500/10 hover:border-emerald-400/20 text-slate-400 hover:text-emerald-400 rounded-lg text-center" data-val="75">75%</button>
-                      <button class="percent-btn flex-1 py-1 bg-white/5 border border-white/5 hover:bg-emerald-500/10 hover:border-emerald-400/20 text-slate-400 hover:text-emerald-400 rounded-lg text-center" data-val="100">100%</button>
-                    </div>
-
-                    <div class="text-[8px] text-slate-500 flex justify-between px-1">
-                      <span>EST. RECEIVE: <span id="trade-est-receive" class="text-white font-bold">1.71</span> <span id="trade-symbol">BTC</span></span>
-                      <span>BAL: 1,250.00 USDT</span>
-                    </div>
-                  </div>
-
-                  <!-- Execute Action Button -->
-                  <button id="btn-execute-trade" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black tracking-widest uppercase rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.15)] transition-all duration-300 transform active:scale-95 text-center">
-                    EXECUTE GASLESS TRADE
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- 💼 MODULE 3: WALLET PORTFOLIO -->
-        <div id="panel-wallet" class="module-view w-full h-full flex flex-col justify-between" style="perspective: 1000px;">
-          <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0">
-            <!-- Left side: Portfolio values & Addresses hub -->
-            <div class="lg:col-span-2 flex flex-col gap-4 overflow-hidden h-full text-left">
-              <!-- Wallet general card -->
-              <div class="relative border border-emerald-500/10 rounded-xl bg-slate-950/40 backdrop-blur-lg flex-1 flex flex-col p-6">
-                <!-- Cyber Brackets -->
-                <div class="absolute top-0 left-0 w-4 h-4 border-t border-l rounded-tl-xl border-emerald-400/30"></div>
-                <div class="absolute top-0 right-0 w-4 h-4 border-t border-r rounded-tr-xl border-emerald-400/30"></div>
-                <div class="absolute bottom-0 left-0 w-4 h-4 border-b border-l rounded-bl-xl border-emerald-400/30"></div>
-                <div class="absolute bottom-0 right-0 w-4 h-4 border-b border-r rounded-br-xl border-emerald-400/30"></div>
-
-                <div class="flex items-center justify-between text-[9px] font-mono tracking-widest uppercase mb-4 border-b border-white/5 pb-2">
-                  <span class="text-emerald-400">[ PORTFOLIO_VAL ]</span>
-                  <span class="text-slate-500">OVERVIEW_BOARDS</span>
-                </div>
-
-                <div class="font-mono flex-1 flex flex-col justify-between">
-                  <!-- Money stats -->
-                  <div>
-                    <span class="text-xs text-slate-500 uppercase tracking-widest">NET WORTH ESTIMATE</span>
-                    <div class="text-4xl font-black text-white leading-none mt-1 select-all">$124,582.00</div>
-                    <span class="text-[9px] text-emerald-400 font-bold flex items-center gap-1 mt-1"><span class="inline-block w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span> +12.42% APY TRACKING</span>
-                  </div>
-
-                  <!-- Multi chain address register -->
-                  <div class="space-y-2 mt-4 text-[9px]">
-                    <span class="text-[8px] text-emerald-400 tracking-wider">[ CRYPTOGRAPHIC_VAULTS ]</span>
-                    
-                    <!-- ICP -->
-                    <div class="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5 hover:border-emerald-500/20 transition-all duration-300">
-                      <span class="text-slate-400 flex items-center gap-1.5">♾️ ICP_PRINCIPAL</span>
-                      <div class="flex items-center space-x-2">
-                        <span class="text-white font-bold select-all">0x71C...9312</span>
-                        <button class="copy-btn hover:text-emerald-400 transition-colors" data-address="0x71C80B0F3A1AB90DE80F3A1AB90DE80F3A1AB90D">📋</button>
+                      <div class="text-right">
+                        <div class="text-xl font-bold text-emerald-500">$2.4M</div>
+                        <div class="text-[10px] text-zinc-400">Total Volume (24h)</div>
                       </div>
                     </div>
-
-                    <!-- EVM -->
-                    <div class="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5 hover:border-emerald-500/20 transition-all duration-300">
-                      <span class="text-slate-400 flex items-center gap-1.5">🔷 EVM_ADDR</span>
-                      <div class="flex items-center space-x-2">
-                        <span class="text-white font-bold select-all">0x8a1...3f1c</span>
-                        <button class="copy-btn hover:text-emerald-400 transition-colors" data-address="0x8a1a3f1bc09b0b4de9b81cd4265ecc9df74477e41">📋</button>
-                      </div>
+                    <!-- Middle -->
+                    <div class="text-center my-auto">
+                      <div class="text-3xl font-bold text-zinc-900 dark:text-white">11 SUPPORTED COINS</div>
+                      <div class="text-sm text-zinc-500 mt-1">EVM • Solana • Internet Computer</div>
+                    </div>
+                    <!-- Bottom -->
+                    <div class="flex justify-between items-center">
+                      <span class="text-xs text-emerald-500 font-bold">+12.5% Today</span>
+                      <button class="nav-to-trade px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition-colors">Start Swapping ➔</button>
                     </div>
                   </div>
+
+                  <!-- Slide 2: Gasless Transactions -->
+                  <div class="w-full flex-shrink-0 flex flex-col justify-between h-full" style="min-width: 100%;">
+                    <div class="flex justify-between items-start">
+                      <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 flex items-center justify-center text-lg text-emerald-500">⚡</div>
+                        <div>
+                          <h3 class="text-lg font-bold text-zinc-900 dark:text-white">Gasless Transactions</h3>
+                          <p class="text-xs text-zinc-500">Swap tokens without paying gas fees</p>
+                        </div>
+                      </div>
+                      <div class="text-right">
+                        <div class="text-xl font-bold text-emerald-500">98%</div>
+                        <div class="text-[10px] text-zinc-400">Gasless Success Rate</div>
+                      </div>
+                    </div>
+                    <!-- Middle -->
+                    <div class="text-center my-auto">
+                      <div class="text-3xl font-bold text-zinc-900 dark:text-white">1,247 ACTIVE USERS</div>
+                      <div class="text-sm text-zinc-500 mt-1">Gasless swaps routed today</div>
+                    </div>
+                    <!-- Bottom -->
+                    <div class="flex justify-between items-center">
+                      <span class="text-xs text-emerald-500 font-bold">+8.3% Volume</span>
+                      <button class="nav-to-trade px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition-colors">Launch Swap ➔</button>
+                    </div>
+                  </div>
+
+                </div>
+                <!-- Carousel Dots Indicator -->
+                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  <button class="carousel-dot w-2 h-2 rounded-full bg-emerald-500" data-slide="0"></button>
+                  <button class="carousel-dot w-2 h-2 rounded-full bg-zinc-300 dark:bg-zinc-700" data-slide="1"></button>
+                </div>
+              </div>
+
+              <!-- DeFi 101 section -->
+              <div class="space-y-3">
+                <div>
+                  <h3 class="text-md font-bold text-zinc-900 dark:text-white">DeFi 101</h3>
+                  <p class="text-xs text-zinc-400">Learn about tokens, standards, and cross-chain swapping</p>
+                </div>
+                <!-- Articles horizontal list -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  
+                  <!-- Article 1 -->
+                  <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 p-4 rounded-xl flex flex-col justify-between hover:scale-[1.02] transition-transform cursor-pointer h-40">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-lg text-emerald-500">💵</div>
+                      <div>
+                        <h4 class="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-tight">What are Tokens?</h4>
+                        <span class="text-[10px] text-zinc-400">Digital Assets</span>
+                      </div>
+                    </div>
+                    <p class="text-[10px] text-zinc-500 leading-normal mt-2">Learn about different types of tokens, standards, and multichain assets.</p>
+                    <span class="text-[10px] font-bold text-emerald-500 mt-3 block">Learn More ➔</span>
+                  </div>
+
+                  <!-- Article 2 -->
+                  <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 p-4 rounded-xl flex flex-col justify-between hover:scale-[1.02] transition-transform cursor-pointer h-40">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-lg text-emerald-500">⚙️</div>
+                      <div>
+                        <h4 class="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-tight">Token Standards</h4>
+                        <span class="text-[10px] text-zinc-400">ERC-20, SPL, ICRC</span>
+                      </div>
+                    </div>
+                    <p class="text-[10px] text-zinc-500 leading-normal mt-2">Explore the token standards used on Ethereum, Solana, and Internet Computer.</p>
+                    <span class="text-[10px] font-bold text-emerald-500 mt-3 block">Learn More ➔</span>
+                  </div>
+
+                  <!-- Article 3 -->
+                  <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 p-4 rounded-xl flex flex-col justify-between hover:scale-[1.02] transition-transform cursor-pointer h-40">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-lg text-emerald-500">⚡</div>
+                      <div>
+                        <h4 class="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-tight">Gasless Power</h4>
+                        <span class="text-[10px] text-zinc-400">Zero Fee Swaps</span>
+                      </div>
+                    </div>
+                    <p class="text-[10px] text-zinc-500 leading-normal mt-2">Understand the mechanics behind our ultra-efficient gasless routing technology.</p>
+                    <span class="text-[10px] font-bold text-emerald-500 mt-3 block">Learn More ➔</span>
+                  </div>
+
                 </div>
               </div>
             </div>
 
-            <!-- Right side: Balances List -->
-            <div class="lg:col-span-2 flex flex-col gap-4 overflow-hidden h-full text-left">
-              <!-- Asset breakdowns -->
-              <div class="relative border border-emerald-500/10 rounded-xl bg-slate-950/40 backdrop-blur-lg flex-1 flex flex-col p-6">
-                <!-- Cyber Brackets -->
-                <div class="absolute top-0 left-0 w-4 h-4 border-t border-l rounded-tl-xl border-emerald-400/30"></div>
-                <div class="absolute top-0 right-0 w-4 h-4 border-t border-r rounded-tr-xl border-emerald-400/30"></div>
-                <div class="absolute bottom-0 left-0 w-4 h-4 border-b border-l rounded-bl-xl border-emerald-400/30"></div>
-                <div class="absolute bottom-0 right-0 w-4 h-4 border-b border-r rounded-br-xl border-emerald-400/30"></div>
-
-                <div class="flex items-center justify-between text-[9px] font-mono tracking-widest uppercase mb-4 border-b border-white/5 pb-2">
-                  <span class="text-emerald-400">[ BALANCES_BREAKDOWN ]</span>
-                  <span class="text-slate-500">LIQUID_VAULT</span>
-                </div>
-
-                <div class="flex-1 overflow-y-auto scrollbar-thin pr-1 space-y-2 font-mono text-[10px]">
-                  <!-- BTC Balance -->
-                  <div class="p-3 bg-white/5 rounded-xl border border-white/5 hover:border-emerald-500/20 flex items-center justify-between transition-all duration-300">
+            <!-- Right side: TokenPriceList -->
+            <div class="lg:col-span-1 flex flex-col gap-4 h-full text-left">
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col h-full overflow-hidden">
+                <h3 class="text-md font-bold text-zinc-900 dark:text-white mb-4">Token Prices</h3>
+                <div class="flex-1 overflow-y-auto scrollbar-thin pr-1 space-y-3">
+                  
+                  <!-- Token Row BTC -->
+                  <div class="price-row flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer" data-symbol="BTC">
                     <div class="flex items-center gap-2">
                       <span class="text-lg">🪙</span>
                       <div>
-                        <div class="font-bold text-white">1.45 BTC</div>
-                        <span class="text-[8px] text-slate-500">Bitcoin Vault</span>
+                        <div class="font-bold text-zinc-900 dark:text-white text-xs leading-none">BTC</div>
+                        <span class="text-[9px] text-zinc-400">Bitcoin</span>
                       </div>
                     </div>
-                    <span class="text-white font-bold">$84,754.31</span>
+                    <div class="text-right font-mono">
+                      <div class="text-xs font-bold text-zinc-900 dark:text-white">$58,451.25</div>
+                      <span class="text-[9px] text-emerald-500 font-bold">+4.12%</span>
+                    </div>
                   </div>
 
-                  <!-- ETH Balance -->
-                  <div class="p-3 bg-white/5 rounded-xl border border-white/5 hover:border-emerald-500/20 flex items-center justify-between transition-all duration-300">
+                  <!-- Token Row ETH -->
+                  <div class="price-row flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer" data-symbol="ETH">
                     <div class="flex items-center gap-2">
                       <span class="text-lg">🔷</span>
                       <div>
-                        <div class="font-bold text-white">8.50 ETH</div>
-                        <span class="text-[8px] text-slate-500">Ethereum Vault</span>
+                        <div class="font-bold text-zinc-900 dark:text-white text-xs leading-none">ETH</div>
+                        <span class="text-[9px] text-zinc-400">Ethereum</span>
                       </div>
                     </div>
-                    <span class="text-white font-bold">$26,523.40</span>
+                    <div class="text-right font-mono">
+                      <div class="text-xs font-bold text-zinc-900 dark:text-white">$3,120.40</div>
+                      <span class="text-[9px] text-emerald-500 font-bold">+2.84%</span>
+                    </div>
                   </div>
+
+                  <!-- Token Row SOL -->
+                  <div class="price-row flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer" data-symbol="SOL">
+                    <div class="flex items-center gap-2">
+                      <span class="text-lg">☀️</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white text-xs leading-none">SOL</div>
+                        <span class="text-[9px] text-zinc-400">Solana</span>
+                      </div>
+                    </div>
+                    <div class="text-right font-mono">
+                      <div class="text-xs font-bold text-zinc-900 dark:text-white">$142.25</div>
+                      <span class="text-[9px] text-emerald-500 font-bold">+8.25%</span>
+                    </div>
+                  </div>
+
+                  <!-- Token Row ICP -->
+                  <div class="price-row flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer" data-symbol="ICP">
+                    <div class="flex items-center gap-2">
+                      <span class="text-lg">♾️</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white text-xs leading-none">ICP</div>
+                        <span class="text-[9px] text-zinc-400">Internet Computer</span>
+                      </div>
+                    </div>
+                    <div class="text-right font-mono">
+                      <div class="text-xs font-bold text-zinc-900 dark:text-white">$8.91</div>
+                      <span class="text-[9px] text-rose-500 font-bold">-1.15%</span>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -405,100 +293,349 @@ import Starfield from '../components/Starfield.astro';
         </div>
 
 
-        <!-- 🧪 MODULE 4: LIQUIDITY (STAKING) -->
-        <div id="panel-liquidity" class="module-view w-full h-full flex flex-col justify-between" style="perspective: 1000px;">
-          <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0">
-            <!-- Left side: APY Pool list -->
-            <div class="lg:col-span-2 flex flex-col gap-4 overflow-hidden h-full text-left">
-              <!-- Active pools card -->
-              <div class="relative border border-emerald-500/10 rounded-xl bg-slate-950/40 backdrop-blur-lg flex-1 flex flex-col p-6">
-                <!-- Cyber Brackets -->
-                <div class="absolute top-0 left-0 w-4 h-4 border-t border-l rounded-tl-xl border-emerald-400/30"></div>
-                <div class="absolute top-0 right-0 w-4 h-4 border-t border-r rounded-tr-xl border-emerald-400/30"></div>
-                <div class="absolute bottom-0 left-0 w-4 h-4 border-b border-l rounded-bl-xl border-emerald-400/30"></div>
-                <div class="absolute bottom-0 right-0 w-4 h-4 border-b border-r rounded-br-xl border-emerald-400/30"></div>
+        <!-- 🏦 MODULE 2: MARKETS -->
+        <div id="panel-markets" class="module-view w-full h-full flex flex-col justify-between overflow-y-auto scrollbar-thin pr-1">
+          <div class="grid grid-cols-1 gap-6 flex-1 min-h-0 text-left">
+            <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-md font-bold text-zinc-900 dark:text-white">Coin Asset catalog</h3>
+                <span class="text-xs text-zinc-400">Live feeds via Binance WS API</span>
+              </div>
+              
+              <table class="w-full text-sm font-sans">
+                <thead>
+                  <tr class="border-b border-zinc-200 dark:border-zinc-700 text-zinc-400 text-xs text-left">
+                    <th class="py-3 font-semibold">COIN</th>
+                    <th class="py-3 font-semibold text-right">PRICE</th>
+                    <th class="py-3 font-semibold text-right">TODAY'S PNL</th>
+                    <th class="py-3 font-semibold text-right">ACTION</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                  
+                  <!-- Row 1 -->
+                  <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+                    <td class="py-4 flex items-center gap-3">
+                      <span class="text-2xl">🪙</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">BTC</div>
+                        <span class="text-xs text-zinc-400">Bitcoin</span>
+                      </div>
+                    </td>
+                    <td class="py-4 text-right font-mono font-bold text-zinc-900 dark:text-white">$58,451.25</td>
+                    <td class="py-4 text-right font-mono font-bold text-emerald-500">+4.12%</td>
+                    <td class="py-4 text-right">
+                      <button class="markets-trade-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors" data-symbol="BTC">Trade</button>
+                    </td>
+                  </tr>
 
-                <div class="flex items-center justify-between text-[9px] font-mono tracking-widest uppercase mb-4 border-b border-white/5 pb-2">
-                  <span class="text-emerald-400">[ STAKING_POOLS ]</span>
-                  <span class="text-slate-500">YIELD_BOARDS</span>
+                  <!-- Row 2 -->
+                  <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+                    <td class="py-4 flex items-center gap-3">
+                      <span class="text-2xl">🔷</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">ETH</div>
+                        <span class="text-xs text-zinc-400">Ethereum</span>
+                      </div>
+                    </td>
+                    <td class="py-4 text-right font-mono font-bold text-zinc-900 dark:text-white">$3,120.40</td>
+                    <td class="py-4 text-right font-mono font-bold text-emerald-500">+2.84%</td>
+                    <td class="py-4 text-right">
+                      <button class="markets-trade-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors" data-symbol="ETH">Trade</button>
+                    </td>
+                  </tr>
+
+                  <!-- Row 3 -->
+                  <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+                    <td class="py-4 flex items-center gap-3">
+                      <span class="text-2xl">☀️</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">SOL</div>
+                        <span class="text-xs text-zinc-400">Solana</span>
+                      </div>
+                    </td>
+                    <td class="py-4 text-right font-mono font-bold text-zinc-900 dark:text-white">$142.25</td>
+                    <td class="py-4 text-right font-mono font-bold text-emerald-500">+8.25%</td>
+                    <td class="py-4 text-right">
+                      <button class="markets-trade-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors" data-symbol="SOL">Trade</button>
+                    </td>
+                  </tr>
+
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- 📈 MODULE 3: TRADE -->
+        <div id="panel-trade" class="module-view w-full h-full flex flex-col justify-between overflow-hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0 text-left">
+            <!-- Candlestick Chart block -->
+            <div class="lg:col-span-3 flex flex-col gap-4 overflow-hidden h-full">
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col h-full overflow-hidden">
+                <div class="flex justify-between items-center mb-4">
+                  <div class="flex items-center gap-3">
+                    <h3 id="trade-chart-title" class="text-md font-bold text-zinc-900 dark:text-white">BTC/USDT</h3>
+                    <span class="text-xs font-mono text-emerald-500 font-bold animate-pulse">$58,451.25 (+4.12%)</span>
+                  </div>
+                  <div class="flex gap-1">
+                    <button class="px-2 py-1 bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded">1m</button>
+                    <button class="px-2 py-1 bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded">5m</button>
+                    <button class="px-2 py-1 bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded border border-emerald-500/20">15m</button>
+                    <button class="px-2 py-1 bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded">1h</button>
+                  </div>
                 </div>
 
-                <div class="flex-1 overflow-y-auto scrollbar-thin pr-1 space-y-2 font-mono text-[10px]">
+                <!-- High quality vector candlesticks simulation -->
+                <div class="flex-1 w-full border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 rounded-xl overflow-hidden relative flex items-end p-2 select-none">
+                  <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <!-- Grid Lines -->
+                    <line x1="0" y1="25" x2="100" y2="25" stroke="rgba(156,163,175,0.08)" stroke-width="1"></line>
+                    <line x1="0" y1="50" x2="100" y2="50" stroke="rgba(156,163,175,0.08)" stroke-width="1"></line>
+                    <line x1="0" y1="75" x2="100" y2="75" stroke="rgba(156,163,175,0.08)" stroke-width="1"></line>
+                    
+                    <!-- Candlesticks bars (green/red) -->
+                    <!-- Green Candle 1 -->
+                    <line x1="10" y1="60" x2="10" y2="85" stroke="#10b981" stroke-width="0.8"></line>
+                    <rect x="8.5" y="65" width="3" height="15" fill="#10b981" rx="0.5"></rect>
+
+                    <!-- Green Candle 2 -->
+                    <line x1="30" y1="50" x2="30" y2="75" stroke="#10b981" stroke-width="0.8"></line>
+                    <rect x="28.5" y="55" width="3" height="15" fill="#10b981" rx="0.5"></rect>
+
+                    <!-- Red Candle 1 -->
+                    <line x1="50" y1="40" x2="50" y2="65" stroke="#ef4444" stroke-width="0.8"></line>
+                    <rect x="48.5" y="45" width="3" height="15" fill="#ef4444" rx="0.5"></rect>
+
+                    <!-- Green Candle 3 -->
+                    <line x1="70" y1="20" x2="70" y2="55" stroke="#10b981" stroke-width="0.8"></line>
+                    <rect x="68.5" y="25" width="3" height="25" fill="#10b981" rx="0.5"></rect>
+
+                    <!-- Active Green Candle -->
+                    <line x1="90" y1="10" x2="90" y2="35" stroke="#10b981" stroke-width="0.8"></line>
+                    <rect x="88.5" y="15" width="3" height="15" fill="#10b981" rx="0.5"></rect>
+                  </svg>
+                  <div class="absolute bottom-2 left-2 text-[8px] font-mono text-zinc-400">DATA_WS: REPLICATED</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Order form side panel -->
+            <div class="lg:col-span-1 flex flex-col gap-4 overflow-hidden h-full">
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col justify-between h-full">
+                <div class="space-y-4">
+                  <div class="flex border-b border-zinc-200 dark:border-zinc-700 pb-2">
+                    <button class="flex-1 text-center font-bold text-sm text-emerald-500 pb-1 border-b-2 border-emerald-500">BUY</button>
+                    <button class="flex-1 text-center font-bold text-sm text-zinc-400 hover:text-zinc-900 dark:hover:text-white pb-1">SELL</button>
+                  </div>
+
+                  <div class="space-y-3 font-mono text-[10px]">
+                    <div class="p-3 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl flex justify-between items-center">
+                      <div class="flex flex-col">
+                        <span class="text-zinc-500">AMOUNT (USDT)</span>
+                        <input id="pay-amount-input" type="number" value="100.00" class="bg-transparent border-none text-sm font-bold text-zinc-900 dark:text-white outline-none w-full p-0 leading-none mt-1 focus:ring-0" />
+                      </div>
+                      <span class="text-zinc-500 font-bold">USDT</span>
+                    </div>
+
+                    <!-- Percentage Row -->
+                    <div class="grid grid-cols-4 gap-1">
+                      <button class="trade-percent-btn py-1 rounded bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-500/10 hover:text-emerald-500 font-bold" data-val="25">25%</button>
+                      <button class="trade-percent-btn py-1 rounded bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-500/10 hover:text-emerald-500 font-bold" data-val="50">50%</button>
+                      <button class="trade-percent-btn py-1 rounded bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-500/10 hover:text-emerald-500 font-bold" data-val="75">75%</button>
+                      <button class="trade-percent-btn py-1 rounded bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-500/10 hover:text-emerald-500 font-bold" data-val="100">100%</button>
+                    </div>
+
+                    <div class="p-2 border border-zinc-200 dark:border-zinc-700 rounded-lg text-left bg-zinc-100 dark:bg-zinc-900 space-y-1 text-[8px] text-zinc-500">
+                      <div class="flex justify-between"><span>EST. RECEIVE:</span> <span class="text-zinc-900 dark:text-white font-bold"><span id="lbl-receive-val">1.710000</span> <span id="lbl-receive-sym">BTC</span></span></div>
+                      <div class="flex justify-between"><span>WALLET BALANCE:</span> <span class="text-zinc-900 dark:text-white">1,250.00 USDT</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <button id="btn-submit-swap" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs tracking-widest uppercase rounded-xl transition-all duration-300">EXECUTE SWAP</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- 💼 MODULE 4: WALLET -->
+        <div id="panel-wallet" class="module-view w-full h-full flex flex-col justify-between overflow-y-auto scrollbar-thin pr-1">
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0 text-left">
+            <!-- Left: Balance card and Copyable addresses -->
+            <div class="lg:col-span-2 flex flex-col gap-6 h-full">
+              <!-- Portfolio Card -->
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col justify-between h-48 select-text">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <span class="text-xs text-zinc-400 uppercase font-mono tracking-wider">Total Portfolio Value</span>
+                    <h2 class="text-3xl font-bold text-zinc-900 dark:text-white mt-1">$124,582.00</h2>
+                    <span class="text-[10px] text-emerald-500 font-bold mt-1 block">Includes liquid assets & active stakes</span>
+                  </div>
+                  <span class="text-xl">💼</span>
+                </div>
+                <div class="flex gap-2">
+                  <button class="wallet-action-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition-colors">Deposit</button>
+                  <button class="wallet-action-btn px-4 py-2 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-750 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white text-xs font-bold rounded-lg transition-colors">Withdraw</button>
+                </div>
+              </div>
+
+              <!-- Address hub -->
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col flex-1 select-text font-mono text-[10px] space-y-3">
+                <span class="text-[9px] text-zinc-400 font-bold tracking-wider">[ CRYPTOGRAPHIC COCKPIT ADDRESSES ]</span>
+                
+                <!-- Principal -->
+                <div class="flex items-center justify-between p-2.5 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-250 dark:border-zinc-700">
+                  <span class="text-zinc-500">♾️ ICP</span>
+                  <div class="flex items-center space-x-2">
+                    <span class="text-zinc-900 dark:text-white font-bold">0x71C...9312</span>
+                    <button class="address-copy-btn text-[11px] hover:text-emerald-500" data-address="0x71C80B0F3A1AB90DE80F3A1AB90DE80F3A1AB90D">📋</button>
+                  </div>
+                </div>
+
+                <!-- EVM -->
+                <div class="flex items-center justify-between p-2.5 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-250 dark:border-zinc-700">
+                  <span class="text-zinc-500">🔷 EVM</span>
+                  <div class="flex items-center space-x-2">
+                    <span class="text-zinc-900 dark:text-white font-bold">0x8a1...3f1c</span>
+                    <button class="address-copy-btn text-[11px] hover:text-emerald-500" data-address="0x8a1a3f1bc09b0b4de9b81cd4265ecc9df74477e41">📋</button>
+                  </div>
+                </div>
+
+                <!-- SOL -->
+                <div class="flex items-center justify-between p-2.5 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-250 dark:border-zinc-700">
+                  <span class="text-zinc-500">☀️ SOL</span>
+                  <div class="flex items-center space-x-2">
+                    <span class="text-zinc-900 dark:text-white font-bold">8bc3...f89c</span>
+                    <button class="address-copy-btn text-[11px] hover:text-emerald-500" data-address="8bc371c80b0f3a1ab90de80f3a1ab90def89c">📋</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Assets breakdown list -->
+            <div class="lg:col-span-2 flex flex-col gap-6 h-full">
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col flex-1 overflow-hidden">
+                <h3 class="text-md font-bold text-zinc-900 dark:text-white mb-4">My Liquid Assets</h3>
+                <div class="flex-1 overflow-y-auto scrollbar-thin pr-1 space-y-2 font-mono text-xs">
+                  
+                  <!-- Asset row 1 -->
+                  <div class="p-3.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between hover:border-emerald-500/20 transition-all">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-2xl">🪙</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">1.45 BTC</div>
+                        <span class="text-[10px] text-zinc-400">Bitcoin Core</span>
+                      </div>
+                    </div>
+                    <span class="font-bold text-zinc-900 dark:text-white">$84,754.31</span>
+                  </div>
+
+                  <!-- Asset row 2 -->
+                  <div class="p-3.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between hover:border-emerald-500/20 transition-all">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-2xl">🔷</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">8.50 ETH</div>
+                        <span class="text-[10px] text-zinc-400">Ethereum Network</span>
+                      </div>
+                    </div>
+                    <span class="font-bold text-zinc-900 dark:text-white">$26,523.40</span>
+                  </div>
+
+                  <!-- Asset row 3 -->
+                  <div class="p-3.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between hover:border-emerald-500/20 transition-all">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-2xl">☀️</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">52.40 SOL</div>
+                        <span class="text-[10px] text-zinc-400">Solana Network</span>
+                      </div>
+                    </div>
+                    <span class="font-bold text-zinc-900 dark:text-white">$7,453.90</span>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- 🧪 MODULE 5: LIQUIDITY -->
+        <div id="panel-liquidity" class="module-view w-full h-full flex flex-col justify-between overflow-y-auto scrollbar-thin pr-1">
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0 text-left">
+            <!-- Left side: Pool yields -->
+            <div class="lg:col-span-2 flex flex-col gap-6 h-full">
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col flex-1">
+                <h3 class="text-md font-bold text-zinc-900 dark:text-white mb-4">Yield Farming Positions</h3>
+                <div class="space-y-3 overflow-y-auto scrollbar-thin pr-1 font-mono text-xs">
+                  
                   <!-- Pool 1 -->
-                  <div class="p-3 bg-white/5 rounded-xl border border-white/5 hover:border-emerald-500/20 flex items-center justify-between transition-all duration-300">
+                  <div class="p-4 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
                     <div>
-                      <div class="font-bold text-white">$IONIC/USDT Pool</div>
-                      <span class="text-[8px] text-slate-500">Multiplier: up to 4.00x</span>
+                      <div class="font-bold text-zinc-900 dark:text-white">IONIC/USDT Pool</div>
+                      <span class="text-[9px] text-zinc-400 block mt-0.5">Global Index: 4.842</span>
                     </div>
                     <div class="text-right">
-                      <div class="text-emerald-400 font-bold">12.50% APY</div>
-                      <span class="text-[8px] text-slate-500">Staked: 124,500 IONIC</span>
+                      <span class="text-emerald-500 font-bold">12.50% APY</span>
+                      <span class="text-[9px] text-zinc-400 block mt-0.5">Staked: 125,000 IONIC</span>
                     </div>
                   </div>
 
                   <!-- Pool 2 -->
-                  <div class="p-3 bg-white/5 rounded-xl border border-white/5 hover:border-emerald-500/20 flex items-center justify-between transition-all duration-300">
+                  <div class="p-4 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
                     <div>
-                      <div class="font-bold text-white">$UNREAL/USDT Pool</div>
-                      <span class="text-[8px] text-slate-500">Multiplier: up to 2.50x</span>
+                      <div class="font-bold text-zinc-900 dark:text-white">UNREAL/USDT Pool</div>
+                      <span class="text-[9px] text-zinc-400 block mt-0.5">Global Index: 2.115</span>
                     </div>
                     <div class="text-right">
-                      <div class="text-emerald-400 font-bold">8.42% APY</div>
-                      <span class="text-[8px] text-slate-500">Staked: 12,000 UNREAL</span>
+                      <span class="text-emerald-500 font-bold">8.42% APY</span>
+                      <span class="text-[9px] text-zinc-400 block mt-0.5">Staked: 12,000 UNREAL</span>
                     </div>
                   </div>
+
                 </div>
               </div>
             </div>
 
-            <!-- Right side: APY Yield Staking calculator and lock dashboard -->
-            <div class="lg:col-span-2 flex flex-col gap-4 overflow-hidden h-full text-left">
-              <!-- Stake locks card -->
-              <div class="relative border border-emerald-500/10 rounded-xl bg-slate-950/40 backdrop-blur-lg flex-1 flex flex-col p-6">
-                <!-- Cyber Brackets -->
-                <div class="absolute top-0 left-0 w-4 h-4 border-t border-l rounded-tl-xl border-emerald-400/30"></div>
-                <div class="absolute top-0 right-0 w-4 h-4 border-t border-r rounded-tr-xl border-emerald-400/30"></div>
-                <div class="absolute bottom-0 left-0 w-4 h-4 border-b border-l rounded-bl-xl border-emerald-400/30"></div>
-                <div class="absolute bottom-0 right-0 w-4 h-4 border-b border-r rounded-br-xl border-emerald-400/30"></div>
-
-                <div class="flex items-center justify-between text-[9px] font-mono tracking-widest uppercase mb-4 border-b border-white/5 pb-2">
-                  <span class="text-emerald-400">[ STAKING_ENGINE ]</span>
-                  <span class="text-slate-500">VAULT_LOCK_CALCULATOR</span>
-                </div>
-
-                <div class="space-y-4 font-mono text-[9px] flex-1 flex flex-col justify-between">
-                  <!-- Inputs -->
-                  <div class="space-y-3">
-                    <div class="p-2.5 bg-white/5 border border-white/5 rounded-lg flex justify-between items-center">
+            <!-- Right side: APY calculator lock dashboard -->
+            <div class="lg:col-span-2 flex flex-col gap-6 h-full">
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col justify-between flex-1">
+                <div>
+                  <h3 class="text-md font-bold text-zinc-900 dark:text-white mb-4">Staking Multiplier Calculator</h3>
+                  <div class="space-y-4 font-mono text-xs">
+                    
+                    <div class="p-3 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl flex justify-between items-center">
                       <div class="flex flex-col">
-                        <span class="text-slate-500 uppercase">LOCK AMOUNT</span>
-                        <input id="stake-input" type="number" value="1000" class="bg-transparent border-none text-sm font-bold text-white outline-none w-full p-0 leading-none mt-1 focus:ring-0" />
+                        <span class="text-[9px] text-zinc-500 font-bold">STAKE AMOUNT</span>
+                        <input id="liq-stake-input" type="number" value="5000" class="bg-transparent border-none text-sm font-bold text-zinc-900 dark:text-white outline-none w-full p-0 leading-none mt-1 focus:ring-0" />
                       </div>
-                      <span class="text-emerald-400 font-bold">$IONIC</span>
+                      <span class="text-emerald-500 font-bold">$IONIC</span>
                     </div>
 
                     <div class="flex flex-col">
-                      <span class="text-slate-500 uppercase mb-1">[ LOCK DURATION (YEARS) ]</span>
-                      <input id="stake-duration" type="range" min="1" max="4" value="2" class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-emerald-500" />
-                      <div class="flex justify-between text-[8px] text-slate-500 mt-1">
-                        <span>1 YEAR (1.00x)</span>
-                        <span>2 YEARS (2.00x)</span>
-                        <span>3 YEARS (3.00x)</span>
-                        <span>4 YEARS (4.00x)</span>
+                      <span class="text-[9px] text-zinc-500 font-bold mb-1">LOCK DURATION (YEARS)</span>
+                      <input id="liq-stake-duration" type="range" min="1" max="4" value="2" class="w-full h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-emerald-500" />
+                      <div class="flex justify-between text-[8px] text-zinc-400 mt-1">
+                        <span>1 YEAR</span>
+                        <span>2 YEARS</span>
+                        <span>3 YEARS</span>
+                        <span>4 YEARS</span>
                       </div>
                     </div>
 
-                    <div class="p-3 bg-white/5 rounded-lg border border-white/5 space-y-1 text-[8px] text-slate-400">
-                      <div class="flex justify-between"><span>VOTING POWER:</span> <span class="text-emerald-400 font-bold"><span id="lbl-voting-power">2,000.00</span> POWER</span></div>
-                      <div class="flex justify-between"><span>EST. ANNUAL YIELD:</span> <span class="text-emerald-400 font-bold"><span id="lbl-annual-yield">125.00</span> IONIC</span></div>
+                    <div class="p-3 border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 rounded-lg space-y-1 text-[9px] text-zinc-500">
+                      <div class="flex justify-between"><span>VOTING POWER MULTIPLIER:</span> <span class="text-emerald-500 font-bold"><span id="lbl-voting-power-display">10,000.00</span> POWER</span></div>
+                      <div class="flex justify-between"><span>EST. ANNUALIZED REWARDS:</span> <span class="text-emerald-500 font-bold"><span id="lbl-annual-yield-display">625.00</span> IONIC</span></div>
                     </div>
-                  </div>
 
-                  <!-- Execute Lock -->
-                  <button id="btn-execute-stake" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black tracking-widest uppercase rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.15)] transition-all duration-300 transform active:scale-95 text-center">
-                    APPROVE & STAKE
-                  </button>
+                  </div>
                 </div>
+
+                <button id="btn-approve-stake" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs tracking-widest uppercase rounded-xl transition-all duration-300 mt-4">APPROVE & LOCK ASSET</button>
               </div>
             </div>
           </div>
@@ -507,22 +644,22 @@ import Starfield from '../components/Starfield.astro';
       </div>
 
       <!-- FOOTER -->
-      <footer class="w-full h-12 border-t border-white/5 px-6 flex items-center justify-between z-10 backdrop-blur-md bg-[#020502]/40 font-mono text-[9px] md:text-xs text-slate-500 select-none">
+      <footer class="w-full h-12 border-t border-zinc-200 dark:border-zinc-800 px-6 flex items-center justify-between z-10 backdrop-blur-md bg-zinc-100/80 dark:bg-zinc-900/80 font-mono text-[9px] md:text-xs text-zinc-500 select-none">
         <div>&copy; 2026 WORLD OF UNREAL. ALL RIGHTS RESERVED.</div>
         <div class="flex items-center space-x-4">
-          <span>SECURE_CHANNELS: ONLINE</span>
-          <span>STALWART_MAIL_REPLICAS: SECURE</span>
+          <span>SECURE_CONNECTIONS: VALID</span>
+          <span>STALWART_REPLICATED: SECURE</span>
         </div>
       </footer>
     </div>
   </div>
 
-  <!-- Notification Modal / Overlay for copy address -->
-  <div id="toast" class="fixed bottom-6 right-6 z-[10000] hidden items-center gap-3 bg-[#050e06] border border-emerald-500/30 pl-4 pr-6 py-3 rounded-xl shadow-[0_0_30px_rgba(16,185,129,0.15)] backdrop-blur-md font-mono text-[10px]">
-    <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
+  <!-- Notification glassmorphic toast notification -->
+  <div id="toast" class="fixed bottom-6 right-6 z-[10000] hidden items-center gap-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-250 dark:border-zinc-700 pl-4 pr-6 py-3 rounded-xl shadow-lg backdrop-blur-md font-mono text-[10px]">
+    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
     <div class="flex flex-col text-left">
-      <span class="text-white font-black uppercase">[ NOTIFICATION ]</span>
-      <span id="toast-message" class="text-slate-400">Address copied successfully.</span>
+      <span class="text-zinc-900 dark:text-white font-bold uppercase">[ NOTIFICATION ]</span>
+      <span id="toast-message" class="text-zinc-500 dark:text-zinc-400">Successfully copied address.</span>
     </div>
   </div>
 </Layout>
@@ -535,12 +672,12 @@ import Starfield from '../components/Starfield.astro';
     padding: 0 !important;
   }
 
-  /* Fade-in animations for module views */
+  /* Smooth panels transitions */
   .module-view {
     display: none;
     opacity: 0;
-    transform: translateY(10px);
-    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    transform: translateY(8px);
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
   }
 
   .module-view.active {
@@ -548,37 +685,27 @@ import Starfield from '../components/Starfield.astro';
     opacity: 1;
     transform: translateY(0);
   }
-
-  @keyframes pulse-slow {
-    0%, 100% { opacity: 0.8; transform: scale(1); }
-    50% { opacity: 0.9; transform: scale(1.02); }
-  }
-
-  .animate-pulse-slow {
-    animation: pulse-slow 8s ease-in-out infinite;
-  }
 </style>
 
 <script>
-  // ponytail: unified state router and reactive controllers in under 120 lines
+  // ponytail: unified gray/zinc dashboard controller in under 115 lines
   const navItems = document.querySelectorAll('.nav-item');
   const modules = document.querySelectorAll('.module-view');
-  const emeraldGlow = document.getElementById('nebula-emerald');
 
-  // Module Router
+  // Router mechanism
   navItems.forEach(item => {
     item.addEventListener('click', () => {
       const target = item.getAttribute('data-target');
-      
-      // Update sidebar visual states
-      navItems.forEach(nav => {
-        nav.classList.remove('text-emerald-400', 'bg-emerald-500/10', 'border', 'border-emerald-400/20');
-        nav.classList.add('text-slate-400');
-      });
-      item.classList.add('text-emerald-400', 'bg-emerald-500/10', 'border', 'border-emerald-400/20');
-      item.classList.remove('text-slate-400');
 
-      // Swap active panels
+      // Update sidebar states
+      navItems.forEach(nav => {
+        nav.classList.remove('text-emerald-500', 'bg-emerald-500/10', 'dark:bg-emerald-500/5', 'border', 'border-emerald-400/20');
+        nav.classList.add('text-zinc-500', 'dark:text-zinc-400');
+      });
+      item.classList.add('text-emerald-500', 'bg-emerald-500/10', 'dark:bg-emerald-500/5', 'border', 'border-emerald-400/20');
+      item.classList.remove('text-zinc-500', 'dark:text-zinc-400');
+
+      // Update active panel views
       modules.forEach(mod => {
         mod.classList.remove('active');
       });
@@ -589,43 +716,46 @@ import Starfield from '../components/Starfield.astro';
     });
   });
 
-  // Dual card tilt effect
-  window.addEventListener('mousemove', (e) => {
-    const halfW = window.innerWidth / 2;
-    const halfH = window.innerHeight / 2;
-    const rotateX = -((e.clientY - halfH) / halfH) * 4; 
-    const rotateY = ((e.clientX - halfW) / halfW) * 4;
-    
-    modules.forEach(mod => {
-      if (mod.classList.contains('active')) {
-        const cards = mod.querySelectorAll('.rounded-xl');
-        cards.forEach(card => {
-          (card as HTMLElement).style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-        });
-      }
-    });
+  // Slide carousel controls
+  let activeSlide = 0;
+  const carouselTrack = document.getElementById('carousel-track');
+  const dots = document.querySelectorAll('.carousel-dot');
 
-    const dx = (e.clientX - halfW) * 0.015;
-    const dy = (e.clientY - halfH) * 0.015;
-    if (emeraldGlow) emeraldGlow.style.transform = `translate(${dx}px, ${dy}px)`;
-  }, { passive: true });
-
-  window.addEventListener('mouseleave', () => {
-    modules.forEach(mod => {
-      const cards = mod.querySelectorAll('.rounded-xl');
-      cards.forEach(card => {
-        (card as HTMLElement).style.transform = 'rotateX(0deg) rotateY(0deg)';
+  const updateCarousel = (slideIndex: number) => {
+    if (carouselTrack) {
+      carouselTrack.style.transform = `translateX(-${slideIndex * 100}%)`;
+      dots.forEach((dot, idx) => {
+        if (idx === slideIndex) {
+          dot.classList.add('bg-emerald-500');
+          dot.classList.remove('bg-zinc-300', 'dark:bg-zinc-700');
+        } else {
+          dot.classList.remove('bg-emerald-500');
+          dot.classList.add('bg-zinc-300', 'dark:bg-zinc-700');
+        }
       });
+      activeSlide = slideIndex;
+    }
+  };
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const slide = parseInt(dot.getAttribute('data-slide') || '0');
+      updateCarousel(slide);
     });
-    if (emeraldGlow) emeraldGlow.style.transform = 'translate(0px, 0px)';
   });
 
-  // Clipboard copy with animated status toasts
+  // Auto scroll carousel every 6 seconds
+  setInterval(() => {
+    const nextSlide = (activeSlide + 1) % 2; // We have 2 slides
+    updateCarousel(nextSlide);
+  }, 6000);
+
+  // General notification triggers
   const toast = document.getElementById('toast');
   const toastMsg = document.getElementById('toast-message');
   let toastTimeout: NodeJS.Timeout;
 
-  const showToast = (message: string) => {
+  const showNotification = (message: string) => {
     if (toast && toastMsg) {
       toastMsg.innerText = message;
       toast.classList.remove('hidden');
@@ -638,90 +768,123 @@ import Starfield from '../components/Starfield.astro';
     }
   };
 
-  document.querySelectorAll('.copy-btn').forEach(btn => {
+  document.querySelectorAll('.address-copy-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const addr = btn.getAttribute('data-address') || '';
       navigator.clipboard.writeText(addr).then(() => {
-        showToast(`Copied Address: ${addr.slice(0, 10)}...`);
+        showNotification(`Copied address: ${addr.slice(0, 10)}...`);
       });
       e.stopPropagation();
     });
   });
 
-  // Trading panel calculator
-  const tradeBuyInput = document.getElementById('trade-buy-input') as HTMLInputElement;
-  const tradeEstReceive = document.getElementById('trade-est-receive');
-  const percentBtns = document.querySelectorAll('.percent-btn');
+  // Staking multiplier calculations
+  const stakeInput = document.getElementById('liq-stake-input') as HTMLInputElement;
+  const stakeDuration = document.getElementById('liq-stake-duration') as HTMLInputElement;
+  const lblPower = document.getElementById('lbl-voting-power-display');
+  const lblYield = document.getElementById('lbl-annual-yield-display');
 
-  const btcPrice = 58451.25;
+  const calculateStaking = () => {
+    const val = parseFloat(stakeInput.value) || 0;
+    const dur = parseFloat(stakeDuration.value) || 1;
 
-  const calculateTrade = () => {
-    const val = parseFloat(tradeBuyInput.value) || 0;
-    if (tradeEstReceive) {
-      tradeEstReceive.innerText = (val / btcPrice).toFixed(6);
+    if (lblPower) {
+      lblPower.innerText = (val * dur).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (lblYield) {
+      lblYield.innerText = (val * dur * 0.0625).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
   };
 
-  tradeBuyInput?.addEventListener('input', calculateTrade);
+  stakeInput?.addEventListener('input', calculateStaking);
+  stakeDuration?.addEventListener('input', calculateStaking);
 
-  percentBtns.forEach(btn => {
+  // Trading panel calculator
+  const payInput = document.getElementById('pay-amount-input') as HTMLInputElement;
+  const receiveVal = document.getElementById('lbl-receive-val');
+  const tradePercentBtns = document.querySelectorAll('.trade-percent-btn');
+  const coinPrices: Record<string, number> = { BTC: 58451.25, ETH: 3120.40, SOL: 142.25, ICP: 8.91 };
+
+  let currentTargetSymbol = 'BTC';
+
+  const updateTradeCalculator = () => {
+    const val = parseFloat(payInput.value) || 0;
+    const price = coinPrices[currentTargetSymbol] || 58451.25;
+    if (receiveVal) {
+      receiveVal.innerText = (val / price).toFixed(6);
+    }
+  };
+
+  payInput?.addEventListener('input', updateTradeCalculator);
+
+  tradePercentBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const percent = parseFloat(btn.getAttribute('data-val') || '0');
-      const maxBalance = 1250;
-      tradeBuyInput.value = ((maxBalance * percent) / 100).toFixed(2);
-      calculateTrade();
+      const maxUSDTBalance = 1250;
+      payInput.value = ((maxUSDTBalance * percent) / 100).toFixed(2);
+      updateTradeCalculator();
     });
   });
 
-  // Staking lock multiplier calculator
-  const stakeInput = document.getElementById('stake-input') as HTMLInputElement;
-  const stakeDuration = document.getElementById('stake-duration') as HTMLInputElement;
-  const lblVotingPower = document.getElementById('lbl-voting-power');
-  const lblAnnualYield = document.getElementById('lbl-annual-yield');
-
-  const calculateStake = () => {
-    const val = parseFloat(stakeInput.value) || 0;
-    const dur = parseFloat(stakeDuration.value) || 1;
-    
-    if (lblVotingPower) {
-      lblVotingPower.innerText = (val * dur).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-    if (lblAnnualYield) {
-      lblAnnualYield.innerText = (val * dur * 0.0625).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-  };
-
-  stakeInput?.addEventListener('input', calculateStake);
-  stakeDuration?.addEventListener('input', calculateStake);
-
-  // Buttons triggers
-  document.getElementById('btn-execute-trade')?.addEventListener('click', () => {
-    showToast("Gasless Order submitted to IONOS validator.");
+  // Actions trigger triggers
+  document.getElementById('btn-submit-swap')?.addEventListener('click', () => {
+    showNotification("Swap submitted. Subsidy applied.");
   });
 
-  document.getElementById('btn-execute-stake')?.addEventListener('click', () => {
-    showToast("Tokens locked. Staking voting power registered.");
+  document.getElementById('btn-approve-stake')?.addEventListener('click', () => {
+    showNotification("Staking locked successfully.");
   });
 
-  document.querySelectorAll('.quick-trade-btn').forEach(btn => {
+  // Action links routers
+  document.querySelectorAll('.price-row, .markets-trade-btn, .quick-trade-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const row = btn.closest('tr');
+      const row = btn.closest('tr') || btn.closest('.price-row');
       if (row) {
         const symbol = row.getAttribute('data-symbol') || 'BTC';
-        const priceText = row.children[1].textContent || '$1.00';
-        
-        // Update trade panel symbol/chart header
-        const chartPair = document.getElementById('chart-pair');
-        if (chartPair) chartPair.innerText = `${symbol}/USDT`;
-        
-        const tradeSymbol = document.getElementById('trade-symbol');
-        if (tradeSymbol) tradeSymbol.innerText = symbol;
+        currentTargetSymbol = symbol;
 
-        // Switch panel to trade
+        // Update trade panel details
+        const headerTitle = document.getElementById('trade-chart-title');
+        if (headerTitle) headerTitle.innerText = `${symbol}/USDT`;
+
+        const receiveSym = document.getElementById('lbl-receive-sym');
+        if (receiveSym) receiveSym.innerText = symbol;
+
+        updateTradeCalculator();
+
+        // Router to trade tab
         const tradeNav = document.querySelector('button[data-target="trade"]') as HTMLButtonElement;
         tradeNav?.click();
       }
       e.stopPropagation();
     });
   });
+
+  document.querySelectorAll('.nav-to-trade').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tradeNav = document.querySelector('button[data-target="trade"]') as HTMLButtonElement;
+      tradeNav?.click();
+    });
+  });
+
+  // Theme switcher trigger
+  const themeBtn = document.getElementById('theme-toggle');
+  themeBtn?.addEventListener('click', () => {
+    const html = document.documentElement;
+    if (html.classList.contains('dark')) {
+      html.classList.remove('dark');
+      localStorage.setItem('ionic-swap-theme', 'light');
+    } else {
+      html.classList.add('dark');
+      localStorage.setItem('ionic-swap-theme', 'dark');
+    }
+  });
+
+  // Read theme on load
+  const prefTheme = localStorage.getItem('ionic-swap-theme') || 'dark';
+  if (prefTheme === 'dark') {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
 </script>

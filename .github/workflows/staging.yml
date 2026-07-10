@@ -23,7 +23,8 @@ jobs:
     - name: Build frontend
       run: npm run build
     - name: Add PTR robots.txt
-      run: echo -e "User-agent: *\nDisallow: /" > dist/robots.txt
+      run: |
+        echo -e "User-agent: *\nDisallow: /" > dist/robots.txt
     - uses: webfactory/ssh-agent@v0.10.0
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
