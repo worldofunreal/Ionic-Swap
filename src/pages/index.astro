@@ -74,19 +74,40 @@ import Layout from '../layouts/Layout.astro';
           <input type="text" placeholder="Search tokens, positions..." class="w-full pl-10 pr-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500" />
         </div>
 
-        <!-- Right Side: Wallet state & Profile -->
-        <div class="flex items-center space-x-4">
-          <div id="btn-login-trigger" class="flex items-center space-x-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 pl-3 pr-2 py-1.5 rounded-xl cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-750 transition-all">
-            <div class="flex flex-col text-right font-sans">
-              <span class="text-[10px] font-bold text-zinc-900 dark:text-white leading-none">BIZKIT_0x1337</span>
-              <span class="text-[8px] text-emerald-500 font-bold tracking-wider leading-none flex items-center justify-end gap-1 mt-1">
-                <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                ICP_MAINNET
-              </span>
-            </div>
-            <!-- Custom Avatar -->
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 border border-emerald-400/20 flex items-center justify-center text-white font-bold text-xs select-none">
-              U
+        <!-- Right Side: Auth (clean, not logged-in by default) -->
+        <div class="flex items-center space-x-3">
+          <!-- Sign In (default) -->
+          <button id="wou-signin-btn" type="button" class="px-4 py-2 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-bold hover:opacity-90 transition flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Sign In
+          </button>
+          <!-- User Pill (hidden until authenticated via wou:auth-state-change) -->
+          <div id="wou-user-pill" class="hidden relative">
+            <button id="wou-user-btn" type="button" class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-500/30 transition">
+              <div id="wou-user-avatar" class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-xs">U</div>
+              <div class="text-left leading-none">
+                <div id="wou-user-name" class="text-xs font-bold text-zinc-900 dark:text-white">Player</div>
+                <div id="wou-user-handle" class="text-[10px] font-mono text-zinc-500">@player</div>
+              </div>
+            </button>
+            <div id="wou-user-dropdown" class="hidden absolute right-0 mt-2 w-64 p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl z-50">
+              <div class="flex items-center gap-3 p-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl mb-3">
+                <div id="wou-dropdown-avatar" class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-sm">U</div>
+                <div class="flex-1 min-w-0">
+                  <div id="wou-dropdown-name" class="text-xs font-bold text-zinc-900 dark:text-white truncate">Player</div>
+                  <div id="wou-dropdown-handle" class="text-[10px] font-mono text-zinc-500 truncate">@player</div>
+                  <div id="wou-dropdown-email" class="text-[10px] text-zinc-400 truncate"></div>
+                </div>
+              </div>
+              <div class="mb-3 p-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl space-y-1.5">
+                <div class="flex items-center justify-between text-[10px] font-mono text-zinc-400"><span>GAMING WALLETS</span><span class="text-emerald-500 font-bold">READY</span></div>
+                <div class="grid grid-cols-3 gap-1">
+                  <button id="copy-evm-btn" type="button" class="py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 border border-blue-500/20 text-[10px] font-bold">EVM</button>
+                  <button id="copy-sol-btn" type="button" class="py-1 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 border border-purple-500/20 text-[10px] font-bold">SOL</button>
+                  <button id="copy-icp-btn" type="button" class="py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 border border-emerald-500/20 text-[10px] font-bold">ICP</button>
+                </div>
+              </div>
+              <button id="wou-logout-btn" type="button" class="w-full text-left px-3 py-2 text-xs font-semibold text-red-500 hover:bg-red-500/10 rounded-xl flex items-center justify-between"><span>Log Out</span><span>↪</span></button>
             </div>
           </div>
         </div>
@@ -933,42 +954,58 @@ import Layout from '../layouts/Layout.astro';
     </div>
   </div>
 
-  <!-- WOU-ID Wallet Login Modal (Binance-like profile, internally via id.worldofunreal.com) -->
-  <div id="wou-modal" class="fixed inset-0 z-[10001] hidden">
-    <div id="wou-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-    <div class="relative z-10 w-full max-w-md mx-auto mt-20 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-2xl font-sans">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-sm font-bold text-zinc-900 dark:text-white">WOU-ID • Wallet Login</h3>
-        <button id="wou-close" class="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg">✕</button>
-      </div>
-      <div id="wou-logged-out" class="space-y-3">
-        <p class="text-xs text-zinc-500">Internal • Anonymous-first, link wallets to your profile. Powered by <span class="text-emerald-500 font-bold">id.worldofunreal.com</span></p>
-        <button id="wou-anon" class="w-full py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-bold rounded-xl">Continue as Guest</button>
-        <div class="grid grid-cols-2 gap-2">
-          <button id="wou-evm" class="py-2.5 bg-[#f59e0b]/10 border border-amber-500/20 text-amber-600 text-xs font-bold rounded-xl">🦊 MetaMask (EVM)</button>
-          <button id="wou-sol" class="py-2.5 bg-purple-500/10 border border-purple-500/20 text-purple-600 text-xs font-bold rounded-xl">👻 Phantom (SOL)</button>
+  <!-- WOU-ID Auth Modal — centered, Emil motion, no Binance slop (mirrors worldofunreal.com/AuthModal) -->
+  <div id="wou-auth-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+    <div id="wou-auth-dialog" class="relative w-full max-w-md bg-zinc-950 border border-white/15 rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.9)] p-6 sm:p-7 overflow-hidden text-white">
+      <div class="absolute -top-24 -right-24 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 font-bold text-xs">◈</div>
+          <span class="text-xs font-mono tracking-widest text-zinc-400">IONIC • ID ENGINE</span>
         </div>
-        <div class="flex items-center gap-2 pt-2">
-          <input id="wou-email" placeholder="email for OTP (optional)" class="flex-1 px-3 py-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none" />
-          <button id="wou-otp" class="px-4 py-2 bg-emerald-500 text-white text-xs font-bold rounded-lg">OTP</button>
-        </div>
-        <p class="text-[10px] text-zinc-400">Binance-like profile: username, tiers, verified badge, linked wallets, private actions — all internal, auditable via Rust.</p>
+        <button id="modal-close-btn" type="button" class="text-zinc-400 hover:text-white p-2 rounded-full hover:bg-white/10 transition">✕</button>
       </div>
-      <div id="wou-logged-in" class="hidden space-y-3">
-        <div class="flex items-center gap-3 p-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
-          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold">U</div>
-          <div class="flex-1">
-            <div id="wou-username" class="text-xs font-bold text-zinc-900 dark:text-white">-</div>
-            <div id="wou-email-display" class="text-[10px] text-zinc-500">-</div>
+      <div class="mb-5">
+        <h2 id="modal-title" class="text-xl font-bold tracking-tight">Sign in to Ionic Swap</h2>
+        <p id="modal-subtitle" class="text-xs text-zinc-400 mt-1">Connect via email, social or Web3. Powered by id.worldofunreal.com</p>
+      </div>
+      <div id="modal-error" class="hidden mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2"><span id="modal-error-msg"></span></div>
+      <div class="flex p-1 bg-zinc-900 border border-white/10 rounded-2xl mb-5">
+        <button id="tab-btn-email" type="button" class="flex-1 py-2 text-xs font-semibold rounded-xl bg-white text-zinc-950">Email OTP</button>
+        <button id="tab-btn-social" type="button" class="flex-1 py-2 text-xs font-semibold rounded-xl text-zinc-400 hover:text-white">Social</button>
+        <button id="tab-btn-web3" type="button" class="flex-1 py-2 text-xs font-semibold rounded-xl text-zinc-400 hover:text-white">Web3</button>
+      </div>
+      <div id="tab-content-email">
+        <form id="form-request-otp" class="space-y-4">
+          <input id="wou-input-email" type="email" required placeholder="name@example.com" class="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-white/15 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-cyan-400" />
+          <button type="submit" class="w-full py-3 rounded-xl bg-white text-zinc-950 font-bold text-sm hover:bg-zinc-200 transition">Send Verification Code</button>
+        </form>
+        <form id="form-verify-otp" class="hidden space-y-4">
+          <div class="flex justify-between gap-2">
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-digit w-11 h-13 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-digit w-11 h-13 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-digit w-11 h-13 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-digit w-11 h-13 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-digit w-11 h-13 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+            <input type="text" inputmode="numeric" maxlength="1" class="otp-digit w-11 h-13 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
           </div>
-          <span class="text-[9px] px-2 py-1 bg-emerald-500/10 text-emerald-600 rounded-full border border-emerald-500/20">✓ VERIFIED</span>
-        </div>
-        <div id="wou-wallets" class="space-y-1 font-mono text-[10px]"></div>
-        <div class="flex gap-2">
-          <button id="wou-profile" class="flex-1 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-bold rounded-lg">View Binance-like Profile</button>
-          <button id="wou-logout" class="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 text-xs font-bold rounded-lg">Logout</button>
-        </div>
+          <button type="submit" class="w-full py-3 rounded-xl bg-cyan-400 text-zinc-950 font-bold text-sm">Verify & Continue</button>
+          <div class="flex justify-between text-xs text-zinc-400"><button id="btn-change-email" type="button" class="hover:text-white">← Change Email</button><button id="btn-resend-otp" type="button" class="text-cyan-400">Resend Code</button></div>
+        </form>
       </div>
+      <div id="tab-content-social" class="hidden space-y-2">
+        <button data-provider="discord" class="social-btn w-full py-3 px-4 rounded-xl bg-[#5865F2]/15 border border-[#5865F2]/30 hover:bg-[#5865F2]/25 text-white text-sm font-semibold flex items-center justify-between"><span class="flex items-center gap-2">◉ Continue with Discord</span><span class="text-xs text-zinc-500">Instant</span></button>
+        <button data-provider="google" class="social-btn w-full py-3 px-4 rounded-xl bg-white/10 border border-white/15 hover:bg-white/20 text-white text-sm font-semibold flex items-center justify-between"><span class="flex items-center gap-2">◎ Continue with Google</span><span class="text-xs text-zinc-500">Instant</span></button>
+        <button data-provider="twitter" class="social-btn w-full py-3 px-4 rounded-xl bg-white/10 border border-white/15 hover:bg-white/20 text-white text-sm font-semibold flex items-center justify-between"><span class="flex items-center gap-2">𝕏 Continue with X</span><span class="text-xs text-zinc-500">Instant</span></button>
+        <button data-provider="meta" class="social-btn w-full py-3 px-4 rounded-xl bg-[#0081FB]/15 border border-[#0081FB]/30 hover:bg-[#0081FB]/25 text-white text-sm font-semibold flex items-center justify-between"><span class="flex items-center gap-2">ⓕ Continue with Meta</span><span class="text-xs text-zinc-500">Instant</span></button>
+      </div>
+      <div id="tab-content-web3" class="hidden space-y-2">
+        <button id="web3-solana" class="w-full py-3 px-4 rounded-xl bg-[#AB9FF2]/15 border border-[#AB9FF2]/30 hover:bg-[#AB9FF2]/25 text-white text-sm font-semibold flex items-center justify-between"><span>◎ Solana (Phantom)</span><span class="text-xs text-cyan-400">Web3</span></button>
+        <button id="web3-evm" class="w-full py-3 px-4 rounded-xl bg-[#F6851B]/15 border border-[#F6851B]/30 hover:bg-[#F6851B]/25 text-white text-sm font-semibold flex items-center justify-between"><span>Ξ Ethereum (MetaMask)</span><span class="text-xs text-cyan-400">Web3</span></button>
+        <button id="web3-icp" class="w-full py-3 px-4 rounded-xl bg-[#29ABE2]/15 border border-[#29ABE2]/30 hover:bg-[#29ABE2]/25 text-white text-sm font-semibold flex items-center justify-between"><span>∞ Internet Identity</span><span class="text-xs text-cyan-400">ICP</span></button>
+      </div>
+      <div class="mt-5 pt-3 border-t border-white/10 text-center text-[11px] font-mono text-zinc-500">Ionic Swap • id.worldofunreal.com</div>
     </div>
   </div>
 
@@ -989,20 +1026,33 @@ import Layout from '../layouts/Layout.astro';
     margin: 0 !important;
     padding: 0 !important;
   }
-
-  /* Smooth panels transitions */
+  :root { --ease-out: cubic-bezier(0.23, 1, 0.32, 1); --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); }
   .module-view {
     display: none;
     opacity: 0;
     transform: translateY(8px);
-    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+    transition: opacity 220ms var(--ease-out), transform 220ms var(--ease-out);
   }
-
   .module-view.active {
     display: flex;
     opacity: 1;
     transform: translateY(0);
   }
+  /* Emil: modal enter */
+  #wou-auth-modal:not(.hidden) #wou-auth-dialog {
+    animation: wou-in 220ms var(--ease-out);
+  }
+  @keyframes wou-in {
+    from { opacity: 0; transform: scale(0.97) translateY(4px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .module-view, #wou-auth-dialog { transition: opacity 150ms ease; transform: none !important; animation: none !important; }
+  }
+  @media (hover: hover) and (pointer: fine) {
+    button:hover { filter: brightness(1.02); }
+  }
+  button:active { transform: scale(0.97); transition: transform 140ms var(--ease-out); }
 </style>
 
 <script>
@@ -1266,74 +1316,105 @@ import Layout from '../layouts/Layout.astro';
     });
   });
 
-  // --- WOU-ID integration (id.worldofunreal.com, internal, wallet link -> profile) ---
-  const WOU_BASE = 'https://id.worldofunreal.com';
-  const WOU_KEY = 'wou_session';
-  const wouModal = document.getElementById('wou-modal');
-  const wouBackdrop = document.getElementById('wou-backdrop');
-  const wouClose = document.getElementById('wou-close');
-  const btnLogin = document.getElementById('btn-login-trigger');
-  const wouOut = document.getElementById('wou-logged-out');
-  const wouIn = document.getElementById('wou-logged-in');
-  const loadWou = () => { try{return JSON.parse(localStorage.getItem(WOU_KEY)||'null');}catch{return null;}};
-  let wou = loadWou();
-  const saveWou = (v:any)=>{ if(v) localStorage.setItem(WOU_KEY, JSON.stringify(v)); else localStorage.removeItem(WOU_KEY); wou=v; renderWou(); };
-  const renderWou = () => {
-    const topName = document.querySelector('#btn-login-trigger span') as HTMLElement;
-    const topSub = document.querySelector('#btn-login-trigger span + span') as HTMLElement;
-    if (wou?.account) {
-      wouOut?.classList.add('hidden'); wouIn?.classList.remove('hidden');
-      (document.getElementById('wou-username') as HTMLElement).innerText = wou.account.username || wou.account.display_name || 'anon';
-      (document.getElementById('wou-email-display') as HTMLElement).innerText = wou.account.email || wou.account.id || '';
-      const wallets = document.getElementById('wou-wallets') as HTMLElement;
-      if (wallets) {
-        const ew = wou.account.embedded_wallets || {};
-        const links = (wou.account.linked_identities||[]).map((l:any)=>`${l.provider}:${l.external_id.slice(0,12)}...`).join(' • ') || 'no external wallets yet';
-        wallets.innerHTML = `<div>EVM: ${ew.evm_address||'-'}</div><div>SOL: ${ew.solana_address||'-'}</div><div>ICP: ${ew.icp_principal||'-'}</div><div class="text-zinc-500">${links}</div>`;
-      }
-      if(topName) topName.innerText = (wou.account.username || wou.account.display_name || 'BIZKIT_0x1337').toUpperCase();
-      if(topSub) topSub.innerHTML = '<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> WOU-ID • ' + (wou.account.email ? 'VERIFIED' : 'GUEST');
+  // --- WOU-ID proper (mirrors worldofunreal.com/src/scripts/wou-auth.ts, no fake guest) ---
+  import { wouAuth } from '../scripts/wou-auth';
+  const signinBtn = document.getElementById('wou-signin-btn');
+  const userPill = document.getElementById('wou-user-pill');
+  const userBtn = document.getElementById('wou-user-btn');
+  const userDropdown = document.getElementById('wou-user-dropdown');
+  const userName = document.getElementById('wou-user-name');
+  const userHandle = document.getElementById('wou-user-handle');
+  const dropdownName = document.getElementById('wou-dropdown-name');
+  const dropdownHandle = document.getElementById('wou-dropdown-handle');
+  const dropdownEmail = document.getElementById('wou-dropdown-email');
+  const avatars = [document.getElementById('wou-user-avatar'), document.getElementById('wou-dropdown-avatar')];
+  // legacy cleanup: remove old wou_session fake key once
+  localStorage.removeItem('wou_session');
+  const updateAuthUI = (detail:any) => {
+    if (detail?.authenticated && detail?.user) {
+      const u = detail.user;
+      signinBtn?.classList.add('hidden'); userPill?.classList.remove('hidden');
+      const name = u.display_name || u.username || 'Player';
+      const handle = u.username ? `@${u.username}` : '@player';
+      if (userName) userName.textContent = name;
+      if (userHandle) userHandle.textContent = handle;
+      if (dropdownName) dropdownName.textContent = name;
+      if (dropdownHandle) dropdownHandle.textContent = handle;
+      if (dropdownEmail) dropdownEmail.textContent = u.email || '';
+      const emoji = (u.profile?.custom_attributes as any)?.animal_emoji || (name.slice(0,2).toUpperCase());
+      avatars.forEach(a=>{ if(!a) return; if (u.profile?.avatar_url) a.innerHTML=`<img src="${u.profile.avatar_url}" class="w-full h-full object-cover rounded-full"/>`; else a.textContent=emoji; });
     } else {
-      wouOut?.classList.remove('hidden'); wouIn?.classList.add('hidden');
+      signinBtn?.classList.remove('hidden'); userPill?.classList.add('hidden'); userDropdown?.classList.add('hidden');
     }
   };
-  const openWou = ()=>{ wouModal?.classList.remove('hidden'); wouModal?.classList.add('flex'); renderWou(); };
-  const closeWou = ()=>{ wouModal?.classList.add('hidden'); wouModal?.classList.remove('flex'); };
-  btnLogin?.addEventListener('click', openWou);
-  wouClose?.addEventListener('click', closeWou);
-  wouBackdrop?.addEventListener('click', closeWou);
-  document.getElementById('wou-anon')?.addEventListener('click', async ()=>{
-    try{ const r=await fetch(`${WOU_BASE}/api/v1/auth/anonymous`,{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({display_name:'IonicTrader', context:'worldofunreal'})});
-      const j=await r.json(); saveWou({account:j.account||j, token:j.session_token}); showNotification('Guest session via WOU-ID');
-    }catch(e){ showNotification('WOU-ID anon failed, using local fallback'); saveWou({account:{username:'guest_'+Date.now().toString(36), display_name:'Guest', id:'local-'+Date.now(), embedded_wallets:{}}});}
+  window.addEventListener('wou:auth-state-change', (e:any)=> updateAuthUI(e.detail));
+  if (wouAuth.isAuthenticated()) updateAuthUI({authenticated:true, user:wouAuth.getUser()});
+  signinBtn?.addEventListener('click', ()=> wouAuth.openModal());
+  userBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); userDropdown?.classList.toggle('hidden'); });
+  document.addEventListener('click', (e)=>{ if (!userDropdown?.contains(e.target as Node) && !userBtn?.contains(e.target as Node)) userDropdown?.classList.add('hidden'); });
+  document.getElementById('wou-logout-btn')?.addEventListener('click', ()=>{ wouAuth.logout(); showNotification('Logged out'); });
+  document.getElementById('copy-evm-btn')?.addEventListener('click', ()=>{ const a=wouAuth.getUser()?.embedded_wallets?.evm_address; if(a){ navigator.clipboard.writeText(a); showNotification('Copied EVM'); }});
+  document.getElementById('copy-sol-btn')?.addEventListener('click', ()=>{ const a=wouAuth.getUser()?.embedded_wallets?.solana_address; if(a){ navigator.clipboard.writeText(a); showNotification('Copied SOL'); }});
+  document.getElementById('copy-icp-btn')?.addEventListener('click', ()=>{ const a=wouAuth.getUser()?.embedded_wallets?.icp_principal; if(a){ navigator.clipboard.writeText(a); showNotification('Copied ICP'); }});
+  // modal wiring (tabs + OTP 6-digit + social + web3)
+  const modal = document.getElementById('wou-auth-modal');
+  const closeBtn = document.getElementById('modal-close-btn');
+  const errorBanner = document.getElementById('modal-error');
+  const errorMsg = document.getElementById('modal-error-msg');
+  const titleEl = document.getElementById('modal-title');
+  const subEl = document.getElementById('modal-subtitle');
+  const tabEmail = document.getElementById('tab-btn-email');
+  const tabSocial = document.getElementById('tab-btn-social');
+  const tabWeb3 = document.getElementById('tab-btn-web3');
+  const cEmail = document.getElementById('tab-content-email');
+  const cSocial = document.getElementById('tab-content-social');
+  const cWeb3 = document.getElementById('tab-content-web3');
+  const formReq = document.getElementById('form-request-otp') as HTMLFormElement;
+  const formVer = document.getElementById('form-verify-otp') as HTMLFormElement;
+  const inputEmail = document.getElementById('wou-input-email') as HTMLInputElement;
+  const otpDigits = document.querySelectorAll('.otp-digit') as NodeListOf<HTMLInputElement>;
+  let currentEmail='';
+  const showErr=(m:string)=>{ if(errorBanner&&errorMsg){ errorMsg.textContent=m; errorBanner.classList.remove('hidden'); }};
+  const hideErr=()=> errorBanner?.classList.add('hidden');
+  const setTab=(t:'email'|'social'|'web3')=>{
+    hideErr();
+    [tabEmail,tabSocial,tabWeb3].forEach(b=> b?.setAttribute('class','flex-1 py-2 text-xs font-semibold rounded-xl text-zinc-400 hover:text-white transition'));
+    cEmail?.classList.add('hidden'); cSocial?.classList.add('hidden'); cWeb3?.classList.add('hidden');
+    if(t==='email'){ tabEmail?.setAttribute('class','flex-1 py-2 text-xs font-semibold rounded-xl bg-white text-zinc-950'); cEmail?.classList.remove('hidden'); }
+    else if(t==='social'){ tabSocial?.setAttribute('class','flex-1 py-2 text-xs font-semibold rounded-xl bg-white text-zinc-950'); cSocial?.classList.remove('hidden'); }
+    else { tabWeb3?.setAttribute('class','flex-1 py-2 text-xs font-semibold rounded-xl bg-white text-zinc-950'); cWeb3?.classList.remove('hidden'); }
+  };
+  tabEmail?.addEventListener('click', ()=> setTab('email'));
+  tabSocial?.addEventListener('click', ()=> setTab('social'));
+  tabWeb3?.addEventListener('click', ()=> setTab('web3'));
+  window.addEventListener('wou:open-auth-modal', ()=> { hideErr(); modal?.classList.remove('hidden'); });
+  window.addEventListener('wou:close-auth-modal', ()=> modal?.classList.add('hidden'));
+  closeBtn?.addEventListener('click', ()=> wouAuth.closeModal());
+  modal?.addEventListener('click', (e)=>{ if(e.target===modal) wouAuth.closeModal(); });
+  formReq?.addEventListener('submit', async (e)=>{
+    e.preventDefault(); hideErr(); currentEmail=inputEmail.value.trim(); if(!currentEmail) return;
+    try{ await wouAuth.requestOtp(currentEmail); formReq.classList.add('hidden'); formVer.classList.remove('hidden'); if(titleEl) titleEl.textContent='Enter Security Code'; if(subEl) subEl.textContent=`Code sent to ${currentEmail}`; otpDigits[0]?.focus(); }catch(err:any){ showErr(err.message||'Failed'); }
   });
-  document.getElementById('wou-evm')?.addEventListener('click', async ()=>{
-    try{
-      const eth = (window as any).ethereum; if(!eth) return showNotification('MetaMask not found');
-      const accs = await eth.request({method:'eth_requestAccounts'}); const addr = accs[0];
-      const ch = await fetch(`${WOU_BASE}/api/v1/auth/web3/challenge`,{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chain:'ethereum', public_address: addr})}).then(r=>r.json());
-      const sig = await eth.request({method:'personal_sign', params:[ch.message, addr]});
-      const vr = await fetch(`${WOU_BASE}/api/v1/auth/web3/verify`,{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chain:'ethereum', public_address: addr, signature: sig, message: ch.message, context:'worldofunreal'})}).then(r=>r.json());
-      if(vr.account){ saveWou({account: vr.account, token: vr.session_token}); showNotification('EVM wallet linked via WOU-ID'); closeWou();} else showNotification('Verify failed');
-    }catch(e:any){ showNotification('EVM link failed: '+(e.message||e));}
+  const verifyCode=async(code:string)=>{ hideErr(); try{ await wouAuth.verifyOtp(currentEmail, code); showNotification('Signed in via OTP'); }catch(err:any){ showErr(err.message||'Invalid code'); }};
+  otpDigits.forEach((d,idx)=>{
+    d.addEventListener('input', (e)=>{
+      const v=(e.target as HTMLInputElement).value.slice(-1); d.value=v; if(v && idx<5) otpDigits[idx+1].focus();
+      const full=Array.from(otpDigits).map(x=>x.value).join(''); if(full.length===6) verifyCode(full);
+    });
+    d.addEventListener('paste', (e:ClipboardEvent)=>{
+      e.preventDefault(); const t=(e.clipboardData?.getData('text')||'').replace(/\D/g,'').slice(0,6); if(!t) return; t.split('').forEach((ch,i)=> { if(otpDigits[i]) otpDigits[i].value=ch; }); const full=Array.from(otpDigits).map(x=>x.value).join(''); if(full.length===6) verifyCode(full);
+    });
+    d.addEventListener('keydown', (e)=>{ if(e.key==='Backspace' && !d.value && idx>0) otpDigits[idx-1].focus(); });
   });
-  document.getElementById('wou-sol')?.addEventListener('click', async ()=>{
-    try{
-      const sol = (window as any).solana || (window as any).phantom?.solana; if(!sol) return showNotification('Phantom not found');
-      await sol.connect(); const pk = sol.publicKey.toString();
-      const ch = await fetch(`${WOU_BASE}/api/v1/auth/web3/challenge`,{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chain:'solana', public_address: pk})}).then(r=>r.json());
-      const enc = new TextEncoder().encode(ch.message); const sigObj = await sol.signMessage(enc,'utf8'); const sig = (sigObj.signature ? Array.from(sigObj.signature).map((b:any)=>b.toString(16).padStart(2,'0')).join('') : sigObj.toString());
-      // Phantom returns base58, try verify with base58
-      const vr = await fetch(`${WOU_BASE}/api/v1/auth/web3/verify`,{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chain:'solana', public_address: pk, signature: sig, message: ch.message, context:'worldofunreal'})}).then(r=>r.json());
-      if(vr.account){ saveWou({account: vr.account, token: vr.session_token}); showNotification('Solana wallet linked'); closeWou();} else showNotification('Sol verify failed, try again');
-    }catch(e:any){ showNotification('SOL link failed: '+(e.message||e));}
-  });
-  document.getElementById('wou-logout')?.addEventListener('click', ()=>{ saveWou(null); showNotification('Logged out'); });
-  document.getElementById('wou-otp')?.addEventListener('click', async ()=>{
-    const email=(document.getElementById('wou-email') as HTMLInputElement).value.trim(); if(!email) return showNotification('Enter email');
-    try{ await fetch(`${WOU_BASE}/api/v1/auth/otp/request`,{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, context:'worldofunreal'})}); showNotification('OTP sent via Stalwart to '+email);}catch{ showNotification('OTP request failed');}
-  });
-  renderWou();
+  formVer?.addEventListener('submit', (e)=>{ e.preventDefault(); const full=Array.from(otpDigits).map(x=>x.value).join(''); if(full.length===6) verifyCode(full); });
+  document.getElementById('btn-change-email')?.addEventListener('click', ()=>{ formVer.classList.add('hidden'); formReq.classList.remove('hidden'); if(titleEl) titleEl.textContent='Sign in to Ionic Swap'; if(subEl) subEl.textContent='Connect via email, social or Web3. Powered by id.worldofunreal.com'; otpDigits.forEach(x=> x.value=''); });
+  document.getElementById('btn-resend-otp')?.addEventListener('click', async()=>{ try{ await wouAuth.requestOtp(currentEmail); showErr('New code sent!'); }catch(err:any){ showErr(err.message||'Resend failed'); }});
+  document.querySelectorAll('.social-btn').forEach(btn=> btn.addEventListener('click', ()=>{ const p=btn.getAttribute('data-provider') as any; if(p) wouAuth.loginWithOAuth(p); }));
+  document.getElementById('web3-solana')?.addEventListener('click', async()=>{ hideErr(); try{ await wouAuth.loginWithSolana(); showNotification('Solana linked'); }catch(e:any){ showErr(e.message); }});
+  document.getElementById('web3-evm')?.addEventListener('click', async()=>{ hideErr(); try{ await wouAuth.loginWithEthereum(); showNotification('EVM linked'); }catch(e:any){ showErr(e.message); }});
+  document.getElementById('web3-icp')?.addEventListener('click', async()=>{ hideErr(); try{ await wouAuth.loginWithIcp(); showNotification('ICP linked'); }catch(e:any){ showErr(e.message); }});
+  // ensure no fake logged-in on first paint
+  if (!wouAuth.isAuthenticated()) { signinBtn?.classList.remove('hidden'); userPill?.classList.add('hidden'); }
 
   //Theme switcher trigger
   const themeBtn = document.getElementById('theme-toggle');
