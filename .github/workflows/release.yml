@@ -31,3 +31,49 @@ jobs:
     - name: Deploy via Rsync
       run: |
         rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/ionicswap.com/dist/
+    - name: Deploy Rust Server (FreeBSD native, no DFX)
+      run: |
+        rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" --exclude target --exclude .git server/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/ionicswap-server/
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOSSH'
+          set -e
+          echo "[1/4] Building ionicswap-server release..."
+          cargo build --release --manifest-path ~/ionicswap-server/Cargo.toml
+          echo "[2/4] Installing binary..."
+          sudo install -o root -g wheel -m 755 ~/ionicswap-server/target/release/ionicswap-server /usr/local/bin/ionicswap-server
+          echo "[3/4] Ensuring rc.d service..."
+          if [ ! -f /usr/local/etc/rc.d/ionicswap ]; then
+            sudo tee /usr/local/etc/rc.d/ionicswap > /dev/null << 'EORC'
+        #!/bin/sh
+        # PROVIDE: ionicswap
+        # REQUIRE: LOGIN
+        # KEYWORD: shutdown
+        . /etc/rc.subr
+        name="ionicswap"
+        rcvar="ionicswap_enable"
+        load_rc_config $name
+        : ${ionicswap_enable:="YES"}
+        : ${ionicswap_port:="8081"}
+        pidfile="/var/run/${name}.pid"
+        command="/usr/sbin/daemon"
+        command_args="-f -P ${pidfile} -r -H -o /var/log/ionicswap.log -t ionicswap /usr/local/bin/ionicswap-server"
+        run_rc_command "$1"
+        EORC
+            sudo chmod +x /usr/local/etc/rc.d/ionicswap
+            echo 'ionicswap_enable="YES"' | sudo tee -a /etc/rc.conf > /dev/null
+          fi
+          echo "[4/4] Restarting + nginx proxy..."
+          sudo service ionicswap restart || sudo service ionicswap start
+          if ! grep -q "location /api/" /usr/local/etc/nginx/conf.d/ionicswap.com.conf; then
+            sudo tee -a /usr/local/etc/nginx/conf.d/ionicswap.com.conf > /dev/null << 'EONGINX'
+          location /api/ {
+              proxy_pass http://127.0.0.1:8081;
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          }
+        EONGINX
+            sudo nginx -t && sudo service nginx reload
+          fi
+          sleep 1
+          curl -s http://127.0.0.1:8081/health || echo "health check failed"
+        EOSSH

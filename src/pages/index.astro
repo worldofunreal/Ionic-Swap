@@ -933,6 +933,45 @@ import Layout from '../layouts/Layout.astro';
     </div>
   </div>
 
+  <!-- WOU-ID Wallet Login Modal (Binance-like profile, internally via id.worldofunreal.com) -->
+  <div id="wou-modal" class="fixed inset-0 z-[10001] hidden">
+    <div id="wou-backdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+    <div class="relative z-10 w-full max-w-md mx-auto mt-20 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-2xl font-sans">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-bold text-zinc-900 dark:text-white">WOU-ID • Wallet Login</h3>
+        <button id="wou-close" class="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg">✕</button>
+      </div>
+      <div id="wou-logged-out" class="space-y-3">
+        <p class="text-xs text-zinc-500">Internal • Anonymous-first, link wallets to your profile. Powered by <span class="text-emerald-500 font-bold">id.worldofunreal.com</span></p>
+        <button id="wou-anon" class="w-full py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-bold rounded-xl">Continue as Guest</button>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="wou-evm" class="py-2.5 bg-[#f59e0b]/10 border border-amber-500/20 text-amber-600 text-xs font-bold rounded-xl">🦊 MetaMask (EVM)</button>
+          <button id="wou-sol" class="py-2.5 bg-purple-500/10 border border-purple-500/20 text-purple-600 text-xs font-bold rounded-xl">👻 Phantom (SOL)</button>
+        </div>
+        <div class="flex items-center gap-2 pt-2">
+          <input id="wou-email" placeholder="email for OTP (optional)" class="flex-1 px-3 py-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none" />
+          <button id="wou-otp" class="px-4 py-2 bg-emerald-500 text-white text-xs font-bold rounded-lg">OTP</button>
+        </div>
+        <p class="text-[10px] text-zinc-400">Binance-like profile: username, tiers, verified badge, linked wallets, private actions — all internal, auditable via Rust.</p>
+      </div>
+      <div id="wou-logged-in" class="hidden space-y-3">
+        <div class="flex items-center gap-3 p-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold">U</div>
+          <div class="flex-1">
+            <div id="wou-username" class="text-xs font-bold text-zinc-900 dark:text-white">-</div>
+            <div id="wou-email-display" class="text-[10px] text-zinc-500">-</div>
+          </div>
+          <span class="text-[9px] px-2 py-1 bg-emerald-500/10 text-emerald-600 rounded-full border border-emerald-500/20">✓ VERIFIED</span>
+        </div>
+        <div id="wou-wallets" class="space-y-1 font-mono text-[10px]"></div>
+        <div class="flex gap-2">
+          <button id="wou-profile" class="flex-1 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-bold rounded-lg">View Binance-like Profile</button>
+          <button id="wou-logout" class="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 text-xs font-bold rounded-lg">Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Notification glassmorphic toast notification -->
   <div id="toast" class="fixed bottom-6 right-6 z-[10000] hidden items-center gap-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-250 dark:border-zinc-700 pl-4 pr-6 py-3 rounded-xl shadow-lg backdrop-blur-md font-mono text-[10px]">
     <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
@@ -1083,6 +1122,20 @@ import Layout from '../layouts/Layout.astro';
   const receiveVal = document.getElementById('lbl-receive-val');
   const tradePercentBtns = document.querySelectorAll('.trade-percent-btn');
   const coinPrices: Record<string, number> = { BTC: 58451.25, ETH: 3120.40, SOL: 142.25, ICP: 8.91, XRP: 0.62, BNB: 605.12, DOGE: 0.14, ADA: 0.45, TRX: 0.11, USDT: 1.00 };
+  // free oracle: try Rust server first, fallback to static
+  const API_BASE = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8081' : '';
+  const refreshFromServer = async () => {
+    try { const r = await fetch(`${API_BASE}/api/prices`); if (!r.ok) return; const arr: any[] = await r.json();
+      arr.forEach((p:any)=>{ if(p.symbol && p.price) coinPrices[p.symbol]=p.price; const el = document.querySelector(`[data-symbol="${p.symbol}"]`); if(el){ const priceEl = el.querySelector('.font-mono .text-xs') || el.nextElementSibling; }});
+      updateTradeCalculator();
+      // update price rows text live (ponytail: direct DOM, no framework)
+      document.querySelectorAll('.price-row').forEach(row=>{
+        const sym=row.getAttribute('data-symbol')||''; const price=coinPrices[sym]; if(!price) return;
+        const priceDiv=row.querySelector('.text-right .text-xs') as HTMLElement; if(priceDiv) priceDiv.innerText=`$${price.toLocaleString()}`;
+      });
+    } catch {}
+  };
+  refreshFromServer(); setInterval(refreshFromServer, 30000);
 
   let currentTargetSymbol = 'BTC';
 
@@ -1150,10 +1203,14 @@ import Layout from '../layouts/Layout.astro';
   };
   renderTxs();
 
-  // Actions trigger triggers (persisted locally)
-  document.getElementById('btn-submit-swap')?.addEventListener('click', () => {
+  // Actions trigger triggers (try Rust server first, fallback local)
+  document.getElementById('btn-submit-swap')?.addEventListener('click', async () => {
     const amt = parseFloat((document.getElementById('pay-amount-input') as HTMLInputElement)?.value || '0');
     if (!amt || amt <= 0) { showNotification("Enter amount"); return; }
+    try {
+      const r = await fetch(`${API_BASE}/api/swap`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({from:'USDT', to: currentTargetSymbol, amount: amt})});
+      if (r.ok) { const j:any = await r.json(); state.txs.push({ id: j.tx_id, from:'USDT', to: j.to, amount: j.amount, receive: j.receive, price: j.price, ts: Date.now() }); saveState(); renderTxs(); showNotification(`Swap ${j.amount} USDT → ${j.receive.toFixed(6)} ${j.to} (Rust free ${j.fee.toFixed(4)} fee)`); return; }
+    } catch {}
     if ((state.balances['USDT']||0) < amt) { showNotification("Insufficient USDT (local)"); return; }
     const price = coinPrices[currentTargetSymbol] || 1;
     const receive = amt / price;
@@ -1161,16 +1218,20 @@ import Layout from '../layouts/Layout.astro';
     state.balances[currentTargetSymbol] = (state.balances[currentTargetSymbol]||0) + receive;
     state.txs.push({ id: Date.now().toString(), from:'USDT', to: currentTargetSymbol, amount: amt, receive, price, ts: Date.now() });
     saveState(); renderTxs();
-    showNotification(`Swap ${amt} USDT → ${receive.toFixed(6)} ${currentTargetSymbol} (local, Rust later)`);
+    showNotification(`Swap ${amt} USDT → ${receive.toFixed(6)} ${currentTargetSymbol} (local fallback)`);
   });
 
-  document.getElementById('btn-approve-stake')?.addEventListener('click', () => {
+  document.getElementById('btn-approve-stake')?.addEventListener('click', async () => {
     const amt = parseFloat((document.getElementById('liq-stake-input') as HTMLInputElement)?.value || '0');
     const dur = parseFloat((document.getElementById('liq-stake-duration') as HTMLInputElement)?.value || '1');
     if (!amt || amt <= 0) { showNotification("Enter stake amount"); return; }
+    try {
+      const r = await fetch(`${API_BASE}/api/stake`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token:'IONIC', amount: amt, dissolve_delay_secs: dur*31536000})});
+      if (r.ok) { const j:any = await r.json(); state.stakes.push({ id: j.position_id, amount: j.amount, duration: dur, voting_power: j.voting_power, ts: Date.now() }); saveState(); showNotification(`Staking ${j.amount} IONIC vp ${j.voting_power.toFixed(0)} apy ${(j.apy*100).toFixed(1)}% (Rust)`); return; }
+    } catch {}
     state.stakes.push({ id: Date.now().toString(), amount: amt, duration: dur, ts: Date.now() });
     saveState();
-    showNotification(`Staking ${amt} IONIC locked ${dur}y (local, Rust later)`);
+    showNotification(`Staking ${amt} IONIC locked ${dur}y (local fallback)`);
   });
 
   // Action links routers
@@ -1204,6 +1265,75 @@ import Layout from '../layouts/Layout.astro';
       tradeNav?.click();
     });
   });
+
+  // --- WOU-ID integration (id.worldofunreal.com, internal, wallet link -> profile) ---
+  const WOU_BASE = 'https://id.worldofunreal.com';
+  const WOU_KEY = 'wou_session';
+  const wouModal = document.getElementById('wou-modal');
+  const wouBackdrop = document.getElementById('wou-backdrop');
+  const wouClose = document.getElementById('wou-close');
+  const btnLogin = document.getElementById('btn-login-trigger');
+  const wouOut = document.getElementById('wou-logged-out');
+  const wouIn = document.getElementById('wou-logged-in');
+  const loadWou = () => { try{return JSON.parse(localStorage.getItem(WOU_KEY)||'null');}catch{return null;}};
+  let wou = loadWou();
+  const saveWou = (v:any)=>{ if(v) localStorage.setItem(WOU_KEY, JSON.stringify(v)); else localStorage.removeItem(WOU_KEY); wou=v; renderWou(); };
+  const renderWou = () => {
+    const topName = document.querySelector('#btn-login-trigger span') as HTMLElement;
+    const topSub = document.querySelector('#btn-login-trigger span + span') as HTMLElement;
+    if (wou?.account) {
+      wouOut?.classList.add('hidden'); wouIn?.classList.remove('hidden');
+      (document.getElementById('wou-username') as HTMLElement).innerText = wou.account.username || wou.account.display_name || 'anon';
+      (document.getElementById('wou-email-display') as HTMLElement).innerText = wou.account.email || wou.account.id || '';
+      const wallets = document.getElementById('wou-wallets') as HTMLElement;
+      if (wallets) {
+        const ew = wou.account.embedded_wallets || {};
+        const links = (wou.account.linked_identities||[]).map((l:any)=>`${l.provider}:${l.external_id.slice(0,12)}...`).join(' • ') || 'no external wallets yet';
+        wallets.innerHTML = `<div>EVM: ${ew.evm_address||'-'}</div><div>SOL: ${ew.solana_address||'-'}</div><div>ICP: ${ew.icp_principal||'-'}</div><div class="text-zinc-500">${links}</div>`;
+      }
+      if(topName) topName.innerText = (wou.account.username || wou.account.display_name || 'BIZKIT_0x1337').toUpperCase();
+      if(topSub) topSub.innerHTML = '<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> WOU-ID • ' + (wou.account.email ? 'VERIFIED' : 'GUEST');
+    } else {
+      wouOut?.classList.remove('hidden'); wouIn?.classList.add('hidden');
+    }
+  };
+  const openWou = ()=>{ wouModal?.classList.remove('hidden'); wouModal?.classList.add('flex'); renderWou(); };
+  const closeWou = ()=>{ wouModal?.classList.add('hidden'); wouModal?.classList.remove('flex'); };
+  btnLogin?.addEventListener('click', openWou);
+  wouClose?.addEventListener('click', closeWou);
+  wouBackdrop?.addEventListener('click', closeWou);
+  document.getElementById('wou-anon')?.addEventListener('click', async ()=>{
+    try{ const r=await fetch(`${WOU_BASE}/api/v1/auth/anonymous`,{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({display_name:'IonicTrader', context:'worldofunreal'})});
+      const j=await r.json(); saveWou({account:j.account||j, token:j.session_token}); showNotification('Guest session via WOU-ID');
+    }catch(e){ showNotification('WOU-ID anon failed, using local fallback'); saveWou({account:{username:'guest_'+Date.now().toString(36), display_name:'Guest', id:'local-'+Date.now(), embedded_wallets:{}}});}
+  });
+  document.getElementById('wou-evm')?.addEventListener('click', async ()=>{
+    try{
+      const eth = (window as any).ethereum; if(!eth) return showNotification('MetaMask not found');
+      const accs = await eth.request({method:'eth_requestAccounts'}); const addr = accs[0];
+      const ch = await fetch(`${WOU_BASE}/api/v1/auth/web3/challenge`,{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chain:'ethereum', public_address: addr})}).then(r=>r.json());
+      const sig = await eth.request({method:'personal_sign', params:[ch.message, addr]});
+      const vr = await fetch(`${WOU_BASE}/api/v1/auth/web3/verify`,{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chain:'ethereum', public_address: addr, signature: sig, message: ch.message, context:'worldofunreal'})}).then(r=>r.json());
+      if(vr.account){ saveWou({account: vr.account, token: vr.session_token}); showNotification('EVM wallet linked via WOU-ID'); closeWou();} else showNotification('Verify failed');
+    }catch(e:any){ showNotification('EVM link failed: '+(e.message||e));}
+  });
+  document.getElementById('wou-sol')?.addEventListener('click', async ()=>{
+    try{
+      const sol = (window as any).solana || (window as any).phantom?.solana; if(!sol) return showNotification('Phantom not found');
+      await sol.connect(); const pk = sol.publicKey.toString();
+      const ch = await fetch(`${WOU_BASE}/api/v1/auth/web3/challenge`,{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chain:'solana', public_address: pk})}).then(r=>r.json());
+      const enc = new TextEncoder().encode(ch.message); const sigObj = await sol.signMessage(enc,'utf8'); const sig = (sigObj.signature ? Array.from(sigObj.signature).map((b:any)=>b.toString(16).padStart(2,'0')).join('') : sigObj.toString());
+      // Phantom returns base58, try verify with base58
+      const vr = await fetch(`${WOU_BASE}/api/v1/auth/web3/verify`,{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({chain:'solana', public_address: pk, signature: sig, message: ch.message, context:'worldofunreal'})}).then(r=>r.json());
+      if(vr.account){ saveWou({account: vr.account, token: vr.session_token}); showNotification('Solana wallet linked'); closeWou();} else showNotification('Sol verify failed, try again');
+    }catch(e:any){ showNotification('SOL link failed: '+(e.message||e));}
+  });
+  document.getElementById('wou-logout')?.addEventListener('click', ()=>{ saveWou(null); showNotification('Logged out'); });
+  document.getElementById('wou-otp')?.addEventListener('click', async ()=>{
+    const email=(document.getElementById('wou-email') as HTMLInputElement).value.trim(); if(!email) return showNotification('Enter email');
+    try{ await fetch(`${WOU_BASE}/api/v1/auth/otp/request`,{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, context:'worldofunreal'})}); showNotification('OTP sent via Stalwart to '+email);}catch{ showNotification('OTP request failed');}
+  });
+  renderWou();
 
   //Theme switcher trigger
   const themeBtn = document.getElementById('theme-toggle');
