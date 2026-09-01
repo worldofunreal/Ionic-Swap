@@ -3,7 +3,7 @@
  * Context: ionic_swap, callback: https://ionicswap.com/auth/callback
  */
 export const ID_SERVER_URL = 'https://id.worldofunreal.com';
-export const AUTH_HUB_CALLBACK_URL = 'https://ionicswap.com/auth/callback';
+export const AUTH_HUB_CALLBACK_URL = 'https://worldofunreal.com/auth/callback';
 
 export type SocialProvider = 'discord' | 'google' | 'twitter' | 'meta';
 export type AuthProvider = SocialProvider | 'email' | 'ethereum' | 'solana' | 'icp' | 'passkey' | 'anonymous' | string;
