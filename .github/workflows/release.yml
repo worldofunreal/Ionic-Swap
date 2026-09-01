@@ -30,4 +30,4 @@ jobs:
         ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
     - name: Deploy via Rsync
       run: |
-        rsync -avz --delete dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/zroot/jails/ionicswap/var/www/ionicswap.com/dist/
+        rsync -avz --delete dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/ionicswap.com/dist/
