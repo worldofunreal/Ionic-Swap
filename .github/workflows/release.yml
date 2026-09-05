@@ -63,17 +63,23 @@ jobs:
           fi
           echo "[4/4] Restarting + nginx proxy..."
           sudo service ionicswap restart || sudo service ionicswap start
-          if ! grep -q "location /api/" /usr/local/etc/nginx/conf.d/ionicswap.com.conf; then
-            sudo tee -a /usr/local/etc/nginx/conf.d/ionicswap.com.conf > /dev/null << 'EONGINX'
-          location /api/ {
-              proxy_pass http://127.0.0.1:8081;
-              proxy_set_header Host $host;
-              proxy_set_header X-Real-IP $remote_addr;
-              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-          }
-        EONGINX
-            sudo nginx -t && sudo service nginx reload
-          fi
+          # Ensure /api/ proxy lives INSIDE the 443 server block (idempotent;
+          # old deploys appended it outside server{} which breaks `nginx -t`).
+          CONF=/usr/local/etc/nginx/conf.d/ionicswap.com.conf
+          sudo cp "$CONF" "$CONF.bak_$(date +%s)"
+          sudo /usr/local/bin/python3 - << 'EOPY'
+          import re
+          p = "/usr/local/etc/nginx/conf.d/ionicswap.com.conf"
+          s = open(p).read()
+          s = re.sub(r"\n? *location /api/ \{[^}]*\}\n?", "\n", s)
+          block = "\n    location /api/ {\n        proxy_pass http://127.0.0.1:8081;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n    }\n"
+          s = s.rstrip() + "\n"
+          assert s.rstrip().endswith("}") and s.count("server {") == 2, "unexpected conf shape"
+          s = s.rstrip()[:-1].rstrip() + "\n" + block + "}\n"
+          open(p, "w").write(s)
+          print("nginx conf normalized OK")
+          EOPY
+          sudo nginx -t && sudo service nginx reload
           sleep 1
           curl -s http://127.0.0.1:8081/health || echo "health check failed"
         EOSSH
