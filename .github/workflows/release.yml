@@ -65,9 +65,11 @@ jobs:
           sudo service ionicswap restart || sudo service ionicswap start
           # Ensure /api/ proxy lives INSIDE the 443 server block (idempotent;
           # old deploys appended it outside server{} which breaks `nginx -t`).
+          # NOTE: heredoc content is YAML-indented, so strip the 10-space
+          # prefix before feeding to python (else IndentationError).
           CONF=/usr/local/etc/nginx/conf.d/ionicswap.com.conf
           sudo cp "$CONF" "$CONF.bak_$(date +%s)"
-          sudo /usr/local/bin/python3 - << 'EOPY'
+          sudo tee /tmp/nginx_fix.py > /dev/null << 'EOPY'
           import re
           p = "/usr/local/etc/nginx/conf.d/ionicswap.com.conf"
           s = open(p).read()
@@ -79,6 +81,8 @@ jobs:
           open(p, "w").write(s)
           print("nginx conf normalized OK")
           EOPY
+          sudo sed -i '' 's/^          //' /tmp/nginx_fix.py
+          sudo /usr/local/bin/python3 /tmp/nginx_fix.py && sudo rm /tmp/nginx_fix.py
           sudo nginx -t && sudo service nginx reload
           sleep 1
           curl -s http://127.0.0.1:8081/health || echo "health check failed"
