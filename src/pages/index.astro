@@ -1423,7 +1423,7 @@ import Layout from '../layouts/Layout.astro';
   modal?.addEventListener('click', (e)=>{ if(e.target===modal) wouAuth.closeModal(); });
   emailForm?.addEventListener('submit', async (e)=>{
     e.preventDefault(); hideErr(); currentEmail=emailInput.value.trim(); if(!currentEmail) return;
-    try{ await wouAuth.requestOtp(currentEmail); step1?.classList.add('hidden'); step2?.classList.remove('hidden'); showErr('Code sent to '+currentEmail, true); otpDigits[0]?.focus(); }catch(err:any){ showErr(err.message||'Failed'); }
+    try{ await wouAuth.requestOtp(currentEmail, false); step1?.classList.add('hidden'); step2?.classList.remove('hidden'); showErr('Code sent to '+currentEmail, true); otpDigits[0]?.focus(); }catch(err:any){ showErr(err.message||'Failed'); }
   });
   const verifyCode=async(code:string)=>{ hideErr(); try{ await wouAuth.verifyOtp(currentEmail, code); showNotification('Signed in via OTP'); }catch(err:any){ showErr(err.message||'Invalid code'); }};
   document.getElementById('wou-verify-otp-btn')?.addEventListener('click', ()=>{ const full=Array.from(otpDigits).map(x=>x.value).join(''); if(full.length===6) verifyCode(full); else showErr('Enter 6-digit code'); });
@@ -1438,7 +1438,7 @@ import Layout from '../layouts/Layout.astro';
     d.addEventListener('keydown', (e)=>{ if(e.key==='Backspace' && !d.value && idx>0) otpDigits[idx-1].focus(); });
   });
   document.getElementById('btn-change-email')?.addEventListener('click', ()=>{ step2?.classList.add('hidden'); step1?.classList.remove('hidden'); otpDigits.forEach(x=> x.value=''); hideErr(); });
-  document.getElementById('btn-resend-otp')?.addEventListener('click', async()=>{ try{ await wouAuth.requestOtp(currentEmail); showErr('New code sent!', true); }catch(err:any){ showErr(err.message||'Resend failed'); }});
+  document.getElementById('btn-resend-otp')?.addEventListener('click', async()=>{ try{ await wouAuth.requestOtp(currentEmail, false); showErr('New code sent!', true); }catch(err:any){ showErr(err.message||'Resend failed'); }});
   document.getElementById('wou-login-google')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('google'));
   document.getElementById('wou-login-discord')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('discord'));
   document.getElementById('wou-login-twitter')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('twitter'));
