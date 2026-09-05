@@ -1349,7 +1349,7 @@ import Layout from '../layouts/Layout.astro';
   });
 
   // --- WOU-ID proper (SOW single-view, real icons, hub callback worldofunreal.com) ---
-  import { wouAuth } from '@worldofunreal/id-sdk';
+  import { wouAuth } from '@worldofunreal/id';
   wouAuth.setDefaultContext('ionic_swap');
   const signinBtn = document.getElementById('wou-signin-btn');
   const userPill = document.getElementById('wou-user-pill');
