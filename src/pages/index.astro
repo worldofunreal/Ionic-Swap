@@ -960,7 +960,7 @@ import Layout from '../layouts/Layout.astro';
       <div class="absolute -top-24 -right-24 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
       <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
       <div class="flex items-center justify-between mb-5">
-        <span class="text-xs font-mono tracking-[0.2em] text-zinc-400">⬡ WORLD OF UNREAL ID</span>
+        <span class="flex items-center gap-2 text-xs font-mono tracking-[0.2em] text-zinc-400"><img src="/wouid.svg" alt="WouID" class="h-4 w-auto" />WORLD OF UNREAL ID</span>
         <button id="wou-modal-close-btn" type="button" class="text-zinc-400 hover:text-white p-2 rounded-full hover:bg-white/10 transition">✕</button>
       </div>
       <!-- logged view (own profile, not Binance slop) -->
@@ -1349,7 +1349,8 @@ import Layout from '../layouts/Layout.astro';
   });
 
   // --- WOU-ID proper (SOW single-view, real icons, hub callback worldofunreal.com) ---
-  import { wouAuth } from '../scripts/wou-auth';
+  import { wouAuth } from '@worldofunreal/id-sdk';
+  wouAuth.setDefaultContext('ionic_swap');
   const signinBtn = document.getElementById('wou-signin-btn');
   const userPill = document.getElementById('wou-user-pill');
   const userBtn = document.getElementById('wou-user-btn');
