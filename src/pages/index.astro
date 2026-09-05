@@ -1415,6 +1415,11 @@ import Layout from '../layouts/Layout.astro';
   const step2 = document.getElementById('wou-email-step-2');
   const otpDigits = document.querySelectorAll('.otp-digit') as NodeListOf<HTMLInputElement>;
   let currentEmail='';
+  let resendCooldownUntil = 0;
+  const resendBtn = document.getElementById('btn-resend-otp');
+  const resendLabel = resendBtn?.textContent ?? 'Resend Code';
+  let resendTick: any = null;
+  const armResendCooldown=(ms:number)=>{ resendCooldownUntil = Date.now()+ms; resendBtn?.setAttribute('disabled','true'); if(resendTick) clearInterval(resendTick); const render=()=>{ const left=Math.max(0,Math.ceil((resendCooldownUntil-Date.now())/1000)); if(resendBtn) resendBtn.textContent = left>0 ? `${resendLabel} (${left}s)` : resendLabel; if(left<=0){ if(resendTick) clearInterval(resendTick); resendTick=null; resendBtn?.removeAttribute('disabled'); } }; render(); resendTick=setInterval(render,1000); };
   const showErr=(m:string, isOk=false)=>{ const el=isOk?authMsg:errorMsg; const banner=isOk?authMsg?.parentElement:errorBanner; if(el&&banner){ el.textContent=m; banner.classList.remove('hidden'); if(isOk) { (banner as HTMLElement).className='p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs text-center'; } } if(!isOk && errorBanner&&errorMsg){ errorMsg.textContent=m; errorBanner.classList.remove('hidden'); }};
   const hideErr=()=>{ errorBanner?.classList.add('hidden'); authMsg?.classList.add('hidden'); if(authMsg?.parentElement) authMsg.parentElement.classList.add('hidden'); };
   window.addEventListener('wou:open-auth-modal', ()=> { hideErr(); modal?.classList.remove('hidden'); const isAuth=wouAuth.isAuthenticated(); if(isAuth){ loggedView?.classList.remove('hidden'); unloggedView?.classList.add('hidden'); } else { loggedView?.classList.add('hidden'); unloggedView?.classList.remove('hidden'); } });
@@ -1423,7 +1428,7 @@ import Layout from '../layouts/Layout.astro';
   modal?.addEventListener('click', (e)=>{ if(e.target===modal) wouAuth.closeModal(); });
   emailForm?.addEventListener('submit', async (e)=>{
     e.preventDefault(); hideErr(); currentEmail=emailInput.value.trim(); if(!currentEmail) return;
-    try{ await wouAuth.requestOtp(currentEmail, false); step1?.classList.add('hidden'); step2?.classList.remove('hidden'); showErr('Code sent to '+currentEmail, true); otpDigits[0]?.focus(); }catch(err:any){ showErr(err.message||'Failed'); }
+    try{ await wouAuth.requestOtp(currentEmail, false); step1?.classList.add('hidden'); step2?.classList.remove('hidden'); showErr('Code sent to '+currentEmail, true); otpDigits[0]?.focus(); }catch(err:any){ showErr(wouAuth.describeOtpError(err).message); }
   });
   const verifyCode=async(code:string)=>{ hideErr(); try{ await wouAuth.verifyOtp(currentEmail, code); showNotification('Signed in via OTP'); }catch(err:any){ showErr(err.message||'Invalid code'); }};
   document.getElementById('wou-verify-otp-btn')?.addEventListener('click', ()=>{ const full=Array.from(otpDigits).map(x=>x.value).join(''); if(full.length===6) verifyCode(full); else showErr('Enter 6-digit code'); });
@@ -1438,7 +1443,7 @@ import Layout from '../layouts/Layout.astro';
     d.addEventListener('keydown', (e)=>{ if(e.key==='Backspace' && !d.value && idx>0) otpDigits[idx-1].focus(); });
   });
   document.getElementById('btn-change-email')?.addEventListener('click', ()=>{ step2?.classList.add('hidden'); step1?.classList.remove('hidden'); otpDigits.forEach(x=> x.value=''); hideErr(); });
-  document.getElementById('btn-resend-otp')?.addEventListener('click', async()=>{ try{ await wouAuth.requestOtp(currentEmail, false); showErr('New code sent!', true); }catch(err:any){ showErr(err.message||'Resend failed'); }});
+  document.getElementById('btn-resend-otp')?.addEventListener('click', async()=>{ if(Date.now() < resendCooldownUntil) return; try{ await wouAuth.requestOtp(currentEmail, false); showErr('New code sent!', true); armResendCooldown(60000); }catch(err:any){ const d=wouAuth.describeOtpError(err); if(d.retryAfterSeconds) armResendCooldown(d.retryAfterSeconds*1000); showErr(d.message); }});
   document.getElementById('wou-login-google')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('google'));
   document.getElementById('wou-login-discord')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('discord'));
   document.getElementById('wou-login-twitter')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('twitter'));
