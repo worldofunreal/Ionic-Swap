@@ -40,9 +40,14 @@ jobs:
           cargo build --release --manifest-path ~/ionicswap-server/Cargo.toml
           echo "[2/4] Installing binary..."
           sudo install -o root -g wheel -m 755 ~/ionicswap-server/target/release/ionicswap-server /usr/local/bin/ionicswap-server
-          echo "[3/4] Ensuring rc.d service..."
-          if [ ! -f /usr/local/etc/rc.d/ionicswap ]; then
-            sudo tee /usr/local/etc/rc.d/ionicswap > /dev/null << 'EORC'
+          echo "[3/4] Ensuring rc.d service + env..."
+          sudo mkdir -p /var/db/ionicswap /var/log
+          sudo install -o root -g wheel -m 600 /dev/null /usr/local/etc/ionicswap.env
+          echo "WOU_JWT_SECRET='${{ secrets.WOU_JWT_SECRET }}'" | sudo tee /usr/local/etc/ionicswap.env > /dev/null
+          echo "LEDGER_PATH='/var/db/ionicswap/ledger.json'" | sudo tee -a /usr/local/etc/ionicswap.env > /dev/null
+          echo "PORT='8081'" | sudo tee -a /usr/local/etc/ionicswap.env > /dev/null
+          sudo chmod 600 /usr/local/etc/ionicswap.env
+          sudo tee /usr/local/etc/rc.d/ionicswap > /dev/null << 'EORC'
         #!/bin/sh
         # PROVIDE: ionicswap
         # REQUIRE: LOGIN
@@ -53,14 +58,17 @@ jobs:
         load_rc_config $name
         : ${ionicswap_enable:="YES"}
         : ${ionicswap_port:="8081"}
+        if [ -f /usr/local/etc/ionicswap.env ]; then
+          . /usr/local/etc/ionicswap.env
+          export WOU_JWT_SECRET LEDGER_PATH PORT
+        fi
         pidfile="/var/run/${name}.pid"
         command="/usr/sbin/daemon"
         command_args="-f -P ${pidfile} -r -H -o /var/log/ionicswap.log -t ionicswap /usr/local/bin/ionicswap-server"
         run_rc_command "$1"
         EORC
-            sudo chmod +x /usr/local/etc/rc.d/ionicswap
-            echo 'ionicswap_enable="YES"' | sudo tee -a /etc/rc.conf > /dev/null
-          fi
+          sudo chmod +x /usr/local/etc/rc.d/ionicswap
+          grep -q 'ionicswap_enable="YES"' /etc/rc.conf || echo 'ionicswap_enable="YES"' | sudo tee -a /etc/rc.conf > /dev/null
           echo "[4/4] Restarting + nginx proxy..."
           sudo service ionicswap restart || sudo service ionicswap start
           # Ensure /api/ proxy lives INSIDE the 443 server block (idempotent;

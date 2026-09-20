@@ -1,6 +1,6 @@
 use axum::{
     extract::{Path, Query, State},
-    http::StatusCode,
+    http::{HeaderMap, StatusCode},
     response::IntoResponse,
     routing::{get, post},
     Json, Router,
@@ -33,6 +33,168 @@ struct AppState {
     prices: Arc<RwLock<HashMap<String, Price>>>,
     // mock pools: token -> (total_staked, total_fees)
     pools: Arc<RwLock<HashMap<String, (f64, f64)>>>,
+    // SPIRAL ledger (fase Rush): saldos por wou-id account_id + idempotencia.
+    ledger: Arc<RwLock<Ledger>>,
+    ledger_path: String,
+    jwt_secret: String,
+}
+
+// ---------- SPIRAL ledger ----------
+// Saldos por jugador (wou-id account_id). Sin cadena: la verdad vive aqui.
+const FAUCET_AMOUNT: f64 = 1000.0;
+const FAUCET_TOPUP_BELOW: f64 = 100.0;
+const MIN_BET: f64 = 10.0;
+const MAX_BET: f64 = 1000.0;
+
+#[derive(Clone, Serialize, Deserialize, Default)]
+struct Ledger {
+    balances: HashMap<String, f64>,
+    // idempotency-key -> respuesta ya entregada (reintentos seguros)
+    processed: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Deserialize)]
+struct Claims {
+    sub: String,
+    #[allow(dead_code)]
+    exp: u64,
+}
+
+#[derive(Deserialize)]
+struct AmountReq {
+    amount: f64,
+    key: String,
+}
+
+fn round2(v: f64) -> f64 {
+    (v * 100.0).round() / 100.0
+}
+
+fn auth_sub(headers: &HeaderMap, secret: &str) -> Result<String, StatusCode> {
+    let h = headers
+        .get("authorization")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    let tok = h.strip_prefix("Bearer ").unwrap_or("");
+    if tok.is_empty() || secret.is_empty() {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let mut validation = jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::HS256);
+    validation.validate_exp = true;
+    jsonwebtoken::decode::<Claims>(
+        tok,
+        &jsonwebtoken::DecodingKey::from_secret(secret.as_bytes()),
+        &validation,
+    )
+    .map(|d| d.claims.sub)
+    .map_err(|_| StatusCode::UNAUTHORIZED)
+}
+
+fn save_ledger(path: &str, ledger: &Ledger) {
+    if let Ok(json) = serde_json::to_string(ledger) {
+        let _ = std::fs::write(path, json);
+    }
+}
+
+async fn ledger_balance(
+    State(s): State<AppState>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    let ledger = s.ledger.read().await;
+    let balance = round2(*ledger.balances.get(&sub).unwrap_or(&0.0));
+    (StatusCode::OK, Json(serde_json::json!({"balance": balance}))).into_response()
+}
+
+async fn ledger_faucet(
+    State(s): State<AppState>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    let mut ledger = s.ledger.write().await;
+    let balance = ledger.balances.entry(sub).or_insert(0.0);
+    let granted = if *balance < FAUCET_TOPUP_BELOW {
+        *balance = round2(*balance + FAUCET_AMOUNT);
+        true
+    } else {
+        false
+    };
+    let resp = serde_json::json!({"balance": round2(*balance), "granted": granted});
+    save_ledger(&s.ledger_path, &ledger);
+    (StatusCode::OK, Json(resp)).into_response()
+}
+
+async fn ledger_debit(
+    State(s): State<AppState>,
+    headers: HeaderMap,
+    Json(req): Json<AmountReq>,
+) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    if !(MIN_BET..=MAX_BET).contains(&req.amount) || req.key.is_empty() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error":"monto invalido (10-1000) o key vacia"})),
+        )
+            .into_response();
+    }
+    let mut ledger = s.ledger.write().await;
+    if let Some(prev) = ledger.processed.get(&req.key) {
+        let mut replay = prev.clone();
+        replay["replay"] = serde_json::json!(true);
+        return (StatusCode::OK, Json(replay)).into_response();
+    }
+    let balance = ledger.balances.entry(sub).or_insert(0.0);
+    if *balance < req.amount {
+        return (
+            StatusCode::PAYMENT_REQUIRED,
+            Json(serde_json::json!({"error":"saldo insuficiente", "balance": round2(*balance)})),
+        )
+            .into_response();
+    }
+    *balance = round2(*balance - req.amount);
+    let resp = serde_json::json!({"balance": round2(*balance), "debit_id": req.key});
+    ledger.processed.insert(req.key.clone(), resp.clone());
+    save_ledger(&s.ledger_path, &ledger);
+    (StatusCode::OK, Json(resp)).into_response()
+}
+
+async fn ledger_credit(
+    State(s): State<AppState>,
+    headers: HeaderMap,
+    Json(req): Json<AmountReq>,
+) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    if req.amount < 0.0 || req.amount > 10_000_000.0 || req.key.is_empty() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error":"monto o key invalidos"})),
+        )
+            .into_response();
+    }
+    let mut ledger = s.ledger.write().await;
+    if let Some(prev) = ledger.processed.get(&req.key) {
+        let mut replay = prev.clone();
+        replay["replay"] = serde_json::json!(true);
+        return (StatusCode::OK, Json(replay)).into_response();
+    }
+    let balance = ledger.balances.entry(sub).or_insert(0.0);
+    *balance = round2(*balance + req.amount);
+    let resp = serde_json::json!({"balance": round2(*balance)});
+    ledger.processed.insert(req.key.clone(), resp.clone());
+    save_ledger(&s.ledger_path, &ledger);
+    (StatusCode::OK, Json(resp)).into_response()
 }
 
 async fn health() -> impl IntoResponse { Json(serde_json::json!({"status":"ok","service":"ionicswap-server","chain":"freebsd-native","oracle":"binance+coingecko free"})) }
@@ -139,6 +301,16 @@ async fn refresh_prices(state: AppState) {
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt().with_env_filter(EnvFilter::from_default_env()).init();
+    let ledger_path = std::env::var("LEDGER_PATH")
+        .unwrap_or_else(|_| "/var/db/ionicswap/ledger.json".to_string());
+    let ledger: Ledger = std::fs::read_to_string(&ledger_path)
+        .ok()
+        .and_then(|raw| serde_json::from_str(&raw).ok())
+        .unwrap_or_default();
+    let jwt_secret = std::env::var("WOU_JWT_SECRET").unwrap_or_default();
+    if jwt_secret.is_empty() {
+        tracing::warn!("WOU_JWT_SECRET vacio: /api/ledger/* respondera 401");
+    }
     let state = AppState {
         prices: Arc::new(RwLock::new(HashMap::from([
             ("BTC".to_string(), Price{ symbol:"BTC".to_string(), price:58451.25, change_24h:4.12, ts: Utc::now().timestamp()}),
@@ -159,6 +331,9 @@ async fn main() {
             ("SOL".to_string(), (840.0, 45.0)),
             ("XRP".to_string(), (45000.0, 210.0)),
         ]))),
+        ledger: Arc::new(RwLock::new(ledger)),
+        ledger_path,
+        jwt_secret,
     };
     let s2 = state.clone();
     tokio::spawn(async move { refresh_prices(s2).await; });
@@ -170,6 +345,10 @@ async fn main() {
         .route("/api/pools", get(get_pools))
         .route("/api/swap", post(post_swap))
         .route("/api/stake", post(post_stake))
+        .route("/api/ledger/balance", get(ledger_balance))
+        .route("/api/ledger/faucet", post(ledger_faucet))
+        .route("/api/ledger/debit", post(ledger_debit))
+        .route("/api/ledger/credit", post(ledger_credit))
         .with_state(state)
         .layer(cors);
     let port: u16 = std::env::var("PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(8081);
