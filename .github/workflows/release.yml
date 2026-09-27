@@ -44,6 +44,8 @@ jobs:
           sudo mkdir -p /var/db/ionicswap /var/log
           sudo install -o root -g wheel -m 600 /dev/null /usr/local/etc/ionicswap.env
           echo "WOU_JWT_SECRET='${{ secrets.WOU_JWT_SECRET }}'" | sudo tee /usr/local/etc/ionicswap.env > /dev/null
+          echo "WOU_BRIDGE_URL='https://id.worldofunreal.com'" | sudo tee -a /usr/local/etc/ionicswap.env > /dev/null
+          echo "WOU_BRIDGE_SECRET='${{ secrets.WOU_BRIDGE_SECRET }}'" | sudo tee -a /usr/local/etc/ionicswap.env > /dev/null
           echo "LEDGER_PATH='/var/db/ionicswap/ledger.json'" | sudo tee -a /usr/local/etc/ionicswap.env > /dev/null
           echo "PORT='8081'" | sudo tee -a /usr/local/etc/ionicswap.env > /dev/null
           sudo chmod 600 /usr/local/etc/ionicswap.env

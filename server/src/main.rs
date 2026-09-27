@@ -37,6 +37,8 @@ struct AppState {
     ledger: Arc<RwLock<Ledger>>,
     ledger_path: String,
     jwt_secret: String,
+    bridge_url: String,
+    bridge_secret: String,
 }
 
 // ---------- SPIRAL ledger ----------
@@ -199,6 +201,139 @@ async fn ledger_credit(
 
 async fn health() -> impl IntoResponse { Json(serde_json::json!({"status":"ok","service":"ionicswap-server","chain":"freebsd-native","oracle":"binance+coingecko free"})) }
 
+// ---------- SPIRAL BRIDGE — wallet Ionic <-> bolsillo de juego wou-id ----------
+// La misma llave idempotente gobierna ambos lados: un reintento replayea en
+// wou-id (devuelve el balance ya aplicado) y en el ledger local (processed),
+// asi ningún colgado puede mover dinero dos veces. Montos enteros SPIRAL.
+
+#[derive(Deserialize)]
+struct BridgeReq { amount: u64, key: String }
+
+async fn bridge_call(
+    s: &AppState,
+    dir: &str,
+    sub: &str,
+    amount: u64,
+    key: &str,
+) -> Result<u64, (StatusCode, serde_json::Value)> {
+    if s.bridge_secret.is_empty() {
+        return Err((StatusCode::SERVICE_UNAVAILABLE, serde_json::json!({"error": "bridge no configurado"})));
+    }
+    let url = format!("{}/api/v1/internal/spiral/bridge", s.bridge_url.trim_end_matches('/'));
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, serde_json::json!({"error": e.to_string()})))?;
+    let resp = client
+        .post(&url)
+        .bearer_auth(&s.bridge_secret)
+        .json(&serde_json::json!({"account": sub, "amount": amount, "dir": dir, "key": key}))
+        .send()
+        .await
+        .map_err(|e| (StatusCode::BAD_GATEWAY, serde_json::json!({"error": format!("wou-id inaccesible: {e}")})))?;
+    let status = resp.status();
+    let body: serde_json::Value = resp.json().await.unwrap_or_default();
+    if status == reqwest::StatusCode::OK {
+        body.get("balance")
+            .and_then(|b| b.as_u64())
+            .ok_or_else(|| (StatusCode::BAD_GATEWAY, serde_json::json!({"error": "respuesta wou-id sin balance"})))
+    } else if status == reqwest::StatusCode::PAYMENT_REQUIRED {
+        Err((StatusCode::PAYMENT_REQUIRED, serde_json::json!({"error": "bolsillo de juego insuficiente"})))
+    } else {
+        Err((StatusCode::BAD_GATEWAY, body))
+    }
+}
+
+fn bridge_key(dir_prefix: &str, sub: &str, req_key: &str) -> String {
+    format!("{}:{}:{}", dir_prefix, &sub[..sub.len().min(8)], req_key)
+}
+
+async fn spiral_deposit(
+    State(s): State<AppState>,
+    headers: HeaderMap,
+    Json(req): Json<BridgeReq>,
+) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    if req.amount == 0 || req.amount > 1_000_000 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"amount debe ser 1..1000000"}))).into_response();
+    }
+    if req.key.len() < 8 || req.key.len() > 64 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"key debe tener 8..64 chars"}))).into_response();
+    }
+    let bkey = bridge_key("dep", &sub, &req.key);
+    // El lock de escritura cubre todo el movimiento: nadie te toca el saldo a la vez.
+    let mut ledger = s.ledger.write().await;
+    if let Some(prev) = ledger.processed.get(&bkey) {
+        let mut replay = prev.clone();
+        replay["replay"] = serde_json::json!(true);
+        return (StatusCode::OK, Json(replay)).into_response();
+    }
+    let wallet = ledger.balances.get(&sub).copied().unwrap_or(0.0);
+    if wallet < req.amount as f64 {
+        return (
+            StatusCode::PAYMENT_REQUIRED,
+            Json(serde_json::json!({"error":"saldo de wallet insuficiente", "wallet": round2(wallet)})),
+        )
+            .into_response();
+    }
+    let pocket = match bridge_call(&s, "credit", &sub, req.amount, &bkey).await {
+        Ok(p) => p,
+        Err((code, body)) => return (code, Json(body)).into_response(),
+    };
+    let wallet_next = round2(wallet - req.amount as f64);
+    ledger.balances.insert(sub.clone(), wallet_next);
+    let resp = serde_json::json!({"wallet": wallet_next, "pocket": pocket, "key": bkey});
+    ledger.processed.insert(bkey, resp.clone());
+    save_ledger(&s.ledger_path, &ledger);
+    (StatusCode::OK, Json(resp)).into_response()
+}
+
+async fn spiral_withdraw(
+    State(s): State<AppState>,
+    headers: HeaderMap,
+    Json(req): Json<BridgeReq>,
+) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    if req.amount == 0 || req.amount > 1_000_000 || req.key.len() < 8 || req.key.len() > 64 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"amount 1..1000000, key 8..64"}))).into_response();
+    }
+    let bkey = bridge_key("wd", &sub, &req.key);
+    if let Some(prev) = ledger_processed_read(&s, &bkey).await {
+        let mut replay = prev.clone();
+        replay["replay"] = serde_json::json!(true);
+        return (StatusCode::OK, Json(replay)).into_response();
+    }
+    // Primero vacia el bolsillo (wou-id manda el no); si pasamos de ahi,
+    // creditar el wallet local es infalible. Un colgado a mitad replayea
+    // el mismo bkey en wou-id sin debitar dos veces.
+    let pocket = match bridge_call(&s, "debit", &sub, req.amount, &bkey).await {
+        Ok(p) => p,
+        Err((code, body)) => return (code, Json(body)).into_response(),
+    };
+    let mut ledger = s.ledger.write().await;
+    if ledger.processed.contains_key(&bkey) {
+        let mut replay = ledger.processed[&bkey].clone();
+        replay["replay"] = serde_json::json!(true);
+        return (StatusCode::OK, Json(replay)).into_response();
+    }
+    let wallet = ledger.balances.entry(sub.clone()).or_insert(0.0);
+    *wallet = round2(*wallet + req.amount as f64);
+    let resp = serde_json::json!({"wallet": *wallet, "pocket": pocket, "key": bkey});
+    ledger.processed.insert(bkey, resp.clone());
+    save_ledger(&s.ledger_path, &ledger);
+    (StatusCode::OK, Json(resp)).into_response()
+}
+
+async fn ledger_processed_read(s: &AppState, key: &str) -> Option<serde_json::Value> {
+    s.ledger.read().await.processed.get(key).cloned()
+}
+
 async fn get_prices(State(s): State<AppState>) -> impl IntoResponse {
     let m = s.prices.read().await;
     let v: Vec<Price> = m.values().cloned().collect();
@@ -311,6 +446,11 @@ async fn main() {
     if jwt_secret.is_empty() {
         tracing::warn!("WOU_JWT_SECRET vacio: /api/ledger/* respondera 401");
     }
+    let bridge_url = std::env::var("WOU_BRIDGE_URL").unwrap_or_else(|_| "https://id.worldofunreal.com".to_string());
+    let bridge_secret = std::env::var("WOU_BRIDGE_SECRET").unwrap_or_default();
+    if bridge_secret.is_empty() {
+        tracing::warn!("WOU_BRIDGE_SECRET vacio: /api/spiral/* respondera 503");
+    }
     let state = AppState {
         prices: Arc::new(RwLock::new(HashMap::from([
             ("BTC".to_string(), Price{ symbol:"BTC".to_string(), price:58451.25, change_24h:4.12, ts: Utc::now().timestamp()}),
@@ -334,6 +474,8 @@ async fn main() {
         ledger: Arc::new(RwLock::new(ledger)),
         ledger_path,
         jwt_secret,
+        bridge_url,
+        bridge_secret,
     };
     let s2 = state.clone();
     tokio::spawn(async move { refresh_prices(s2).await; });
@@ -349,6 +491,8 @@ async fn main() {
         .route("/api/ledger/faucet", post(ledger_faucet))
         .route("/api/ledger/debit", post(ledger_debit))
         .route("/api/ledger/credit", post(ledger_credit))
+        .route("/api/spiral/deposit", post(spiral_deposit))
+        .route("/api/spiral/withdraw", post(spiral_withdraw))
         .with_state(state)
         .layer(cors);
     let port: u16 = std::env::var("PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(8081);
