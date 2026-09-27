@@ -1,0 +1,155 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Authenticating... | Ionic Swap">
+  <section class="h-screen flex items-center justify-center p-6">
+    <div class="max-w-md w-full p-8 rounded-3xl bg-zinc-950/90 border border-white/15 text-center shadow-2xl backdrop-blur-xl relative overflow-hidden">
+      <!-- Glow -->
+      <div class="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Loading State -->
+      <div id="cb-loading" class="py-8 space-y-4">
+        <svg class="animate-spin h-10 w-10 text-emerald-400 mx-auto" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <h2 class="text-xl font-bold text-white tracking-tight">Authenticating Identity...</h2>
+        <p class="text-xs text-zinc-400 font-mono">Verifying identity session with World of Unreal Identity Hub</p>
+      </div>
+
+      <!-- Error State -->
+      <div id="cb-error" class="hidden py-6 space-y-4">
+        <div class="w-12 h-12 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </div>
+        <h2 class="text-xl font-bold text-white">Authentication Failed</h2>
+        <p id="cb-error-msg" class="text-sm text-red-400"></p>
+        <a href="/" class="inline-block py-3 px-6 rounded-xl bg-white text-zinc-950 font-bold text-xs hover:bg-zinc-200 transition-all mt-4">
+          Return to Ionic Swap
+        </a>
+      </div>
+
+      <!-- Success State -->
+      <div id="cb-success" class="hidden py-6 space-y-4">
+        <div class="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <h2 class="text-xl font-bold text-white">Authenticated Successfully!</h2>
+        <p class="text-xs text-zinc-400 font-mono">Redirecting you to IONIC SWAP...</p>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    import { wouAuth } from '@worldofunreal/id';
+    wouAuth.setDefaultContext('world_of_unreal');
+
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code') || '';
+    const stateParam = params.get('state');
+
+    let provider = '';
+    let returnTo = '/';
+
+    function decodeState(raw: string | null): { returnTo?: string; accountId?: string; provider?: string } {
+      if (!raw) return {};
+
+      // 1. Try URL-safe Base64 decode
+      try {
+        let b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
+        while (b64.length % 4 !== 0) b64 += '=';
+        const decodedStr = decodeURIComponent(escape(atob(b64)));
+        const obj = JSON.parse(decodedStr);
+        if (obj && typeof obj === 'object') return obj;
+      } catch {}
+
+      // 2. Try direct JSON.parse
+      try {
+        const obj = JSON.parse(raw);
+        if (obj && typeof obj === 'object') return obj;
+      } catch {}
+
+      // 3. Try decodeURIComponent + JSON.parse
+      try {
+        const obj = JSON.parse(decodeURIComponent(raw));
+        if (obj && typeof obj === 'object') return obj;
+      } catch {}
+
+      // 4. Try replacing single quotes
+      try {
+        const obj = JSON.parse(raw.replace(/'/g, '"'));
+        if (obj && typeof obj === 'object') return obj;
+      } catch {}
+
+      return {};
+    }
+
+    const stateObj = decodeState(stateParam);
+    if (stateObj.returnTo) returnTo = stateObj.returnTo;
+    if (stateObj.provider) provider = stateObj.provider;
+
+    // Fallback 1: check sessionStorage
+    if (!provider && typeof sessionStorage !== 'undefined') {
+      const stored = sessionStorage.getItem('wou_oauth_provider');
+      if (stored) provider = stored;
+    }
+
+    // Fallback 2: check URL query param (?provider=...)
+    if (!provider) {
+      provider = params.get('provider') || '';
+    }
+
+    const loadingEl = document.getElementById('cb-loading');
+    const errorEl = document.getElementById('cb-error');
+    const successEl = document.getElementById('cb-success');
+    const errorMsgEl = document.getElementById('cb-error-msg');
+
+    async function processCallback() {
+      if (!code) {
+        loadingEl?.classList.add('hidden');
+        errorEl?.classList.remove('hidden');
+        if (errorMsgEl) errorMsgEl.textContent = 'No authorization code received from provider.';
+        return;
+      }
+
+      if (!provider) {
+        loadingEl?.classList.add('hidden');
+        errorEl?.classList.remove('hidden');
+        if (errorMsgEl) errorMsgEl.textContent = 'Could not determine authentication provider. Please return to the login modal and try again.';
+        return;
+      }
+
+      try {
+        const data = await wouAuth.handleOAuthCallback(provider, code, {}, stateParam || '');
+        loadingEl?.classList.add('hidden');
+        successEl?.classList.remove('hidden');
+
+        // Check if returning cross-domain (cosmicrafts.com, nftropoly.com, etc.)
+        if (returnTo.startsWith('http://') || returnTo.startsWith('https://')) {
+          try {
+            const target = new URL(returnTo);
+            target.searchParams.set('session_token', data.session_token);
+            target.searchParams.set('account', JSON.stringify(data.account));
+            setTimeout(() => {
+              window.location.href = target.toString();
+            }, 600);
+            return;
+          } catch {
+            // fallback to direct location change
+          }
+        }
+
+        setTimeout(() => {
+          window.location.href = returnTo;
+        }, 600);
+      } catch (err: any) {
+        loadingEl?.classList.add('hidden');
+        errorEl?.classList.remove('hidden');
+        if (errorMsgEl) errorMsgEl.textContent = err.message || 'Failed to exchange authorization code.';
+      }
+    }
+
+    processCallback();
+  </script>
+</Layout>

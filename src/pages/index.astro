@@ -1355,7 +1355,7 @@ import Layout from '../layouts/Layout.astro';
 
   // --- WOU-ID proper (SOW single-view, real icons, hub callback worldofunreal.com) ---
   import { wouAuth } from '@worldofunreal/id';
-  wouAuth.setDefaultContext('ionic_swap');
+  wouAuth.setDefaultContext('world_of_unreal');
   const signinBtn = document.getElementById('wou-signin-btn');
   const userPill = document.getElementById('wou-user-pill');
   const userBtn = document.getElementById('wou-user-btn');
@@ -1449,10 +1449,11 @@ import Layout from '../layouts/Layout.astro';
   });
   document.getElementById('btn-change-email')?.addEventListener('click', ()=>{ step2?.classList.add('hidden'); step1?.classList.remove('hidden'); otpDigits.forEach(x=> x.value=''); hideErr(); });
   document.getElementById('btn-resend-otp')?.addEventListener('click', async()=>{ if(Date.now() < resendCooldownUntil) return; try{ await wouAuth.requestOtp(currentEmail, false); showErr('New code sent!', true); armResendCooldown(60000); }catch(err:any){ const d=wouAuth.describeOtpError(err); if(d.retryAfterSeconds) armResendCooldown(d.retryAfterSeconds*1000); showErr(d.message); }});
-  document.getElementById('wou-login-google')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('google'));
-  document.getElementById('wou-login-discord')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('discord'));
-  document.getElementById('wou-login-twitter')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('twitter'));
-  document.getElementById('wou-login-meta')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('meta'));
+  const oauthCallback = { redirectUri: 'https://ionicswap.com/auth/callback' };
+  document.getElementById('wou-login-google')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('google', oauthCallback));
+  document.getElementById('wou-login-discord')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('discord', oauthCallback));
+  document.getElementById('wou-login-twitter')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('twitter', oauthCallback));
+  document.getElementById('wou-login-meta')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('meta', oauthCallback));
   document.getElementById('wou-login-eth')?.addEventListener('click', async()=>{ hideErr(); try{ await wouAuth.loginWithEthereum(); showNotification('EVM linked'); }catch(e:any){ showErr(e.message); }});
   document.getElementById('wou-login-sol')?.addEventListener('click', async()=>{ hideErr(); try{ await wouAuth.loginWithSolana(); showNotification('Solana linked'); }catch(e:any){ showErr(e.message); }});
   document.getElementById('wou-login-passkey')?.addEventListener('click', async()=>{ hideErr(); try{ await (wouAuth as any).loginWithPasskey?.(); showNotification('Passkey linked'); }catch(e:any){ showErr(e.message); }});
