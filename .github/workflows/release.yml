@@ -62,7 +62,7 @@ jobs:
         : ${ionicswap_port:="8081"}
         if [ -f /usr/local/etc/ionicswap.env ]; then
           . /usr/local/etc/ionicswap.env
-          export WOU_JWT_SECRET LEDGER_PATH PORT
+          export WOU_JWT_SECRET LEDGER_PATH PORT WOU_BRIDGE_URL WOU_BRIDGE_SECRET
         fi
         pidfile="/var/run/${name}.pid"
         command="/usr/sbin/daemon"
