@@ -646,7 +646,7 @@ import Layout from '../layouts/Layout.astro';
 
                     <div class="p-2 border border-zinc-200 dark:border-zinc-700 rounded-lg text-left bg-zinc-100 dark:bg-zinc-900 space-y-1 text-[8px] text-zinc-500">
                       <div class="flex justify-between"><span>EST. RECEIVE:</span> <span class="text-zinc-900 dark:text-white font-bold"><span id="lbl-receive-val">1.710000</span> <span id="lbl-receive-sym">BTC</span></span></div>
-                      <div class="flex justify-between"><span>WALLET BALANCE:</span> <span class="text-zinc-900 dark:text-white">1,250.00 USDT</span></div>
+                      <div class="flex justify-between"><span>WALLET BALANCE:</span> <span id="trade-wallet-balance" class="text-zinc-900 dark:text-white">0.00 USDT</span></div>
                     </div>
                   </div>
                 </div>
@@ -668,14 +668,14 @@ import Layout from '../layouts/Layout.astro';
                 <div class="flex justify-between items-start">
                   <div>
                     <span class="text-xs text-zinc-400 uppercase font-mono tracking-wider">Total Portfolio Value</span>
-                    <h2 class="text-3xl font-bold text-zinc-900 dark:text-white mt-1">$124,582.00</h2>
-                    <span class="text-[10px] text-emerald-500 font-bold mt-1 block">Includes liquid assets & active stakes</span>
+                    <h2 id="portfolio-total" class="text-3xl font-bold text-zinc-900 dark:text-white mt-1">$0.00</h2>
+                    <span id="portfolio-sub" class="text-[10px] text-emerald-500 font-bold mt-1 block">Sign in to load your portfolio</span>
                   </div>
                   <span class="text-xl">💼</span>
                 </div>
                 <div class="flex gap-2">
-                  <button class="wallet-action-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition-colors">Deposit</button>
-                  <button class="wallet-action-btn px-4 py-2 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-750 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white text-xs font-bold rounded-lg transition-colors">Withdraw</button>
+                  <button id="btn-faucet" type="button" class="wallet-action-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition-colors">Faucet</button>
+                  <button id="btn-send" type="button" class="wallet-action-btn px-4 py-2 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-750 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white text-xs font-bold rounded-lg transition-colors">Withdraw</button>
                 </div>
               </div>
 
@@ -716,7 +716,7 @@ import Layout from '../layouts/Layout.astro';
             <div class="lg:col-span-2 flex flex-col gap-6 h-full">
               <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col flex-1 overflow-hidden">
                 <h3 class="text-md font-bold text-zinc-900 dark:text-white mb-4">My Liquid Assets</h3>
-                <div class="flex-1 overflow-y-auto scrollbar-thin pr-1 space-y-2 font-mono text-xs">
+                <div id="wallet-assets" class="flex-1 overflow-y-auto scrollbar-thin pr-1 space-y-2 font-mono text-xs">
                   
                   <!-- Asset row 1 -->
                   <div class="p-3.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between hover:border-emerald-500/20 transition-all">
@@ -1209,20 +1209,93 @@ import Layout from '../layouts/Layout.astro';
   const receiveVal = document.getElementById('lbl-receive-val');
   const tradePercentBtns = document.querySelectorAll('.trade-percent-btn');
   const coinPrices: Record<string, number> = { BTC: 58451.25, ETH: 3120.40, SOL: 142.25, ICP: 8.91, XRP: 0.62, BNB: 605.12, DOGE: 0.14, ADA: 0.45, TRX: 0.11, USDT: 1.00 };
-  // free oracle: try Rust server first, fallback to static
+  // Cada IP trae su Binance gratis; el servidor solo agrega medianas (ver /api/prices/report).
   const API_BASE = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8081' : '';
-  const refreshFromServer = async () => {
-    try { const r = await fetch(`${API_BASE}/api/prices`); if (!r.ok) return; const arr: any[] = await r.json();
-      arr.forEach((p:any)=>{ if(p.symbol && p.price) coinPrices[p.symbol]=p.price; const el = document.querySelector(`[data-symbol="${p.symbol}"]`); if(el){ const priceEl = el.querySelector('.font-mono .text-xs') || el.nextElementSibling; }});
-      updateTradeCalculator();
-      // update price rows text live (ponytail: direct DOM, no framework)
-      document.querySelectorAll('.price-row').forEach(row=>{
-        const sym=row.getAttribute('data-symbol')||''; const price=coinPrices[sym]; if(!price) return;
-        const priceDiv=row.querySelector('.text-right .text-xs') as HTMLElement; if(priceDiv) priceDiv.innerText=`$${price.toLocaleString()}`;
-      });
-    } catch {}
+  const coinChange: Record<string, number> = {};
+  const BINANCE_MAP: Record<string, string> = { BTC:'BTCUSDT', ETH:'ETHUSDT', SOL:'SOLUSDT', ICP:'ICPUSDT', XRP:'XRPUSDT', BNB:'BNBUSDT', DOGE:'DOGEUSDT', ADA:'ADAUSDT', TRX:'TRXUSDT' };
+  const authHeaders = (): Record<string,string> => {
+    const h: Record<string,string> = { 'Content-Type': 'application/json' };
+    try { const t = (wouAuth as any)?.getSessionToken?.(); if (t) h['Authorization'] = `Bearer ${t}`; } catch {}
+    return h;
   };
-  refreshFromServer(); setInterval(refreshFromServer, 30000);
+  const isAuthed = (): boolean => { try { return !!(wouAuth as any)?.isAuthenticated?.(); } catch { return false; } };
+  const fmtUsd = (v:number) => `$${Number(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  const paintPriceRows = () => {
+    document.querySelectorAll('.price-row').forEach(row=>{
+      const sym = row.getAttribute('data-symbol')||''; const price = coinPrices[sym]; if(!price) return;
+      const right = row.querySelector('.text-right'); if(!right) return;
+      const priceDiv = right.querySelector('.text-xs') as HTMLElement;
+      if (priceDiv) priceDiv.innerText = fmtUsd(price);
+      const chg = coinChange[sym]; const chgEl = right.querySelector('span') as HTMLElement;
+      if (chgEl && chg !== undefined) {
+        chgEl.innerText = `${chg>=0?'+':''}${chg.toFixed(2)}%`;
+        chgEl.classList.toggle('text-emerald-500', chg>=0);
+        chgEl.classList.toggle('text-rose-500', chg<0);
+      }
+    });
+  };
+  const paintMarketsTable = () => {
+    document.querySelectorAll('#panel-markets tbody tr').forEach(row=>{
+      const sym = row.querySelector('.markets-trade-btn')?.getAttribute('data-symbol')||'';
+      const price = coinPrices[sym]; if(!price) return;
+      const cells = row.querySelectorAll('td.text-right.font-mono');
+      if (cells[0]) cells[0].textContent = fmtUsd(price);
+      const chg = coinChange[sym];
+      if (cells[1] && chg !== undefined) {
+        (cells[1] as HTMLElement).innerText = `${chg>=0?'+':''}${chg.toFixed(2)}%`;
+        cells[1].classList.toggle('text-emerald-500', chg>=0);
+        cells[1].classList.toggle('text-rose-500', chg<0);
+      }
+    });
+  };
+  const paintTradeHeader = () => {
+    const title = document.getElementById('trade-chart-title');
+    const price = coinPrices[currentTargetSymbol];
+    if (title && price) {
+      const tag = title.nextElementSibling as HTMLElement;
+      const chg = coinChange[currentTargetSymbol];
+      if (tag) tag.innerText = `${fmtUsd(price)} (${chg!==undefined?`${chg>=0?'+':''}${chg.toFixed(2)}%`:'—'})`;
+    }
+  };
+  const fetchBinance = async (): Promise<Record<string,number>|null> => {
+    try {
+      const syms = encodeURIComponent(JSON.stringify(Object.values(BINANCE_MAP)));
+      const r = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${syms}`);
+      if (!r.ok) return null;
+      const arr: any[] = await r.json();
+      const obs: Record<string,number> = {};
+      arr.forEach((t:any)=>{
+        const sym = Object.keys(BINANCE_MAP).find(k=>BINANCE_MAP[k]===t.symbol);
+        if (!sym) return;
+        const p = parseFloat(t.lastPrice); const c = parseFloat(t.priceChangePercent);
+        if (isFinite(p) && p>0) { coinPrices[sym]=p; if(isFinite(c)) coinChange[sym]=c; obs[sym]=p; }
+      });
+      coinPrices['USDT']=1.0; coinChange['USDT']=0.0;
+      return Object.keys(obs).length ? obs : null;
+    } catch { return null; }
+  };
+  const refreshMarket = async () => {
+    const obs = await fetchBinance();
+    if (obs) {
+      paintPriceRows(); paintMarketsTable(); paintTradeHeader(); updateTradeCalculator();
+      try {
+        if (isAuthed()) {
+          await fetch(`${API_BASE}/api/prices/report`, { method:'POST', headers: authHeaders(),
+            body: JSON.stringify({ observations: Object.entries(obs).map(([symbol,price])=>({symbol,price})) }) });
+        }
+      } catch {}
+    } else {
+      // Binance bloqueado para esta IP: libro del servidor (honesto, puede ir stale)
+      try {
+        const r = await fetch(`${API_BASE}/api/prices`);
+        if (r.ok) {
+          const arr:any[] = await r.json();
+          arr.forEach((p:any)=>{ if(p.symbol && p.price){ coinPrices[p.symbol]=p.price; if(typeof p.change_24h==='number') coinChange[p.symbol]=p.change_24h; } });
+          paintPriceRows(); paintMarketsTable(); paintTradeHeader(); updateTradeCalculator();
+        }
+      } catch {}
+    }
+  };
 
   let currentTargetSymbol = 'BTC';
 
@@ -1239,7 +1312,7 @@ import Layout from '../layouts/Layout.astro';
   tradePercentBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const percent = parseFloat(btn.getAttribute('data-val') || '0');
-      const maxUSDTBalance = 1250;
+      const maxUSDTBalance = serverBalances['USDT']||0;
       payInput.value = ((maxUSDTBalance * percent) / 100).toFixed(2);
       updateTradeCalculator();
     });
@@ -1278,35 +1351,107 @@ import Layout from '../layouts/Layout.astro';
     const box = document.createElement('div');
     box.id = 'trade-tx-history';
     box.className = 'mt-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-4 max-h-48 overflow-y-auto scrollbar-thin';
-    box.innerHTML = '<h4 class="text-xs font-bold text-zinc-900 dark:text-white mb-2 font-mono">TRANSACTION_HISTORY (local)</h4><div id="tx-list" class="space-y-1 font-mono text-[10px]"></div>';
+    box.innerHTML = '<h4 class="text-xs font-bold text-zinc-900 dark:text-white mb-2 font-mono">TRANSACTION_HISTORY</h4><div id="tx-list" class="space-y-1 font-mono text-[10px]"></div>';
     tradeLeft.appendChild(box);
   };
-  const renderTxs = () => {
+  const renderTxs = async () => {
     ensureTxHistory();
     const list = document.getElementById('tx-list');
     if (!list) return;
-    if (state.txs.length === 0) { list.innerHTML = '<span class="text-zinc-500">No swaps yet — local only, Rust canister later.</span>'; return; }
-    list.innerHTML = state.txs.slice(-10).reverse().map(t => `<div class="flex justify-between p-2 bg-zinc-100 dark:bg-zinc-900 rounded border border-zinc-200 dark:border-zinc-700"><span>${t.from} → ${t.to} ${t.receive.toFixed(6)}</span><span class="text-zinc-500">${new Date(t.ts).toLocaleTimeString()}</span></div>`).join('');
+    if (!isAuthed()) { list.innerHTML = '<span class="text-zinc-500">Sign in to see your swaps.</span>'; return; }
+    try {
+      const r = await fetch(`${API_BASE}/api/history?limit=10`, { headers: authHeaders() });
+      if (!r.ok) { list.innerHTML = '<span class="text-zinc-500">History unavailable.</span>'; return; }
+      const j:any = await r.json();
+      if (!j.txs?.length) { list.innerHTML = '<span class="text-zinc-500">No swaps yet — claim the Faucet and trade.</span>'; return; }
+      list.innerHTML = j.txs.map((t:any) => `<div class="flex justify-between p-2 bg-zinc-100 dark:bg-zinc-900 rounded border border-zinc-200 dark:border-zinc-700"><span>${t.from} → ${t.to} ${Number(t.receive).toFixed(6)}</span><span class="text-zinc-500">${new Date(t.ts*1000).toLocaleString()}</span></div>`).join('');
+    } catch { list.innerHTML = '<span class="text-zinc-500">History unavailable.</span>'; }
   };
-  renderTxs();
 
-  // Actions trigger triggers (try Rust server first, fallback local)
+  // Swap real contra el servidor (con sesion). Sin login no hay trade.
   document.getElementById('btn-submit-swap')?.addEventListener('click', async () => {
     const amt = parseFloat((document.getElementById('pay-amount-input') as HTMLInputElement)?.value || '0');
     if (!amt || amt <= 0) { showNotification("Enter amount"); return; }
+    if (!isAuthed()) { showNotification("Sign in to trade"); (wouAuth as any)?.openModal?.(); return; }
     try {
-      const r = await fetch(`${API_BASE}/api/swap`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({from:'USDT', to: currentTargetSymbol, amount: amt})});
-      if (r.ok) { const j:any = await r.json(); state.txs.push({ id: j.tx_id, from:'USDT', to: j.to, amount: j.amount, receive: j.receive, price: j.price, ts: Date.now() }); saveState(); renderTxs(); showNotification(`Swap ${j.amount} USDT → ${j.receive.toFixed(6)} ${j.to} (Rust free ${j.fee.toFixed(4)} fee)`); return; }
-    } catch {}
-    if ((state.balances['USDT']||0) < amt) { showNotification("Insufficient USDT (local)"); return; }
-    const price = coinPrices[currentTargetSymbol] || 1;
-    const receive = amt / price;
-    state.balances['USDT'] -= amt;
-    state.balances[currentTargetSymbol] = (state.balances[currentTargetSymbol]||0) + receive;
-    state.txs.push({ id: Date.now().toString(), from:'USDT', to: currentTargetSymbol, amount: amt, receive, price, ts: Date.now() });
-    saveState(); renderTxs();
-    showNotification(`Swap ${amt} USDT → ${receive.toFixed(6)} ${currentTargetSymbol} (local fallback)`);
+      const key = (crypto as any)?.randomUUID?.() || `${Date.now()}-${Math.floor(Math.random()*1e9)}`;
+      const r = await fetch(`${API_BASE}/api/swap`, { method:'POST', headers: authHeaders(),
+        body: JSON.stringify({ from:'USDT', to: currentTargetSymbol, amount: amt, key }) });
+      const j:any = await r.json().catch(()=>({}));
+      if (r.status === 401) { showNotification("Session expired, sign in again"); (wouAuth as any)?.openModal?.(); return; }
+      if (r.status === 402) { showNotification(`Insufficient USDT (have ${j.have ?? 0}) — claim the Faucet`); return; }
+      if (r.status === 503) { showNotification("Price feed stale — wait a bit and retry"); return; }
+      if (!r.ok) { showNotification(j.error || "Swap rejected"); return; }
+      showNotification(`Swap ${j.amount} USDT → ${Number(j.receive).toFixed(6)} ${j.to} (fee $${Number(j.fee_usd).toFixed(2)})`);
+      if (receiveVal) receiveVal.innerText = Number(j.receive).toFixed(6);
+      loadWallet();
+    } catch { showNotification("Swap failed (network)"); }
   });
+
+  // --- WALLET REAL (servidor). Sin saldos locales ficticios. ---
+  const TOKEN_META: Record<string,{emoji:string;name:string}> = {
+    BTC:{emoji:'🪙',name:'Bitcoin'}, ETH:{emoji:'🔷',name:'Ethereum'}, SOL:{emoji:'☀️',name:'Solana'},
+    ICP:{emoji:'♾️',name:'Internet Computer'}, XRP:{emoji:'💧',name:'XRP Ledger'}, BNB:{emoji:'🟡',name:'BNB Chain'},
+    DOGE:{emoji:'🐶',name:'Dogecoin'}, ADA:{emoji:'🔵',name:'Cardano'}, TRX:{emoji:'🔴',name:'TRON'},
+    USDT:{emoji:'💵',name:'Tether'}, IONIC:{emoji:'💎',name:'Ionic'}, UNREAL:{emoji:'✨',name:'Unreal'},
+  };
+  let serverBalances: Record<string, number> = {};
+  const paintWalletAssets = (holdings: any[]) => {
+    const box = document.getElementById('wallet-assets'); if(!box) return;
+    if (!holdings.length) { box.innerHTML = '<span class="text-zinc-500 text-[11px]">No assets yet — claim the Faucet to start.</span>'; return; }
+    box.innerHTML = holdings.map(h=>{
+      const meta = TOKEN_META[h.token] || {emoji:'🪙',name:h.token};
+      return `<div class="p-3.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between hover:border-emerald-500/20 transition-all">`
+        + `<div class="flex items-center gap-2.5"><span class="text-2xl">${meta.emoji}</span><div>`
+        + `<div class="font-bold text-zinc-900 dark:text-white">${Number(h.amount).toLocaleString('en-US',{maximumFractionDigits:6})} ${h.token}</div>`
+        + `<span class="text-[10px] text-zinc-400">${meta.name}</span></div></div>`
+        + `<span class="font-bold text-zinc-900 dark:text-white">${fmtUsd(h.value_usdt)}</span></div>`;
+    }).join('');
+  };
+  const paintTradeBalance = () => {
+    const el = document.getElementById('trade-wallet-balance');
+    if (el) el.innerText = `${Number(serverBalances['USDT']||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} USDT`;
+  };
+  const loadWallet = async () => {
+    const totalEl = document.getElementById('portfolio-total');
+    const subEl = document.getElementById('portfolio-sub');
+    if (!isAuthed()) {
+      serverBalances = {};
+      const box = document.getElementById('wallet-assets');
+      if (box) box.innerHTML = '<span class="text-zinc-500 text-[11px]">Sign in to see your balances.</span>';
+      if (totalEl) totalEl.innerText = '$0.00';
+      if (subEl) subEl.innerText = 'Sign in to load your portfolio';
+      paintTradeBalance(); renderTxs();
+      return;
+    }
+    try {
+      const p = await fetch(`${API_BASE}/api/portfolio`, { headers: authHeaders() });
+      if (p.status === 401) { try { (wouAuth as any)?.logout?.(); } catch {} loadWallet(); return; }
+      if (p.ok) {
+        const j:any = await p.json();
+        serverBalances = {}; (j.holdings||[]).forEach((h:any)=>{ serverBalances[h.token]=h.amount; });
+        paintWalletAssets(j.holdings||[]);
+        if (totalEl) totalEl.innerText = fmtUsd(j.total_usdt||0);
+        if (subEl) subEl.innerText = `${j.trades||0} trades on record`;
+      }
+      renderTxs();
+    } catch {}
+    paintTradeBalance();
+  };
+  document.getElementById('btn-faucet')?.addEventListener('click', async () => {
+    if (!isAuthed()) { showNotification("Sign in to claim the Faucet"); (wouAuth as any)?.openModal?.(); return; }
+    try {
+      const r = await fetch(`${API_BASE}/api/faucet`, { method:'POST', headers: authHeaders() });
+      const j:any = await r.json().catch(()=>({}));
+      if (r.status === 401) { showNotification("Session expired, sign in again"); return; }
+      if (!r.ok) { showNotification(j.error || "Faucet failed"); return; }
+      showNotification(j.granted ? `Faucet: +2,000,000 USDT` : `Faucet already claimed (balance ${fmtUsd(j.balance)})`);
+      loadWallet();
+    } catch { showNotification("Faucet failed (network)"); }
+  });
+  document.getElementById('btn-send')?.addEventListener('click', () => showNotification("Transfers arrive in Phase C"));
+  window.addEventListener('wou:auth-state-change', (e:any)=>{ if(e?.detail?.authenticated){ refreshMarket(); loadWallet(); } else { loadWallet(); } });
+  refreshMarket(); setInterval(refreshMarket, 30000); loadWallet();
 
   document.getElementById('btn-approve-stake')?.addEventListener('click', async () => {
     const amt = parseFloat((document.getElementById('liq-stake-input') as HTMLInputElement)?.value || '0');
