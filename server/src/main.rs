@@ -63,11 +63,17 @@ struct Price { symbol: String, price: f64, change_24h: f64, ts: i64, stale: bool
 #[derive(Clone, Serialize, Deserialize)]
 struct BookEntry { price: f64, ts: i64, change_24h: f64, internal: bool }
 
+fn default_tx_kind() -> String {
+    "swap".to_string()
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 struct SwapTx {
     id: String, key: String, from: String, to: String,
     amount: f64, receive: f64, price_from: f64, price_to: f64,
     fee_usd: f64, ts: i64,
+    #[serde(default = "default_tx_kind")]
+    kind: String, // swap | transfer
 }
 
 // Todo el estado trade vive aqui y se guarda en STATE_PATH (el ledger SPIRAL
@@ -100,7 +106,7 @@ fn token_cfg(sym: &str) -> Option<(&'static str, u32, bool)> {
 
 fn round_dp(v: f64, dp: u32) -> f64 {
     let m = 10f64.powi(dp as i32);
-    (v * m).round() / m
+    (v * m).round() / m + 0.0 // +0.0: -0.0 se ve feo en JSON
 }
 
 fn median(mut v: Vec<f64>) -> f64 {
@@ -769,6 +775,7 @@ async fn trade_swap(State(s): State<AppState>, headers: HeaderMap, Json(req): Js
         id: uuid::Uuid::new_v4().to_string(), key: req.key.clone(),
         from: from.clone(), to: to.clone(), amount: req.amount, receive,
         price_from: pf.price, price_to: pt.price, fee_usd: round_dp(fee_usd, 2), ts: now,
+        kind: "swap".to_string(),
     };
     let hist = st.txs.entry(sub).or_default();
     hist.push(tx.clone());
@@ -792,30 +799,19 @@ async fn trade_swap(State(s): State<AppState>, headers: HeaderMap, Json(req): Js
 #[derive(Deserialize)]
 struct HistQuery { limit: Option<usize>, offset: Option<usize> }
 
-async fn trade_history(State(s): State<AppState>, headers: HeaderMap, Query(q): Query<HistQuery>) -> impl IntoResponse {
-    let sub = match auth_sub(&headers, &s.jwt_secret) {
-        Ok(sub) => sub,
-        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
-    };
-    let st = s.trade.read().await;
-    let all: Vec<SwapTx> = st.txs.get(&sub).cloned().unwrap_or_default();
+fn history_view(st: &TradeState, sub: &str, limit: usize, offset: usize) -> serde_json::Value {
+    let all: Vec<SwapTx> = st.txs.get(sub).cloned().unwrap_or_default();
     let total = all.len();
-    let offset = q.offset.unwrap_or(0).min(total);
-    let limit = q.limit.unwrap_or(50).min(200).max(1);
+    let offset = offset.min(total);
+    let limit = limit.min(200).max(1);
     let page: Vec<SwapTx> = all.into_iter().rev().skip(offset).take(limit).collect();
-    (StatusCode::OK, Json(serde_json::json!({"txs": page, "total": total}))).into_response()
+    serde_json::json!({"txs": page, "total": total})
 }
 
-async fn trade_portfolio(State(s): State<AppState>, headers: HeaderMap) -> impl IntoResponse {
-    let sub = match auth_sub(&headers, &s.jwt_secret) {
-        Ok(sub) => sub,
-        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
-    };
-    let st = s.trade.read().await;
-    let now = Utc::now().timestamp();
+fn portfolio_view(st: &TradeState, sub: &str, now: i64) -> serde_json::Value {
     let mut holdings = vec![];
     let mut total = 0.0;
-    if let Some(b) = st.balances.get(&sub) {
+    if let Some(b) = st.balances.get(sub) {
         let mut toks: Vec<(&String, &f64)> = b.iter().filter(|(_, a)| **a > 0.0).collect();
         toks.sort_by(|a, b| a.0.cmp(b.0));
         for (tok, amt) in toks {
@@ -828,10 +824,138 @@ async fn trade_portfolio(State(s): State<AppState>, headers: HeaderMap) -> impl 
             }));
         }
     }
-    let trades = st.txs.get(&sub).map(|v| v.len()).unwrap_or(0);
-    (StatusCode::OK, Json(serde_json::json!({
+    let trades = st.txs.get(sub).map(|v| v.iter().filter(|t| t.kind != "transfer").count()).unwrap_or(0);
+    serde_json::json!({
         "holdings": holdings, "total_usdt": round_dp(total, 2), "trades": trades, "ts": now,
-    }))).into_response()
+    })
+}
+
+async fn trade_history(State(s): State<AppState>, headers: HeaderMap, Query(q): Query<HistQuery>) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    let st = s.trade.read().await;
+    (StatusCode::OK, Json(history_view(&st, &sub, q.limit.unwrap_or(50), q.offset.unwrap_or(0)))).into_response()
+}
+
+async fn trade_portfolio(State(s): State<AppState>, headers: HeaderMap) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    let st = s.trade.read().await;
+    (StatusCode::OK, Json(portfolio_view(&st, &sub, Utc::now().timestamp()))).into_response()
+}
+
+// Perfiles publicos (decision owner): portafolio e historial visibles sin sesion.
+async fn public_portfolio(State(s): State<AppState>, Path(account): Path<String>) -> impl IntoResponse {
+    if account.trim().is_empty() || account.len() > 64 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"cuenta invalida"}))).into_response();
+    }
+    let st = s.trade.read().await;
+    (StatusCode::OK, Json(portfolio_view(&st, &account, Utc::now().timestamp()))).into_response()
+}
+
+async fn public_history(State(s): State<AppState>, Path(account): Path<String>, Query(q): Query<HistQuery>) -> impl IntoResponse {
+    if account.trim().is_empty() || account.len() > 64 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"cuenta invalida"}))).into_response();
+    }
+    let st = s.trade.read().await;
+    (StatusCode::OK, Json(history_view(&st, &account, q.limit.unwrap_or(20).min(50), q.offset.unwrap_or(0)))).into_response()
+}
+
+#[derive(Deserialize)]
+struct TransferReq {
+    to_account: Option<String>,
+    to_username: Option<String>,
+    token: Option<String>,
+    amount: f64,
+    key: String,
+}
+
+async fn wou_account_for(s: &AppState, username: &str) -> Option<String> {
+    if username.is_empty() || username.len() > 32
+        || !username.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-' || c == '.')
+    {
+        return None;
+    }
+    let url = format!("{}/api/v1/user/by-username/{}", s.bridge_url.trim_end_matches('/'), username);
+    let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(8)).build().ok()?;
+    let body: serde_json::Value = client.get(&url).send().await.ok()?.json().await.ok()?;
+    body.get("account_id").and_then(|v| v.as_str()).map(|v| v.to_string())
+}
+
+// Transferencia entre usuarios (cualquier token). El destino se resuelve por
+// username en wou-id o directo por account_id. Ambos lados quedan en historial.
+async fn trade_transfer(State(s): State<AppState>, headers: HeaderMap, Json(req): Json<TransferReq>) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    if req.key.len() < TRADE_KEY_MIN || req.key.len() > TRADE_KEY_MAX {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"key debe tener 8..64 chars"}))).into_response();
+    }
+    let token = req.token.unwrap_or_else(|| "USDT".to_string()).to_uppercase();
+    let dp = match token_cfg(&token) {
+        Some((_, dp, _)) => dp,
+        None => return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"unknown token"}))).into_response(),
+    };
+    if !req.amount.is_finite() || req.amount <= 0.0 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"monto invalido"}))).into_response();
+    }
+    let dest = match (req.to_account, req.to_username) {
+        (Some(a), _) if !a.trim().is_empty() && a.len() <= 64 => a.trim().to_string(),
+        (_, Some(u)) => match wou_account_for(&s, u.trim().trim_start_matches('@')).await {
+            Some(a) => a,
+            None => return (StatusCode::NOT_FOUND, Json(serde_json::json!({"error":"usuario no existe"}))).into_response(),
+        },
+        _ => return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"falta destino"}))).into_response(),
+    };
+    if dest == sub {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"no te puedes enviar a ti"}))).into_response();
+    }
+    let pkey = format!("transfer:{}", req.key);
+    let now = Utc::now().timestamp();
+    let mut st = s.trade.write().await;
+    if let Some(prev) = st.processed.get(&pkey) {
+        let mut replay = prev.clone();
+        replay["replay"] = serde_json::json!(true);
+        return (StatusCode::OK, Json(replay)).into_response();
+    }
+    let have = st.balances.get(&sub).and_then(|b| b.get(&token)).copied().unwrap_or(0.0);
+    if have + 1e-9 < req.amount {
+        return (StatusCode::PAYMENT_REQUIRED, Json(serde_json::json!({"error":"saldo insuficiente", "have": round_dp(have, dp)}))).into_response();
+    }
+    let amt = round_dp(req.amount, dp);
+    {
+        let b = st.balances.entry(sub.clone()).or_default();
+        b.insert(token.clone(), round_dp(have - amt, dp));
+    }
+    {
+        let b = st.balances.entry(dest.clone()).or_default();
+        let cur = b.get(&token).copied().unwrap_or(0.0);
+        b.insert(token.clone(), round_dp(cur + amt, dp));
+    }
+    let mk = |key: String| SwapTx {
+        id: uuid::Uuid::new_v4().to_string(), key,
+        from: token.clone(), to: token.clone(), amount: amt, receive: amt,
+        price_from: 1.0, price_to: 1.0, fee_usd: 0.0, ts: now, kind: "transfer".to_string(),
+    };
+    let out_tx = mk(req.key.clone());
+    let in_tx = mk(format!("in:{}", req.key));
+    for (who, tx) in [(sub.clone(), out_tx), (dest.clone(), in_tx)] {
+        let h = st.txs.entry(who).or_default();
+        h.push(tx);
+        if h.len() > HISTORY_CAP {
+            h.drain(..h.len() - HISTORY_CAP);
+        }
+    }
+    let left = round_dp(have - amt, dp);
+    let resp = serde_json::json!({"to": dest, "token": token, "amount": amt, "balance": left, "key": req.key});
+    st.processed.insert(pkey, resp.clone());
+    save_trade(&s.state_path, &st);
+    (StatusCode::OK, Json(resp)).into_response()
 }
 
 #[derive(Deserialize)]
@@ -1266,7 +1390,10 @@ async fn main() {
         .route("/api/balances", get(trade_balances))
         .route("/api/swap", post(trade_swap))
         .route("/api/history", get(trade_history))
+        .route("/api/history/:account", get(public_history))
         .route("/api/portfolio", get(trade_portfolio))
+        .route("/api/portfolio/:account", get(public_portfolio))
+        .route("/api/transfer", post(trade_transfer))
         .route("/api/pools", get(get_pools))
         .route("/api/stake", post(trade_stake))
         .route("/api/positions", get(trade_positions))

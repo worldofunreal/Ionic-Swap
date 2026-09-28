@@ -76,7 +76,8 @@ import Layout from '../layouts/Layout.astro';
         <!-- Search bar -->
         <div class="flex items-center flex-1 max-w-md relative">
           <span class="absolute left-3 text-zinc-400">🔍</span>
-          <input type="text" placeholder="Search tokens, positions..." class="w-full pl-10 pr-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500" />
+          <input id="global-search" type="text" placeholder="Search tokens, positions... (@user for players)" class="w-full pl-10 pr-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500" />
+          <div id="user-search-results" class="hidden absolute top-full left-0 right-0 mt-2 p-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-2xl z-50 space-y-1"></div>
         </div>
 
         <!-- Right Side: Auth (clean, not logged-in by default) -->
@@ -675,7 +676,7 @@ import Layout from '../layouts/Layout.astro';
                 </div>
                 <div class="flex gap-2">
                   <button id="btn-faucet" type="button" class="wallet-action-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition-colors">Faucet</button>
-                  <button id="btn-send" type="button" class="wallet-action-btn px-4 py-2 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-750 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white text-xs font-bold rounded-lg transition-colors">Withdraw</button>
+                  <button id="btn-send" type="button" class="wallet-action-btn px-4 py-2 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-750 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white text-xs font-bold rounded-lg transition-colors">Send</button>
                 </div>
               </div>
 
@@ -1346,8 +1347,33 @@ import Layout from '../layouts/Layout.astro';
   };
   let state = loadState();
   const saveState = () => localStorage.setItem(LS_KEY, JSON.stringify(state));
-  const headerSearch = document.querySelector('header input[placeholder*="Search"]') as HTMLInputElement;
+  const headerSearch = document.getElementById('global-search') as HTMLInputElement;
+  let userSearchTimer: any = null;
+  const userSearchBox = document.getElementById('user-search-results');
+  const userSearch = (qraw:string) => {
+    const q = qraw.trim();
+    if (userSearchTimer) clearTimeout(userSearchTimer);
+    if (!userSearchBox) return;
+    if (q.length < 2) { userSearchBox.classList.add('hidden'); return; }
+    userSearchTimer = setTimeout(async () => {
+      try {
+        const r = await fetch(`https://id.worldofunreal.com/api/v1/user/search?q=${encodeURIComponent(q)}&limit=6`);
+        if (!r.ok) return;
+        const arr:any[] = await r.json();
+        userSearchBox.innerHTML = arr.length ? arr.map((u:any)=>{
+          const av = u.avatar_url ? `<img src="${u.avatar_url}" class="w-7 h-7 rounded-full object-cover" alt=""/>` : `<span class="w-7 h-7 rounded-full bg-emerald-500/20 flex items-center justify-center text-sm">${u.animal_emoji||(u.display_name||u.username||'?').slice(0,1)}</span>`;
+          return `<a href="/user?u=${encodeURIComponent(u.username)}" class="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 text-left">`
+            + `${av}<span class="text-xs font-bold text-zinc-900 dark:text-white">${u.display_name||u.username}</span>`
+            + `<span class="text-[11px] font-mono text-zinc-500">@${u.username}</span></a>`;
+        }).join('') : '<span class="text-[11px] text-zinc-500 p-2 block">No players found.</span>';
+        userSearchBox.classList.remove('hidden');
+      } catch {}
+    }, 250);
+  };
+  document.addEventListener('click', (e)=>{ if(!userSearchBox?.contains(e.target as Node) && e.target!==headerSearch) userSearchBox?.classList.add('hidden'); });
   headerSearch?.addEventListener('input', () => {
+    if (headerSearch.value.startsWith('@')) { userSearch(headerSearch.value.slice(1)); return; }
+    userSearchBox?.classList.add('hidden');
     const q = headerSearch.value.toLowerCase().trim();
     document.querySelectorAll('.price-row').forEach(row => {
       const sym = (row.getAttribute('data-symbol')||'').toLowerCase();
@@ -1468,7 +1494,25 @@ import Layout from '../layouts/Layout.astro';
       loadWallet();
     } catch { showNotification("Faucet failed (network)"); }
   });
-  document.getElementById('btn-send')?.addEventListener('click', () => showNotification("Transfers arrive in Phase C"));
+  document.getElementById('btn-send')?.addEventListener('click', async () => {
+    if (!isAuthed()) { showNotification("Sign in to send"); (wouAuth as any)?.openModal?.(); return; }
+    const to = prompt('Send to (username):');
+    if (!to) return;
+    const amt = parseFloat(prompt('USDT amount:')||'');
+    if (!amt || amt<=0) return;
+    try {
+      const key = (crypto as any)?.randomUUID?.() || `${Date.now()}-${Math.floor(Math.random()*1e9)}`;
+      const r = await fetch(`${API_BASE}/api/transfer`, { method:'POST', headers: authHeaders(),
+        body: JSON.stringify({ to_username: to.replace(/^@/,'').trim(), amount: amt, key }) });
+      const j:any = await r.json().catch(()=>({}));
+      if (r.status === 401) { showNotification("Session expired, sign in again"); return; }
+      if (r.status === 402) { showNotification(`Insufficient USDT (have ${j.have ?? 0})`); return; }
+      if (r.status === 404) { showNotification("User not found"); return; }
+      if (!r.ok) { showNotification(j.error || "Transfer rejected"); return; }
+      showNotification(`Sent ${j.amount} USDT`);
+      loadWallet();
+    } catch { showNotification("Transfer failed (network)"); }
+  });
   window.addEventListener('wou:auth-state-change', (e:any)=>{ if(e?.detail?.authenticated){ refreshMarket(); loadWallet(); loadPositions(); } else { loadWallet(); loadPositions(); } });
   refreshMarket(); setInterval(refreshMarket, 30000); loadWallet(); loadPools(); setInterval(loadPools, 60000); loadPositions();
 

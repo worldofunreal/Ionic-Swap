@@ -1,0 +1,117 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Player | Ionic Swap">
+  <div class="h-screen w-screen overflow-y-auto scrollbar-thin bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-sans">
+    <div class="max-w-2xl mx-auto p-6 space-y-4">
+      <a href="/" class="inline-block text-xs font-mono text-emerald-500 hover:underline">← Ionic Swap</a>
+
+      <div id="u-error" class="hidden p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm"></div>
+
+      <div id="u-card" class="hidden p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800">
+        <div class="flex items-center gap-4">
+          <div id="u-avatar" class="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-2xl overflow-hidden">?</div>
+          <div class="flex-1 min-w-0">
+            <div id="u-name" class="text-lg font-bold truncate">Player</div>
+            <div id="u-handle" class="text-xs font-mono text-emerald-500 truncate">@player</div>
+            <div id="u-bio" class="text-xs text-zinc-500 mt-1"></div>
+            <div id="u-counts" class="text-[11px] font-mono text-zinc-400 mt-1"></div>
+          </div>
+          <button id="u-follow" type="button" class="hidden px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold">Follow</button>
+        </div>
+      </div>
+
+      <div id="u-portfolio" class="hidden p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold">Portfolio</h3>
+          <span id="u-total" class="text-sm font-bold font-mono">$0.00</span>
+        </div>
+        <div id="u-holdings" class="space-y-2 font-mono text-xs"></div>
+      </div>
+
+      <div id="u-activity" class="hidden p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800">
+        <h3 class="text-sm font-bold mb-3">Recent swaps</h3>
+        <div id="u-txs" class="space-y-1.5 font-mono text-[11px]"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { wouAuth } from '@worldofunreal/id';
+    wouAuth.setDefaultContext('world_of_unreal');
+    const ID_SERVER = 'https://id.worldofunreal.com';
+    const API_BASE = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8081' : '';
+    const TOKEN_EMOJI: Record<string,string> = { BTC:'🪙', ETH:'🔷', SOL:'☀️', ICP:'♾️', XRP:'💧', BNB:'🟡', DOGE:'🐶', ADA:'🔵', TRX:'🔴', USDT:'💵', IONIC:'💎', UNREAL:'✨' };
+    const fmtUsd = (v:number) => `$${Number(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+    const uname = (new URLSearchParams(location.search).get('u')||'').replace(/^@/,'').trim();
+    const errEl = document.getElementById('u-error');
+
+    function fail(msg:string) { if(errEl){ errEl.textContent = msg; errEl.classList.remove('hidden'); } }
+
+    async function load() {
+      if (!uname) { fail('Missing user. Open /user?u=username'); return; }
+      let u:any;
+      try {
+        const r = await fetch(`${ID_SERVER}/api/v1/user/by-username/${encodeURIComponent(uname)}`);
+        if (!r.ok) { fail('User not found.'); return; }
+        u = await r.json();
+      } catch { fail('Identity server unreachable.'); return; }
+      document.getElementById('u-card')?.classList.remove('hidden');
+      const av = document.getElementById('u-avatar')!;
+      if (u.avatar_url) av.innerHTML = `<img src="${u.avatar_url}" class="w-full h-full object-cover" alt=""/>`;
+      else av.textContent = (u.display_name||u.username||'?').slice(0,2).toUpperCase();
+      document.getElementById('u-name')!.textContent = u.display_name || u.username;
+      document.getElementById('u-handle')!.textContent = `@${u.username}`;
+      document.getElementById('u-bio')!.textContent = u.bio || '';
+      document.getElementById('u-counts')!.textContent = `${u.followers_count||0} followers · ${u.following_count||0} following`;
+      document.title = `@${u.username} | Ionic Swap`;
+
+      const followBtn = document.getElementById('u-follow') as HTMLButtonElement;
+      const me = (wouAuth as any)?.getUser?.() || null;
+      if (me && me.account_id === u.account_id) {
+        followBtn.classList.remove('hidden');
+        followBtn.textContent = 'This is you';
+        followBtn.setAttribute('disabled','true');
+      } else if (!(wouAuth as any)?.isAuthenticated?.()) {
+        followBtn.classList.remove('hidden');
+        followBtn.textContent = 'Sign in to follow';
+        followBtn.addEventListener('click', ()=> { location.href = '/'; });
+      } else {
+        let following = false;
+        followBtn.classList.remove('hidden');
+        followBtn.addEventListener('click', async () => {
+          try {
+            if (!following) { await (wouAuth as any).follow(u.account_id); following = true; followBtn.textContent = 'Following ✓'; }
+            else { await (wouAuth as any).unfollow(u.account_id); following = false; followBtn.textContent = 'Follow'; }
+          } catch (e:any) { followBtn.textContent = e?.message || 'Follow failed'; }
+        });
+      }
+
+      try {
+        const pr = await fetch(`${API_BASE}/api/portfolio/${u.account_id}`);
+        if (pr.ok) {
+          const j:any = await pr.json();
+          document.getElementById('u-portfolio')?.classList.remove('hidden');
+          document.getElementById('u-total')!.textContent = fmtUsd(j.total_usdt);
+          const box = document.getElementById('u-holdings')!;
+          box.innerHTML = (j.holdings||[]).length ? (j.holdings||[]).map((h:any)=>
+            `<div class="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">`
+            + `<span>${TOKEN_EMOJI[h.token]||'🪙'} <b>${Number(h.amount).toLocaleString('en-US',{maximumFractionDigits:6})} ${h.token}</b></span>`
+            + `<span class="font-bold">${fmtUsd(h.value_usdt)}</span></div>`
+          ).join('') : '<span class="text-zinc-500">No assets.</span>';
+        }
+        const hr = await fetch(`${API_BASE}/api/history/${u.account_id}?limit=20`);
+        if (hr.ok) {
+          const j:any = await hr.json();
+          document.getElementById('u-activity')?.classList.remove('hidden');
+          const box = document.getElementById('u-txs')!;
+          box.innerHTML = (j.txs||[]).length ? (j.txs||[]).map((t:any)=>
+            `<div class="flex justify-between p-2 bg-zinc-100 dark:bg-zinc-900 rounded border border-zinc-200 dark:border-zinc-700"><span>${t.kind==='transfer'?'⇄ transfer':`${t.from} → ${t.to}`} ${t.kind==='transfer'?`${t.amount} ${t.token||t.from}`:Number(t.receive).toFixed(6)}</span><span class="text-zinc-500">${new Date(t.ts*1000).toLocaleDateString()}</span></div>`
+          ).join('') : '<span class="text-zinc-500">No activity yet.</span>';
+        }
+      } catch {}
+    }
+    load();
+  </script>
+</Layout>
