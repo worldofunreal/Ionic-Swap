@@ -43,6 +43,7 @@ const TOKENS: &[(&str, u32, bool)] = &[
     ("TRX", 2, false),
     ("IONIC", 2, true),
     ("UNREAL", 2, true),
+    ("SPIRAL", 2, true),
 ];
 // Semilla de arranque (nace stale a proposito: solo reportes frescos operan).
 const ORACLE_SEED: &[(&str, f64)] = &[
@@ -134,7 +135,7 @@ fn save_trade(path: &str, st: &TradeState) {
 fn seed_trade() -> TradeState {
     let now = Utc::now().timestamp();
     let mut st = TradeState::default();
-    for sym in ["USDT", "IONIC", "UNREAL"] {
+    for sym in ["USDT", "IONIC", "UNREAL", "SPIRAL"] {
         st.book.insert(sym.to_string(), BookEntry { price: 1.0, ts: now, change_24h: 0.0, internal: true });
     }
     for (sym, price) in ORACLE_SEED {
@@ -714,6 +715,13 @@ async fn trade_balances(State(s): State<AppState>, headers: HeaderMap) -> impl I
             out.insert(tok.clone(), serde_json::json!(*amt));
         }
     }
+    // Fase D: SPIRAL se lee de su ledger (verdad unica), no se duplica aqui.
+    let spiral = s.ledger.read().await.balances.get(&sub).copied().unwrap_or(0.0);
+    if spiral > 0.0 {
+        let price = st.book.get("SPIRAL").map(|e| e.price).unwrap_or(1.0);
+        total += spiral * price;
+        out.insert("SPIRAL".to_string(), serde_json::json!(spiral));
+    }
     (StatusCode::OK, Json(serde_json::json!({"balances": out, "total_usdt": round_dp(total, 2), "ts": now}))).into_response()
 }
 
@@ -739,6 +747,12 @@ async fn trade_swap(State(s): State<AppState>, headers: HeaderMap, Json(req): Js
     if from == to || !req.amount.is_finite() || req.amount <= 0.0 {
         return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"monto invalido"}))).into_response();
     }
+    // Fase D: SPIRAL entero (puente u64, sin polvo) y contra su ledger: verdad unica.
+    let spiral_leg = from == "SPIRAL" || to == "SPIRAL";
+    let amt = if spiral_leg { req.amount.floor() } else { req.amount };
+    if spiral_leg && amt < 1.0 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"SPIRAL minimo 1"}))).into_response();
+    }
     let pkey = format!("swap:{}", req.key);
     let now = Utc::now().timestamp();
     let mut st = s.trade.write().await;
@@ -754,26 +768,53 @@ async fn trade_swap(State(s): State<AppState>, headers: HeaderMap, Json(req): Js
     if (!pf.internal && now - pf.ts > STALE_AFTER_SECS) || (!pt.internal && now - pt.ts > STALE_AFTER_SECS) {
         return (StatusCode::SERVICE_UNAVAILABLE, Json(serde_json::json!({"error":"oracle desactualizado: sin reportes frescos"}))).into_response();
     }
-    let notional = req.amount * pf.price;
+    let notional = amt * pf.price;
     if notional > MAX_NOTIONAL_USDT {
         return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"monto excede tope por operacion"}))).into_response();
     }
-    let have = st.balances.get(&sub).and_then(|b| b.get(&from)).copied().unwrap_or(0.0);
-    if have + 1e-9 < req.amount {
-        return (StatusCode::PAYMENT_REQUIRED, Json(serde_json::json!({"error":"saldo insuficiente", "have": round_dp(have, from_dp)}))).into_response();
-    }
     let fee_usd = notional * FEE_RATE;
-    let receive = round_dp((notional - fee_usd) / pt.price, to_dp);
-    let left = round_dp(have - req.amount, from_dp);
-    {
+    let receive = if to == "SPIRAL" { ((notional - fee_usd) / pt.price).floor() } else { round_dp((notional - fee_usd) / pt.price, to_dp) };
+    if to == "SPIRAL" && receive < 1.0 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"recibes menos de 1 SPIRAL: sube el monto"}))).into_response();
+    }
+    // debito: check+mutacion juntos por store (orden de locks trade->ledger siempre)
+    let left: f64;
+    if from == "SPIRAL" {
+        let mut led = s.ledger.write().await;
+        let lb = led.balances.entry(sub.clone()).or_insert(0.0);
+        if *lb + 1e-9 < amt {
+            let have = *lb;
+            drop(led);
+            return (StatusCode::PAYMENT_REQUIRED, Json(serde_json::json!({"error":"saldo insuficiente", "have": have as u64}))).into_response();
+        }
+        *lb -= amt;
+        left = *lb;
+        save_ledger(&s.ledger_path, &led);
+    } else {
+        let have = st.balances.get(&sub).and_then(|b| b.get(&from)).copied().unwrap_or(0.0);
+        if have + 1e-9 < amt {
+            return (StatusCode::PAYMENT_REQUIRED, Json(serde_json::json!({"error":"saldo insuficiente", "have": round_dp(have, from_dp)}))).into_response();
+        }
+        left = round_dp(have - amt, from_dp);
+        st.balances.entry(sub.clone()).or_default().insert(from.clone(), left);
+    }
+    // credito
+    let got_new: f64;
+    if to == "SPIRAL" {
+        let mut led = s.ledger.write().await;
+        let lb = led.balances.entry(sub.clone()).or_insert(0.0);
+        *lb += receive;
+        got_new = *lb;
+        save_ledger(&s.ledger_path, &led);
+    } else {
         let b = st.balances.entry(sub.clone()).or_default();
-        b.insert(from.clone(), left);
         let got = b.get(&to).copied().unwrap_or(0.0);
-        b.insert(to.clone(), round_dp(got + receive, to_dp));
+        got_new = round_dp(got + receive, to_dp);
+        b.insert(to.clone(), got_new);
     }
     let tx = SwapTx {
         id: uuid::Uuid::new_v4().to_string(), key: req.key.clone(),
-        from: from.clone(), to: to.clone(), amount: req.amount, receive,
+        from: from.clone(), to: to.clone(), amount: amt, receive,
         price_from: pf.price, price_to: pt.price, fee_usd: round_dp(fee_usd, 2), ts: now,
         kind: "swap".to_string(),
     };
@@ -787,9 +828,9 @@ async fn trade_swap(State(s): State<AppState>, headers: HeaderMap, Json(req): Js
     // Fase B: el fee alimenta el indice global del pool de salida
     accrue_fee(&mut st, &to, fee_usd, now);
     let resp = serde_json::json!({
-        "from": from, "to": to, "amount": req.amount, "receive": receive,
+        "from": from, "to": to, "amount": amt, "receive": receive,
         "price": pt.price, "fee_usd": round_dp(fee_usd, 2), "tx_id": tx.id,
-        "key": req.key, "balances": { from.clone(): left, to.clone(): round_dp(tx.receive + 0.0, to_dp) },
+        "key": req.key, "balances": { from.clone(): left, to.clone(): got_new },
     });
     st.processed.insert(pkey, resp.clone());
     save_trade(&s.state_path, &st);
@@ -808,21 +849,29 @@ fn history_view(st: &TradeState, sub: &str, limit: usize, offset: usize) -> serd
     serde_json::json!({"txs": page, "total": total})
 }
 
-fn portfolio_view(st: &TradeState, sub: &str, now: i64) -> serde_json::Value {
+fn portfolio_view(st: &TradeState, spiral: f64, sub: &str, now: i64) -> serde_json::Value {
     let mut holdings = vec![];
     let mut total = 0.0;
+    let mut toks: Vec<(String, f64)> = vec![];
     if let Some(b) = st.balances.get(sub) {
-        let mut toks: Vec<(&String, &f64)> = b.iter().filter(|(_, a)| **a > 0.0).collect();
-        toks.sort_by(|a, b| a.0.cmp(b.0));
-        for (tok, amt) in toks {
-            let (price, chg) = st.book.get(tok).map(|e| (e.price, e.change_24h)).unwrap_or((0.0, 0.0));
-            let value = amt * price;
-            total += value;
-            holdings.push(serde_json::json!({
-                "token": tok, "amount": amt, "price": price,
-                "value_usdt": round_dp(value, 2), "change_24h": chg,
-            }));
+        for (tok, amt) in b {
+            if *amt > 0.0 {
+                toks.push((tok.clone(), *amt));
+            }
         }
+    }
+    if spiral > 0.0 {
+        toks.push(("SPIRAL".to_string(), spiral));
+    }
+    toks.sort_by(|a, b| a.0.cmp(&b.0));
+    for (tok, amt) in toks {
+        let (price, chg) = st.book.get(&tok).map(|e| (e.price, e.change_24h)).unwrap_or((0.0, 0.0));
+        let value = amt * price;
+        total += value;
+        holdings.push(serde_json::json!({
+            "token": tok, "amount": amt, "price": price,
+            "value_usdt": round_dp(value, 2), "change_24h": chg,
+        }));
     }
     let trades = st.txs.get(sub).map(|v| v.iter().filter(|t| t.kind != "transfer").count()).unwrap_or(0);
     serde_json::json!({
@@ -845,7 +894,8 @@ async fn trade_portfolio(State(s): State<AppState>, headers: HeaderMap) -> impl 
         Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
     };
     let st = s.trade.read().await;
-    (StatusCode::OK, Json(portfolio_view(&st, &sub, Utc::now().timestamp()))).into_response()
+    let spiral = s.ledger.read().await.balances.get(&sub).copied().unwrap_or(0.0);
+    (StatusCode::OK, Json(portfolio_view(&st, spiral, &sub, Utc::now().timestamp()))).into_response()
 }
 
 // Perfiles publicos (decision owner): portafolio e historial visibles sin sesion.
@@ -854,7 +904,8 @@ async fn public_portfolio(State(s): State<AppState>, Path(account): Path<String>
         return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"cuenta invalida"}))).into_response();
     }
     let st = s.trade.read().await;
-    (StatusCode::OK, Json(portfolio_view(&st, &account, Utc::now().timestamp()))).into_response()
+    let spiral = s.ledger.read().await.balances.get(&account).copied().unwrap_or(0.0);
+    (StatusCode::OK, Json(portfolio_view(&st, spiral, &account, Utc::now().timestamp()))).into_response()
 }
 
 async fn public_history(State(s): State<AppState>, Path(account): Path<String>, Query(q): Query<HistQuery>) -> impl IntoResponse {
@@ -923,19 +974,39 @@ async fn trade_transfer(State(s): State<AppState>, headers: HeaderMap, Json(req)
         replay["replay"] = serde_json::json!(true);
         return (StatusCode::OK, Json(replay)).into_response();
     }
-    let have = st.balances.get(&sub).and_then(|b| b.get(&token)).copied().unwrap_or(0.0);
-    if have + 1e-9 < req.amount {
-        return (StatusCode::PAYMENT_REQUIRED, Json(serde_json::json!({"error":"saldo insuficiente", "have": round_dp(have, dp)}))).into_response();
+    // Fase D: SPIRAL viaja por el ledger del puente (verdad unica), entero.
+    let amt = if token == "SPIRAL" { req.amount.floor() } else { round_dp(req.amount, dp) };
+    if token == "SPIRAL" && amt < 1.0 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"SPIRAL minimo 1"}))).into_response();
     }
-    let amt = round_dp(req.amount, dp);
-    {
-        let b = st.balances.entry(sub.clone()).or_default();
-        b.insert(token.clone(), round_dp(have - amt, dp));
-    }
-    {
-        let b = st.balances.entry(dest.clone()).or_default();
-        let cur = b.get(&token).copied().unwrap_or(0.0);
-        b.insert(token.clone(), round_dp(cur + amt, dp));
+    let left: f64;
+    if token == "SPIRAL" {
+        let mut led = s.ledger.write().await;
+        let have = led.balances.get(&sub).copied().unwrap_or(0.0);
+        if have + 1e-9 < amt {
+            drop(led);
+            return (StatusCode::PAYMENT_REQUIRED, Json(serde_json::json!({"error":"saldo insuficiente", "have": have as u64}))).into_response();
+        }
+        led.balances.insert(sub.clone(), have - amt);
+        let cur = led.balances.get(&dest).copied().unwrap_or(0.0);
+        led.balances.insert(dest.clone(), cur + amt);
+        save_ledger(&s.ledger_path, &led);
+        left = have - amt;
+    } else {
+        let have = st.balances.get(&sub).and_then(|b| b.get(&token)).copied().unwrap_or(0.0);
+        if have + 1e-9 < amt {
+            return (StatusCode::PAYMENT_REQUIRED, Json(serde_json::json!({"error":"saldo insuficiente", "have": round_dp(have, dp)}))).into_response();
+        }
+        left = round_dp(have - amt, dp);
+        {
+            let b = st.balances.entry(sub.clone()).or_default();
+            b.insert(token.clone(), left);
+        }
+        {
+            let b = st.balances.entry(dest.clone()).or_default();
+            let cur = b.get(&token).copied().unwrap_or(0.0);
+            b.insert(token.clone(), round_dp(cur + amt, dp));
+        }
     }
     let mk = |key: String| SwapTx {
         id: uuid::Uuid::new_v4().to_string(), key,
@@ -951,7 +1022,6 @@ async fn trade_transfer(State(s): State<AppState>, headers: HeaderMap, Json(req)
             h.drain(..h.len() - HISTORY_CAP);
         }
     }
-    let left = round_dp(have - amt, dp);
     let resp = serde_json::json!({"to": dest, "token": token, "amount": amt, "balance": left, "key": req.key});
     st.processed.insert(pkey, resp.clone());
     save_trade(&s.state_path, &st);
@@ -1017,6 +1087,11 @@ async fn trade_stake(State(s): State<AppState>, headers: HeaderMap, Json(req): J
     if !req.amount.is_finite() || req.amount <= 0.0 {
         return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"monto invalido"}))).into_response();
     }
+    // Fase D: SPIRAL entero y contra su ledger (verdad unica).
+    let amt = if token == "SPIRAL" { req.amount.floor() } else { req.amount };
+    if token == "SPIRAL" && amt < 1.0 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"SPIRAL minimo 1"}))).into_response();
+    }
     if req.dissolve_delay_secs < STAKE_MIN_DELAY_SECS || req.dissolve_delay_secs > STAKE_MAX_DELAY_SECS {
         return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"plazo debe ser 1 dia..4 anos"}))).into_response();
     }
@@ -1032,21 +1107,30 @@ async fn trade_stake(State(s): State<AppState>, headers: HeaderMap, Json(req): J
         Some(e) if e.internal || now - e.ts <= STALE_AFTER_SECS => e.price,
         _ => return (StatusCode::SERVICE_UNAVAILABLE, Json(serde_json::json!({"error":"oracle desactualizado: sin reportes frescos"}))).into_response(),
     };
-    if req.amount * price > STAKE_MAX_VALUE_USDT {
+    if amt * price > STAKE_MAX_VALUE_USDT {
         return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"stake excede tope por posicion"}))).into_response();
     }
-    let have = st.balances.get(&sub).and_then(|b| b.get(&token)).copied().unwrap_or(0.0);
-    if have + 1e-9 < req.amount {
-        return (StatusCode::PAYMENT_REQUIRED, Json(serde_json::json!({"error":"saldo insuficiente", "have": round_dp(have, dp)}))).into_response();
-    }
-    {
-        let b = st.balances.entry(sub.clone()).or_default();
-        b.insert(token.clone(), round_dp(have - req.amount, dp));
+    if token == "SPIRAL" {
+        let mut led = s.ledger.write().await;
+        let lb = led.balances.entry(sub.clone()).or_insert(0.0);
+        if *lb + 1e-9 < amt {
+            let have = *lb;
+            drop(led);
+            return (StatusCode::PAYMENT_REQUIRED, Json(serde_json::json!({"error":"saldo insuficiente", "have": have as u64}))).into_response();
+        }
+        *lb -= amt;
+        save_ledger(&s.ledger_path, &led);
+    } else {
+        let have = st.balances.get(&sub).and_then(|b| b.get(&token)).copied().unwrap_or(0.0);
+        if have + 1e-9 < amt {
+            return (StatusCode::PAYMENT_REQUIRED, Json(serde_json::json!({"error":"saldo insuficiente", "have": round_dp(have, dp)}))).into_response();
+        }
+        st.balances.entry(sub.clone()).or_default().insert(token.clone(), round_dp(have - amt, dp));
     }
     let idx = st.fee_index.get(&token).copied().unwrap_or(0.0);
     let pos = Position {
         id: uuid::Uuid::new_v4().to_string(), sub: sub.clone(), token: token.clone(),
-        amount: round_dp(req.amount, dp), delay_secs: req.dissolve_delay_secs, created_at: now,
+        amount: round_dp(amt, dp), delay_secs: req.dissolve_delay_secs, created_at: now,
         state: "Locked".to_string(), dissolving_started_at: None, withdrawn: 0.0, last_index: idx,
     };
     let view = position_view(&st, &pos, now);
@@ -1242,16 +1326,26 @@ async fn pos_withdraw(State(s): State<AppState>, headers: HeaderMap, Path(id): P
         return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"disuelve primero"}))).into_response();
     }
     let avail = available_now(st.positions.get(&id).expect("existe"), now);
-    if req.amount - avail > 1e-9 {
+    let credited = if token == "SPIRAL" { req.amount.floor() } else { round_dp(req.amount, dp) };
+    if token == "SPIRAL" && credited < 1.0 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"SPIRAL minimo 1"}))).into_response();
+    }
+    if credited - avail > 1e-9 {
         return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"excede lo liberado", "available": round_dp(avail, dp)}))).into_response();
     }
-    let credited = round_dp(req.amount, dp);
     {
         let p = st.positions.get_mut(&id).expect("existe");
         p.withdrawn = round_dp(p.withdrawn + credited, dp);
         if p.withdrawn + 1e-9 >= p.amount {
             p.state = "Dissolved".to_string();
         }
+    }
+    if token == "SPIRAL" {
+        let mut led = s.ledger.write().await;
+        let lb = led.balances.entry(sub.clone()).or_insert(0.0);
+        *lb += credited;
+        save_ledger(&s.ledger_path, &led);
+    } else {
         let b = st.balances.entry(sub.clone()).or_default();
         let cur = b.get(&token).copied().unwrap_or(0.0);
         b.insert(token.clone(), round_dp(cur + credited, dp));
@@ -1316,9 +1410,26 @@ async fn pos_add(State(s): State<AppState>, headers: HeaderMap, Path(id): Path<S
         return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"solo posiciones Locked reciben"}))).into_response();
     }
     let dp = token_cfg(&token).map(|(_, d, _)| d).unwrap_or(2);
-    let have = st.balances.get(&sub).and_then(|b| b.get(&token)).copied().unwrap_or(0.0);
-    if have + 1e-9 < req.amount {
-        return (StatusCode::PAYMENT_REQUIRED, Json(serde_json::json!({"error":"saldo insuficiente", "have": round_dp(have, dp)}))).into_response();
+    let amt = if token == "SPIRAL" { req.amount.floor() } else { req.amount };
+    if token == "SPIRAL" && amt < 1.0 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"SPIRAL minimo 1"}))).into_response();
+    }
+    if token == "SPIRAL" {
+        let mut led = s.ledger.write().await;
+        let lb = led.balances.entry(sub.clone()).or_insert(0.0);
+        if *lb + 1e-9 < amt {
+            let have = *lb;
+            drop(led);
+            return (StatusCode::PAYMENT_REQUIRED, Json(serde_json::json!({"error":"saldo insuficiente", "have": have as u64}))).into_response();
+        }
+        *lb -= amt;
+        save_ledger(&s.ledger_path, &led);
+    } else {
+        let have = st.balances.get(&sub).and_then(|b| b.get(&token)).copied().unwrap_or(0.0);
+        if have + 1e-9 < amt {
+            return (StatusCode::PAYMENT_REQUIRED, Json(serde_json::json!({"error":"saldo insuficiente", "have": round_dp(have, dp)}))).into_response();
+        }
+        st.balances.entry(sub.clone()).or_default().insert(token.clone(), round_dp(have - amt, dp));
     }
     let idx = st.fee_index.get(&token).copied().unwrap_or(0.0);
     let mut p = st.positions.get(&id).expect("existe").clone();
@@ -1329,15 +1440,11 @@ async fn pos_add(State(s): State<AppState>, headers: HeaderMap, Path(id): Path<S
         b.insert("USDT".to_string(), round_dp(u + settled, 2));
         p.last_index = idx;
     }
-    p.amount = round_dp(p.amount + req.amount, dp);
-    {
-        let b = st.balances.entry(sub.clone()).or_default();
-        b.insert(token.clone(), round_dp(have - req.amount, dp));
-    }
+    p.amount = round_dp(p.amount + amt, dp);
     st.positions.insert(id.clone(), p.clone());
-    liq_log(&mut st, &sub, "add", Some(id.clone()), &token, req.amount, now);
+    liq_log(&mut st, &sub, "add", Some(id.clone()), &token, amt, now);
     let view = position_view(&st, &p, now);
-    let resp = serde_json::json!({"added": req.amount, "settled_usdt": settled, "position": view, "key": req.key});
+    let resp = serde_json::json!({"added": amt, "settled_usdt": settled, "position": view, "key": req.key});
     st.processed.insert(pkey, resp.clone());
     save_trade(&s.state_path, &st);
     (StatusCode::OK, Json(resp)).into_response()

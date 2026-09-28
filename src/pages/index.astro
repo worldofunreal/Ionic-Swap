@@ -586,7 +586,7 @@ import Layout from '../layouts/Layout.astro';
                 </div>
 
                 <!-- High quality vector candlesticks simulation -->
-                <div class="flex-1 w-full border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 rounded-xl overflow-hidden relative flex items-end p-2 select-none">
+                <div id="trade-chart" class="flex-1 w-full border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 rounded-xl overflow-hidden relative flex items-end p-2 select-none">
                   <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                     <!-- Grid Lines -->
                     <line x1="0" y1="25" x2="100" y2="25" stroke="rgba(156,163,175,0.08)" stroke-width="1"></line>
@@ -624,8 +624,8 @@ import Layout from '../layouts/Layout.astro';
               <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col justify-between h-full">
                 <div class="space-y-4">
                   <div class="flex border-b border-zinc-200 dark:border-zinc-700 pb-2">
-                    <button class="flex-1 text-center font-bold text-sm text-emerald-500 pb-1 border-b-2 border-emerald-500">BUY</button>
-                    <button class="flex-1 text-center font-bold text-sm text-zinc-400 hover:text-zinc-900 dark:hover:text-white pb-1">SELL</button>
+                    <button id="buy-tab" type="button" class="flex-1 text-center font-bold text-sm text-emerald-500 pb-1 border-b-2 border-emerald-500">BUY</button>
+                    <button id="sell-tab" type="button" class="flex-1 text-center font-bold text-sm text-zinc-400 hover:text-zinc-900 dark:hover:text-white pb-1">SELL</button>
                   </div>
 
                   <div class="space-y-3 font-mono text-[10px]">
@@ -1294,10 +1294,45 @@ import Layout from '../layouts/Layout.astro';
       return Object.keys(obs).length ? obs : null;
     } catch { return null; }
   };
+  // Velas reales desde el Binance de cada IP (gratis). Sin chain, sin proxy.
+  const renderChart = async () => {
+    const box = document.getElementById('trade-chart'); if(!box) return;
+    const sym = currentTargetSymbol;
+    const pair = BINANCE_MAP[sym];
+    const price = coinPrices[sym]||0;
+    const frame = (inner:string, note:string) => { box.innerHTML = inner + `<div class="absolute bottom-2 left-2 text-[8px] font-mono text-zinc-400">${note}</div>`; };
+    const flat = (note:string) => {
+      frame(`<svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="0" y1="50" x2="100" y2="50" stroke="#10b981" stroke-width="0.6"/></svg>`, note);
+    };
+    if (!pair) { flat(`INTERNAL PRICE ${fmtUsd(price)} · NO MARKET HISTORY`); return; }
+    try {
+      const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=15m&limit=96`);
+      if (!r.ok) throw 0;
+      const k:any[] = await r.json();
+      if (!k.length) throw 0;
+      let hi = -Infinity, lo = Infinity;
+      const rows = k.map(c=>[parseFloat(c[1]),parseFloat(c[2]),parseFloat(c[3]),parseFloat(c[4])]);
+      rows.forEach(rw=>{ hi=Math.max(hi,rw[1]); lo=Math.min(lo,rw[2]); });
+      if (!(hi>lo)) throw 0;
+      const n = rows.length; const w = 100/n; const bw = Math.max(0.3, w*0.55);
+      const y = (p:number) => 96 - ((p-lo)/(hi-lo))*92;
+      let svg = `<svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">`;
+      rows.forEach((rw,i)=>{
+        const o=rw[0], h=rw[1], l=rw[2], c=rw[3];
+        const col = c>=o?'#10b981':'#ef4444';
+        const x = i*w + w/2;
+        svg += `<line x1="${x.toFixed(2)}" y1="${y(h).toFixed(2)}" x2="${x.toFixed(2)}" y2="${y(l).toFixed(2)}" stroke="${col}" stroke-width="0.25"/>`;
+        const top = y(Math.max(o,c)), bot = y(Math.min(o,c));
+        svg += `<rect x="${(x-bw/2).toFixed(2)}" y="${top.toFixed(2)}" width="${bw.toFixed(2)}" height="${Math.max(0.6,bot-top).toFixed(2)}" fill="${col}"/>`;
+      });
+      svg += `</svg>`;
+      frame(svg, `${sym}/USDT 15m · BINANCE`);
+    } catch { flat(`FEED UNAVAILABLE · LAST ${fmtUsd(price)}`); }
+  };
   const refreshMarket = async () => {
     const obs = await fetchBinance();
     if (obs) {
-      paintPriceRows(); paintMarketsTable(); paintTradeHeader(); updateTradeCalculator();
+      paintPriceRows(); paintMarketsTable(); paintTradeHeader(); updateTradeCalculator(); renderChart();
       try {
         if (isAuthed()) {
           await fetch(`${API_BASE}/api/prices/report`, { method:'POST', headers: authHeaders(),
@@ -1311,7 +1346,7 @@ import Layout from '../layouts/Layout.astro';
         if (r.ok) {
           const arr:any[] = await r.json();
           arr.forEach((p:any)=>{ if(p.symbol && p.price){ coinPrices[p.symbol]=p.price; if(typeof p.change_24h==='number') coinChange[p.symbol]=p.change_24h; } });
-          paintPriceRows(); paintMarketsTable(); paintTradeHeader(); updateTradeCalculator();
+          paintPriceRows(); paintMarketsTable(); paintTradeHeader(); updateTradeCalculator(); renderChart();
         }
       } catch {}
     }
@@ -1319,20 +1354,34 @@ import Layout from '../layouts/Layout.astro';
 
   let currentTargetSymbol = 'BTC';
 
+  // Lado BUY (USDT->token) / SELL (token->USDT). SPIRAL opera en ambos.
+  let tradeSide: 'buy'|'sell' = 'buy';
+  const tradeFrom = () => tradeSide==='buy' ? 'USDT' : currentTargetSymbol;
+  const tradeTo = () => tradeSide==='buy' ? currentTargetSymbol : 'USDT';
+  const paintTabs = () => {
+    const b = document.getElementById('buy-tab'); const s = document.getElementById('sell-tab');
+    if (b) { const a = tradeSide==='buy'; b.classList.toggle('text-emerald-500', a); b.classList.toggle('border-b-2', a); b.classList.toggle('border-emerald-500', a); b.classList.toggle('text-zinc-400', !a); }
+    if (s) { const a = tradeSide==='sell'; s.classList.toggle('text-emerald-500', a); s.classList.toggle('border-b-2', a); s.classList.toggle('border-emerald-500', a); s.classList.toggle('text-zinc-400', !a); }
+  };
   const updateTradeCalculator = () => {
     const val = parseFloat(payInput.value) || 0;
-    const price = coinPrices[currentTargetSymbol] || 58451.25;
+    const price = coinPrices[currentTargetSymbol] || 0;
+    const rsym = document.getElementById('lbl-receive-sym');
+    if (rsym) rsym.innerText = tradeTo();
     if (receiveVal) {
-      receiveVal.innerText = (val / price).toFixed(6);
+      receiveVal.innerText = !price ? '—' : tradeSide==='buy' ? (val/price).toFixed(6) : (val*price).toFixed(2);
     }
+    paintTradeBalance();
   };
+  document.getElementById('buy-tab')?.addEventListener('click', ()=>{ tradeSide='buy'; paintTabs(); updateTradeCalculator(); });
+  document.getElementById('sell-tab')?.addEventListener('click', ()=>{ tradeSide='sell'; paintTabs(); updateTradeCalculator(); });
 
   payInput?.addEventListener('input', updateTradeCalculator);
 
   tradePercentBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const percent = parseFloat(btn.getAttribute('data-val') || '0');
-      const maxUSDTBalance = serverBalances['USDT']||0;
+      const maxUSDTBalance = serverBalances[tradeFrom()]||0;
       payInput.value = ((maxUSDTBalance * percent) / 100).toFixed(2);
       updateTradeCalculator();
     });
@@ -1421,14 +1470,14 @@ import Layout from '../layouts/Layout.astro';
     try {
       const key = (crypto as any)?.randomUUID?.() || `${Date.now()}-${Math.floor(Math.random()*1e9)}`;
       const r = await fetch(`${API_BASE}/api/swap`, { method:'POST', headers: authHeaders(),
-        body: JSON.stringify({ from:'USDT', to: currentTargetSymbol, amount: amt, key }) });
+        body: JSON.stringify({ from: tradeFrom(), to: tradeTo(), amount: amt, key }) });
       const j:any = await r.json().catch(()=>({}));
       if (r.status === 401) { showNotification("Session expired, sign in again"); (wouAuth as any)?.openModal?.(); return; }
-      if (r.status === 402) { showNotification(`Insufficient USDT (have ${j.have ?? 0}) — claim the Faucet`); return; }
+      if (r.status === 402) { showNotification(`Insufficient ${j.from||tradeFrom()} (have ${j.have ?? 0})`); return; }
       if (r.status === 503) { showNotification("Price feed stale — wait a bit and retry"); return; }
       if (!r.ok) { showNotification(j.error || "Swap rejected"); return; }
-      showNotification(`Swap ${j.amount} USDT → ${Number(j.receive).toFixed(6)} ${j.to} (fee $${Number(j.fee_usd).toFixed(2)})`);
-      if (receiveVal) receiveVal.innerText = Number(j.receive).toFixed(6);
+      showNotification(`Swap ${j.amount} ${j.from} → ${Number(j.receive).toLocaleString('en-US',{maximumFractionDigits:6})} ${j.to} (fee $${Number(j.fee_usd).toFixed(2)})`);
+      if (receiveVal) receiveVal.innerText = tradeSide==='buy' ? Number(j.receive).toFixed(6) : Number(j.receive).toFixed(2);
       loadWallet();
     } catch { showNotification("Swap failed (network)"); }
   });
@@ -1438,7 +1487,7 @@ import Layout from '../layouts/Layout.astro';
     BTC:{emoji:'🪙',name:'Bitcoin'}, ETH:{emoji:'🔷',name:'Ethereum'}, SOL:{emoji:'☀️',name:'Solana'},
     ICP:{emoji:'♾️',name:'Internet Computer'}, XRP:{emoji:'💧',name:'XRP Ledger'}, BNB:{emoji:'🟡',name:'BNB Chain'},
     DOGE:{emoji:'🐶',name:'Dogecoin'}, ADA:{emoji:'🔵',name:'Cardano'}, TRX:{emoji:'🔴',name:'TRON'},
-    USDT:{emoji:'💵',name:'Tether'}, IONIC:{emoji:'💎',name:'Ionic'}, UNREAL:{emoji:'✨',name:'Unreal'},
+    USDT:{emoji:'💵',name:'Tether'}, IONIC:{emoji:'💎',name:'Ionic'}, UNREAL:{emoji:'✨',name:'Unreal'}, SPIRAL:{emoji:'🌀',name:'Spiral'},
   };
   let serverBalances: Record<string, number> = {};
   const paintWalletAssets = (holdings: any[]) => {
@@ -1455,7 +1504,8 @@ import Layout from '../layouts/Layout.astro';
   };
   const paintTradeBalance = () => {
     const el = document.getElementById('trade-wallet-balance');
-    if (el) el.innerText = `${Number(serverBalances['USDT']||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} USDT`;
+    const f = tradeFrom();
+    if (el) el.innerText = `${Number(serverBalances[f]||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ${f}`;
   };
   const loadWallet = async () => {
     const totalEl = document.getElementById('portfolio-total');
@@ -1625,7 +1675,7 @@ import Layout from '../layouts/Layout.astro';
         const receiveSym = document.getElementById('lbl-receive-sym');
         if (receiveSym) receiveSym.innerText = symbol;
 
-        updateTradeCalculator();
+        updateTradeCalculator(); renderChart();
 
         // Router to trade tab
         const tradeNav = document.querySelector('button[data-target="trade"]') as HTMLButtonElement;
