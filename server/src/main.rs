@@ -83,6 +83,15 @@ struct TradeState {
     processed: HashMap<String, serde_json::Value>,
     volume_usd: HashMap<String, f64>,
     fees_usd: HashMap<String, f64>,
+    // Fase B (con default: abre state.json viejos sin romper)
+    #[serde(default)]
+    positions: HashMap<String, Position>,
+    #[serde(default)]
+    fee_index: HashMap<String, f64>,
+    #[serde(default)]
+    liq_txs: HashMap<String, Vec<LiqTx>>,
+    #[serde(default)]
+    fee_events: Vec<(i64, String, f64)>,
 }
 
 fn token_cfg(sym: &str) -> Option<(&'static str, u32, bool)> {
@@ -136,13 +145,125 @@ struct StakeReq { token: String, amount: f64, dissolve_delay_secs: u64 }
 #[derive(Clone, Serialize, Deserialize)]
 struct StakeResp { position_id: String, token: String, amount: f64, voting_power: f64, apy: f64 }
 
+// ---------- Fase B: staking con neuronas (spec MVP/Stage-1 legacy) ----------
+// Semilla de arranque (paridad legacy, sin dueno): profundidad inicial de
+// display. NO diluye fees: el indice solo reparte entre posiciones de usuarios.
+const SEED_STAKE: &[(&str, f64)] = &[
+    ("IONIC", 125000.0),
+    ("UNREAL", 12000.0),
+    ("BTC", 2.10),
+    ("SOL", 840.0),
+    ("XRP", 45000.0),
+];
+const STAKE_MIN_DELAY_SECS: u64 = 86400;
+const STAKE_MAX_DELAY_SECS: u64 = 126144000; // 4y (tope del slider UI)
+const STAKE_MAX_VALUE_USDT: f64 = 1_000_000.0;
+const FEE_EVENTS_CAP: usize = 5000;
+const APY_WINDOW_SECS: i64 = 30 * 86400;
+
+#[derive(Clone, Serialize, Deserialize)]
+struct Position {
+    id: String, sub: String, token: String,
+    amount: f64, delay_secs: u64, created_at: i64,
+    state: String, // Locked | Dissolving | Dissolved
+    dissolving_started_at: Option<i64>,
+    withdrawn: f64, last_index: f64,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+struct LiqTx {
+    id: String, kind: String, position_id: Option<String>,
+    token: String, amount: f64, ts: i64,
+}
+
+fn delay_mult(delay_secs: u64) -> f64 {
+    let d = delay_secs as f64 / 86400.0;
+    if d <= 1.0 { 1.0 } else if d <= 7.0 { 1.5 } else if d <= 30.0 { 2.0 } else if d <= 90.0 { 3.0 } else { 5.0 }
+}
+
+fn age_mult(age_days: f64, dissolving: bool) -> f64 {
+    if dissolving {
+        return 1.0;
+    }
+    if age_days < 30.0 { 1.0 } else if age_days < 90.0 { 1.1 } else if age_days < 180.0 { 1.2 } else if age_days < 365.0 { 1.3 } else { 1.5 }
+}
+
+fn dissolve_fraction(p: &Position, now: i64) -> f64 {
+    match p.dissolving_started_at {
+        Some(t0) if p.delay_secs > 0 => ((now - t0).max(0) as f64 / p.delay_secs as f64).min(1.0),
+        _ => 0.0,
+    }
+}
+
+// Poder de voto: solo la tranche bloqueada gana (disolviendo gana menos con el tiempo).
+fn voting_power(p: &Position, now: i64) -> f64 {
+    if p.state == "Dissolved" {
+        return 0.0;
+    }
+    let dissolving = p.state == "Dissolving";
+    let locked = if dissolving { p.amount * (1.0 - dissolve_fraction(p, now)) } else { p.amount };
+    if locked <= 0.0 {
+        return 0.0;
+    }
+    let age_days = if dissolving { 0.0 } else { (now - p.created_at).max(0) as f64 / 86400.0 };
+    locked * delay_mult(p.delay_secs) * age_mult(age_days, dissolving)
+}
+
+fn available_now(p: &Position, now: i64) -> f64 {
+    if p.state == "Dissolved" {
+        return (p.amount - p.withdrawn).max(0.0);
+    }
+    if p.state != "Dissolving" {
+        return 0.0;
+    }
+    (p.amount * dissolve_fraction(p, now) - p.withdrawn).max(0.0)
+}
+
+fn claimable(p: &Position, index_now: f64, now: i64) -> f64 {
+    let c = voting_power(p, now) * (index_now - p.last_index);
+    if c > 0.0 { c } else { 0.0 }
+}
+
+fn accrue_fee(st: &mut TradeState, token: &str, fee_usd: f64, now: i64) {
+    if fee_usd <= 0.0 {
+        return;
+    }
+    let w: f64 = st.positions.values().filter(|p| p.token == token).map(|p| voting_power(p, now)).sum();
+    if w > 0.0 {
+        *st.fee_index.entry(token.to_string()).or_insert(0.0) += fee_usd / w;
+    }
+    st.fee_events.push((now, token.to_string(), fee_usd));
+    if st.fee_events.len() > FEE_EVENTS_CAP {
+        st.fee_events.drain(..st.fee_events.len() - FEE_EVENTS_CAP);
+    }
+}
+
+fn position_view(st: &TradeState, p: &Position, now: i64) -> serde_json::Value {
+    let idx = st.fee_index.get(&p.token).copied().unwrap_or(0.0);
+    serde_json::json!({
+        "id": p.id, "token": p.token, "amount": p.amount, "state": p.state,
+        "delay_secs": p.delay_secs, "created_at": p.created_at,
+        "dissolving_started_at": p.dissolving_started_at, "withdrawn": round_dp(p.withdrawn, 6),
+        "available_now": round_dp(available_now(p, now), 6),
+        "voting_power": round_dp(voting_power(p, now), 2),
+        "claimable_usdt": round_dp(claimable(p, idx, now), 2),
+        "global_index": idx, "last_index": p.last_index,
+    })
+}
+
+fn liq_log(st: &mut TradeState, sub: &str, kind: &str, pid: Option<String>, token: &str, amount: f64, now: i64) {
+    let e = st.liq_txs.entry(sub.to_string()).or_default();
+    e.push(LiqTx { id: uuid::Uuid::new_v4().to_string(), kind: kind.to_string(), position_id: pid, token: token.to_string(), amount, ts: now });
+    if e.len() > HISTORY_CAP {
+        e.drain(..e.len() - HISTORY_CAP);
+    }
+}
+
 #[derive(Clone)]
 struct AppState {
     // libro de precios agregado de reportes de navegadores (Fase A)
     trade: Arc<RwLock<TradeState>>,
     state_path: String,
-    // mock pools: token -> (total_staked, total_fees) — Fase B los vuelve reales
-    pools: Arc<RwLock<HashMap<String, (f64, f64)>>>,
     // SPIRAL ledger (fase Rush): saldos por wou-id account_id + idempotencia.
     ledger: Arc<RwLock<Ledger>>,
     ledger_path: String,
@@ -656,6 +777,8 @@ async fn trade_swap(State(s): State<AppState>, headers: HeaderMap, Json(req): Js
     }
     *st.volume_usd.entry(to.clone()).or_insert(0.0) += notional;
     *st.fees_usd.entry(to.clone()).or_insert(0.0) += fee_usd;
+    // Fase B: el fee alimenta el indice global del pool de salida
+    accrue_fee(&mut st, &to, fee_usd, now);
     let resp = serde_json::json!({
         "from": from, "to": to, "amount": req.amount, "receive": receive,
         "price": pt.price, "fee_usd": round_dp(fee_usd, 2), "tx_id": tx.id,
@@ -715,31 +838,385 @@ async fn trade_portfolio(State(s): State<AppState>, headers: HeaderMap) -> impl 
 struct PoolQuery { symbol: Option<String> }
 
 async fn get_pools(Query(q): Query<PoolQuery>, State(s): State<AppState>) -> impl IntoResponse {
-    // Fase B: pools reales desde posiciones. Hoy: semilla + contadores de swaps.
-    let pools = s.pools.read().await;
+    // Pools reales: posiciones de usuarios + semilla de arranque (display, sin dueno).
+    // La semilla NO entra al indice de fees: el 100% va a los LPs reales.
     let st = s.trade.read().await;
-    let list: Vec<serde_json::Value> = pools.iter().map(|(tok,(staked,fees))| {
-        let price = st.book.get(tok).map(|p| p.price).unwrap_or(1.0);
-        let vol = st.volume_usd.get(tok).copied().unwrap_or(0.0);
-        let afe = st.fees_usd.get(tok).copied().unwrap_or(0.0);
-        serde_json::json!({"token":tok,"total_staked":staked,"total_fees":round_dp(fees+afe,2),"price":price,"tvl": round_dp(staked*price,2),"volume_usd_24h": round_dp(vol,2)})
-    }).filter(|v| q.symbol.as_ref().map(|f| v["token"].as_str()==Some(&f.to_uppercase())).unwrap_or(true)).collect();
+    let now = Utc::now().timestamp();
+    let mut list: Vec<serde_json::Value> = TOKENS
+        .iter()
+        .map(|(tok, _, _)| {
+            let price = st.book.get(*tok).map(|p| p.price).unwrap_or(0.0);
+            let user_staked: f64 = st.positions.values()
+                .filter(|p| &p.token == tok && p.state != "Dissolved")
+                .map(|p| (p.amount - p.withdrawn).max(0.0)).sum();
+            let seed = SEED_STAKE.iter().find(|(t, _)| t == tok).map(|(_, a)| *a).unwrap_or(0.0);
+            let tvl = (user_staked + seed) * price;
+            let fees_trail: f64 = st.fee_events.iter()
+                .filter(|(ts, t, _)| t == tok && now - ts <= APY_WINDOW_SECS)
+                .map(|(_, _, f)| f).sum();
+            let apy = if tvl > 0.0 { fees_trail * (365.0 / 30.0) / tvl * 100.0 } else { 0.0 };
+            let npos = st.positions.values().filter(|p| &p.token == tok && p.state != "Dissolved").count();
+            serde_json::json!({
+                "token": tok, "price": price,
+                "total_staked": round_dp(user_staked, 6), "seed_staked": seed,
+                "tvl": round_dp(tvl, 2), "global_index": st.fee_index.get(*tok).copied().unwrap_or(0.0),
+                "volume_usd": round_dp(st.volume_usd.get(*tok).copied().unwrap_or(0.0), 2),
+                "fees_usd": round_dp(st.fees_usd.get(*tok).copied().unwrap_or(0.0), 2),
+                "apy_30d": round_dp(apy, 2), "positions": npos,
+            })
+        })
+        .collect();
+    list.sort_by(|a, b| b["tvl"].as_f64().unwrap_or(0.0).partial_cmp(&a["tvl"].as_f64().unwrap_or(0.0)).unwrap_or(std::cmp::Ordering::Equal));
+    if let Some(f) = q.symbol.as_ref() {
+        list.retain(|v| v["token"].as_str() == Some(&f.to_uppercase()));
+    }
     Json(list)
 }
 
-async fn post_stake(State(s): State<AppState>, Json(req): Json<StakeReq>) -> impl IntoResponse {
-    // voting_power = stake * delay_mult (MVP: 1d=1.0, 30d=2.0, 365d=5.0 linear)
-    let days = req.dissolve_delay_secs as f64 / 86400.0;
-    let delay_mult = if days <= 1.0 {1.0} else if days <= 30.0 {1.0 + (days-1.0)/29.0} else if days <= 365.0 {2.0 + (days-30.0)/335.0*3.0} else {5.0};
-    let voting_power = req.amount * delay_mult;
-    let apy = 0.0625 * delay_mult; // from frontend calc
-    {
-        let mut pools = s.pools.write().await;
-        let e = pools.entry(req.token.to_uppercase()).or_insert((0.0,0.0));
-        e.0 += req.amount;
+#[derive(Deserialize)]
+struct StakeTradeReq { token: String, amount: f64, dissolve_delay_secs: u64, key: String }
+
+// Stake real: bloquea saldo, crea neurona Locked, sin accrual retroactivo.
+async fn trade_stake(State(s): State<AppState>, headers: HeaderMap, Json(req): Json<StakeTradeReq>) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    if req.key.len() < TRADE_KEY_MIN || req.key.len() > TRADE_KEY_MAX {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"key debe tener 8..64 chars"}))).into_response();
     }
-    let resp = StakeResp { position_id: format!("{}-{}-{}", req.token.to_uppercase(), Utc::now().timestamp(), &uuid::Uuid::new_v4().to_string()[..8]), token: req.token.to_uppercase(), amount: req.amount, voting_power, apy };
-    (StatusCode::OK, Json(serde_json::to_value(resp).unwrap())).into_response()
+    let token = req.token.to_uppercase();
+    let dp = match token_cfg(&token) {
+        Some((_, dp, _)) => dp,
+        None => return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"unknown token"}))).into_response(),
+    };
+    if !req.amount.is_finite() || req.amount <= 0.0 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"monto invalido"}))).into_response();
+    }
+    if req.dissolve_delay_secs < STAKE_MIN_DELAY_SECS || req.dissolve_delay_secs > STAKE_MAX_DELAY_SECS {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"plazo debe ser 1 dia..4 anos"}))).into_response();
+    }
+    let pkey = format!("stake:{}", req.key);
+    let now = Utc::now().timestamp();
+    let mut st = s.trade.write().await;
+    if let Some(prev) = st.processed.get(&pkey) {
+        let mut replay = prev.clone();
+        replay["replay"] = serde_json::json!(true);
+        return (StatusCode::OK, Json(replay)).into_response();
+    }
+    let price = match st.book.get(&token) {
+        Some(e) if e.internal || now - e.ts <= STALE_AFTER_SECS => e.price,
+        _ => return (StatusCode::SERVICE_UNAVAILABLE, Json(serde_json::json!({"error":"oracle desactualizado: sin reportes frescos"}))).into_response(),
+    };
+    if req.amount * price > STAKE_MAX_VALUE_USDT {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"stake excede tope por posicion"}))).into_response();
+    }
+    let have = st.balances.get(&sub).and_then(|b| b.get(&token)).copied().unwrap_or(0.0);
+    if have + 1e-9 < req.amount {
+        return (StatusCode::PAYMENT_REQUIRED, Json(serde_json::json!({"error":"saldo insuficiente", "have": round_dp(have, dp)}))).into_response();
+    }
+    {
+        let b = st.balances.entry(sub.clone()).or_default();
+        b.insert(token.clone(), round_dp(have - req.amount, dp));
+    }
+    let idx = st.fee_index.get(&token).copied().unwrap_or(0.0);
+    let pos = Position {
+        id: uuid::Uuid::new_v4().to_string(), sub: sub.clone(), token: token.clone(),
+        amount: round_dp(req.amount, dp), delay_secs: req.dissolve_delay_secs, created_at: now,
+        state: "Locked".to_string(), dissolving_started_at: None, withdrawn: 0.0, last_index: idx,
+    };
+    let view = position_view(&st, &pos, now);
+    liq_log(&mut st, &sub, "stake", Some(pos.id.clone()), &token, pos.amount, now);
+    st.positions.insert(pos.id.clone(), pos);
+    let mut resp = view;
+    resp["key"] = serde_json::json!(req.key);
+    st.processed.insert(pkey, resp.clone());
+    save_trade(&s.state_path, &st);
+    (StatusCode::OK, Json(resp)).into_response()
+}
+
+async fn trade_positions(State(s): State<AppState>, headers: HeaderMap) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    let st = s.trade.read().await;
+    let now = Utc::now().timestamp();
+    let mut v: Vec<serde_json::Value> = st.positions.values()
+        .filter(|p| p.sub == sub)
+        .map(|p| position_view(&st, p, now))
+        .collect();
+    v.sort_by(|a, b| b["created_at"].as_i64().unwrap_or(0).cmp(&a["created_at"].as_i64().unwrap_or(0)));
+    (StatusCode::OK, Json(serde_json::json!({"positions": v}))).into_response()
+}
+
+async fn trade_liq_txs(State(s): State<AppState>, headers: HeaderMap, Query(q): Query<HistQuery>) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    let st = s.trade.read().await;
+    let all: Vec<LiqTx> = st.liq_txs.get(&sub).cloned().unwrap_or_default();
+    let total = all.len();
+    let offset = q.offset.unwrap_or(0).min(total);
+    let limit = q.limit.unwrap_or(50).min(200).max(1);
+    let page: Vec<LiqTx> = all.into_iter().rev().skip(offset).take(limit).collect();
+    (StatusCode::OK, Json(serde_json::json!({"txs": page, "total": total}))).into_response()
+}
+
+async fn pos_start_dissolving(State(s): State<AppState>, headers: HeaderMap, Path(id): Path<String>) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    let now = Utc::now().timestamp();
+    let mut st = s.trade.write().await;
+    let ok = match st.positions.get_mut(&id) {
+        Some(p) if p.sub == sub && p.state == "Locked" => {
+            p.state = "Dissolving".to_string();
+            p.dissolving_started_at = Some(now);
+            true
+        }
+        Some(p) if p.sub == sub => false,
+        _ => return (StatusCode::NOT_FOUND, Json(serde_json::json!({"error":"position no existe"}))).into_response(),
+    };
+    if !ok {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"solo posiciones Locked disuelven"}))).into_response();
+    }
+    let snap = st.positions.get(&id).expect("existe").clone();
+    let view = position_view(&st, &snap, now);
+    liq_log(&mut st, &sub, "start_dissolving", Some(id), &snap.token, snap.amount, now);
+    save_trade(&s.state_path, &st);
+    (StatusCode::OK, Json(view)).into_response()
+}
+
+async fn pos_cancel_dissolving(State(s): State<AppState>, headers: HeaderMap, Path(id): Path<String>) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    let now = Utc::now().timestamp();
+    let mut st = s.trade.write().await;
+    let ok = match st.positions.get_mut(&id) {
+        Some(p) if p.sub == sub && p.state == "Dissolving" => {
+            // Cancelar reinicia la edad (anti-gaming legacy): vuelve Locked desde hoy.
+            p.state = "Locked".to_string();
+            p.dissolving_started_at = None;
+            p.created_at = now;
+            true
+        }
+        Some(p) if p.sub == sub => false,
+        _ => return (StatusCode::NOT_FOUND, Json(serde_json::json!({"error":"position no existe"}))).into_response(),
+    };
+    if !ok {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"solo posiciones Dissolving cancelan"}))).into_response();
+    }
+    let snap = st.positions.get(&id).expect("existe").clone();
+    let view = position_view(&st, &snap, now);
+    liq_log(&mut st, &sub, "cancel_dissolving", Some(id), &snap.token, snap.amount, now);
+    save_trade(&s.state_path, &st);
+    (StatusCode::OK, Json(view)).into_response()
+}
+
+// Cobra fees a USDT (el fee se cobro en valor USDT en el swap).
+async fn pos_claim(State(s): State<AppState>, headers: HeaderMap, Path(id): Path<String>) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    let now = Utc::now().timestamp();
+    let mut st = s.trade.write().await;
+    let token = match st.positions.get(&id) {
+        Some(p) if p.sub == sub => p.token.clone(),
+        _ => return (StatusCode::NOT_FOUND, Json(serde_json::json!({"error":"position no existe"}))).into_response(),
+    };
+    let idx = st.fee_index.get(&token).copied().unwrap_or(0.0);
+    let mut p = st.positions.get(&id).expect("existe").clone();
+    let got = round_dp(claimable(&p, idx, now), 2);
+    if got > 0.0 {
+        let b = st.balances.entry(sub.clone()).or_default();
+        let u = b.get("USDT").copied().unwrap_or(0.0);
+        b.insert("USDT".to_string(), round_dp(u + got, 2));
+        p.last_index = idx;
+        st.positions.insert(id.clone(), p.clone());
+        liq_log(&mut st, &sub, "claim", Some(id.clone()), &token, got, now);
+        save_trade(&s.state_path, &st);
+    }
+    let view = position_view(&st, &p, now);
+    (StatusCode::OK, Json(serde_json::json!({"claimed_usdt": got, "position": view}))).into_response()
+}
+
+// Reinvierte fees a la posicion (convierte USDT->token a precio de libro).
+async fn pos_compound(State(s): State<AppState>, headers: HeaderMap, Path(id): Path<String>) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    let now = Utc::now().timestamp();
+    let mut st = s.trade.write().await;
+    let (token, locked) = match st.positions.get(&id) {
+        Some(p) if p.sub == sub => (p.token.clone(), p.state == "Locked"),
+        _ => return (StatusCode::NOT_FOUND, Json(serde_json::json!({"error":"position no existe"}))).into_response(),
+    };
+    if !locked {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"solo posiciones Locked componen"}))).into_response();
+    }
+    let idx = st.fee_index.get(&token).copied().unwrap_or(0.0);
+    let price = match st.book.get(&token) {
+        Some(e) if e.internal || now - e.ts <= STALE_AFTER_SECS => e.price,
+        _ => return (StatusCode::SERVICE_UNAVAILABLE, Json(serde_json::json!({"error":"oracle desactualizado: sin reportes frescos"}))).into_response(),
+    };
+    let dp = token_cfg(&token).map(|(_, d, _)| d).unwrap_or(2);
+    let (got, added) = {
+        let p = st.positions.get_mut(&id).expect("existe");
+        let c = round_dp(claimable(p, idx, now), 2);
+        if c <= 0.0 {
+            (0.0, 0.0)
+        } else {
+            let add = round_dp(c / price, dp);
+            p.amount = round_dp(p.amount + add, dp);
+            p.last_index = idx;
+            (c, add)
+        }
+    };
+    if got > 0.0 {
+        liq_log(&mut st, &sub, "compound", Some(id.clone()), &token, added, now);
+        save_trade(&s.state_path, &st);
+    }
+    let snap = st.positions.get(&id).expect("existe").clone();
+    let view = position_view(&st, &snap, now);
+    (StatusCode::OK, Json(serde_json::json!({"compounded_usdt": got, "added": added, "position": view}))).into_response()
+}
+
+#[derive(Deserialize)]
+struct WithdrawReq { amount: f64, key: String }
+
+async fn pos_withdraw(State(s): State<AppState>, headers: HeaderMap, Path(id): Path<String>, Json(req): Json<WithdrawReq>) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    if req.key.len() < TRADE_KEY_MIN || req.key.len() > TRADE_KEY_MAX {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"key debe tener 8..64 chars"}))).into_response();
+    }
+    if !req.amount.is_finite() || req.amount <= 0.0 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"monto invalido"}))).into_response();
+    }
+    let pkey = format!("wd:{}:{}", id, req.key);
+    let now = Utc::now().timestamp();
+    let mut st = s.trade.write().await;
+    if let Some(prev) = st.processed.get(&pkey) {
+        let mut replay = prev.clone();
+        replay["replay"] = serde_json::json!(true);
+        return (StatusCode::OK, Json(replay)).into_response();
+    }
+    let (token, dp, dissolvable) = match st.positions.get(&id) {
+        Some(p) if p.sub == sub => (p.token.clone(), token_cfg(&p.token).map(|(_, d, _)| d).unwrap_or(2), p.state == "Dissolving" || p.state == "Dissolved"),
+        _ => return (StatusCode::NOT_FOUND, Json(serde_json::json!({"error":"position no existe"}))).into_response(),
+    };
+    if !dissolvable {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"disuelve primero"}))).into_response();
+    }
+    let avail = available_now(st.positions.get(&id).expect("existe"), now);
+    if req.amount - avail > 1e-9 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"excede lo liberado", "available": round_dp(avail, dp)}))).into_response();
+    }
+    let credited = round_dp(req.amount, dp);
+    {
+        let p = st.positions.get_mut(&id).expect("existe");
+        p.withdrawn = round_dp(p.withdrawn + credited, dp);
+        if p.withdrawn + 1e-9 >= p.amount {
+            p.state = "Dissolved".to_string();
+        }
+        let b = st.balances.entry(sub.clone()).or_default();
+        let cur = b.get(&token).copied().unwrap_or(0.0);
+        b.insert(token.clone(), round_dp(cur + credited, dp));
+    }
+    liq_log(&mut st, &sub, "withdraw", Some(id.clone()), &token, credited, now);
+    let snap = st.positions.get(&id).expect("existe").clone();
+    let view = position_view(&st, &snap, now);
+    let mut resp = serde_json::json!({"withdrawn": credited, "position": view, "key": req.key});
+    resp["available_now"] = view["available_now"].clone();
+    st.processed.insert(pkey, resp.clone());
+    save_trade(&s.state_path, &st);
+    (StatusCode::OK, Json(resp)).into_response()
+}
+
+async fn pos_withdraw_available(State(s): State<AppState>, headers: HeaderMap, Path(id): Path<String>) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    let now = Utc::now().timestamp();
+    let st = s.trade.read().await;
+    let avail = match st.positions.get(&id) {
+        Some(p) if p.sub == sub => available_now(p, now),
+        _ => return (StatusCode::NOT_FOUND, Json(serde_json::json!({"error":"position no existe"}))).into_response(),
+    };
+    drop(st);
+    if avail <= 0.0 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"nada liberado aun"}))).into_response();
+    }
+    let auto_key = format!("auto-{}-{}", &id[..id.len().min(8)], now);
+    pos_withdraw(State(s), headers, Path(id), Json(WithdrawReq { amount: avail, key: auto_key })).await.into_response()
+}
+
+#[derive(Deserialize)]
+struct AddReq { amount: f64, key: String }
+
+// Agrega a posicion Locked (cobra pendientes a USDT primero, sin accrual retroactivo).
+async fn pos_add(State(s): State<AppState>, headers: HeaderMap, Path(id): Path<String>, Json(req): Json<AddReq>) -> impl IntoResponse {
+    let sub = match auth_sub(&headers, &s.jwt_secret) {
+        Ok(sub) => sub,
+        Err(code) => return (code, Json(serde_json::json!({"error":"unauthorized"}))).into_response(),
+    };
+    if req.key.len() < TRADE_KEY_MIN || req.key.len() > TRADE_KEY_MAX {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"key debe tener 8..64 chars"}))).into_response();
+    }
+    if !req.amount.is_finite() || req.amount <= 0.0 {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"monto invalido"}))).into_response();
+    }
+    let pkey = format!("add:{}:{}", id, req.key);
+    let now = Utc::now().timestamp();
+    let mut st = s.trade.write().await;
+    if let Some(prev) = st.processed.get(&pkey) {
+        let mut replay = prev.clone();
+        replay["replay"] = serde_json::json!(true);
+        return (StatusCode::OK, Json(replay)).into_response();
+    }
+    let (token, locked) = match st.positions.get(&id) {
+        Some(p) if p.sub == sub => (p.token.clone(), p.state == "Locked"),
+        _ => return (StatusCode::NOT_FOUND, Json(serde_json::json!({"error":"position no existe"}))).into_response(),
+    };
+    if !locked {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"solo posiciones Locked reciben"}))).into_response();
+    }
+    let dp = token_cfg(&token).map(|(_, d, _)| d).unwrap_or(2);
+    let have = st.balances.get(&sub).and_then(|b| b.get(&token)).copied().unwrap_or(0.0);
+    if have + 1e-9 < req.amount {
+        return (StatusCode::PAYMENT_REQUIRED, Json(serde_json::json!({"error":"saldo insuficiente", "have": round_dp(have, dp)}))).into_response();
+    }
+    let idx = st.fee_index.get(&token).copied().unwrap_or(0.0);
+    let mut p = st.positions.get(&id).expect("existe").clone();
+    let settled = round_dp(claimable(&p, idx, now), 2);
+    if settled > 0.0 {
+        let b = st.balances.entry(sub.clone()).or_default();
+        let u = b.get("USDT").copied().unwrap_or(0.0);
+        b.insert("USDT".to_string(), round_dp(u + settled, 2));
+        p.last_index = idx;
+    }
+    p.amount = round_dp(p.amount + req.amount, dp);
+    {
+        let b = st.balances.entry(sub.clone()).or_default();
+        b.insert(token.clone(), round_dp(have - req.amount, dp));
+    }
+    st.positions.insert(id.clone(), p.clone());
+    liq_log(&mut st, &sub, "add", Some(id.clone()), &token, req.amount, now);
+    let view = position_view(&st, &p, now);
+    let resp = serde_json::json!({"added": req.amount, "settled_usdt": settled, "position": view, "key": req.key});
+    st.processed.insert(pkey, resp.clone());
+    save_trade(&s.state_path, &st);
+    (StatusCode::OK, Json(resp)).into_response()
 }
 
 // Sin oraculo propio: los precios los reporta cada navegador desde su Binance
@@ -772,13 +1249,6 @@ async fn main() {
     let state = AppState {
         trade: Arc::new(RwLock::new(trade)),
         state_path,
-        pools: Arc::new(RwLock::new(HashMap::from([
-            ("IONIC".to_string(), (125000.0, 3420.0)),
-            ("UNREAL".to_string(), (12000.0, 890.0)),
-            ("BTC".to_string(), (2.10, 120.0)),
-            ("SOL".to_string(), (840.0, 45.0)),
-            ("XRP".to_string(), (45000.0, 210.0)),
-        ]))),
         ledger: Arc::new(RwLock::new(ledger)),
         ledger_path,
         jwt_secret,
@@ -798,7 +1268,16 @@ async fn main() {
         .route("/api/history", get(trade_history))
         .route("/api/portfolio", get(trade_portfolio))
         .route("/api/pools", get(get_pools))
-        .route("/api/stake", post(post_stake))
+        .route("/api/stake", post(trade_stake))
+        .route("/api/positions", get(trade_positions))
+        .route("/api/positions/:id/start-dissolving", post(pos_start_dissolving))
+        .route("/api/positions/:id/cancel-dissolving", post(pos_cancel_dissolving))
+        .route("/api/positions/:id/claim", post(pos_claim))
+        .route("/api/positions/:id/compound", post(pos_compound))
+        .route("/api/positions/:id/withdraw", post(pos_withdraw))
+        .route("/api/positions/:id/withdraw-available", post(pos_withdraw_available))
+        .route("/api/positions/:id/add", post(pos_add))
+        .route("/api/liquidity/transactions", get(trade_liq_txs))
         .route("/api/ledger/balance", get(ledger_balance))
         .route("/api/ledger/faucet", post(ledger_faucet))
         .route("/api/ledger/debit", post(ledger_debit))
