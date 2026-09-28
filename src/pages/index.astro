@@ -1041,12 +1041,12 @@ import Layout from '../layouts/Layout.astro';
           </div>
           <div id="wou-email-step-2" class="hidden space-y-2">
             <div class="flex justify-between gap-2">
-              <input type="text" inputmode="numeric" maxlength="1" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
-              <input type="text" inputmode="numeric" maxlength="1" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
-              <input type="text" inputmode="numeric" maxlength="1" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
-              <input type="text" inputmode="numeric" maxlength="1" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
-              <input type="text" inputmode="numeric" maxlength="1" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
-              <input type="text" inputmode="numeric" maxlength="1" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+              <input type="text" inputmode="numeric" maxlength="1" name="otp-1" autocomplete="one-time-code" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+              <input type="text" inputmode="numeric" maxlength="1" name="otp-2" autocomplete="one-time-code" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+              <input type="text" inputmode="numeric" maxlength="1" name="otp-3" autocomplete="one-time-code" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+              <input type="text" inputmode="numeric" maxlength="1" name="otp-4" autocomplete="one-time-code" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+              <input type="text" inputmode="numeric" maxlength="1" name="otp-5" autocomplete="one-time-code" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+              <input type="text" inputmode="numeric" maxlength="1" name="otp-6" autocomplete="one-time-code" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
             </div>
             <div class="flex gap-2">
               <button id="wou-verify-otp-btn" type="button" class="flex-1 py-2.5 rounded-xl bg-cyan-400 text-zinc-950 font-bold text-xs">Verify</button>
@@ -1564,7 +1564,7 @@ import Layout from '../layouts/Layout.astro';
     } catch { showNotification("Transfer failed (network)"); }
   });
   window.addEventListener('wou:auth-state-change', (e:any)=>{ if(e?.detail?.authenticated){ refreshMarket(); loadWallet(); loadPositions(); } else { loadWallet(); loadPositions(); } });
-  refreshMarket(); setInterval(refreshMarket, 30000); loadWallet(); loadPools(); setInterval(loadPools, 60000); loadPositions();
+  refreshMarket(); setInterval(refreshMarket, 30000); loadWallet();
 
   document.getElementById('btn-approve-stake')?.addEventListener('click', async () => {
     const amt = parseFloat((document.getElementById('liq-stake-input') as HTMLInputElement)?.value || '0');
@@ -1659,6 +1659,9 @@ import Layout from '../layouts/Layout.astro';
       loadPositions(); loadPools(); loadWallet();
     } catch { showNotification('Action failed (network)'); }
   });
+  // Init tardio: loadPools/loadPositions ya existen a esta altura (llamarlas
+  // antes rompia el modulo entero, incluido el login).
+  loadPools(); setInterval(loadPools, 60000); loadPositions();
 
   // Action links routers
   document.querySelectorAll('.price-row, .markets-trade-btn, .quick-trade-btn').forEach(btn => {
