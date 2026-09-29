@@ -1,0 +1,2186 @@
+---
+import Layout from '../layouts/Layout.astro';
+interface Props {
+  // Panel que arranca activo. Lo setea cada pagina de ruta (/markets, /wallet...).
+  initialPanel?: string;
+  title?: string;
+  description?: string;
+}
+const {
+  initialPanel = 'discovery',
+  title = 'Ionic Swap | Cross-Chain Token Swapping with Gasless Transactions',
+  description,
+} = Astro.props;
+const isActive = (p: string) => (p === initialPanel ? ' active' : '');
+---
+
+<Layout title={title} description={description}>
+  <h1 class="sr-only">Ionic Swap — cross-chain token swapping with gasless transactions</h1>
+  <noscript>
+    <h1>Ionic Swap — cross-chain token swapping</h1>
+    <p>Trade tokens across chains with gasless transactions.</p>
+  </noscript>
+  <!-- Viewport-Locked Container -->
+  <div class="fixed inset-0 h-screen w-screen overflow-hidden flex bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-sans select-none z-10">
+    
+    <!-- LEFT SIDEBAR: Navigational Menu (Collapsible/Expanding) -->
+    <aside id="sidebar" class="hidden md:flex flex-col justify-between items-center z-50 fixed top-0 left-0 h-screen bg-zinc-50 dark:bg-[#1e1e24] border-r border-zinc-200 dark:border-zinc-800 w-16 hover:w-52 transition-all duration-300 ease-out group backdrop-blur-md">
+      <!-- Brand Logo -->
+      <div class="w-full flex items-center justify-start p-4 gap-3 select-none border-b border-zinc-200 dark:border-zinc-800 h-16">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center flex-shrink-0">
+          <!-- Ionic Swap Circle Logo -->
+          <svg class="w-5 h-5 text-emerald-500" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="8">
+            <path d="M30,50 L50,20 L70,50 L50,80 Z"></path>
+            <circle cx="50" cy="50" r="10" fill="currentColor"></circle>
+          </svg>
+        </div>
+        <span class="text-sm font-bold font-mono tracking-widest text-zinc-900 dark:text-white uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-200">IONIC_SWAP</span>
+      </div>
+
+      <!-- Navigation Icons -->
+      <nav class="w-full flex-1 flex flex-col gap-1 py-4 px-2">
+        <!-- Discovery (Home) -->
+        <button data-target="discovery" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/5 hover:text-emerald-400 transition-all duration-200 text-left">
+          <span class="text-lg leading-none">🧭</span>
+          <span class="text-xs font-semibold tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-200">Discovery</span>
+        </button>
+
+        <!-- Markets -->
+        <button data-target="markets" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-all duration-200 text-left">
+          <span class="text-lg leading-none">🏦</span>
+          <span class="text-xs font-semibold tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-200">Markets</span>
+        </button>
+
+        <!-- Trade -->
+        <button data-target="trade" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-all duration-200 text-left">
+          <span class="text-lg leading-none">📈</span>
+          <span class="text-xs font-semibold tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-200">Trade</span>
+        </button>
+
+        <!-- Wallet -->
+        <button data-target="wallet" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-all duration-200 text-left">
+          <span class="text-lg leading-none">💼</span>
+          <span class="text-xs font-semibold tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-200">Wallet</span>
+        </button>
+
+        <!-- Liquidity -->
+        <button data-target="liquidity" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-all duration-200 text-left">
+          <span class="text-lg leading-none">🧪</span>
+          <span class="text-xs font-semibold tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-200">Liquidity</span>
+        </button>
+
+        <!-- Aprender (rutas de contenido portadas de Nuxt -> Astro) -->
+        <a href="/learn" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-all duration-200 text-left">
+          <span class="text-lg leading-none">🎓</span>
+          <span class="text-xs font-semibold tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-200">Learn</span>
+        </a>
+
+        <!-- Soporte / Contacto -->
+        <a href="/support" class="nav-item w-full flex items-center gap-3 p-3 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white transition-all duration-200 text-left">
+          <span class="text-lg leading-none">💬</span>
+          <span class="text-xs font-semibold tracking-wide opacity-0 group-hover:opacity-100 transition-opacity duration-200">Support</span>
+        </a>
+      </nav>
+
+      <!-- Bottom Settings/Theme Switcher -->
+      <div class="w-full p-4 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between h-16 relative">
+        <div class="flex items-center gap-1">
+          <button id="theme-toggle" class="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-500 dark:text-zinc-400">
+            <span class="text-lg leading-none select-none dark:hidden">🌙</span>
+            <span class="text-lg leading-none select-none hidden dark:inline">☀️</span>
+          </button>
+          <a href="/settings" id="nav-settings" title="Settings" class="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-500 dark:text-zinc-400">
+            <span class="text-lg leading-none select-none">⚙️</span>
+          </a>
+        </div>
+        <span class="text-[9px] font-mono text-zinc-400 dark:text-zinc-500 uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity duration-200">v3.1.2</span>
+      </div>
+    </aside>
+
+    <!-- RIGHT SECTION: Main Content Frame -->
+    <div class="flex-1 flex flex-col min-h-screen md:ml-16 relative overflow-hidden">
+      
+      <!-- TOP HEADER -->
+      <header class="w-full h-16 border-b border-zinc-200 dark:border-zinc-800 px-6 flex items-center justify-between z-10 backdrop-blur-md bg-zinc-100/80 dark:bg-zinc-900/80 select-none">
+        <!-- Search bar -->
+        <div class="flex items-center flex-1 max-w-md relative">
+          <span class="absolute left-3 text-zinc-400">🔍</span>
+          <input id="global-search" type="text" placeholder="Search tokens, positions... (@user for players)" class="w-full pl-10 pr-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500" />
+          <div id="user-search-results" class="hidden absolute top-full left-0 right-0 mt-2 p-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-2xl z-50 space-y-1"></div>
+        </div>
+
+        <!-- Right Side: Auth (clean, not logged-in by default) -->
+        <div class="flex items-center space-x-3">
+          <!-- Sign In (default) -->
+          <button id="wou-signin-btn" type="button" class="px-4 py-2 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-bold hover:opacity-90 transition flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Sign In
+          </button>
+          <!-- User Pill (hidden until authenticated via wou:auth-state-change) -->
+          <div id="wou-user-pill" class="hidden relative">
+            <button id="wou-user-btn" type="button" class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-500/30 transition">
+              <div id="wou-user-avatar" class="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-xs">U</div>
+              <div class="text-left leading-none">
+                <div id="wou-user-name" class="text-xs font-bold text-zinc-900 dark:text-white">Player</div>
+                <div id="wou-user-handle" class="text-[10px] font-mono text-zinc-500">@player</div>
+              </div>
+            </button>
+            <div id="wou-user-dropdown" class="hidden absolute right-0 mt-2 w-64 p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl z-50">
+              <div class="flex items-center gap-3 p-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl mb-3">
+                <div id="wou-dropdown-avatar" class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-sm">U</div>
+                <div class="flex-1 min-w-0">
+                  <div id="wou-dropdown-name" class="text-xs font-bold text-zinc-900 dark:text-white truncate">Player</div>
+                  <div id="wou-dropdown-handle" class="text-[10px] font-mono text-zinc-500 truncate">@player</div>
+                  <div id="wou-dropdown-email" class="text-[10px] text-zinc-400 truncate"></div>
+                </div>
+              </div>
+              <div class="mb-3 p-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl space-y-1.5">
+                <div class="flex items-center justify-between text-[10px] font-mono text-zinc-400"><span>GAMING WALLETS</span><span class="text-emerald-500 font-bold">READY</span></div>
+                <div class="grid grid-cols-3 gap-1">
+                  <button id="copy-evm-btn" type="button" class="py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 border border-blue-500/20 text-[10px] font-bold">EVM</button>
+                  <button id="copy-sol-btn" type="button" class="py-1 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 border border-purple-500/20 text-[10px] font-bold">SOL</button>
+                  <button id="copy-icp-btn" type="button" class="py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 border border-emerald-500/20 text-[10px] font-bold">ICP</button>
+                </div>
+              </div>
+              <div class="mb-3 space-y-1">
+                <button id="dd-profile" type="button" class="w-full text-left px-3 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl flex items-center justify-between"><span>Profile</span><span>👤</span></button>
+                <a href="/settings" class="w-full text-left px-3 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl flex items-center justify-between"><span>Settings</span><span>⚙️</span></a>
+              </div>
+              <button id="wou-logout-btn" type="button" class="w-full text-left px-3 py-2 text-xs font-semibold text-red-500 hover:bg-red-500/10 rounded-xl flex items-center justify-between"><span>Log Out</span><span>↪</span></button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- CENTER DISPLAY CONTAINER -->
+      <div class="flex-1 overflow-hidden p-6 relative">
+
+        <!-- 🧭 MODULE 1: DISCOVERY (HOME) -->
+        <div id="panel-discovery" class={"module-view" + isActive('discovery') + " w-full h-full flex flex-col justify-between overflow-y-auto scrollbar-thin pr-1"}>
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0">
+            <!-- Left side: DiscoverCarousel & DeFi 101 -->
+            <div class="lg:col-span-3 flex flex-col gap-6 text-left h-full">
+              
+              <!-- DiscoverCarousel -->
+              <div class="relative w-full overflow-hidden bg-zinc-50 dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-850 shadow-sm p-8" style="height: 340px;">
+                <!-- Slides Container -->
+                <div id="carousel-track" class="h-full flex transition-transform duration-500 ease-in-out w-full">
+                  
+                  <!-- Slide 1: Cross-Chain Swaps -->
+                  <div class="w-full flex-shrink-0 flex flex-col justify-between h-full" style="min-width: 100%;">
+                    <div class="flex justify-between items-start">
+                      <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 flex items-center justify-center text-lg text-emerald-500">🔄</div>
+                        <div>
+                          <h3 class="text-lg font-bold text-zinc-900 dark:text-white">Cross-Chain Swaps</h3>
+                          <p class="text-xs text-zinc-500">Seamless token swapping across multiple blockchains</p>
+                        </div>
+                      </div>
+                      <div class="text-right">
+                        <div class="text-xl font-bold text-emerald-500">$2.4M</div>
+                        <div class="text-[10px] text-zinc-400">Total Volume (24h)</div>
+                      </div>
+                    </div>
+                    <!-- Middle -->
+                    <div class="text-center my-auto">
+                      <div class="text-3xl font-bold text-zinc-900 dark:text-white">11 SUPPORTED COINS</div>
+                      <div class="text-sm text-zinc-500 mt-1">EVM • Solana • Internet Computer</div>
+                    </div>
+                    <!-- Bottom -->
+                    <div class="flex justify-between items-center">
+                      <span class="text-xs text-emerald-500 font-bold">+12.5% Today</span>
+                      <button class="nav-to-trade px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition-colors">Start Swapping ➔</button>
+                    </div>
+                  </div>
+
+                  <!-- Slide 2: Gasless Transactions -->
+                  <div class="w-full flex-shrink-0 flex flex-col justify-between h-full" style="min-width: 100%;">
+                    <div class="flex justify-between items-start">
+                      <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 flex items-center justify-center text-lg text-emerald-500">⚡</div>
+                        <div>
+                          <h3 class="text-lg font-bold text-zinc-900 dark:text-white">Gasless Transactions</h3>
+                          <p class="text-xs text-zinc-500">Swap tokens without paying gas fees</p>
+                        </div>
+                      </div>
+                      <div class="text-right">
+                        <div class="text-xl font-bold text-emerald-500">98%</div>
+                        <div class="text-[10px] text-zinc-400">Gasless Success Rate</div>
+                      </div>
+                    </div>
+                    <!-- Middle -->
+                    <div class="text-center my-auto">
+                      <div class="text-3xl font-bold text-zinc-900 dark:text-white">1,247 ACTIVE USERS</div>
+                      <div class="text-sm text-zinc-500 mt-1">Gasless swaps routed today</div>
+                    </div>
+                    <!-- Bottom -->
+                    <div class="flex justify-between items-center">
+                      <span class="text-xs text-emerald-500 font-bold">+8.3% Volume</span>
+                      <button class="nav-to-trade px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition-colors">Launch Swap ➔</button>
+                    </div>
+                  </div>
+
+                </div>
+                <!-- Carousel Dots Indicator -->
+                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  <button class="carousel-dot w-2 h-2 rounded-full bg-emerald-500" data-slide="0"></button>
+                  <button class="carousel-dot w-2 h-2 rounded-full bg-zinc-300 dark:bg-zinc-700" data-slide="1"></button>
+                </div>
+              </div>
+
+              <!-- DeFi 101 section -->
+              <div class="space-y-3">
+                <div>
+                  <h3 class="text-md font-bold text-zinc-900 dark:text-white">DeFi 101</h3>
+                  <p class="text-xs text-zinc-400">Learn about tokens, standards, and cross-chain swapping</p>
+                </div>
+                <!-- Articles horizontal list -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  
+                  <!-- Article 1 -->
+                  <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 p-4 rounded-xl flex flex-col justify-between hover:scale-[1.02] transition-transform cursor-pointer h-40">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-lg text-emerald-500">💵</div>
+                      <div>
+                        <h4 class="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-tight">What are Tokens?</h4>
+                        <span class="text-[10px] text-zinc-400">Digital Assets</span>
+                      </div>
+                    </div>
+                    <p class="text-[10px] text-zinc-500 leading-normal mt-2">Learn about different types of tokens, standards, and multichain assets.</p>
+                    <span class="text-[10px] font-bold text-emerald-500 mt-3 block">Learn More ➔</span>
+                  </div>
+
+                  <!-- Article 2 -->
+                  <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 p-4 rounded-xl flex flex-col justify-between hover:scale-[1.02] transition-transform cursor-pointer h-40">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-lg text-emerald-500">⚙️</div>
+                      <div>
+                        <h4 class="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-tight">Token Standards</h4>
+                        <span class="text-[10px] text-zinc-400">ERC-20, SPL, ICRC</span>
+                      </div>
+                    </div>
+                    <p class="text-[10px] text-zinc-500 leading-normal mt-2">Explore the token standards used on Ethereum, Solana, and Internet Computer.</p>
+                    <span class="text-[10px] font-bold text-emerald-500 mt-3 block">Learn More ➔</span>
+                  </div>
+
+                  <!-- Article 3 -->
+                  <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 p-4 rounded-xl flex flex-col justify-between hover:scale-[1.02] transition-transform cursor-pointer h-40">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-lg text-emerald-500">⚡</div>
+                      <div>
+                        <h4 class="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-tight">Gasless Power</h4>
+                        <span class="text-[10px] text-zinc-400">Zero Fee Swaps</span>
+                      </div>
+                    </div>
+                    <p class="text-[10px] text-zinc-500 leading-normal mt-2">Understand the mechanics behind our ultra-efficient gasless routing technology.</p>
+                    <span class="text-[10px] font-bold text-emerald-500 mt-3 block">Learn More ➔</span>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Right side: TokenPriceList -->
+            <div class="lg:col-span-1 flex flex-col gap-4 h-full text-left">
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col h-full overflow-hidden">
+                <h3 class="text-md font-bold text-zinc-900 dark:text-white mb-4">Token Prices</h3>
+                <div class="flex-1 overflow-y-auto scrollbar-thin pr-1 space-y-3">
+                  
+                  <!-- Token Row BTC -->
+                  <div class="price-row flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer" data-symbol="BTC">
+                    <div class="flex items-center gap-2">
+                      <span class="text-lg">🪙</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white text-xs leading-none">BTC</div>
+                        <span class="text-[9px] text-zinc-400">Bitcoin</span>
+                      </div>
+                    </div>
+                    <div class="text-right font-mono">
+                      <div class="text-xs font-bold text-zinc-900 dark:text-white">$58,451.25</div>
+                      <span class="text-[9px] text-emerald-500 font-bold">+4.12%</span>
+                    </div>
+                  </div>
+
+                  <!-- Token Row ETH -->
+                  <div class="price-row flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer" data-symbol="ETH">
+                    <div class="flex items-center gap-2">
+                      <span class="text-lg">🔷</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white text-xs leading-none">ETH</div>
+                        <span class="text-[9px] text-zinc-400">Ethereum</span>
+                      </div>
+                    </div>
+                    <div class="text-right font-mono">
+                      <div class="text-xs font-bold text-zinc-900 dark:text-white">$3,120.40</div>
+                      <span class="text-[9px] text-emerald-500 font-bold">+2.84%</span>
+                    </div>
+                  </div>
+
+                  <!-- Token Row SOL -->
+                  <div class="price-row flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer" data-symbol="SOL">
+                    <div class="flex items-center gap-2">
+                      <span class="text-lg">☀️</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white text-xs leading-none">SOL</div>
+                        <span class="text-[9px] text-zinc-400">Solana</span>
+                      </div>
+                    </div>
+                    <div class="text-right font-mono">
+                      <div class="text-xs font-bold text-zinc-900 dark:text-white">$142.25</div>
+                      <span class="text-[9px] text-emerald-500 font-bold">+8.25%</span>
+                    </div>
+                  </div>
+
+                  <!-- Token Row ICP -->
+                  <div class="price-row flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer" data-symbol="ICP">
+                    <div class="flex items-center gap-2">
+                      <span class="text-lg">♾️</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white text-xs leading-none">ICP</div>
+                        <span class="text-[9px] text-zinc-400">Internet Computer</span>
+                      </div>
+                    </div>
+                    <div class="text-right font-mono">
+                      <div class="text-xs font-bold text-zinc-900 dark:text-white">$8.91</div>
+                      <span class="text-[9px] text-rose-500 font-bold">-1.15%</span>
+                    </div>
+                  </div>
+
+                  <!-- Token Row XRP -->
+                  <div class="price-row flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer" data-symbol="XRP">
+                    <div class="flex items-center gap-2">
+                      <span class="text-lg">💧</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white text-xs leading-none">XRP</div>
+                        <span class="text-[9px] text-zinc-400">XRP Ledger</span>
+                      </div>
+                    </div>
+                    <div class="text-right font-mono">
+                      <div class="text-xs font-bold text-zinc-900 dark:text-white">$0.62</div>
+                      <span class="text-[9px] text-emerald-500 font-bold">+1.82%</span>
+                    </div>
+                  </div>
+
+                  <!-- Token Row BNB -->
+                  <div class="price-row flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer" data-symbol="BNB">
+                    <div class="flex items-center gap-2">
+                      <span class="text-lg">🟡</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white text-xs leading-none">BNB</div>
+                        <span class="text-[9px] text-zinc-400">BNB Chain</span>
+                      </div>
+                    </div>
+                    <div class="text-right font-mono">
+                      <div class="text-xs font-bold text-zinc-900 dark:text-white">$605.12</div>
+                      <span class="text-[9px] text-emerald-500 font-bold">+0.94%</span>
+                    </div>
+                  </div>
+
+                  <!-- Token Row DOGE -->
+                  <div class="price-row flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer" data-symbol="DOGE">
+                    <div class="flex items-center gap-2">
+                      <span class="text-lg">🐶</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white text-xs leading-none">DOGE</div>
+                        <span class="text-[9px] text-zinc-400">Dogecoin</span>
+                      </div>
+                    </div>
+                    <div class="text-right font-mono">
+                      <div class="text-xs font-bold text-zinc-900 dark:text-white">$0.14</div>
+                      <span class="text-[9px] text-rose-500 font-bold">-2.31%</span>
+                    </div>
+                  </div>
+
+                  <!-- Token Row ADA -->
+                  <div class="price-row flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer" data-symbol="ADA">
+                    <div class="flex items-center gap-2">
+                      <span class="text-lg">🔵</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white text-xs leading-none">ADA</div>
+                        <span class="text-[9px] text-zinc-400">Cardano</span>
+                      </div>
+                    </div>
+                    <div class="text-right font-mono">
+                      <div class="text-xs font-bold text-zinc-900 dark:text-white">$0.45</div>
+                      <span class="text-[9px] text-emerald-500 font-bold">+3.12%</span>
+                    </div>
+                  </div>
+
+                  <!-- Token Row TRX -->
+                  <div class="price-row flex items-center justify-between p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer" data-symbol="TRX">
+                    <div class="flex items-center gap-2">
+                      <span class="text-lg">🔴</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white text-xs leading-none">TRX</div>
+                        <span class="text-[9px] text-zinc-400">TRON</span>
+                      </div>
+                    </div>
+                    <div class="text-right font-mono">
+                      <div class="text-xs font-bold text-zinc-900 dark:text-white">$0.11</div>
+                      <span class="text-[9px] text-emerald-500 font-bold">+0.55%</span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- 🏦 MODULE 2: MARKETS -->
+        <div id="panel-markets" class={"module-view" + isActive('markets') + " w-full h-full flex flex-col justify-between overflow-y-auto scrollbar-thin pr-1"}>
+          <div class="grid grid-cols-1 gap-6 flex-1 min-h-0 text-left">
+            <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-md font-bold text-zinc-900 dark:text-white">Coin Asset catalog</h3>
+                <span class="text-xs text-zinc-400">Live feeds via Binance WS API</span>
+              </div>
+              
+              <table class="w-full text-sm font-sans">
+                <thead>
+                  <tr class="border-b border-zinc-200 dark:border-zinc-700 text-zinc-400 text-xs text-left">
+                    <th class="py-3 font-semibold">COIN</th>
+                    <th class="py-3 font-semibold text-right">PRICE</th>
+                    <th class="py-3 font-semibold text-right">TODAY'S PNL</th>
+                    <th class="py-3 font-semibold text-right">ACTION</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                  
+                  <!-- Row 1 -->
+                  <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+                    <td class="py-4 flex items-center gap-3">
+                      <span class="text-2xl">🪙</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">BTC</div>
+                        <span class="text-xs text-zinc-400">Bitcoin</span>
+                      </div>
+                    </td>
+                    <td class="py-4 text-right font-mono font-bold text-zinc-900 dark:text-white">$58,451.25</td>
+                    <td class="py-4 text-right font-mono font-bold text-emerald-500">+4.12%</td>
+                    <td class="py-4 text-right">
+                      <button class="markets-trade-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors" data-symbol="BTC">Trade</button>
+                    </td>
+                  </tr>
+
+                  <!-- Row 2 -->
+                  <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+                    <td class="py-4 flex items-center gap-3">
+                      <span class="text-2xl">🔷</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">ETH</div>
+                        <span class="text-xs text-zinc-400">Ethereum</span>
+                      </div>
+                    </td>
+                    <td class="py-4 text-right font-mono font-bold text-zinc-900 dark:text-white">$3,120.40</td>
+                    <td class="py-4 text-right font-mono font-bold text-emerald-500">+2.84%</td>
+                    <td class="py-4 text-right">
+                      <button class="markets-trade-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors" data-symbol="ETH">Trade</button>
+                    </td>
+                  </tr>
+
+                  <!-- Row 3 -->
+                  <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+                    <td class="py-4 flex items-center gap-3">
+                      <span class="text-2xl">☀️</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">SOL</div>
+                        <span class="text-xs text-zinc-400">Solana</span>
+                      </div>
+                    </td>
+                    <td class="py-4 text-right font-mono font-bold text-zinc-900 dark:text-white">$142.25</td>
+                    <td class="py-4 text-right font-mono font-bold text-emerald-500">+8.25%</td>
+                    <td class="py-4 text-right">
+                      <button class="markets-trade-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors" data-symbol="SOL">Trade</button>
+                    </td>
+                  </tr>
+
+                  <!-- Row ICP -->
+                  <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+                    <td class="py-4 flex items-center gap-3">
+                      <span class="text-2xl">♾️</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">ICP</div>
+                        <span class="text-xs text-zinc-400">Internet Computer</span>
+                      </div>
+                    </td>
+                    <td class="py-4 text-right font-mono font-bold text-zinc-900 dark:text-white">$8.91</td>
+                    <td class="py-4 text-right font-mono font-bold text-rose-500">-1.15%</td>
+                    <td class="py-4 text-right">
+                      <button class="markets-trade-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors" data-symbol="ICP">Trade</button>
+                    </td>
+                  </tr>
+
+                  <!-- Row XRP -->
+                  <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+                    <td class="py-4 flex items-center gap-3">
+                      <span class="text-2xl">💧</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">XRP</div>
+                        <span class="text-xs text-zinc-400">XRP Ledger</span>
+                      </div>
+                    </td>
+                    <td class="py-4 text-right font-mono font-bold text-zinc-900 dark:text-white">$0.62</td>
+                    <td class="py-4 text-right font-mono font-bold text-emerald-500">+1.82%</td>
+                    <td class="py-4 text-right">
+                      <button class="markets-trade-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors" data-symbol="XRP">Trade</button>
+                    </td>
+                  </tr>
+
+                  <!-- Row BNB -->
+                  <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+                    <td class="py-4 flex items-center gap-3">
+                      <span class="text-2xl">🟡</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">BNB</div>
+                        <span class="text-xs text-zinc-400">BNB Chain</span>
+                      </div>
+                    </td>
+                    <td class="py-4 text-right font-mono font-bold text-zinc-900 dark:text-white">$605.12</td>
+                    <td class="py-4 text-right font-mono font-bold text-emerald-500">+0.94%</td>
+                    <td class="py-4 text-right">
+                      <button class="markets-trade-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors" data-symbol="BNB">Trade</button>
+                    </td>
+                  </tr>
+
+                  <!-- Row DOGE -->
+                  <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+                    <td class="py-4 flex items-center gap-3">
+                      <span class="text-2xl">🐶</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">DOGE</div>
+                        <span class="text-xs text-zinc-400">Dogecoin</span>
+                      </div>
+                    </td>
+                    <td class="py-4 text-right font-mono font-bold text-zinc-900 dark:text-white">$0.14</td>
+                    <td class="py-4 text-right font-mono font-bold text-rose-500">-2.31%</td>
+                    <td class="py-4 text-right">
+                      <button class="markets-trade-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors" data-symbol="DOGE">Trade</button>
+                    </td>
+                  </tr>
+
+                  <!-- Row ADA -->
+                  <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+                    <td class="py-4 flex items-center gap-3">
+                      <span class="text-2xl">🔵</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">ADA</div>
+                        <span class="text-xs text-zinc-400">Cardano</span>
+                      </div>
+                    </td>
+                    <td class="py-4 text-right font-mono font-bold text-zinc-900 dark:text-white">$0.45</td>
+                    <td class="py-4 text-right font-mono font-bold text-emerald-500">+3.12%</td>
+                    <td class="py-4 text-right">
+                      <button class="markets-trade-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors" data-symbol="ADA">Trade</button>
+                    </td>
+                  </tr>
+
+                  <!-- Row TRX -->
+                  <tr class="hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+                    <td class="py-4 flex items-center gap-3">
+                      <span class="text-2xl">🔴</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">TRX</div>
+                        <span class="text-xs text-zinc-400">TRON</span>
+                      </div>
+                    </td>
+                    <td class="py-4 text-right font-mono font-bold text-zinc-900 dark:text-white">$0.11</td>
+                    <td class="py-4 text-right font-mono font-bold text-emerald-500">+0.55%</td>
+                    <td class="py-4 text-right">
+                      <button class="markets-trade-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors" data-symbol="TRX">Trade</button>
+                    </td>
+                  </tr>
+
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- 📈 MODULE 3: TRADE -->
+        <div id="panel-trade" class={"module-view" + isActive('trade') + " w-full h-full flex flex-col justify-between overflow-hidden"}>
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0 text-left">
+            <!-- Candlestick Chart block -->
+            <div class="lg:col-span-3 flex flex-col gap-4 overflow-hidden h-full">
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col h-full overflow-hidden">
+                <div class="flex justify-between items-center mb-4">
+                  <div class="flex items-center gap-3">
+                    <h3 id="trade-chart-title" class="text-md font-bold text-zinc-900 dark:text-white">BTC/USDT</h3>
+                    <span class="text-xs font-mono text-emerald-500 font-bold animate-pulse">$58,451.25 (+4.12%)</span>
+                  </div>
+                  <div class="flex gap-1">
+                    <button class="px-2 py-1 bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded">1m</button>
+                    <button class="px-2 py-1 bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded">5m</button>
+                    <button class="px-2 py-1 bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded border border-emerald-500/20">15m</button>
+                    <button class="px-2 py-1 bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-500/10 text-emerald-500 text-[10px] font-bold rounded">1h</button>
+                  </div>
+                </div>
+
+                <!-- High quality vector candlesticks simulation -->
+                <div id="trade-chart" class="flex-1 w-full border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 rounded-xl overflow-hidden relative flex items-end p-2 select-none">
+                  <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <!-- Grid Lines -->
+                    <line x1="0" y1="25" x2="100" y2="25" stroke="rgba(156,163,175,0.08)" stroke-width="1"></line>
+                    <line x1="0" y1="50" x2="100" y2="50" stroke="rgba(156,163,175,0.08)" stroke-width="1"></line>
+                    <line x1="0" y1="75" x2="100" y2="75" stroke="rgba(156,163,175,0.08)" stroke-width="1"></line>
+                    
+                    <!-- Candlesticks bars (green/red) -->
+                    <!-- Green Candle 1 -->
+                    <line x1="10" y1="60" x2="10" y2="85" stroke="#10b981" stroke-width="0.8"></line>
+                    <rect x="8.5" y="65" width="3" height="15" fill="#10b981" rx="0.5"></rect>
+
+                    <!-- Green Candle 2 -->
+                    <line x1="30" y1="50" x2="30" y2="75" stroke="#10b981" stroke-width="0.8"></line>
+                    <rect x="28.5" y="55" width="3" height="15" fill="#10b981" rx="0.5"></rect>
+
+                    <!-- Red Candle 1 -->
+                    <line x1="50" y1="40" x2="50" y2="65" stroke="#ef4444" stroke-width="0.8"></line>
+                    <rect x="48.5" y="45" width="3" height="15" fill="#ef4444" rx="0.5"></rect>
+
+                    <!-- Green Candle 3 -->
+                    <line x1="70" y1="20" x2="70" y2="55" stroke="#10b981" stroke-width="0.8"></line>
+                    <rect x="68.5" y="25" width="3" height="25" fill="#10b981" rx="0.5"></rect>
+
+                    <!-- Active Green Candle -->
+                    <line x1="90" y1="10" x2="90" y2="35" stroke="#10b981" stroke-width="0.8"></line>
+                    <rect x="88.5" y="15" width="3" height="15" fill="#10b981" rx="0.5"></rect>
+                  </svg>
+                  <div class="absolute bottom-2 left-2 text-[8px] font-mono text-zinc-400">DATA_WS: REPLICATED</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Order form side panel -->
+            <div class="lg:col-span-1 flex flex-col gap-4 overflow-hidden h-full">
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col justify-between h-full">
+                <div class="space-y-4">
+                  <div class="flex border-b border-zinc-200 dark:border-zinc-700 pb-2">
+                    <button id="buy-tab" type="button" class="flex-1 text-center font-bold text-sm text-emerald-500 pb-1 border-b-2 border-emerald-500">BUY</button>
+                    <button id="sell-tab" type="button" class="flex-1 text-center font-bold text-sm text-zinc-400 hover:text-zinc-900 dark:hover:text-white pb-1">SELL</button>
+                  </div>
+
+                  <div class="space-y-3 font-mono text-[10px]">
+                    <div class="p-3 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl flex justify-between items-center">
+                      <div class="flex flex-col">
+                        <span class="text-zinc-500">AMOUNT (USDT)</span>
+                        <input id="pay-amount-input" type="number" value="100.00" class="bg-transparent border-none text-sm font-bold text-zinc-900 dark:text-white outline-none w-full p-0 leading-none mt-1 focus:ring-0" />
+                      </div>
+                      <span class="text-zinc-500 font-bold">USDT</span>
+                    </div>
+
+                    <!-- Percentage Row -->
+                    <div class="grid grid-cols-4 gap-1">
+                      <button class="trade-percent-btn py-1 rounded bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-500/10 hover:text-emerald-500 font-bold" data-val="25">25%</button>
+                      <button class="trade-percent-btn py-1 rounded bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-500/10 hover:text-emerald-500 font-bold" data-val="50">50%</button>
+                      <button class="trade-percent-btn py-1 rounded bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-500/10 hover:text-emerald-500 font-bold" data-val="75">75%</button>
+                      <button class="trade-percent-btn py-1 rounded bg-zinc-100 dark:bg-zinc-900 hover:bg-emerald-500/10 hover:text-emerald-500 font-bold" data-val="100">100%</button>
+                    </div>
+
+                    <div class="p-2 border border-zinc-200 dark:border-zinc-700 rounded-lg text-left bg-zinc-100 dark:bg-zinc-900 space-y-1 text-[8px] text-zinc-500">
+                      <div class="flex justify-between"><span>EST. RECEIVE:</span> <span class="text-zinc-900 dark:text-white font-bold"><span id="lbl-receive-val">1.710000</span> <span id="lbl-receive-sym">BTC</span></span></div>
+                      <div class="flex justify-between"><span>WALLET BALANCE:</span> <span id="trade-wallet-balance" class="text-zinc-900 dark:text-white">0.00 USDT</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <button id="btn-submit-swap" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs tracking-widest uppercase rounded-xl transition-all duration-300">EXECUTE SWAP</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- 💼 MODULE 4: WALLET -->
+        <div id="panel-wallet" class={"module-view" + isActive('wallet') + " w-full h-full flex flex-col justify-between overflow-y-auto scrollbar-thin pr-1"}>
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0 text-left">
+            <!-- Left: Balance card and Copyable addresses -->
+            <div class="lg:col-span-2 flex flex-col gap-6 h-full">
+              <!-- Portfolio Card -->
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col justify-between h-48 select-text">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <span class="text-xs text-zinc-400 uppercase font-mono tracking-wider">Total Portfolio Value</span>
+                    <h2 id="portfolio-total" class="text-3xl font-bold text-zinc-900 dark:text-white mt-1">$0.00</h2>
+                    <span id="portfolio-sub" class="text-[10px] text-emerald-500 font-bold mt-1 block">Sign in to load your portfolio</span>
+                  </div>
+                  <span class="text-xl">💼</span>
+                </div>
+                <div class="flex gap-2">
+                  <button id="btn-faucet" type="button" class="wallet-action-btn px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition-colors">Faucet</button>
+                  <button id="btn-send" type="button" class="wallet-action-btn px-4 py-2 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-750 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white text-xs font-bold rounded-lg transition-colors">Send</button>
+                </div>
+              </div>
+
+              <!-- Address hub -->
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col flex-1 select-text font-mono text-[10px] space-y-3">
+                <span class="text-[9px] text-zinc-400 font-bold tracking-wider">[ CRYPTOGRAPHIC COCKPIT ADDRESSES ]</span>
+                
+                <!-- Principal -->
+                <div class="flex items-center justify-between p-2.5 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-250 dark:border-zinc-700">
+                  <span class="text-zinc-500">♾️ ICP</span>
+                  <div class="flex items-center space-x-2">
+                    <span class="text-zinc-900 dark:text-white font-bold">0x71C...9312</span>
+                    <button class="address-copy-btn text-[11px] hover:text-emerald-500" data-address="0x71C80B0F3A1AB90DE80F3A1AB90DE80F3A1AB90D">📋</button>
+                  </div>
+                </div>
+
+                <!-- EVM -->
+                <div class="flex items-center justify-between p-2.5 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-250 dark:border-zinc-700">
+                  <span class="text-zinc-500">🔷 EVM</span>
+                  <div class="flex items-center space-x-2">
+                    <span class="text-zinc-900 dark:text-white font-bold">0x8a1...3f1c</span>
+                    <button class="address-copy-btn text-[11px] hover:text-emerald-500" data-address="0x8a1a3f1bc09b0b4de9b81cd4265ecc9df74477e41">📋</button>
+                  </div>
+                </div>
+
+                <!-- SOL -->
+                <div class="flex items-center justify-between p-2.5 rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-250 dark:border-zinc-700">
+                  <span class="text-zinc-500">☀️ SOL</span>
+                  <div class="flex items-center space-x-2">
+                    <span class="text-zinc-900 dark:text-white font-bold">8bc3...f89c</span>
+                    <button class="address-copy-btn text-[11px] hover:text-emerald-500" data-address="8bc371c80b0f3a1ab90de80f3a1ab90def89c">📋</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Assets breakdown list -->
+            <div class="lg:col-span-2 flex flex-col gap-6 h-full">
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col flex-1 overflow-hidden">
+                <h3 class="text-md font-bold text-zinc-900 dark:text-white mb-4">My Liquid Assets</h3>
+                <div id="wallet-assets" class="flex-1 overflow-y-auto scrollbar-thin pr-1 space-y-2 font-mono text-xs">
+                  
+                  <!-- Asset row 1 -->
+                  <div class="p-3.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between hover:border-emerald-500/20 transition-all">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-2xl">🪙</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">1.45 BTC</div>
+                        <span class="text-[10px] text-zinc-400">Bitcoin Core</span>
+                      </div>
+                    </div>
+                    <span class="font-bold text-zinc-900 dark:text-white">$84,754.31</span>
+                  </div>
+
+                  <!-- Asset row 2 -->
+                  <div class="p-3.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between hover:border-emerald-500/20 transition-all">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-2xl">🔷</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">8.50 ETH</div>
+                        <span class="text-[10px] text-zinc-400">Ethereum Network</span>
+                      </div>
+                    </div>
+                    <span class="font-bold text-zinc-900 dark:text-white">$26,523.40</span>
+                  </div>
+
+                  <!-- Asset row 3 -->
+                  <div class="p-3.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between hover:border-emerald-500/20 transition-all">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-2xl">☀️</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">52.40 SOL</div>
+                        <span class="text-[10px] text-zinc-400">Solana Network</span>
+                      </div>
+                    </div>
+                    <span class="font-bold text-zinc-900 dark:text-white">$7,453.90</span>
+                  </div>
+
+                  <!-- Asset row XRP -->
+                  <div class="p-3.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between hover:border-emerald-500/20 transition-all">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-2xl">💧</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">1,200 XRP</div>
+                        <span class="text-[10px] text-zinc-400">XRP Ledger</span>
+                      </div>
+                    </div>
+                    <span class="font-bold text-zinc-900 dark:text-white">$744.00</span>
+                  </div>
+
+                  <!-- Asset row BNB -->
+                  <div class="p-3.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between hover:border-emerald-500/20 transition-all">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-2xl">🟡</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">3.20 BNB</div>
+                        <span class="text-[10px] text-zinc-400">BNB Chain</span>
+                      </div>
+                    </div>
+                    <span class="font-bold text-zinc-900 dark:text-white">$1,936.38</span>
+                  </div>
+
+                  <!-- Asset row DOGE -->
+                  <div class="p-3.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between hover:border-emerald-500/20 transition-all">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-2xl">🐶</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">5,000 DOGE</div>
+                        <span class="text-[10px] text-zinc-400">Dogecoin</span>
+                      </div>
+                    </div>
+                    <span class="font-bold text-zinc-900 dark:text-white">$700.00</span>
+                  </div>
+
+                  <!-- Asset row ADA -->
+                  <div class="p-3.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between hover:border-emerald-500/20 transition-all">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-2xl">🔵</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">2,400 ADA</div>
+                        <span class="text-[10px] text-zinc-400">Cardano</span>
+                      </div>
+                    </div>
+                    <span class="font-bold text-zinc-900 dark:text-white">$1,080.00</span>
+                  </div>
+
+                  <!-- Asset row TRX -->
+                  <div class="p-3.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between hover:border-emerald-500/20 transition-all">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-2xl">🔴</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">8,000 TRX</div>
+                        <span class="text-[10px] text-zinc-400">TRON</span>
+                      </div>
+                    </div>
+                    <span class="font-bold text-zinc-900 dark:text-white">$880.00</span>
+                  </div>
+
+                  <!-- Asset row USDT -->
+                  <div class="p-3.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between hover:border-emerald-500/20 transition-all">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-2xl">💵</span>
+                      <div>
+                        <div class="font-bold text-zinc-900 dark:text-white">1,250 USDT</div>
+                        <span class="text-[10px] text-zinc-400">Tether</span>
+                      </div>
+                    </div>
+                    <span class="font-bold text-zinc-900 dark:text-white">$1,250.00</span>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- 🧪 MODULE 5: LIQUIDITY -->
+        <div id="panel-liquidity" class={"module-view" + isActive('liquidity') + " w-full h-full flex flex-col justify-between overflow-y-auto scrollbar-thin pr-1"}>
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0 text-left">
+            <!-- Left side: Pool yields -->
+            <div class="lg:col-span-2 flex flex-col gap-6 h-full">
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col flex-1">
+                <h3 class="text-md font-bold text-zinc-900 dark:text-white mb-4">Yield Farming Positions</h3>
+                <div id="pools-list" class="space-y-3 overflow-y-auto scrollbar-thin pr-1 font-mono text-xs">
+                  
+                  <!-- Pool 1 -->
+                  <div class="p-4 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
+                    <div>
+                      <div class="font-bold text-zinc-900 dark:text-white">IONIC/USDT Pool</div>
+                      <span class="text-[9px] text-zinc-400 block mt-0.5">Global Index: 4.842</span>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-emerald-500 font-bold">12.50% APY</span>
+                      <span class="text-[9px] text-zinc-400 block mt-0.5">Staked: 125,000 IONIC</span>
+                    </div>
+                  </div>
+
+                  <!-- Pool 2 -->
+                  <div class="p-4 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
+                    <div>
+                      <div class="font-bold text-zinc-900 dark:text-white">UNREAL/USDT Pool</div>
+                      <span class="text-[9px] text-zinc-400 block mt-0.5">Global Index: 2.115</span>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-emerald-500 font-bold">8.42% APY</span>
+                      <span class="text-[9px] text-zinc-400 block mt-0.5">Staked: 12,000 UNREAL</span>
+                    </div>
+                  </div>
+
+                  <!-- Pool 3 BTC -->
+                  <div class="p-4 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
+                    <div>
+                      <div class="font-bold text-zinc-900 dark:text-white">BTC/USDT Pool</div>
+                      <span class="text-[9px] text-zinc-400 block mt-0.5">Global Index: 3.421</span>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-emerald-500 font-bold">9.15% APY</span>
+                      <span class="text-[9px] text-zinc-400 block mt-0.5">Staked: 2.10 BTC</span>
+                    </div>
+                  </div>
+
+                  <!-- Pool 4 SOL -->
+                  <div class="p-4 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
+                    <div>
+                      <div class="font-bold text-zinc-900 dark:text-white">SOL/USDT Pool</div>
+                      <span class="text-[9px] text-zinc-400 block mt-0.5">Global Index: 1.884</span>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-emerald-500 font-bold">15.20% APY</span>
+                      <span class="text-[9px] text-zinc-400 block mt-0.5">Staked: 840 SOL</span>
+                    </div>
+                  </div>
+
+                  <!-- Pool 5 XRP -->
+                  <div class="p-4 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
+                    <div>
+                      <div class="font-bold text-zinc-900 dark:text-white">XRP/USDT Pool</div>
+                      <span class="text-[9px] text-zinc-400 block mt-0.5">Global Index: 1.221</span>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-emerald-500 font-bold">6.80% APY</span>
+                      <span class="text-[9px] text-zinc-400 block mt-0.5">Staked: 45,000 XRP</span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col">
+                <h3 class="text-md font-bold text-zinc-900 dark:text-white mb-4">My Positions</h3>
+                <div id="positions-list" class="space-y-3 overflow-y-auto scrollbar-thin pr-1 font-mono text-xs max-h-72">
+                  <span class="text-zinc-500 text-[11px]">Sign in to see your positions.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right side: APY calculator lock dashboard -->
+            <div class="lg:col-span-2 flex flex-col gap-6 h-full">
+              <div class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-6 flex flex-col justify-between flex-1">
+                <div>
+                  <h3 class="text-md font-bold text-zinc-900 dark:text-white mb-4">Staking Multiplier Calculator</h3>
+                  <div class="space-y-4 font-mono text-xs">
+                    
+                    <div class="p-3 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl flex justify-between items-center">
+                      <div class="flex flex-col">
+                        <span class="text-[9px] text-zinc-500 font-bold">STAKE AMOUNT</span>
+                        <input id="liq-stake-input" type="number" value="5000" class="bg-transparent border-none text-sm font-bold text-zinc-900 dark:text-white outline-none w-full p-0 leading-none mt-1 focus:ring-0" />
+                      </div>
+                      <select id="liq-token" class="bg-transparent text-emerald-500 font-bold text-xs outline-none cursor-pointer">
+                        <option value="IONIC">IONIC</option>
+                        <option value="UNREAL">UNREAL</option>
+                        <option value="BTC">BTC</option>
+                        <option value="ETH">ETH</option>
+                        <option value="SOL">SOL</option>
+                        <option value="XRP">XRP</option>
+                      </select>
+                    </div>
+
+                    <div class="flex flex-col">
+                      <span class="text-[9px] text-zinc-500 font-bold mb-1">LOCK DURATION (YEARS)</span>
+                      <input id="liq-stake-duration" type="range" min="1" max="4" value="2" class="w-full h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-emerald-500" />
+                      <div class="flex justify-between text-[8px] text-zinc-400 mt-1">
+                        <span>1 YEAR</span>
+                        <span>2 YEARS</span>
+                        <span>3 YEARS</span>
+                        <span>4 YEARS</span>
+                      </div>
+                    </div>
+
+                    <div class="p-3 border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 rounded-lg space-y-1 text-[9px] text-zinc-500">
+                      <div class="flex justify-between"><span>VOTING POWER MULTIPLIER:</span> <span class="text-emerald-500 font-bold"><span id="lbl-voting-power-display">10,000.00</span> POWER</span></div>
+                      <div class="flex justify-between"><span>EST. ANNUALIZED REWARDS:</span> <span class="text-emerald-500 font-bold"><span id="lbl-annual-yield-display">—</span> <span id="lbl-yield-sym">IONIC</span></span></div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <button id="btn-approve-stake" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs tracking-widest uppercase rounded-xl transition-all duration-300 mt-4">APPROVE & LOCK ASSET</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 👤 MODULE 6: PROFILE (/profile -> /@username) -->
+        <div id="panel-profile" class={"module-view" + isActive('profile') + " w-full h-full flex items-center justify-center overflow-y-auto scrollbar-thin pr-1"}>
+          <div class="max-w-md w-full p-8 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-center space-y-4">
+            <div class="text-4xl">👤</div>
+            <h2 class="text-lg font-bold text-zinc-900 dark:text-white">Your profile lives at your @username</h2>
+            <p id="profile-sub" class="text-xs text-zinc-500">Sign in to open your public profile.</p>
+            <div class="flex flex-col gap-2">
+              <button id="profile-open-btn" type="button" class="hidden px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold">Open my profile</button>
+              <button id="profile-signin-btn" type="button" class="px-4 py-2.5 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-bold">Sign in</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ⚙️ MODULE 7: SETTINGS (/settings) -->
+        <div id="panel-settings" class={"module-view" + isActive('settings') + " w-full h-full overflow-y-auto scrollbar-thin pr-1"}>
+          <div class="max-w-3xl mx-auto w-full space-y-5 pb-8">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <h2 class="text-lg font-bold text-zinc-900 dark:text-white">Settings</h2>
+                <p class="text-xs text-zinc-500">Account, wallets, appearance and service status.</p>
+              </div>
+              <span id="set-oracle-badge" class="text-[10px] font-mono px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-500 whitespace-nowrap">ORACLE: —</span>
+            </div>
+
+            <div class="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800">
+              <h3 class="text-sm font-bold mb-3 text-zinc-900 dark:text-white">👤 Account</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-xs">
+                <div class="p-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                  <div class="text-[10px] text-zinc-400 uppercase tracking-wider mb-1">Name</div>
+                  <div id="set-name" class="text-zinc-900 dark:text-white truncate">—</div>
+                </div>
+                <div class="p-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                  <div class="text-[10px] text-zinc-400 uppercase tracking-wider mb-1">Handle</div>
+                  <div id="set-handle" class="text-emerald-500 truncate">—</div>
+                </div>
+                <div class="p-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 sm:col-span-2">
+                  <div class="text-[10px] text-zinc-400 uppercase tracking-wider mb-1">Email</div>
+                  <div id="set-email" class="text-zinc-900 dark:text-white truncate">—</div>
+                </div>
+              </div>
+              <div class="flex flex-wrap gap-2 mt-4">
+                <button id="set-signin" type="button" class="px-4 py-2 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-bold">Sign in</button>
+                <a href="/profile" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold">View profile</a>
+                <button id="set-logout" type="button" class="hidden px-4 py-2 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 text-xs font-bold">Log out</button>
+              </div>
+            </div>
+
+            <div class="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800">
+              <h3 class="text-sm font-bold mb-3 text-zinc-900 dark:text-white">🔗 Embedded wallets</h3>
+              <div class="space-y-2">
+                <button data-copy-wallet="evm_address" type="button" class="w-full p-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center gap-3 text-left hover:border-emerald-500/40 transition">
+                  <span class="text-[10px] font-mono text-zinc-400 uppercase tracking-wider w-10">EVM</span>
+                  <span id="set-evm" class="flex-1 text-[11px] font-mono text-zinc-900 dark:text-white truncate">—</span>
+                  <span class="text-[10px] font-mono text-emerald-500">COPY</span>
+                </button>
+                <button data-copy-wallet="solana_address" type="button" class="w-full p-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center gap-3 text-left hover:border-emerald-500/40 transition">
+                  <span class="text-[10px] font-mono text-zinc-400 uppercase tracking-wider w-10">SOL</span>
+                  <span id="set-sol" class="flex-1 text-[11px] font-mono text-zinc-900 dark:text-white truncate">—</span>
+                  <span class="text-[10px] font-mono text-emerald-500">COPY</span>
+                </button>
+                <button data-copy-wallet="icp_principal" type="button" class="w-full p-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center gap-3 text-left hover:border-emerald-500/40 transition">
+                  <span class="text-[10px] font-mono text-zinc-400 uppercase tracking-wider w-10">ICP</span>
+                  <span id="set-icp" class="flex-1 text-[11px] font-mono text-zinc-900 dark:text-white truncate">—</span>
+                  <span class="text-[10px] font-mono text-emerald-500">COPY</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800">
+              <h3 class="text-sm font-bold mb-3 text-zinc-900 dark:text-white">🎨 Appearance</h3>
+              <div class="flex gap-2">
+                <button data-set-theme="light" type="button" class="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-200">☀️ Light</button>
+                <button data-set-theme="dark" type="button" class="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-200">🌙 Dark</button>
+              </div>
+            </div>
+
+            <div class="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800">
+              <h3 class="text-sm font-bold mb-3 text-zinc-900 dark:text-white">📊 Service</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
+                <div class="p-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                  <div class="text-[10px] text-zinc-400 uppercase tracking-wider mb-1">Engine</div>
+                  <div class="text-zinc-900 dark:text-white">freebsd-native</div>
+                </div>
+                <div class="p-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                  <div class="text-[10px] text-zinc-400 uppercase tracking-wider mb-1">Fee</div>
+                  <div class="text-zinc-900 dark:text-white">0.30%</div>
+                </div>
+                <div class="p-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                  <div class="text-[10px] text-zinc-400 uppercase tracking-wider mb-1">Oracle</div>
+                  <div id="set-oracle" class="text-zinc-900 dark:text-white">—</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-3 text-[11px] font-mono">
+              <a href="/markets" class="text-emerald-500 hover:underline">Markets</a>
+              <a href="/liquidity" class="text-emerald-500 hover:underline">Liquidity</a>
+              <a href="/learn" class="text-emerald-500 hover:underline">Learn</a>
+              <a href="/support" class="text-emerald-500 hover:underline">Support</a>
+              <a href="/terms" class="text-emerald-500 hover:underline">Terms</a>
+              <a href="/privacy" class="text-emerald-500 hover:underline">Privacy</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 🌐 MODULE 8: PUBLIC PROFILE (/@username) -->
+        <div id="panel-user" class={"module-view" + isActive('user') + " w-full h-full overflow-y-auto scrollbar-thin pr-1"}>
+          <div class="max-w-2xl mx-auto w-full space-y-4 pb-8">
+            <div id="up-error" class="hidden p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm"></div>
+            <div id="up-loading" class="p-8 text-center text-xs font-mono text-zinc-500">Loading profile…</div>
+
+            <div id="up-card" class="hidden p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800">
+              <div class="flex items-center gap-4">
+                <div id="up-avatar" class="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-2xl overflow-hidden">?</div>
+                <div class="flex-1 min-w-0">
+                  <div id="up-name" class="text-lg font-bold text-zinc-900 dark:text-white truncate">Player</div>
+                  <div id="up-handle" class="text-xs font-mono text-emerald-500 truncate">@player</div>
+                  <div id="up-bio" class="text-xs text-zinc-500 mt-1"></div>
+                  <div id="up-counts" class="text-[11px] font-mono text-zinc-400 mt-1"></div>
+                </div>
+                <button id="up-follow" type="button" class="hidden px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold">Follow</button>
+              </div>
+              <div class="mt-4 flex gap-2 text-[10px] font-mono">
+                <a id="up-full-link" href="/user" class="px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:text-emerald-500">FULL PAGE ↗</a>
+                <button id="up-share" type="button" class="px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:text-emerald-500">COPY LINK</button>
+              </div>
+            </div>
+
+            <div id="up-portfolio" class="hidden p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold text-zinc-900 dark:text-white">Portfolio</h3>
+                <span id="up-total" class="text-sm font-bold font-mono text-zinc-900 dark:text-white">$0.00</span>
+              </div>
+              <div id="up-holdings" class="space-y-2 font-mono text-xs"></div>
+            </div>
+
+            <div id="up-activity" class="hidden p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800">
+              <h3 class="text-sm font-bold mb-3 text-zinc-900 dark:text-white">Recent swaps</h3>
+              <div id="up-txs" class="space-y-1.5 font-mono text-[11px]"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="w-full h-12 border-t border-zinc-200 dark:border-zinc-800 px-6 flex items-center justify-between z-10 backdrop-blur-md bg-zinc-100/80 dark:bg-zinc-900/80 font-mono text-[9px] md:text-xs text-zinc-500 select-none">
+        <div>&copy; 2026 WORLD OF UNREAL. ALL RIGHTS RESERVED.</div>
+        <div class="flex items-center space-x-4">
+          <span>SECURE_CONNECTIONS: VALID</span>
+          <span>STALWART_REPLICATED: SECURE</span>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- WOU-ID Auth Modal — SOW single-view, real icons, no ID ENGINE slop, no tabs -->
+  <div id="wou-auth-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md" aria-hidden="true" role="dialog" aria-modal="true">
+    <div id="wou-auth-dialog" class="relative w-full max-w-md bg-zinc-950 border border-white/15 rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.9)] p-6 sm:p-7 overflow-hidden text-white">
+      <div class="absolute -top-24 -right-24 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="flex items-center justify-between mb-5">
+        <span class="flex items-center gap-2 text-xs font-mono tracking-[0.2em] text-zinc-400"><img src="/wouid.svg" alt="WouID" class="h-4 w-auto" />WORLD OF UNREAL ID</span>
+        <button id="wou-modal-close-btn" type="button" class="text-zinc-400 hover:text-white p-2 rounded-full hover:bg-white/10 transition">✕</button>
+      </div>
+      <!-- logged view (own profile, not Binance slop) -->
+      <div id="wou-auth-logged-view" class="hidden space-y-4">
+        <div class="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/10">
+          <div id="wou-logged-avatar" class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold">U</div>
+          <div class="flex-1 min-w-0">
+            <div id="wou-logged-name" class="text-sm font-bold truncate">Player</div>
+            <div id="wou-logged-handle" class="text-xs font-mono text-cyan-400 truncate">@player</div>
+            <div id="wou-logged-email" class="text-[11px] text-zinc-400 truncate"></div>
+          </div>
+        </div>
+        <button id="wou-logout-btn-modal" type="button" class="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold">Sign Out</button>
+      </div>
+      <!-- unlogged view — unified, no tabs -->
+      <div id="wou-auth-unlogged-view" class="space-y-4">
+        <div>
+          <h2 class="text-xl font-bold tracking-tight">Sign in to Ionic Swap</h2>
+          <p class="text-xs text-zinc-400 mt-1">Sync progression and wallets via worldofunreal.com</p>
+        </div>
+        <div id="modal-error" class="hidden p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs"><span id="modal-error-msg"></span></div>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="wou-login-google" type="button" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white text-zinc-900 text-xs font-bold hover:bg-zinc-100 transition">
+            <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+            Google
+          </button>
+          <button id="wou-login-discord" type="button" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#5865F2] text-white text-xs font-bold hover:bg-[#4752c4] transition">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028z"/></svg>
+            Discord
+          </button>
+          <button id="wou-login-twitter" type="button" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-zinc-900 border border-white/15 text-white text-xs font-bold hover:bg-zinc-800 transition">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            X
+          </button>
+          <button id="wou-login-meta" type="button" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0081FB]/20 border border-[#0081FB]/30 text-white text-xs font-bold hover:bg-[#0081FB]/30 transition">
+            <svg class="w-4 h-4 fill-current text-[#0081FB]" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            Meta
+          </button>
+        </div>
+        <div class="relative flex items-center py-1"><div class="flex-1 h-px bg-white/10"></div><span class="px-3 text-[10px] font-mono tracking-widest text-zinc-500">OR WALLET / PASSKEY</span><div class="flex-1 h-px bg-white/10"></div></div>
+        <div class="grid grid-cols-3 gap-2">
+          <button id="wou-login-eth" type="button" class="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-[#F6851B]/15 border border-[#F6851B]/30 hover:bg-[#F6851B]/25 text-white text-xs font-semibold">
+            <span class="w-6 h-6 rounded-full bg-[#F6851B] flex items-center justify-center text-zinc-950 font-bold text-xs">Ξ</span> MetaMask
+          </button>
+          <button id="wou-login-sol" type="button" class="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-[#AB9FF2]/15 border border-[#AB9FF2]/30 hover:bg-[#AB9FF2]/25 text-white text-xs font-semibold">
+            <span class="w-6 h-6 rounded-full bg-[#AB9FF2] flex items-center justify-center text-zinc-950 font-bold text-xs">S</span> Phantom
+          </button>
+          <button id="wou-login-passkey" type="button" class="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-white/10 border border-white/15 hover:bg-white/20 text-white text-xs font-semibold">
+            <span class="text-sm">🔑</span> Passkey
+          </button>
+        </div>
+        <!-- hidden ICP button for script compat -->
+        <button id="wou-login-icp" type="button" class="hidden">ICP</button>
+        <div class="relative flex items-center py-1"><div class="flex-1 h-px bg-white/10"></div><span class="px-3 text-[10px] font-mono tracking-widest text-zinc-500">EMAIL OTP</span><div class="flex-1 h-px bg-white/10"></div></div>
+        <form id="wou-email-form" class="space-y-3">
+          <div id="wou-email-step-1" class="flex gap-2">
+            <input id="wou-email-input" type="email" required placeholder="name@example.com" class="flex-1 px-4 py-2.5 rounded-xl bg-zinc-900 border border-white/15 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-cyan-400" />
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-white text-zinc-950 font-bold text-xs hover:bg-zinc-200 transition">Send</button>
+          </div>
+          <div id="wou-email-step-2" class="hidden space-y-2">
+            <div class="flex justify-between gap-2">
+              <input type="text" inputmode="numeric" maxlength="1" name="otp-1" autocomplete="one-time-code" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+              <input type="text" inputmode="numeric" maxlength="1" name="otp-2" autocomplete="one-time-code" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+              <input type="text" inputmode="numeric" maxlength="1" name="otp-3" autocomplete="one-time-code" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+              <input type="text" inputmode="numeric" maxlength="1" name="otp-4" autocomplete="one-time-code" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+              <input type="text" inputmode="numeric" maxlength="1" name="otp-5" autocomplete="one-time-code" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+              <input type="text" inputmode="numeric" maxlength="1" name="otp-6" autocomplete="one-time-code" class="otp-digit w-11 h-11 text-center text-lg font-mono font-bold bg-zinc-900 border border-white/20 rounded-xl focus:border-cyan-400 text-white" />
+            </div>
+            <div class="flex gap-2">
+              <button id="wou-verify-otp-btn" type="button" class="flex-1 py-2.5 rounded-xl bg-cyan-400 text-zinc-950 font-bold text-xs">Verify</button>
+              <button id="btn-change-email" type="button" class="px-4 py-2.5 rounded-xl bg-white/10 text-white text-xs">Change</button>
+            </div>
+            <button id="btn-resend-otp" type="button" class="w-full text-xs text-cyan-400 hover:underline">Resend Code</button>
+          </div>
+          <p id="wou-auth-msg" class="hidden text-xs text-center"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification glassmorphic toast notification -->
+  <div id="toast" class="fixed bottom-6 right-6 z-[10000] hidden items-center gap-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-250 dark:border-zinc-700 pl-4 pr-6 py-3 rounded-xl shadow-lg backdrop-blur-md font-mono text-[10px]">
+    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+    <div class="flex flex-col text-left">
+      <span class="text-zinc-900 dark:text-white font-bold uppercase">[ NOTIFICATION ]</span>
+      <span id="toast-message" class="text-zinc-500 dark:text-zinc-400">Successfully copied address.</span>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  :global(body) {
+    overflow: hidden !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  :root { --ease-out: cubic-bezier(0.23, 1, 0.32, 1); --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); }
+  .module-view {
+    display: none;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 220ms var(--ease-out), transform 220ms var(--ease-out);
+  }
+  .module-view.active {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+  }
+  /* Emil: modal enter */
+  #wou-auth-modal:not(.hidden) #wou-auth-dialog {
+    animation: wou-in 220ms var(--ease-out);
+  }
+  @keyframes wou-in {
+    from { opacity: 0; transform: scale(0.97) translateY(4px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .module-view, #wou-auth-dialog { transition: opacity 150ms ease; transform: none !important; animation: none !important; }
+  }
+  @media (hover: hover) and (pointer: fine) {
+    button:hover { filter: brightness(1.02); }
+  }
+  button:active { transform: scale(0.97); transition: transform 140ms var(--ease-out); }
+</style>
+
+<script>
+  // ponytail: unified gray/zinc dashboard controller in under 115 lines
+  const navItems = document.querySelectorAll('.nav-item');
+  const modules = document.querySelectorAll('.module-view');
+
+  // Router mechanism (deep-link aware; appRoute se define al final del script)
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const target = item.getAttribute('data-target') || 'discovery';
+      appRoute.go(target);
+    });
+  });
+
+  // Slide carousel controls
+  let activeSlide = 0;
+  const carouselTrack = document.getElementById('carousel-track');
+  const dots = document.querySelectorAll('.carousel-dot');
+
+  const updateCarousel = (slideIndex: number) => {
+    if (carouselTrack) {
+      carouselTrack.style.transform = `translateX(-${slideIndex * 100}%)`;
+      dots.forEach((dot, idx) => {
+        if (idx === slideIndex) {
+          dot.classList.add('bg-emerald-500');
+          dot.classList.remove('bg-zinc-300', 'dark:bg-zinc-700');
+        } else {
+          dot.classList.remove('bg-emerald-500');
+          dot.classList.add('bg-zinc-300', 'dark:bg-zinc-700');
+        }
+      });
+      activeSlide = slideIndex;
+    }
+  };
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const slide = parseInt(dot.getAttribute('data-slide') || '0');
+      updateCarousel(slide);
+    });
+  });
+
+  // Auto scroll carousel every 6 seconds
+  setInterval(() => {
+    const nextSlide = (activeSlide + 1) % 2; // We have 2 slides
+    updateCarousel(nextSlide);
+  }, 6000);
+
+  // General notification triggers
+  const toast = document.getElementById('toast');
+  const toastMsg = document.getElementById('toast-message');
+  let toastTimeout: NodeJS.Timeout;
+
+  const showNotification = (message: string) => {
+    if (toast && toastMsg) {
+      toastMsg.innerText = message;
+      toast.classList.remove('hidden');
+      toast.classList.add('flex');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('hidden');
+        toast.classList.remove('flex');
+      }, 2500);
+    }
+  };
+
+  document.querySelectorAll('.address-copy-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const addr = btn.getAttribute('data-address') || '';
+      navigator.clipboard.writeText(addr).then(() => {
+        showNotification(`Copied address: ${addr.slice(0, 10)}...`);
+      });
+      e.stopPropagation();
+    });
+  });
+
+  // Staking multiplier calculations
+  const stakeInput = document.getElementById('liq-stake-input') as HTMLInputElement;
+  const stakeDuration = document.getElementById('liq-stake-duration') as HTMLInputElement;
+  const lblPower = document.getElementById('lbl-voting-power-display');
+  const lblYield = document.getElementById('lbl-annual-yield-display');
+
+  const stakeTokenSel = document.getElementById('liq-token') as HTMLSelectElement;
+  const calculateStaking = () => {
+    const val = parseFloat(stakeInput.value) || 0;
+    // Slider 1-4 anos => delay_mult 5.0 (tabla MVP). Poder = stake x 5.
+    if (lblPower) {
+      lblPower.innerText = (val * 5).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (lblYield) {
+      const tok = stakeTokenSel?.value || 'IONIC';
+      const pool = poolsCache.find((p:any)=>p.token===tok);
+      const apy = pool ? Number(pool.apy_30d||0) : NaN;
+      lblYield.innerText = isFinite(apy) ? (val * apy / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—';
+      const ySym = document.getElementById('lbl-yield-sym');
+      if (ySym) ySym.innerText = tok;
+    }
+  };
+
+  stakeInput?.addEventListener('input', calculateStaking);
+  stakeDuration?.addEventListener('input', calculateStaking);
+  stakeTokenSel?.addEventListener('change', calculateStaking);
+
+  // Trading panel calculator
+  const payInput = document.getElementById('pay-amount-input') as HTMLInputElement;
+  const receiveVal = document.getElementById('lbl-receive-val');
+  const tradePercentBtns = document.querySelectorAll('.trade-percent-btn');
+  const coinPrices: Record<string, number> = { BTC: 58451.25, ETH: 3120.40, SOL: 142.25, ICP: 8.91, XRP: 0.62, BNB: 605.12, DOGE: 0.14, ADA: 0.45, TRX: 0.11, USDT: 1.00 };
+  // Cada IP trae su Binance gratis; el servidor solo agrega medianas (ver /api/prices/report).
+  const API_BASE = location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8081' : '';
+  const coinChange: Record<string, number> = {};
+  const BINANCE_MAP: Record<string, string> = { BTC:'BTCUSDT', ETH:'ETHUSDT', SOL:'SOLUSDT', ICP:'ICPUSDT', XRP:'XRPUSDT', BNB:'BNBUSDT', DOGE:'DOGEUSDT', ADA:'ADAUSDT', TRX:'TRXUSDT' };
+  const authHeaders = (): Record<string,string> => {
+    const h: Record<string,string> = { 'Content-Type': 'application/json' };
+    try { const t = (wouAuth as any)?.getSessionToken?.(); if (t) h['Authorization'] = `Bearer ${t}`; } catch {}
+    return h;
+  };
+  const isAuthed = (): boolean => { try { return !!(wouAuth as any)?.isAuthenticated?.(); } catch { return false; } };
+  const fmtUsd = (v:number) => `$${Number(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  const paintPriceRows = () => {
+    document.querySelectorAll('.price-row').forEach(row=>{
+      const sym = row.getAttribute('data-symbol')||''; const price = coinPrices[sym]; if(!price) return;
+      const right = row.querySelector('.text-right'); if(!right) return;
+      const priceDiv = right.querySelector('.text-xs') as HTMLElement;
+      if (priceDiv) priceDiv.innerText = fmtUsd(price);
+      const chg = coinChange[sym]; const chgEl = right.querySelector('span') as HTMLElement;
+      if (chgEl && chg !== undefined) {
+        chgEl.innerText = `${chg>=0?'+':''}${chg.toFixed(2)}%`;
+        chgEl.classList.toggle('text-emerald-500', chg>=0);
+        chgEl.classList.toggle('text-rose-500', chg<0);
+      }
+    });
+  };
+  const paintMarketsTable = () => {
+    document.querySelectorAll('#panel-markets tbody tr').forEach(row=>{
+      const sym = row.querySelector('.markets-trade-btn')?.getAttribute('data-symbol')||'';
+      const price = coinPrices[sym]; if(!price) return;
+      const cells = row.querySelectorAll('td.text-right.font-mono');
+      if (cells[0]) cells[0].textContent = fmtUsd(price);
+      const chg = coinChange[sym];
+      if (cells[1] && chg !== undefined) {
+        (cells[1] as HTMLElement).innerText = `${chg>=0?'+':''}${chg.toFixed(2)}%`;
+        cells[1].classList.toggle('text-emerald-500', chg>=0);
+        cells[1].classList.toggle('text-rose-500', chg<0);
+      }
+    });
+  };
+  const paintTradeHeader = () => {
+    const title = document.getElementById('trade-chart-title');
+    const price = coinPrices[currentTargetSymbol];
+    if (title && price) {
+      const tag = title.nextElementSibling as HTMLElement;
+      const chg = coinChange[currentTargetSymbol];
+      if (tag) tag.innerText = `${fmtUsd(price)} (${chg!==undefined?`${chg>=0?'+':''}${chg.toFixed(2)}%`:'—'})`;
+    }
+  };
+  const fetchBinance = async (): Promise<Record<string,number>|null> => {
+    try {
+      const syms = encodeURIComponent(JSON.stringify(Object.values(BINANCE_MAP)));
+      const r = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${syms}`);
+      if (!r.ok) return null;
+      const arr: any[] = await r.json();
+      const obs: Record<string,number> = {};
+      arr.forEach((t:any)=>{
+        const sym = Object.keys(BINANCE_MAP).find(k=>BINANCE_MAP[k]===t.symbol);
+        if (!sym) return;
+        const p = parseFloat(t.lastPrice); const c = parseFloat(t.priceChangePercent);
+        if (isFinite(p) && p>0) { coinPrices[sym]=p; if(isFinite(c)) coinChange[sym]=c; obs[sym]=p; }
+      });
+      coinPrices['USDT']=1.0; coinChange['USDT']=0.0;
+      return Object.keys(obs).length ? obs : null;
+    } catch { return null; }
+  };
+  // Velas reales desde el Binance de cada IP (gratis). Sin chain, sin proxy.
+  const renderChart = async () => {
+    const box = document.getElementById('trade-chart'); if(!box) return;
+    const sym = currentTargetSymbol;
+    const pair = BINANCE_MAP[sym];
+    const price = coinPrices[sym]||0;
+    const frame = (inner:string, note:string) => { box.innerHTML = inner + `<div class="absolute bottom-2 left-2 text-[8px] font-mono text-zinc-400">${note}</div>`; };
+    const flat = (note:string) => {
+      frame(`<svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="0" y1="50" x2="100" y2="50" stroke="#10b981" stroke-width="0.6"/></svg>`, note);
+    };
+    if (!pair) { flat(`INTERNAL PRICE ${fmtUsd(price)} · NO MARKET HISTORY`); return; }
+    try {
+      const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=15m&limit=96`);
+      if (!r.ok) throw 0;
+      const k:any[] = await r.json();
+      if (!k.length) throw 0;
+      let hi = -Infinity, lo = Infinity;
+      const rows = k.map(c=>[parseFloat(c[1]),parseFloat(c[2]),parseFloat(c[3]),parseFloat(c[4])]);
+      rows.forEach(rw=>{ hi=Math.max(hi,rw[1]); lo=Math.min(lo,rw[2]); });
+      if (!(hi>lo)) throw 0;
+      const n = rows.length; const w = 100/n; const bw = Math.max(0.3, w*0.55);
+      const y = (p:number) => 96 - ((p-lo)/(hi-lo))*92;
+      let svg = `<svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">`;
+      rows.forEach((rw,i)=>{
+        const o=rw[0], h=rw[1], l=rw[2], c=rw[3];
+        const col = c>=o?'#10b981':'#ef4444';
+        const x = i*w + w/2;
+        svg += `<line x1="${x.toFixed(2)}" y1="${y(h).toFixed(2)}" x2="${x.toFixed(2)}" y2="${y(l).toFixed(2)}" stroke="${col}" stroke-width="0.25"/>`;
+        const top = y(Math.max(o,c)), bot = y(Math.min(o,c));
+        svg += `<rect x="${(x-bw/2).toFixed(2)}" y="${top.toFixed(2)}" width="${bw.toFixed(2)}" height="${Math.max(0.6,bot-top).toFixed(2)}" fill="${col}"/>`;
+      });
+      svg += `</svg>`;
+      frame(svg, `${sym}/USDT 15m · BINANCE`);
+    } catch { flat(`FEED UNAVAILABLE · LAST ${fmtUsd(price)}`); }
+  };
+  const refreshMarket = async () => {
+    const obs = await fetchBinance();
+    if (obs) {
+      paintPriceRows(); paintMarketsTable(); paintTradeHeader(); updateTradeCalculator(); renderChart();
+      try {
+        if (isAuthed()) {
+          await fetch(`${API_BASE}/api/prices/report`, { method:'POST', headers: authHeaders(),
+            body: JSON.stringify({ observations: Object.entries(obs).map(([symbol,price])=>({symbol,price})) }) });
+        }
+      } catch {}
+    } else {
+      // Binance bloqueado para esta IP: libro del servidor (honesto, puede ir stale)
+      try {
+        const r = await fetch(`${API_BASE}/api/prices`);
+        if (r.ok) {
+          const arr:any[] = await r.json();
+          arr.forEach((p:any)=>{ if(p.symbol && p.price){ coinPrices[p.symbol]=p.price; if(typeof p.change_24h==='number') coinChange[p.symbol]=p.change_24h; } });
+          paintPriceRows(); paintMarketsTable(); paintTradeHeader(); updateTradeCalculator(); renderChart();
+        }
+      } catch {}
+    }
+  };
+
+  let currentTargetSymbol = 'BTC';
+
+  // Lado BUY (USDT->token) / SELL (token->USDT). SPIRAL opera en ambos.
+  let tradeSide: 'buy'|'sell' = 'buy';
+  const tradeFrom = () => tradeSide==='buy' ? 'USDT' : currentTargetSymbol;
+  const tradeTo = () => tradeSide==='buy' ? currentTargetSymbol : 'USDT';
+  const paintTabs = () => {
+    const b = document.getElementById('buy-tab'); const s = document.getElementById('sell-tab');
+    if (b) { const a = tradeSide==='buy'; b.classList.toggle('text-emerald-500', a); b.classList.toggle('border-b-2', a); b.classList.toggle('border-emerald-500', a); b.classList.toggle('text-zinc-400', !a); }
+    if (s) { const a = tradeSide==='sell'; s.classList.toggle('text-emerald-500', a); s.classList.toggle('border-b-2', a); s.classList.toggle('border-emerald-500', a); s.classList.toggle('text-zinc-400', !a); }
+  };
+  const updateTradeCalculator = () => {
+    const val = parseFloat(payInput.value) || 0;
+    const price = coinPrices[currentTargetSymbol] || 0;
+    const rsym = document.getElementById('lbl-receive-sym');
+    if (rsym) rsym.innerText = tradeTo();
+    if (receiveVal) {
+      receiveVal.innerText = !price ? '—' : tradeSide==='buy' ? (val/price).toFixed(6) : (val*price).toFixed(2);
+    }
+    paintTradeBalance();
+  };
+  document.getElementById('buy-tab')?.addEventListener('click', ()=>{ tradeSide='buy'; paintTabs(); updateTradeCalculator(); });
+  document.getElementById('sell-tab')?.addEventListener('click', ()=>{ tradeSide='sell'; paintTabs(); updateTradeCalculator(); });
+
+  payInput?.addEventListener('input', updateTradeCalculator);
+
+  tradePercentBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const percent = parseFloat(btn.getAttribute('data-val') || '0');
+      const maxUSDTBalance = serverBalances[tradeFrom()]||0;
+      payInput.value = ((maxUSDTBalance * percent) / 100).toFixed(2);
+      updateTradeCalculator();
+    });
+  });
+
+  // --- LOCAL PERSISTENCE (ponytail: single localStorage, no custodio) ---
+  const LS_KEY = 'ionic_swap_v1';
+  type Tx = { id:string, from:string, to:string, amount:number, receive:number, price:number, ts:number };
+  const defaultBalances: Record<string, number> = { USDT:1250, BTC:1.45, ETH:8.5, SOL:52.4, XRP:1200, BNB:3.2, DOGE:5000, ADA:2400, TRX:8000, ICP:180 };
+  const loadState = () => {
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || 'null') || { balances:{...defaultBalances}, txs:[] as Tx[], stakes:[] as any[] }; } catch { return { balances:{...defaultBalances}, txs:[], stakes:[] }; }
+  };
+  let state = loadState();
+  const saveState = () => localStorage.setItem(LS_KEY, JSON.stringify(state));
+  const headerSearch = document.getElementById('global-search') as HTMLInputElement;
+  let userSearchTimer: any = null;
+  const userSearchBox = document.getElementById('user-search-results');
+  const userSearch = (qraw:string) => {
+    const q = qraw.trim();
+    if (userSearchTimer) clearTimeout(userSearchTimer);
+    if (!userSearchBox) return;
+    if (q.length < 2) { userSearchBox.classList.add('hidden'); return; }
+    userSearchTimer = setTimeout(async () => {
+      try {
+        const r = await fetch(`https://id.worldofunreal.com/api/v1/user/search?q=${encodeURIComponent(q)}&limit=6`);
+        if (!r.ok) return;
+        const arr:any[] = await r.json();
+        userSearchBox.innerHTML = arr.length ? arr.map((u:any)=>{
+          const av = u.avatar_url ? `<img src="${u.avatar_url}" class="w-7 h-7 rounded-full object-cover" alt=""/>` : `<span class="w-7 h-7 rounded-full bg-emerald-500/20 flex items-center justify-center text-sm">${u.animal_emoji||(u.display_name||u.username||'?').slice(0,1)}</span>`;
+          return `<a href="/@${encodeURIComponent(u.username)}" class="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 text-left">`
+            + `${av}<span class="text-xs font-bold text-zinc-900 dark:text-white">${u.display_name||u.username}</span>`
+            + `<span class="text-[11px] font-mono text-zinc-500">@${u.username}</span></a>`;
+        }).join('') : '<span class="text-[11px] text-zinc-500 p-2 block">No players found.</span>';
+        userSearchBox.classList.remove('hidden');
+      } catch {}
+    }, 250);
+  };
+  document.addEventListener('click', (e)=>{ if(!userSearchBox?.contains(e.target as Node) && e.target!==headerSearch) userSearchBox?.classList.add('hidden'); });
+  headerSearch?.addEventListener('input', () => {
+    if (headerSearch.value.startsWith('@')) { userSearch(headerSearch.value.slice(1)); return; }
+    userSearchBox?.classList.add('hidden');
+    const q = headerSearch.value.toLowerCase().trim();
+    document.querySelectorAll('.price-row').forEach(row => {
+      const sym = (row.getAttribute('data-symbol')||'').toLowerCase();
+      const txt = row.textContent?.toLowerCase()||'';
+      (row as HTMLElement).style.display = !q || sym.includes(q) || txt.includes(q) ? '' : 'none';
+    });
+    document.querySelectorAll('#panel-markets tbody tr').forEach(row => {
+      const sym = (row.querySelector('[data-symbol]')?.getAttribute('data-symbol')||'').toLowerCase();
+      const txt = row.textContent?.toLowerCase()||'';
+      (row as HTMLElement).style.display = !q || sym.includes(q) || txt.includes(q) ? '' : 'none';
+    });
+    document.querySelectorAll('#panel-wallet .p-3\\.5').forEach(el => {
+      const txt = el.textContent?.toLowerCase()||'';
+      (el as HTMLElement).style.display = !q || txt.includes(q) ? '' : 'none';
+    });
+  });
+  const ensureTxHistory = () => {
+    const tradeLeft = document.querySelector('#panel-trade .lg\\:col-span-3');
+    if (!tradeLeft || document.getElementById('trade-tx-history')) return;
+    const box = document.createElement('div');
+    box.id = 'trade-tx-history';
+    box.className = 'mt-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-850 rounded-2xl p-4 max-h-48 overflow-y-auto scrollbar-thin';
+    box.innerHTML = '<h4 class="text-xs font-bold text-zinc-900 dark:text-white mb-2 font-mono">TRANSACTION_HISTORY</h4><div id="tx-list" class="space-y-1 font-mono text-[10px]"></div>';
+    tradeLeft.appendChild(box);
+  };
+  const renderTxs = async () => {
+    ensureTxHistory();
+    const list = document.getElementById('tx-list');
+    if (!list) return;
+    if (!isAuthed()) { list.innerHTML = '<span class="text-zinc-500">Sign in to see your swaps.</span>'; return; }
+    try {
+      const r = await fetch(`${API_BASE}/api/history?limit=10`, { headers: authHeaders() });
+      if (!r.ok) { list.innerHTML = '<span class="text-zinc-500">History unavailable.</span>'; return; }
+      const j:any = await r.json();
+      if (!j.txs?.length) { list.innerHTML = '<span class="text-zinc-500">No swaps yet — claim the Faucet and trade.</span>'; return; }
+      list.innerHTML = j.txs.map((t:any) => `<div class="flex justify-between p-2 bg-zinc-100 dark:bg-zinc-900 rounded border border-zinc-200 dark:border-zinc-700"><span>${t.from} → ${t.to} ${Number(t.receive).toFixed(6)}</span><span class="text-zinc-500">${new Date(t.ts*1000).toLocaleString()}</span></div>`).join('');
+    } catch { list.innerHTML = '<span class="text-zinc-500">History unavailable.</span>'; }
+  };
+
+  // Swap real contra el servidor (con sesion). Sin login no hay trade.
+  document.getElementById('btn-submit-swap')?.addEventListener('click', async () => {
+    const amt = parseFloat((document.getElementById('pay-amount-input') as HTMLInputElement)?.value || '0');
+    if (!amt || amt <= 0) { showNotification("Enter amount"); return; }
+    if (!isAuthed()) { showNotification("Sign in to trade"); (wouAuth as any)?.openModal?.(); return; }
+    try {
+      const key = (crypto as any)?.randomUUID?.() || `${Date.now()}-${Math.floor(Math.random()*1e9)}`;
+      const r = await fetch(`${API_BASE}/api/swap`, { method:'POST', headers: authHeaders(),
+        body: JSON.stringify({ from: tradeFrom(), to: tradeTo(), amount: amt, key }) });
+      const j:any = await r.json().catch(()=>({}));
+      if (r.status === 401) { showNotification("Session expired, sign in again"); (wouAuth as any)?.openModal?.(); return; }
+      if (r.status === 402) { showNotification(`Insufficient ${j.from||tradeFrom()} (have ${j.have ?? 0})`); return; }
+      if (r.status === 503) { showNotification("Price feed stale — wait a bit and retry"); return; }
+      if (!r.ok) { showNotification(j.error || "Swap rejected"); return; }
+      showNotification(`Swap ${j.amount} ${j.from} → ${Number(j.receive).toLocaleString('en-US',{maximumFractionDigits:6})} ${j.to} (fee $${Number(j.fee_usd).toFixed(2)})`);
+      if (receiveVal) receiveVal.innerText = tradeSide==='buy' ? Number(j.receive).toFixed(6) : Number(j.receive).toFixed(2);
+      loadWallet();
+    } catch { showNotification("Swap failed (network)"); }
+  });
+
+  // --- WALLET REAL (servidor). Sin saldos locales ficticios. ---
+  const TOKEN_META: Record<string,{emoji:string;name:string}> = {
+    BTC:{emoji:'🪙',name:'Bitcoin'}, ETH:{emoji:'🔷',name:'Ethereum'}, SOL:{emoji:'☀️',name:'Solana'},
+    ICP:{emoji:'♾️',name:'Internet Computer'}, XRP:{emoji:'💧',name:'XRP Ledger'}, BNB:{emoji:'🟡',name:'BNB Chain'},
+    DOGE:{emoji:'🐶',name:'Dogecoin'}, ADA:{emoji:'🔵',name:'Cardano'}, TRX:{emoji:'🔴',name:'TRON'},
+    USDT:{emoji:'💵',name:'Tether'}, IONIC:{emoji:'💎',name:'Ionic'}, UNREAL:{emoji:'✨',name:'Unreal'}, SPIRAL:{emoji:'🌀',name:'Spiral'},
+  };
+  let serverBalances: Record<string, number> = {};
+  const paintWalletAssets = (holdings: any[]) => {
+    const box = document.getElementById('wallet-assets'); if(!box) return;
+    if (!holdings.length) { box.innerHTML = '<span class="text-zinc-500 text-[11px]">No assets yet — claim the Faucet to start.</span>'; return; }
+    box.innerHTML = holdings.map(h=>{
+      const meta = TOKEN_META[h.token] || {emoji:'🪙',name:h.token};
+      return `<div class="p-3.5 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between hover:border-emerald-500/20 transition-all">`
+        + `<div class="flex items-center gap-2.5"><span class="text-2xl">${meta.emoji}</span><div>`
+        + `<div class="font-bold text-zinc-900 dark:text-white">${Number(h.amount).toLocaleString('en-US',{maximumFractionDigits:6})} ${h.token}</div>`
+        + `<span class="text-[10px] text-zinc-400">${meta.name}</span></div></div>`
+        + `<span class="font-bold text-zinc-900 dark:text-white">${fmtUsd(h.value_usdt)}</span></div>`;
+    }).join('');
+  };
+  const paintTradeBalance = () => {
+    const el = document.getElementById('trade-wallet-balance');
+    const f = tradeFrom();
+    if (el) el.innerText = `${Number(serverBalances[f]||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ${f}`;
+  };
+  const loadWallet = async () => {
+    const totalEl = document.getElementById('portfolio-total');
+    const subEl = document.getElementById('portfolio-sub');
+    if (!isAuthed()) {
+      serverBalances = {};
+      const box = document.getElementById('wallet-assets');
+      if (box) box.innerHTML = '<span class="text-zinc-500 text-[11px]">Sign in to see your balances.</span>';
+      if (totalEl) totalEl.innerText = '$0.00';
+      if (subEl) subEl.innerText = 'Sign in to load your portfolio';
+      paintTradeBalance(); renderTxs();
+      return;
+    }
+    try {
+      const p = await fetch(`${API_BASE}/api/portfolio`, { headers: authHeaders() });
+      if (p.status === 401) { try { (wouAuth as any)?.logout?.(); } catch {} loadWallet(); return; }
+      if (p.ok) {
+        const j:any = await p.json();
+        serverBalances = {}; (j.holdings||[]).forEach((h:any)=>{ serverBalances[h.token]=h.amount; });
+        paintWalletAssets(j.holdings||[]);
+        if (totalEl) totalEl.innerText = fmtUsd(j.total_usdt||0);
+        if (subEl) subEl.innerText = `${j.trades||0} trades on record`;
+      }
+      renderTxs();
+    } catch {}
+    paintTradeBalance();
+  };
+  document.getElementById('btn-faucet')?.addEventListener('click', async () => {
+    if (!isAuthed()) { showNotification("Sign in to claim the Faucet"); (wouAuth as any)?.openModal?.(); return; }
+    try {
+      const r = await fetch(`${API_BASE}/api/faucet`, { method:'POST', headers: authHeaders() });
+      const j:any = await r.json().catch(()=>({}));
+      if (r.status === 401) { showNotification("Session expired, sign in again"); return; }
+      if (!r.ok) { showNotification(j.error || "Faucet failed"); return; }
+      showNotification(j.granted ? `Faucet: +2,000,000 USDT` : `Faucet already claimed (balance ${fmtUsd(j.balance)})`);
+      loadWallet();
+    } catch { showNotification("Faucet failed (network)"); }
+  });
+  document.getElementById('btn-send')?.addEventListener('click', async () => {
+    if (!isAuthed()) { showNotification("Sign in to send"); (wouAuth as any)?.openModal?.(); return; }
+    const to = prompt('Send to (username):');
+    if (!to) return;
+    const amt = parseFloat(prompt('USDT amount:')||'');
+    if (!amt || amt<=0) return;
+    try {
+      const key = (crypto as any)?.randomUUID?.() || `${Date.now()}-${Math.floor(Math.random()*1e9)}`;
+      const r = await fetch(`${API_BASE}/api/transfer`, { method:'POST', headers: authHeaders(),
+        body: JSON.stringify({ to_username: to.replace(/^@/,'').trim(), amount: amt, key }) });
+      const j:any = await r.json().catch(()=>({}));
+      if (r.status === 401) { showNotification("Session expired, sign in again"); return; }
+      if (r.status === 402) { showNotification(`Insufficient USDT (have ${j.have ?? 0})`); return; }
+      if (r.status === 404) { showNotification("User not found"); return; }
+      if (!r.ok) { showNotification(j.error || "Transfer rejected"); return; }
+      showNotification(`Sent ${j.amount} USDT`);
+      loadWallet();
+    } catch { showNotification("Transfer failed (network)"); }
+  });
+  window.addEventListener('wou:auth-state-change', (e:any)=>{ if(e?.detail?.authenticated){ refreshMarket(); loadWallet(); loadPositions(); } else { loadWallet(); loadPositions(); } });
+  refreshMarket(); setInterval(refreshMarket, 30000); loadWallet();
+
+  document.getElementById('btn-approve-stake')?.addEventListener('click', async () => {
+    const amt = parseFloat((document.getElementById('liq-stake-input') as HTMLInputElement)?.value || '0');
+    const yrs = parseFloat((document.getElementById('liq-stake-duration') as HTMLInputElement)?.value || '1');
+    const token = (document.getElementById('liq-token') as HTMLSelectElement)?.value || 'IONIC';
+    if (!amt || amt <= 0) { showNotification("Enter stake amount"); return; }
+    if (!isAuthed()) { showNotification("Sign in to stake"); (wouAuth as any)?.openModal?.(); return; }
+    try {
+      const key = (crypto as any)?.randomUUID?.() || `${Date.now()}-${Math.floor(Math.random()*1e9)}`;
+      const r = await fetch(`${API_BASE}/api/stake`, { method:'POST', headers: authHeaders(),
+        body: JSON.stringify({ token, amount: amt, dissolve_delay_secs: Math.round(yrs*31536000), key }) });
+      const j:any = await r.json().catch(()=>({}));
+      if (r.status === 401) { showNotification("Session expired, sign in again"); (wouAuth as any)?.openModal?.(); return; }
+      if (r.status === 402) { showNotification(`Insufficient ${token} (have ${j.have ?? 0}) — swap first`); return; }
+      if (r.status === 503) { showNotification("Price feed stale — wait a bit and retry"); return; }
+      if (!r.ok) { showNotification(j.error || "Stake rejected"); return; }
+      showNotification(`Staked ${j.amount} ${j.token} · VP ${Number(j.voting_power).toFixed(0)}`);
+      loadPositions(); loadPools(); loadWallet();
+    } catch { showNotification("Stake failed (network)"); }
+  });
+
+  // --- POSICIONES REALES (Fase B) ---
+  let poolsCache: any[] = [];
+  const loadPools = async () => {
+    try {
+      const r = await fetch(`${API_BASE}/api/pools`);
+      if (!r.ok) return;
+      poolsCache = await r.json();
+      const box = document.getElementById('pools-list'); if(!box) return;
+      box.innerHTML = poolsCache.map((p:any)=>{
+        const staked = Number(p.total_staked||0) + Number(p.seed_staked||0);
+        return `<div class="p-4 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">`
+        + `<div><div class="font-bold text-zinc-900 dark:text-white">${p.token}/USDT Pool</div>`
+        + `<span class="text-[9px] text-zinc-400 block mt-0.5">Index: ${Number(p.global_index||0).toFixed(6)} · ${p.positions||0} positions</span></div>`
+        + `<div class="text-right"><span class="text-emerald-500 font-bold">${Number(p.apy_30d||0).toFixed(2)}% APY</span>`
+        + `<span class="text-[9px] text-zinc-400 block mt-0.5">Staked: ${staked.toLocaleString('en-US',{maximumFractionDigits:2})} ${p.token}</span></div></div>`;
+      }).join('') || '<span class="text-zinc-500 text-[11px]">No pools.</span>';
+      calculateStaking();
+    } catch {}
+  };
+  const loadPositions = async () => {
+    const box = document.getElementById('positions-list'); if(!box) return;
+    if (!isAuthed()) { box.innerHTML = '<span class="text-zinc-500 text-[11px]">Sign in to see your positions.</span>'; return; }
+    try {
+      const r = await fetch(`${API_BASE}/api/positions`, { headers: authHeaders() });
+      if (!r.ok) { box.innerHTML = '<span class="text-zinc-500 text-[11px]">Positions unavailable.</span>'; return; }
+      const j:any = await r.json();
+      if (!j.positions?.length) { box.innerHTML = '<span class="text-zinc-500 text-[11px]">No positions — stake above to earn fees.</span>'; return; }
+      const btnCls = 'px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20 text-[10px] font-bold';
+      box.innerHTML = j.positions.map((p:any)=>{
+        const badge = p.state==='Locked' ? 'bg-emerald-500/15 text-emerald-400' : p.state==='Dissolving' ? 'bg-amber-500/15 text-amber-400' : 'bg-zinc-500/15 text-zinc-400';
+        let btns = '';
+        if (p.state==='Locked') btns += `<button data-act="dissolve" data-id="${p.id}" class="${btnCls}">Dissolve</button>`;
+        if (p.state==='Dissolving') btns += `<button data-act="cancel" data-id="${p.id}" class="${btnCls}">Cancel</button>`;
+        if (Number(p.claimable_usdt)>0) btns += `<button data-act="claim" data-id="${p.id}" class="${btnCls}">Claim $${Number(p.claimable_usdt).toFixed(2)}</button>`;
+        if (p.state==='Locked' && Number(p.claimable_usdt)>0) btns += `<button data-act="compound" data-id="${p.id}" class="${btnCls}">Compound</button>`;
+        if ((p.state==='Dissolving'||p.state==='Dissolved') && Number(p.available_now)>0) btns += `<button data-act="wdavail" data-id="${p.id}" class="${btnCls}">Withdraw ${p.available_now}</button>`;
+        if (p.state==='Dissolving'||p.state==='Dissolved') btns += `<button data-act="wd" data-id="${p.id}" class="${btnCls}">Withdraw…</button>`;
+        if (p.state==='Locked') btns += `<button data-act="add" data-id="${p.id}" class="${btnCls}">Add…</button>`;
+        return `<div class="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700">`
+        + `<div class="flex items-center justify-between"><span class="font-bold text-zinc-900 dark:text-white">${p.amount} ${p.token}</span><span class="text-[9px] px-2 py-0.5 rounded-full ${badge}">${p.state}</span></div>`
+        + `<div class="text-[10px] text-zinc-500 mt-1">VP ${Number(p.voting_power).toLocaleString()} · avail ${p.available_now} · ${String(p.id).slice(0,8)}</div>`
+        + (btns ? `<div class="flex flex-wrap gap-1.5 mt-2">${btns}</div>` : '') + `</div>`;
+      }).join('');
+    } catch { box.innerHTML = '<span class="text-zinc-500 text-[11px]">Positions unavailable.</span>'; }
+  };
+  document.getElementById('positions-list')?.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest('[data-act]') as HTMLElement;
+    if (!btn) return;
+    const id = btn.getAttribute('data-id')||''; const act = btn.getAttribute('data-act')||'';
+    const key = (crypto as any)?.randomUUID?.() || `${Date.now()}-${Math.floor(Math.random()*1e9)}`;
+    const call = async (url:string, body?:any) => {
+      const r = await fetch(url, { method:'POST', headers: authHeaders(), body: body?JSON.stringify(body):undefined });
+      const j:any = await r.json().catch(()=>({}));
+      return { r, j };
+    };
+    try {
+      if (act==='dissolve' || act==='cancel' || act==='claim' || act==='compound' || act==='wdavail') {
+        const ep = act==='dissolve'?'start-dissolving':act==='cancel'?'cancel-dissolving':act==='claim'?'claim':act==='compound'?'compound':'withdraw-available';
+        const { r, j } = await call(`${API_BASE}/api/positions/${id}/${ep}`);
+        if (!r.ok) { showNotification(j.error||'Action rejected'); return; }
+        showNotification(act==='claim' ? `Claimed $${Number(j.claimed_usdt).toFixed(2)} USDT` : act==='compound' ? `Compounded +${j.added}` : act==='wdavail' ? `Withdrew ${j.withdrawn}` : `${act} ok`);
+      } else if (act==='wd' || act==='add') {
+        const raw = prompt(act==='wd' ? 'Amount to withdraw:' : 'Amount to add:');
+        const amt = parseFloat(raw||'');
+        if (!amt || amt<=0) return;
+        const ep = act==='wd'?'withdraw':'add';
+        const { r, j } = await call(`${API_BASE}/api/positions/${id}/${ep}`, { amount: amt, key });
+        if (!r.ok) { showNotification(j.error || (j.available!==undefined?`Available: ${j.available}`:'Action rejected')); return; }
+        showNotification(act==='wd' ? `Withdrew ${j.withdrawn}` : `Added ${j.added}`);
+      }
+      loadPositions(); loadPools(); loadWallet();
+    } catch { showNotification('Action failed (network)'); }
+  });
+  // Init tardio: loadPools/loadPositions ya existen a esta altura (llamarlas
+  // antes rompia el modulo entero, incluido el login).
+  loadPools(); setInterval(loadPools, 60000); loadPositions();
+
+  // Action links routers
+  document.querySelectorAll('.price-row, .markets-trade-btn, .quick-trade-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const row = btn.closest('tr') || btn.closest('.price-row');
+      if (row) {
+        const symbol = row.getAttribute('data-symbol') || row.querySelector('[data-symbol]')?.getAttribute('data-symbol') || 'BTC';
+        currentTargetSymbol = symbol;
+
+        // Update trade panel details
+        const headerTitle = document.getElementById('trade-chart-title');
+        if (headerTitle) headerTitle.innerText = `${symbol}/USDT`;
+
+        const receiveSym = document.getElementById('lbl-receive-sym');
+        if (receiveSym) receiveSym.innerText = symbol;
+
+        updateTradeCalculator(); renderChart();
+
+        // Router to trade tab
+        const tradeNav = document.querySelector('button[data-target="trade"]') as HTMLButtonElement;
+        tradeNav?.click();
+      }
+      e.stopPropagation();
+    });
+  });
+
+  document.querySelectorAll('.nav-to-trade').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tradeNav = document.querySelector('button[data-target="trade"]') as HTMLButtonElement;
+      tradeNav?.click();
+    });
+  });
+
+  // --- WOU-ID proper (SOW single-view, real icons, hub callback worldofunreal.com) ---
+  import { wouAuth } from '@worldofunreal/id';
+  wouAuth.setDefaultContext('world_of_unreal');
+  const signinBtn = document.getElementById('wou-signin-btn');
+  const userPill = document.getElementById('wou-user-pill');
+  const userBtn = document.getElementById('wou-user-btn');
+  const userDropdown = document.getElementById('wou-user-dropdown');
+  const userName = document.getElementById('wou-user-name');
+  const userHandle = document.getElementById('wou-user-handle');
+  const dropdownName = document.getElementById('wou-dropdown-name');
+  const dropdownHandle = document.getElementById('wou-dropdown-handle');
+  const dropdownEmail = document.getElementById('wou-dropdown-email');
+  const avatars = [document.getElementById('wou-user-avatar'), document.getElementById('wou-dropdown-avatar')];
+  const loggedView = document.getElementById('wou-auth-logged-view');
+  const unloggedView = document.getElementById('wou-auth-unlogged-view');
+  const loggedAvatar = document.getElementById('wou-logged-avatar');
+  const loggedName = document.getElementById('wou-logged-name');
+  const loggedHandle = document.getElementById('wou-logged-handle');
+  const loggedEmail = document.getElementById('wou-logged-email');
+  localStorage.removeItem('wou_session');
+  const updateAuthUI = (detail:any) => {
+    const isAuth = detail?.authenticated && detail?.user;
+    if (isAuth) {
+      const u = detail.user;
+      signinBtn?.classList.add('hidden'); userPill?.classList.remove('hidden');
+      loggedView?.classList.remove('hidden'); unloggedView?.classList.add('hidden');
+      const name = u.display_name || u.username || 'Player';
+      const handle = u.username ? `@${u.username}` : '@player';
+      if (userName) userName.textContent = name;
+      if (userHandle) userHandle.textContent = handle;
+      if (dropdownName) dropdownName.textContent = name;
+      if (dropdownHandle) dropdownHandle.textContent = handle;
+      if (dropdownEmail) dropdownEmail.textContent = u.email || '';
+      if (loggedName) loggedName.textContent = name;
+      if (loggedHandle) loggedHandle.textContent = handle;
+      if (loggedEmail) loggedEmail.textContent = u.email || '';
+      const emoji = (u.profile?.custom_attributes as any)?.animal_emoji || (name.slice(0,2).toUpperCase());
+      const renderAv = (el: HTMLElement | null) => { if(!el) return; if (u.profile?.avatar_url) el.innerHTML=`<img src="${u.profile.avatar_url}" class="w-full h-full object-cover rounded-full"/>`; else el.textContent=emoji; };
+      avatars.forEach(a=> renderAv(a as HTMLElement));
+      renderAv(loggedAvatar as HTMLElement);
+    } else {
+      signinBtn?.classList.remove('hidden'); userPill?.classList.add('hidden'); userDropdown?.classList.add('hidden');
+      loggedView?.classList.add('hidden'); unloggedView?.classList.remove('hidden');
+    }
+  };
+  window.addEventListener('wou:auth-state-change', (e:any)=> updateAuthUI(e.detail));
+  if (wouAuth.isAuthenticated()) updateAuthUI({authenticated:true, user:wouAuth.getUser()});
+  signinBtn?.addEventListener('click', ()=> wouAuth.openModal());
+  userBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); userDropdown?.classList.toggle('hidden'); });
+  document.addEventListener('click', (e)=>{ if (!userDropdown?.contains(e.target as Node) && !userBtn?.contains(e.target as Node)) userDropdown?.classList.add('hidden'); });
+  document.getElementById('wou-logout-btn')?.addEventListener('click', ()=>{ wouAuth.logout(); showNotification('Logged out'); });
+  document.getElementById('wou-logout-btn-modal')?.addEventListener('click', ()=>{ wouAuth.logout(); showNotification('Logged out'); wouAuth.closeModal(); });
+  document.getElementById('copy-evm-btn')?.addEventListener('click', ()=>{ const a=wouAuth.getUser()?.embedded_wallets?.evm_address; if(a){ navigator.clipboard.writeText(a); showNotification('Copied EVM'); }});
+  document.getElementById('copy-sol-btn')?.addEventListener('click', ()=>{ const a=wouAuth.getUser()?.embedded_wallets?.solana_address; if(a){ navigator.clipboard.writeText(a); showNotification('Copied SOL'); }});
+  document.getElementById('copy-icp-btn')?.addEventListener('click', ()=>{ const a=wouAuth.getUser()?.embedded_wallets?.icp_principal; if(a){ navigator.clipboard.writeText(a); showNotification('Copied ICP'); }});
+  // modal — SOW style single view
+  const modal = document.getElementById('wou-auth-modal');
+  const closeBtn = document.getElementById('wou-modal-close-btn');
+  const errorBanner = document.getElementById('modal-error');
+  const errorMsg = document.getElementById('modal-error-msg');
+  const authMsg = document.getElementById('wou-auth-msg');
+  const emailInput = document.getElementById('wou-email-input') as HTMLInputElement;
+  const emailForm = document.getElementById('wou-email-form') as HTMLFormElement;
+  const step1 = document.getElementById('wou-email-step-1');
+  const step2 = document.getElementById('wou-email-step-2');
+  const otpDigits = document.querySelectorAll('.otp-digit') as NodeListOf<HTMLInputElement>;
+  let currentEmail='';
+  let resendCooldownUntil = 0;
+  const resendBtn = document.getElementById('btn-resend-otp');
+  const resendLabel = resendBtn?.textContent ?? 'Resend Code';
+  let resendTick: any = null;
+  const armResendCooldown=(ms:number)=>{ resendCooldownUntil = Date.now()+ms; resendBtn?.setAttribute('disabled','true'); if(resendTick) clearInterval(resendTick); const render=()=>{ const left=Math.max(0,Math.ceil((resendCooldownUntil-Date.now())/1000)); if(resendBtn) resendBtn.textContent = left>0 ? `${resendLabel} (${left}s)` : resendLabel; if(left<=0){ if(resendTick) clearInterval(resendTick); resendTick=null; resendBtn?.removeAttribute('disabled'); } }; render(); resendTick=setInterval(render,1000); };
+  const showErr=(m:string, isOk=false)=>{ const el=isOk?authMsg:errorMsg; const banner=isOk?authMsg?.parentElement:errorBanner; if(el&&banner){ el.textContent=m; banner.classList.remove('hidden'); if(isOk) { (banner as HTMLElement).className='p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs text-center'; } } if(!isOk && errorBanner&&errorMsg){ errorMsg.textContent=m; errorBanner.classList.remove('hidden'); }};
+  const hideErr=()=>{ errorBanner?.classList.add('hidden'); authMsg?.classList.add('hidden'); if(authMsg?.parentElement) authMsg.parentElement.classList.add('hidden'); };
+  window.addEventListener('wou:open-auth-modal', ()=> { hideErr(); modal?.classList.remove('hidden'); const isAuth=wouAuth.isAuthenticated(); if(isAuth){ loggedView?.classList.remove('hidden'); unloggedView?.classList.add('hidden'); } else { loggedView?.classList.add('hidden'); unloggedView?.classList.remove('hidden'); } });
+  window.addEventListener('wou:close-auth-modal', ()=> modal?.classList.add('hidden'));
+  closeBtn?.addEventListener('click', ()=> wouAuth.closeModal());
+  modal?.addEventListener('click', (e)=>{ if(e.target===modal) wouAuth.closeModal(); });
+  emailForm?.addEventListener('submit', async (e)=>{
+    e.preventDefault(); hideErr(); currentEmail=emailInput.value.trim(); if(!currentEmail) return;
+    try{ await wouAuth.requestOtp(currentEmail, false); step1?.classList.add('hidden'); step2?.classList.remove('hidden'); showErr('Code sent to '+currentEmail, true); otpDigits[0]?.focus(); }catch(err:any){ showErr(wouAuth.describeOtpError(err).message); }
+  });
+  const verifyCode=async(code:string)=>{ hideErr(); try{ await wouAuth.verifyOtp(currentEmail, code); showNotification('Signed in via OTP'); }catch(err:any){ showErr(err.message||'Invalid code'); }};
+  document.getElementById('wou-verify-otp-btn')?.addEventListener('click', ()=>{ const full=Array.from(otpDigits).map(x=>x.value).join(''); if(full.length===6) verifyCode(full); else showErr('Enter 6-digit code'); });
+  otpDigits.forEach((d,idx)=>{
+    d.addEventListener('input', (e)=>{
+      const v=(e.target as HTMLInputElement).value.slice(-1).replace(/\D/g,''); d.value=v; if(v && idx<5) otpDigits[idx+1].focus();
+      const full=Array.from(otpDigits).map(x=>x.value).join(''); if(full.length===6) verifyCode(full);
+    });
+    d.addEventListener('paste', (e:ClipboardEvent)=>{
+      e.preventDefault(); const t=(e.clipboardData?.getData('text')||'').replace(/\D/g,'').slice(0,6); if(!t) return; t.split('').forEach((ch,i)=> { if(otpDigits[i]) otpDigits[i].value=ch; }); const full=Array.from(otpDigits).map(x=>x.value).join(''); if(full.length===6) verifyCode(full);
+    });
+    d.addEventListener('keydown', (e)=>{ if(e.key==='Backspace' && !d.value && idx>0) otpDigits[idx-1].focus(); });
+  });
+  document.getElementById('btn-change-email')?.addEventListener('click', ()=>{ step2?.classList.add('hidden'); step1?.classList.remove('hidden'); otpDigits.forEach(x=> x.value=''); hideErr(); });
+  document.getElementById('btn-resend-otp')?.addEventListener('click', async()=>{ if(Date.now() < resendCooldownUntil) return; try{ await wouAuth.requestOtp(currentEmail, false); showErr('New code sent!', true); armResendCooldown(60000); }catch(err:any){ const d=wouAuth.describeOtpError(err); if(d.retryAfterSeconds) armResendCooldown(d.retryAfterSeconds*1000); showErr(d.message); }});
+  const oauthCallback = { redirectUri: 'https://ionicswap.com/auth/callback' };
+  document.getElementById('wou-login-google')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('google', oauthCallback));
+  document.getElementById('wou-login-discord')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('discord', oauthCallback));
+  document.getElementById('wou-login-twitter')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('twitter', oauthCallback));
+  document.getElementById('wou-login-meta')?.addEventListener('click', ()=> wouAuth.loginWithOAuth('meta', oauthCallback));
+  document.getElementById('wou-login-eth')?.addEventListener('click', async()=>{ hideErr(); try{ await wouAuth.loginWithEthereum(); showNotification('EVM linked'); }catch(e:any){ showErr(e.message); }});
+  document.getElementById('wou-login-sol')?.addEventListener('click', async()=>{ hideErr(); try{ await wouAuth.loginWithSolana(); showNotification('Solana linked'); }catch(e:any){ showErr(e.message); }});
+  document.getElementById('wou-login-passkey')?.addEventListener('click', async()=>{ hideErr(); try{ await (wouAuth as any).loginWithPasskey?.(); showNotification('Passkey linked'); }catch(e:any){ showErr(e.message); }});
+  document.getElementById('wou-login-icp')?.addEventListener('click', async()=>{ hideErr(); try{ await wouAuth.loginWithIcp(); showNotification('ICP linked'); }catch(e:any){ showErr(e.message); }});
+  if (!wouAuth.isAuthenticated()) { signinBtn?.classList.remove('hidden'); userPill?.classList.add('hidden'); }
+
+  //Theme switcher trigger
+  const themeBtn = document.getElementById('theme-toggle');
+  themeBtn?.addEventListener('click', () => {
+    const html = document.documentElement;
+    if (html.classList.contains('dark')) {
+      html.classList.remove('dark');
+      localStorage.setItem('ionic-swap-theme', 'light');
+    } else {
+      html.classList.add('dark');
+      localStorage.setItem('ionic-swap-theme', 'dark');
+    }
+  });
+
+  // Read theme on load
+  const prefTheme = localStorage.getItem('ionic-swap-theme') || 'dark';
+  if (prefTheme === 'dark') {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+
+  // ---------- Deep-link router (paridad de rutas Nuxt) ----------
+  // Rutas reales: / /markets /trading /wallet /liquidity /settings /profile /@username
+  const PANEL_PATH: Record<string,string> = {
+    discovery: '/', markets: '/markets', trade: '/trading', wallet: '/wallet',
+    liquidity: '/liquidity', settings: '/settings', profile: '/profile'
+  };
+  const PATH_TO_PANEL: Record<string,string> = {
+    '/': 'discovery', '/markets': 'markets', '/trading': 'trade', '/trade': 'trade',
+    '/wallet': 'wallet', '/liquidity': 'liquidity', '/settings': 'settings', '/profile': 'profile'
+  };
+  const setText = (id: string, v: string) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const setActiveNav = (panel: string) => {
+    navItems.forEach(nav => {
+      const on = nav.getAttribute('data-target') === panel;
+      nav.classList.toggle('text-emerald-500', on);
+      nav.classList.toggle('bg-emerald-500/10', on);
+      nav.classList.toggle('dark:bg-emerald-500/5', on);
+      nav.classList.toggle('border', on);
+      nav.classList.toggle('border-emerald-400/20', on);
+      nav.classList.toggle('text-zinc-500', !on);
+      nav.classList.toggle('dark:text-zinc-400', !on);
+      if (on) nav.setAttribute('aria-current', 'page'); else nav.removeAttribute('aria-current');
+    });
+  };
+  const showPanel = (panel: string) => {
+    modules.forEach(m => m.classList.remove('active'));
+    document.getElementById(`panel-${panel}`)?.classList.add('active');
+    setActiveNav(panel);
+    window.scrollTo(0, 0);
+  };
+  const profileRefresh = () => {
+    const u: any = isAuthed() ? (wouAuth as any).getUser?.() : null;
+    const openBtn = document.getElementById('profile-open-btn');
+    const signBtn = document.getElementById('profile-signin-btn');
+    if (u?.username) {
+      setText('profile-sub', `Signed in as @${u.username}.`);
+      openBtn?.classList.remove('hidden'); signBtn?.classList.add('hidden');
+    } else {
+      setText('profile-sub', 'Sign in to open your public profile.');
+      openBtn?.classList.add('hidden'); signBtn?.classList.remove('hidden');
+    }
+  };
+  const settingsRender = async () => {
+    const dark = document.documentElement.classList.contains('dark');
+    document.querySelectorAll('[data-set-theme]').forEach(b => {
+      const on = b.getAttribute('data-set-theme') === (dark ? 'dark' : 'light');
+      b.classList.toggle('ring-2', on);
+      b.classList.toggle('ring-emerald-500', on);
+    });
+    const u: any = isAuthed() ? (wouAuth as any).getUser?.() : null;
+    setText('set-name', u ? (u.display_name || u.username || '—') : '—');
+    setText('set-handle', u?.username ? `@${u.username}` : 'not signed in');
+    setText('set-email', u?.email || '—');
+    const w = u?.embedded_wallets || {};
+    setText('set-evm', w.evm_address || '—');
+    setText('set-sol', w.solana_address || '—');
+    setText('set-icp', w.icp_principal || '—');
+    document.getElementById('set-logout')?.classList.toggle('hidden', !u);
+    document.getElementById('set-signin')?.classList.toggle('hidden', !!u);
+    if (!u) { setText('set-oracle', 'sign in'); setText('set-oracle-badge', 'ORACLE: —'); return; }
+    setText('set-oracle', 'checking…');
+    try {
+      const r = await fetch(`${API_BASE}/api/prices`);
+      if (!r.ok) throw new Error('bad');
+      const arr: any[] = await r.json();
+      const ext = arr.filter((p: any) => !['USDT', 'IONIC', 'UNREAL', 'SPIRAL'].includes(p.symbol));
+      const fresh = ext.filter((p: any) => !p.stale).length;
+      const label = `${fresh}/${ext.length} fresh`;
+      setText('set-oracle', label);
+      setText('set-oracle-badge', `ORACLE: ${label}`);
+    } catch {
+      setText('set-oracle', 'unreachable');
+      setText('set-oracle-badge', 'ORACLE: offline');
+    }
+  };
+  const ID_SERVER = 'https://id.worldofunreal.com';
+  const TOKEN_EMOJI: Record<string,string> = { BTC:'🪙', ETH:'🔷', SOL:'☀️', ICP:'♾️', XRP:'💧', BNB:'🟡', DOGE:'🐶', ADA:'🔵', TRX:'🔴', USDT:'💵', IONIC:'💎', UNREAL:'✨', SPIRAL:'🌀' };
+  const openUserProfile = async (uname: string) => {
+    showPanel('user');
+    document.title = `@${uname} | Ionic Swap`;
+    if (location.pathname !== `/@${uname}`) history.pushState({ user: uname }, '', `/@${uname}`);
+    const errEl = document.getElementById('up-error');
+    const loadEl = document.getElementById('up-loading');
+    const card = document.getElementById('up-card');
+    errEl?.classList.add('hidden');
+    card?.classList.add('hidden');
+    document.getElementById('up-portfolio')?.classList.add('hidden');
+    document.getElementById('up-activity')?.classList.add('hidden');
+    loadEl?.classList.remove('hidden');
+    const fail = (m: string) => { loadEl?.classList.add('hidden'); if (errEl) { errEl.textContent = m; errEl.classList.remove('hidden'); } };
+    let u: any;
+    try {
+      const r = await fetch(`${ID_SERVER}/api/v1/user/by-username/${encodeURIComponent(uname)}`);
+      if (!r.ok) { fail(`No player called @${uname}.`); return; }
+      u = await r.json();
+    } catch { fail('Identity server unreachable.'); return; }
+    loadEl?.classList.add('hidden');
+    card?.classList.remove('hidden');
+    const av = document.getElementById('up-avatar')!;
+    if (u.avatar_url) av.innerHTML = `<img src="${u.avatar_url}" class="w-full h-full object-cover" alt=""/>`;
+    else av.textContent = (u.display_name || u.username || '?').slice(0, 2).toUpperCase();
+    setText('up-name', u.display_name || u.username || 'Player');
+    setText('up-handle', `@${u.username}`);
+    setText('up-bio', u.bio || '');
+    setText('up-counts', `${u.followers_count || 0} followers · ${u.following_count || 0} following`);
+    const full = document.getElementById('up-full-link') as HTMLAnchorElement | null;
+    if (full) full.href = `/user?u=${encodeURIComponent(u.username)}`;
+    const follow = document.getElementById('up-follow') as HTMLButtonElement | null;
+    const me: any = isAuthed() ? (wouAuth as any).getUser?.() : null;
+    if (follow) {
+      follow.classList.remove('hidden');
+      if (me && me.account_id === u.account_id) { follow.textContent = 'This is you'; follow.disabled = true; follow.onclick = null; }
+      else if (!me) { follow.disabled = false; follow.textContent = 'Sign in to follow'; follow.onclick = () => wouAuth.openModal(); }
+      else {
+        let following = false; follow.disabled = false; follow.textContent = 'Follow';
+        follow.onclick = async () => {
+          try {
+            if (!following) { await (wouAuth as any).follow?.(u.account_id); following = true; follow.textContent = 'Following ✓'; }
+            else { await (wouAuth as any).unfollow?.(u.account_id); following = false; follow.textContent = 'Follow'; }
+          } catch (e: any) { follow.textContent = e?.message || 'Failed'; }
+        };
+      }
+    }
+    try {
+      const pr = await fetch(`${API_BASE}/api/portfolio/${u.account_id}`);
+      if (pr.ok) {
+        const j: any = await pr.json();
+        document.getElementById('up-portfolio')?.classList.remove('hidden');
+        setText('up-total', fmtUsd(j.total_usdt));
+        const box = document.getElementById('up-holdings')!;
+        const hs = j.holdings || [];
+        box.innerHTML = hs.length ? hs.map((h: any) =>
+          `<div class="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">`
+          + `<span>${TOKEN_EMOJI[h.token] || '🪙'} <b>${Number(h.amount).toLocaleString('en-US', { maximumFractionDigits: 6 })} ${h.token}</b></span>`
+          + `<span class="font-bold">${fmtUsd(h.value_usdt)}</span></div>`).join('')
+          : '<span class="text-zinc-500">No assets.</span>';
+      }
+      const hr = await fetch(`${API_BASE}/api/history/${u.account_id}?limit=20`);
+      if (hr.ok) {
+        const j: any = await hr.json();
+        document.getElementById('up-activity')?.classList.remove('hidden');
+        const box = document.getElementById('up-txs')!;
+        const txs = j.txs || [];
+        box.innerHTML = txs.length ? txs.map((t: any) =>
+          `<div class="flex justify-between p-2 bg-zinc-100 dark:bg-zinc-900 rounded border border-zinc-200 dark:border-zinc-700"><span>${t.kind === 'transfer' ? '⇄ transfer' : `${t.from} → ${t.to} ${Number(t.receive || 0).toFixed(6)}`}</span><span class="text-zinc-500">${new Date((t.ts || 0) * 1000).toLocaleDateString()}</span></div>`).join('')
+          : '<span class="text-zinc-500">No activity yet.</span>';
+      }
+    } catch {}
+  };
+  const appRoute = {
+    show: showPanel,
+    go(panel: string, push = true) {
+      if (panel === 'profile') { appRoute.profile(); return; }
+      showPanel(panel);
+      const path = PANEL_PATH[panel];
+      if (push && path && location.pathname !== path) history.pushState({ panel }, '', path);
+      if (panel === 'settings') settingsRender();
+    },
+    profile() {
+      const u: any = isAuthed() ? (wouAuth as any).getUser?.() : null;
+      if (u?.username) { location.href = `/@${u.username}`; return; }
+      showPanel('profile');
+      if ((history.state || {}).panel !== 'profile') history.pushState({ panel: 'profile' }, '', '/profile');
+      profileRefresh();
+    },
+    resolve() {
+      const m = location.pathname.match(/^\/@([A-Za-z0-9_.-]{1,32})\/?$/);
+      if (m) { openUserProfile(decodeURIComponent(m[1])); return; }
+      const clean = location.pathname.replace(/\/+$/, '');
+      const panel = PATH_TO_PANEL[clean || '/'] || 'discovery';
+      if (panel === 'profile') { appRoute.profile(); return; }
+      showPanel(panel);
+      if (panel === 'settings') settingsRender();
+    }
+  };
+  // ---------- Wiring de las rutas nuevas ----------
+  document.getElementById('dd-profile')?.addEventListener('click', (e) => { e.preventDefault(); userDropdown?.classList.add('hidden'); appRoute.profile(); });
+  document.getElementById('profile-open-btn')?.addEventListener('click', () => appRoute.profile());
+  document.getElementById('profile-signin-btn')?.addEventListener('click', () => wouAuth.openModal());
+  document.getElementById('set-signin')?.addEventListener('click', () => wouAuth.openModal());
+  document.getElementById('set-logout')?.addEventListener('click', () => { wouAuth.logout(); showNotification('Logged out'); setTimeout(() => settingsRender(), 300); });
+  document.getElementById('up-share')?.addEventListener('click', () => {
+    const m = location.pathname.match(/^\/@(.+?)\/?$/);
+    if (m) { navigator.clipboard.writeText(`${location.origin}/@${m[1]}`); showNotification('Profile link copied'); }
+  });
+  document.querySelectorAll('[data-set-theme]').forEach(b => b.addEventListener('click', () => {
+    const t = b.getAttribute('data-set-theme') || 'dark';
+    document.documentElement.classList.toggle('dark', t === 'dark');
+    localStorage.setItem('ionic-swap-theme', t);
+    settingsRender();
+  }));
+  document.querySelectorAll('[data-copy-wallet]').forEach(b => b.addEventListener('click', () => {
+    const u: any = isAuthed() ? (wouAuth as any).getUser?.() : null;
+    const v = u?.embedded_wallets?.[b.getAttribute('data-copy-wallet') || ''];
+    if (v) { navigator.clipboard.writeText(v); showNotification('Address copied'); }
+  }));
+  window.addEventListener('popstate', () => appRoute.resolve());
+  window.addEventListener('wou:auth-state-change', () => { profileRefresh(); settingsRender(); });
+  appRoute.resolve();
+  settingsRender();
+</script>

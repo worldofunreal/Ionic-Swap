@@ -1,0 +1,20 @@
+[Unit]
+Description=Ionic Swap external price-oracle feeder (Binance -> ionicswap.com)
+Documentation=https://ionicswap.com/settings
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ionicswap-oracle-feeder.py
+Restart=always
+RestartSec=10
+# Feeding a dashboard, not a Vault: keep it locked down but simple.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+Environment=IONIC_FEED_INTERVAL=30
+
+[Install]
+WantedBy=multi-user.target

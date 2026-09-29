@@ -437,7 +437,7 @@ async fn ledger_credit(
     (StatusCode::OK, Json(resp)).into_response()
 }
 
-async fn health() -> impl IntoResponse { Json(serde_json::json!({"status":"ok","service":"ionicswap-server","chain":"freebsd-native","oracle":"client-reported median (browser binance)"})) }
+async fn health() -> impl IntoResponse { Json(serde_json::json!({"status":"ok","service":"ionicswap-server","chain":"freebsd-native","oracle":"external feeder (binance 24hr) + browser median fallback"})) }
 
 // ---------- SPIRAL BRIDGE — wallet Ionic <-> bolsillo de juego wou-id ----------
 // La misma llave idempotente gobierna ambos lados: un reintento replayea en
@@ -622,10 +622,143 @@ async fn get_tokens(State(s): State<AppState>) -> impl IntoResponse {
 }
 
 #[derive(Deserialize)]
-struct ReportObs { symbol: String, price: f64 }
+struct ReportObs {
+    symbol: String,
+    price: f64,
+    #[serde(default)]
+    change_24h: Option<f64>,
+}
 
 #[derive(Deserialize)]
 struct ReportReq { observations: Vec<ReportObs> }
+
+#[derive(Deserialize)]
+struct OracleFeedReq {
+    #[serde(default)]
+    source: Option<String>,
+    #[serde(default)]
+    force: bool,
+    observations: Vec<ReportObs>,
+}
+
+fn oracle_feed_secret() -> String {
+    let env = std::env::var("ORACLE_FEED_SECRET").unwrap_or_default();
+    if !env.trim().is_empty() {
+        return env.trim().to_string();
+    }
+    let path = std::env::var("ORACLE_KEY_PATH")
+        .unwrap_or_else(|_| "/var/db/ionicswap/oracle_key".to_string());
+    std::fs::read_to_string(path)
+        .map(|s| s.trim().to_string())
+        .unwrap_or_default()
+}
+
+// Comparacion en tiempo constante-ish (evita filtrar la clave por timing).
+fn ct_eq(a: &str, b: &str) -> bool {
+    if a.is_empty() || b.is_empty() {
+        return false;
+    }
+    let (a, b) = (a.as_bytes(), b.as_bytes());
+    if a.len() != b.len() {
+        return false;
+    }
+    let mut d = 0u8;
+    for i in 0..a.len() {
+        d |= a[i] ^ b[i];
+    }
+    d == 0
+}
+
+// Feeder externo 24/7 (p.ej. Orange Pi en LAN con salida a Binance): la IP de
+// IONOS esta bloqueada por Binance (HTTP 451), asi que los precios entran por
+// aqui con una clave compartida en vez de un JWT de usuario. Si el libro esta
+// stale (arranque o feeder caido), se acepta el precio sin guard de desviacion
+// para poder resincronizar; con libro fresco si se aplica el guard del 25%.
+async fn oracle_feed(
+    State(s): State<AppState>,
+    headers: HeaderMap,
+    Json(req): Json<OracleFeedReq>,
+) -> impl IntoResponse {
+    let secret = oracle_feed_secret();
+    if secret.is_empty() {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error":"feeder disabled: sin ORACLE_FEED_SECRET ni fichero oracle_key"})),
+        )
+            .into_response();
+    }
+    let given = headers.get("x-oracle-key").and_then(|v| v.to_str().ok()).unwrap_or("");
+    if !ct_eq(given, &secret) {
+        return (StatusCode::UNAUTHORIZED, Json(serde_json::json!({"error":"bad oracle key"}))).into_response();
+    }
+    let now = Utc::now().timestamp();
+    let mut st = s.trade.write().await;
+    let (mut accepted, mut ignored) = (0, 0);
+    for o in req.observations.iter().take(64) {
+        let sym = o.symbol.to_uppercase();
+        match token_cfg(&sym) {
+            Some((_, _, false)) => {}
+            _ => {
+                ignored += 1;
+                continue;
+            }
+        }
+        if !o.price.is_finite() || o.price <= 0.0 {
+            ignored += 1;
+            continue;
+        }
+        let existing = st.book.get(&sym).cloned();
+        let bypass = req.force
+            || match &existing {
+                Some(e) => e.internal || now - e.ts > STALE_AFTER_SECS,
+                None => true,
+            };
+        if !bypass {
+            if let Some(e) = &existing {
+                if e.price > 0.0 && ((o.price - e.price).abs() / e.price) > REPORT_DEVIATION {
+                    ignored += 1;
+                    continue;
+                }
+            }
+        }
+        let day = now / 86400;
+        let open = match st.day_open.get(&sym) {
+            Some((d, p)) if *d == day => *p,
+            _ => {
+                st.day_open.insert(sym.clone(), (day, o.price));
+                o.price
+            }
+        };
+        let chg = match o.change_24h {
+            Some(c) if c.is_finite() => c,
+            _ => {
+                if open > 0.0 {
+                    (o.price - open) / open * 100.0
+                } else {
+                    0.0
+                }
+            }
+        };
+        // Ventana limpia: evita que reportes viejos de navegador contaminen la mediana.
+        st.reports.insert(sym.clone(), vec![(now, o.price)]);
+        st.book.insert(
+            sym.clone(),
+            BookEntry { price: o.price, ts: now, change_24h: chg, internal: false },
+        );
+        accepted += 1;
+    }
+    save_trade(&s.state_path, &st);
+    (
+        StatusCode::OK,
+        Json(serde_json::json!({
+            "accepted": accepted,
+            "ignored": ignored,
+            "source": req.source.clone().unwrap_or_else(|| "feed".to_string()),
+            "ts": now,
+        })),
+    )
+        .into_response()
+}
 
 // Cada navegador trae su Binance gratis; el servidor agrega la mediana.
 // Reportes absurdos (>25% de la mediana) se ignoran sin romper nada.
@@ -1560,6 +1693,7 @@ async fn main() {
         .route("/api/tokens", get(get_tokens))
         .route("/api/contact", post(post_contact))
         .route("/api/prices/report", post(report_prices))
+        .route("/api/oracle/feed", post(oracle_feed))
         .route("/api/faucet", post(trade_faucet))
         .route("/api/balances", get(trade_balances))
         .route("/api/swap", post(trade_swap))
