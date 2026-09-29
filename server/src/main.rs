@@ -1453,6 +1453,72 @@ async fn pos_add(State(s): State<AppState>, headers: HeaderMap, Path(id): Path<S
 // Sin oraculo propio: los precios los reporta cada navegador desde su Binance
 // gratis (directiva owner). Ver report_prices + seed_trade.
 
+// ---------- Contacto (formularios del sitio) ----------
+// Los mensajes del sitio se anexan a un JSONL propio. Sin terceros ni SMTP:
+// el operador lo lee desde el servidor. Endpoint publico (es un formulario).
+const CONTACT_MAX_MSG: usize = 8000;
+const CONTACT_MAX_FIELD: usize = 300;
+
+fn contact_path() -> String {
+    std::env::var("CONTACT_PATH").unwrap_or_else(|_| "/var/db/ionicswap/contact.jsonl".to_string())
+}
+
+fn clip(v: &str, max: usize) -> String {
+    let t = v.trim();
+    if t.len() <= max { t.to_string() } else { t.chars().take(max).collect() }
+}
+
+#[derive(Deserialize)]
+struct ContactReq {
+    #[serde(default)]
+    name: Option<String>,
+    #[serde(default)]
+    email: Option<String>,
+    #[serde(default)]
+    company: Option<String>,
+    #[serde(default)]
+    subject: Option<String>,
+    #[serde(default)]
+    topic: Option<String>,
+    message: String,
+}
+
+async fn post_contact(Json(req): Json<ContactReq>) -> impl IntoResponse {
+    let message = clip(&req.message, CONTACT_MAX_MSG);
+    if message.is_empty() {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error": "message required"}))).into_response();
+    }
+    let record = serde_json::json!({
+        "ts": Utc::now().to_rfc3339(),
+        "topic": clip(req.topic.as_deref().unwrap_or("contact"), 32),
+        "name": clip(req.name.as_deref().unwrap_or(""), CONTACT_MAX_FIELD),
+        "email": clip(req.email.as_deref().unwrap_or(""), CONTACT_MAX_FIELD),
+        "company": clip(req.company.as_deref().unwrap_or(""), CONTACT_MAX_FIELD),
+        "subject": clip(req.subject.as_deref().unwrap_or(""), CONTACT_MAX_FIELD),
+        "message": message,
+    });
+    let path = contact_path();
+    if let Some(dir) = std::path::Path::new(&path).parent() {
+        let _ = std::fs::create_dir_all(dir);
+    }
+    let line = format!("{}\n", record);
+    let write = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&path)
+        .and_then(|mut f| {
+            use std::io::Write;
+            f.write_all(line.as_bytes())
+        });
+    match write {
+        Ok(_) => (StatusCode::OK, Json(serde_json::json!({"ok": true}))).into_response(),
+        Err(e) => {
+            tracing::warn!("contact: no se pudo escribir {}: {}", path, e);
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": "storage unavailable"}))).into_response()
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt().with_env_filter(EnvFilter::from_default_env()).init();
@@ -1492,6 +1558,7 @@ async fn main() {
         .route("/api/prices", get(get_prices))
         .route("/api/price/:symbol", get(get_price))
         .route("/api/tokens", get(get_tokens))
+        .route("/api/contact", post(post_contact))
         .route("/api/prices/report", post(report_prices))
         .route("/api/faucet", post(trade_faucet))
         .route("/api/balances", get(trade_balances))

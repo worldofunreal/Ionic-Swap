@@ -1,0 +1,273 @@
+---
+import ContentLayout from '../layouts/ContentLayout.astro';
+---
+
+<ContentLayout title={"Support Center - Ionic Swap"} description={"Get help with cross-chain swapping, gasless transactions, and token trading. Find answers to common questions and contact our support team."} canonical={"https://ionicswap.com/support"}>
+  <div class="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+      <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="text-center mb-12">
+          <h1 class="text-4xl font-bold text-zinc-900 dark:text-white mb-4">
+            Support Center
+          </h1>
+          <p class="text-xl text-zinc-600 dark:text-zinc-300">
+            Get help with cross-chain swapping, gasless transactions, and token
+            trading
+          </p>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div
+            class="bg-zinc-50 dark:bg-neutral-800 p-6 rounded-lg shadow text-center"
+          >
+            <div
+              class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900 rounded-lg flex items-center justify-center mx-auto mb-4"
+            >
+              <span class="w-6 h-6 text-emerald-600 dark:text-emerald-400 inline-flex items-center justify-center leading-none" aria-hidden="true">❓</span>
+            </div>
+            <h3 class="text-lg font-medium text-zinc-900 dark:text-white mb-2">
+              FAQ
+            </h3>
+            <p class="text-zinc-600 dark:text-zinc-300 mb-4">
+              Find answers to common questions about swapping and DeFi
+            </p>
+            <a
+              href="#faq"
+              class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium"
+            >
+              Browse FAQ →
+            </a>
+          </div>
+
+          <div
+            class="bg-zinc-50 dark:bg-neutral-800 p-6 rounded-lg shadow text-center"
+          >
+            <div
+              class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center mx-auto mb-4"
+            >
+              <span class="w-6 h-6 text-green-600 dark:text-green-400 inline-flex items-center justify-center leading-none" aria-hidden="true">💬</span>
+            </div>
+            <h3 class="text-lg font-medium text-zinc-900 dark:text-white mb-2">
+              Live Chat
+            </h3>
+            <p class="text-zinc-600 dark:text-zinc-300 mb-4">
+              Chat with our support team in real-time
+            </p>
+            <a
+              href="#chat"
+              class="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium"
+            >
+              Start Chat →
+            </a>
+          </div>
+
+          <div
+            class="bg-zinc-50 dark:bg-neutral-800 p-6 rounded-lg shadow text-center"
+          >
+            <div
+              class="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center mx-auto mb-4"
+            >
+              <span class="w-6 h-6 text-purple-600 dark:text-purple-400 inline-flex items-center justify-center leading-none" aria-hidden="true">✉️</span>
+            </div>
+            <h3 class="text-lg font-medium text-zinc-900 dark:text-white mb-2">
+              Email Support
+            </h3>
+            <p class="text-zinc-600 dark:text-zinc-300 mb-4">
+              Send us a detailed message about your issue
+            </p>
+            <a
+              href="#email-support"
+              class="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
+            >
+              Send Email →
+            </a>
+          </div>
+        </div>
+
+        <!-- Content Sections -->
+        <div class="space-y-8">
+          <!-- FAQ Section -->
+          <div
+            id="faq"
+            class="bg-zinc-50 dark:bg-neutral-800 rounded-lg shadow p-8 scroll-mt-20"
+          >
+            <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-6">
+              Frequently Asked Questions
+            </h2>
+
+                        <div class="space-y-6">
+              <details class="border-b border-gray-200 dark:border-gray-700 pb-4 group">
+                <summary class="text-lg font-semibold text-zinc-900 dark:text-white cursor-pointer list-none flex items-center justify-between gap-4">
+                  <span>How do gasless transactions work?</span>
+                  <span class="text-emerald-500 group-open:rotate-45 transition-transform" aria-hidden="true">＋</span>
+                </summary>
+                <p class="text-zinc-600 dark:text-zinc-300 mt-3">Gasless transactions use cryptographic permits that allow contracts to execute transactions on your behalf without requiring you to pay gas fees. You sign a permit with your wallet, and our server submits the transaction.</p>
+              </details>
+              <details class="border-b border-gray-200 dark:border-gray-700 pb-4 group">
+                <summary class="text-lg font-semibold text-zinc-900 dark:text-white cursor-pointer list-none flex items-center justify-between gap-4">
+                  <span>Which networks are supported?</span>
+                  <span class="text-emerald-500 group-open:rotate-45 transition-transform" aria-hidden="true">＋</span>
+                </summary>
+                <p class="text-zinc-600 dark:text-zinc-300 mt-3">Ionic Swap runs on its own FreeBSD-native chain with its own ledger, and bridges value against Ethereum (EVM) and Solana assets. Everything settles on our own server, no external canisters.</p>
+              </details>
+              <details class="border-b border-gray-200 dark:border-gray-700 pb-4 group">
+                <summary class="text-lg font-semibold text-zinc-900 dark:text-white cursor-pointer list-none flex items-center justify-between gap-4">
+                  <span>What token standards are supported?</span>
+                  <span class="text-emerald-500 group-open:rotate-45 transition-transform" aria-hidden="true">＋</span>
+                </summary>
+                <p class="text-zinc-600 dark:text-zinc-300 mt-3">Every token listed by our own server (/api/tokens), plus ERC-20 on EVM chains and SPL tokens on Solana when you bridge in.</p>
+              </details>
+              <details class="border-b border-gray-200 dark:border-gray-700 pb-4 group">
+                <summary class="text-lg font-semibold text-zinc-900 dark:text-white cursor-pointer list-none flex items-center justify-between gap-4">
+                  <span>How long do swaps take?</span>
+                  <span class="text-emerald-500 group-open:rotate-45 transition-transform" aria-hidden="true">＋</span>
+                </summary>
+                <p class="text-zinc-600 dark:text-zinc-300 mt-3">Swaps on our own chain settle in milliseconds. Bridge-in from Solana is typically seconds; EVM takes 1-5 minutes depending on congestion.</p>
+              </details>
+              <details class="border-b border-gray-200 dark:border-gray-700 pb-4 group">
+                <summary class="text-lg font-semibold text-zinc-900 dark:text-white cursor-pointer list-none flex items-center justify-between gap-4">
+                  <span>Are there any fees for swapping?</span>
+                  <span class="text-emerald-500 group-open:rotate-45 transition-transform" aria-hidden="true">＋</span>
+                </summary>
+                <p class="text-zinc-600 dark:text-zinc-300 mt-3">Ionic Swap uses gasless transactions, so you don't pay network gas. A small protocol fee (0.3%) applies per swap and is accrued by the server's ledger.</p>
+              </details>
+              <details class="border-b border-gray-200 dark:border-gray-700 pb-4 group">
+                <summary class="text-lg font-semibold text-zinc-900 dark:text-white cursor-pointer list-none flex items-center justify-between gap-4">
+                  <span>Is my wallet secure?</span>
+                  <span class="text-emerald-500 group-open:rotate-45 transition-transform" aria-hidden="true">＋</span>
+                </summary>
+                <p class="text-zinc-600 dark:text-zinc-300 mt-3">Yes. Ionic Swap is non-custodial: we never touch your private keys. You sign with your own wallet (MetaMask, Phantom, Rabby, Plug, Magic Eden or the built-in local wallet); the server only stores balances and positions.</p>
+              </details>
+            </div>
+          </div>
+
+          <!-- Chat Section -->
+          <div
+            id="chat"
+            class="bg-zinc-50 dark:bg-neutral-800 rounded-lg shadow p-8 scroll-mt-20"
+          >
+            <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-6">
+              Live Chat Support
+            </h2>
+            <p class="text-zinc-600 dark:text-zinc-300 mb-6">
+              Our support team is available 24/7 to help you with any questions
+              about cross-chain swapping, gasless transactions, or token trading.
+            </p>
+            <div class="bg-zinc-50 dark:bg-zinc-900 rounded-lg p-6 text-center">
+              <span class="w-12 h-12 text-zinc-300 mx-auto mb-4 inline-flex items-center justify-center leading-none" aria-hidden="true">💬</span>
+              <p class="text-zinc-600 dark:text-zinc-300 mb-4">
+                Live chat is coming soon! For now, please use email support.
+              </p>
+              <a href="#email-support" class="inline-block px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition-colors">
+                Contact Email Support
+              </a>
+            </div>
+          </div>
+
+          <!-- Email Section -->
+          <div
+            id="email-support"
+            class="bg-zinc-50 dark:bg-neutral-800 rounded-lg shadow p-8 scroll-mt-20"
+          >
+            <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-6">
+              Email Support
+            </h2>
+            <p class="text-zinc-600 dark:text-zinc-300 mb-6">
+              Send us a detailed message about your issue and we'll get back to
+              you within 24 hours.
+            </p>
+
+            <form id="support-form" class="space-y-4" novalidate>
+              <div>
+                <label
+                  class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"
+                >
+                  Subject
+                </label>
+                <input
+                  id="support-subject"
+                  name="subject"
+                  required
+                  placeholder="Brief description of your issue"
+                  class="w-full"
+                 />
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"
+                >
+                  Message
+                </label>
+                <textarea
+                  id="support-message"
+                  name="message"
+                  required
+                  rows="5"
+                  placeholder="Please provide as much detail as possible about your issue..."
+                  class="w-full"
+                ></textarea>
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"
+                >
+                  Your Email
+                </label>
+                <input
+                  id="support-email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  placeholder="your@email.com"
+                  class="w-full"
+                 />
+              </div>
+              <button type="submit" class="w-full">
+                Send Support Request
+              </button>
+              <p id="support-status" class="text-sm text-zinc-500 dark:text-zinc-400" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+</ContentLayout>
+
+<script>
+  const sForm = document.getElementById('support-form') as HTMLFormElement | null;
+  const sStatus = document.getElementById('support-status');
+  const setS = (msg: string, ok?: boolean) => {
+    if (!sStatus) return;
+    sStatus.textContent = msg;
+    sStatus.style.color = ok === undefined ? '' : ok ? '#10b981' : '#f87171';
+  };
+
+  sForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const data = new FormData(sForm);
+    const payload = Object.fromEntries([...data.entries()].map(([k, v]) => [k, String(v)]));
+    if (!payload.subject || !payload.message) {
+      setS('Subject and message are required.', false);
+      return;
+    }
+    setS('Sending...');
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, topic: 'support' }),
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      sForm.reset();
+      setS('Request received! We will reply within 24 hours.', true);
+    } catch (err) {
+      const subject = encodeURIComponent(String(payload.subject));
+      const body = encodeURIComponent(
+        String(payload.message) + '\n\nFrom: ' + String(payload.email ?? '')
+      );
+      setS('Server unavailable — opening your mail client instead.', false);
+      window.location.href = 'mailto:support@ionicswap.com?subject=' + subject + '&body=' + body;
+    }
+  });
+</script>
